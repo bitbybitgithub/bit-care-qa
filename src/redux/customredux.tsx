@@ -1,0 +1,1 @@
+//create redux that can be reused across the application

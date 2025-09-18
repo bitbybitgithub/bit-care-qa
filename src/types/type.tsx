@@ -1,0 +1,1 @@
+//generate type definitions that can be reused across the application

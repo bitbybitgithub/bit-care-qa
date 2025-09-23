@@ -24,7 +24,7 @@ const Login = () => {
       } else {
         setErrors((prev) => ({
           ...prev,
-          number: "Mobile Number must start with 6-9",
+          number: "Mobile Number must start from 6-9",
         }));
       }
     }

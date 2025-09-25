@@ -1,27 +1,29 @@
-// Redux Auth State
-export interface AuthState {
-  token: string | null;
-  loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-}
-
-// Login Form Data
-export interface LoginFormData {
-  number: string;
+// ==========================
+// Core Form Data Interface
+// ==========================
+export interface FormDataBase {
+  name: string;
+  email: string;
+  phone: string;
+  gender: "" | "Male" | "Female" | "Other";
+  type: "" | "sponsored" | "paid";
+  address: string;
+  strNumber: string;
+  PINCode: string;
   password: string;
+  confirmPassword: string;
 }
 
-// Error Handling
-export interface ValidationErrors {
-  number?: string;
-  password?: string;
-  email?: string;
-  [key: string]: string | undefined; // flexible for future
-}
+// ==========================
+// Validation Errors (Generic)
+// ==========================
+export type ValidationErrors<T = FormDataBase> = Partial<Record<keyof T, string>> & {
+  general?: string; // global errors
+};
 
-
-// User / Patient Types
+// ==========================
+// User / API Types
+// ==========================
 export interface User {
   id: string;
   name: string;
@@ -30,18 +32,26 @@ export interface User {
   role: "doctor" | "patient" | "admin";
 }
 
-
-// Common API Response Type
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
 }
 
-// Regex Type
+// ==========================
+// Regex Collection
+// ==========================
 export interface RegexCollection {
   mobile: RegExp;
   password: RegExp;
   email: RegExp;
-  [key: string]: RegExp; 
+  pincode: RegExp;
+  [key: string]: RegExp;
 }
+
+  export interface PostOffice {
+    Name: string;
+    District: string;
+    Block: string;
+    State: string;
+  }

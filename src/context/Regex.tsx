@@ -4,6 +4,7 @@ export const regex: RegexCollection = {
   mobile: /^[6-9]\d{9}$/,
   password: /^[A-Za-z0-9!@#$%^&*]{6,20}$/,
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  pincode: /^[1-9][0-9]{5}$/,
 };
 
 const Regex = {
@@ -18,3 +19,4 @@ const Regex = {
 };
 
 export default Regex;
+

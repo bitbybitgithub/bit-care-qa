@@ -10,6 +10,9 @@ export interface FormDataBase {
   address: string;
   strNumber: string;
   PINCode: string;
+  city: string,
+  district: string,
+  state : string,
   password: string;
   confirmPassword: string;
 }

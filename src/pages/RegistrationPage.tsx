@@ -168,7 +168,6 @@ const navigate = useNavigate();
 
 
  const handleSubmit = async (e: React.FormEvent) => {
-  debugger;
   e.preventDefault();
   console.log(formData);
   const validationErrors = validateRegistration(formData as FormDataBase);

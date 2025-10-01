@@ -12,16 +12,12 @@ export const validateRegistration = (form: FormDataBase): Errors => {
     errors.phone = "must be 10 digits";
   }
   if (!form.phone?.trim()) errors.phone = "Contact No. required";
-  if (!form.password?.trim()) errors.password = "Password is requires";
-  if (!form.confirmPassword?.trim())
-    errors.confirmPassword = "Password is requires";
   if (form.email && !Regex.email.test(form.email)) {
     errors.email = "email is not valid";
   }
   if (form.PINCode && !Regex.pincode.test(form.PINCode)) {
     errors.PINCode = "must be a number";
   }
-  if (!form.type) errors.type = "Choose at least one";
 
   return errors;
 };

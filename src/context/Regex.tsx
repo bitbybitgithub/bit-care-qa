@@ -17,6 +17,5 @@ const Regex = {
   numeric: /^\d+$/,
   alphabets: /^[A-Za-z]+$/,
 };
-
 export default Regex;
 

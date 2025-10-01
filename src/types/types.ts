@@ -1,20 +1,19 @@
 // ==========================
 // Core Form Data Interface
-// ==========================
 export interface FormDataBase {
   name: string;
   email: string;
   phone: string;
-  gender: "" | "Male" | "Female" | "Other";
-  type: "" | "sponsored" | "paid";
+  type: string;
   address: string;
-  strNumber: string;
+  strNumber?: string;
   PINCode: string;
-  city: string,
-  district: string,
-  state : string,
+  area: string;
+  district: string;
+  state: string;
   password: string;
   confirmPassword: string;
+  number :string;
 }
 
 // ==========================
@@ -58,3 +57,11 @@ export interface RegexCollection {
     Block: string;
     State: string;
   }
+  // Request interfaces
+  // Interfaces moved to src/utils/sendOtpAndVerify.tsx to avoid duplication.
+  export type LocationItem = {
+  Block?: string;
+  State?: string;
+  District?: string;
+  Name?:string;
+};

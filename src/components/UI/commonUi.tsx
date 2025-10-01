@@ -1,1 +1,1 @@
-//generate Common UI components here
+//custon UI generate here

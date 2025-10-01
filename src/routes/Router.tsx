@@ -4,6 +4,7 @@ import Dashboard from "../features/component/Dashboard";
 import Registration from "../pages/RegistrationPage";
 import MainLayout from "../layout/main/MainLayout";
 import BlankLayout from "../layout/main/BlankLayout";
+import Users from "../features/component/Users";
 
 
 const Router = [
@@ -21,6 +22,9 @@ const Router = [
     element: <MainLayout />,
     children: [
       { path: '/dashboard', element: <Dashboard /> },
+      { path: '/users', element: <Users /> },
+
+
     ]
   }
 

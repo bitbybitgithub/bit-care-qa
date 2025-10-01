@@ -8,7 +8,6 @@ import {
   InputAdornment,
   IconButton,
   Autocomplete,
-  type SelectChangeEvent,
 } from "@mui/material";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -17,14 +16,14 @@ import type {
   ValidationErrors,
   LocationItem,
 } from "../types/types";
-import RegistrrationUi from "../assets/Registration_UI_design.png";
-import DocI from "../assets/DocWithEMR.png"
 import DocFaceMask from "../assets/blue-doctor-icon-png.png"
 import Regex, { regex } from "../context/Regex";
 import Otpverification from "../components/forms/Otpverification";
 import { validateRegistration } from "../Helper/ErrorHandler";
 import { getPincodeDetails } from "../api/ServiceApi";
 import { registerApi } from "../api/formApi";
+import { useNavigate } from "react-router-dom";
+
 
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -33,7 +32,7 @@ const Registration = () => {
     phone: "",
     type: "",
     address: "",
-    strNumber: "",
+    strNumber: "B3",
     PINCode: "",
     area: "",
     district: "",
@@ -42,7 +41,6 @@ const Registration = () => {
     confirmPassword: "",
     number: "",
   });
-
   const [districList, setDistricList] = useState<string[]>([]);
   const [stateList, setStateList] = useState<string[]>([]);
   const [areaList, setAreaList] = useState<string[]>([]);
@@ -55,18 +53,13 @@ const Registration = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [showEmailOtp, setShowEmailOtp] = useState(false);
 
+const navigate = useNavigate();
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-
   const fetchLocationList = (responseData: LocationItem[]) => {
     const stateList: string[] = [];
     const districtList: string[] = [];
@@ -181,44 +174,32 @@ const Registration = () => {
     }
   };
 
-  // const handlePostOfficeSelect = (
-  //   officeName: string,
-  //   officeData?: PostOffice
-  // ) => {
-  //   setSelectedOffice(officeName);
 
-  //   const selected =
-  //     officeData || postOffices.find((o) => o.Name === officeName);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const validationErrors = validateRegistration(formData as FormDataBase);
+  setErrors(validationErrors);
 
-  //   if (selected) {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       city: selected.Block || "",
-  //       district: selected.District || "",
-  //       state: selected.State || "",
-  //     }));
-  //   }
-  // };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validateRegistration(formData as FormDataBase);
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      setLoading(true);
-      try {
-        console.log("form data", formData);
-        const response = await registerApi(formData);
-        alert("Your Registration is Completed Successfully");
-        console.log("Registration API Response:", response);
-      } catch (err: any) {
-        setErrors({ general: err.message || "Registration failed" });
-      } finally {
-        setLoading(false);
+  if (Object.keys(validationErrors).length === 0) {
+    setLoading(true);
+    try {
+      const response = await registerApi(formData);
+      console.log("Registration API Response:", response);
+      if (response.isRegistered==true) {
+        alert("Registration Successful");
+        navigate("/login");
+      } else {
+        alert("Something Went Wrong");
       }
+    } catch (err: any) {
+      setErrors({ general: err.message || "Registration failed" });
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+};
+
+
 
   return (
     <Box className="bg-blue-400 text-center flex min-h-screen">
@@ -239,7 +220,7 @@ const Registration = () => {
             <TextField
               margin="dense"
               fullWidth
-              placeholder="Name"
+              placeholder="Clinic Name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}

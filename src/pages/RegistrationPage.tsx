@@ -14,7 +14,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import { MdEmail, MdLocationOn } from "react-icons/md";
+import { MdDiversity1, MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
 
 import type {
@@ -29,7 +29,8 @@ import Otpverification from "../components/forms/Otpverification";
 import { validateRegistration } from "../Helper/ErrorHandler";
 import { getPincodeDetails } from "../api/ServiceApi";
 import { registerApi } from "../api/formApi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -175,10 +176,10 @@ const Registration = () => {
         const response = await registerApi(formData);
         console.log("Registration API Response:", response);
         if (response.isRegistered == true) {
-          alert("Registration Successful");
+          toast.success("Registration Successful");
           navigate("/login");
         } else {
-          alert("Something Went Wrong");
+          toast.error("Something Went Wrong");
         }
       } catch (err: any) {
         setErrors({ general: err.message || "Registration failed" });
@@ -191,10 +192,9 @@ const Registration = () => {
   return (
     <Box className="bg-gray-100 min-h-screen flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-2xl flex w-full max-w-6xl overflow-hidden">
-        {/* Left Image Section */}
-        <div className="w-2/5 relative bg-blue-700 flex items-center justify-center hidden md:flex p-10">
+        <div className="w-2/5 relative bg-blue-700 items-center justify-center hidden md:flex p-10">
           <img
-            src={DrBgReg} // the background image with scattered icons
+            src={DrBgReg} 
             alt="Medical Icons Background"
             className="absolute inset-0 w-full h-full object-cover opacity-50 z-0"
           />
@@ -280,7 +280,6 @@ const Registration = () => {
                 </FormHelperText>
               </FormControl>
 
-              {/* {showOtp && <Otpverification type="MOBILE" identifier={formData.phone} />} */}
               <Dialog
                 open={showOtp} // Control visibility
                 onClose={() => setShowOtp(false)}
@@ -299,7 +298,6 @@ const Registration = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Email */}
               <FormControl fullWidth>
                 <TextField
                   placeholder="Email Address"
@@ -330,7 +328,6 @@ const Registration = () => {
                 </FormHelperText>
               </FormControl>
 
-              {/* {showEmailOtp && <Otpverification identifier={formData.email} type="EMAIL" />} */}
               <Dialog
                 open={showEmailOtp}
                 onClose={() => setShowEmailOtp(false)}
@@ -502,6 +499,14 @@ const Registration = () => {
                   {errors.general}
                 </Typography>
               )}
+              <div className="text-center col-span-2 text-sm">
+                <label>
+                  Already have an account? 
+                  <Link to="/login" className="text-blue-600 hover:underline cursor-pointer">
+                    Click Here to login
+                  </Link>
+                </label>
+              </div>
             </Box>
           </Container>
         </div>

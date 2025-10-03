@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import DailySchedule from "./DailySchedule";
 import UploadControl from "../../../components/forms/UploadControl";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const daysOfWeek = [
   "Monday",
@@ -41,14 +43,38 @@ const Profile: React.FC = () => {
       setPreview(null); // clear preview when removed
     }
   };
-  return (
-    <div className="max-w-11/12 mx-auto p-6 md:p-10 mt-4 bg-white shadow-lg rounded-2xl">
-      <h2 className="text-2xl md:text-2xl font-bold mb-5 text-gray-800">
-        Clinic App Settings
-      </h2>
 
+  const handleSave = () => {
+    if (!clinicLogo) {
+      toast.error("Please select a logo");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("clinic_logo", clinicLogo); // file
+    formData.append("clinic_id", "1"); // text fields must be string
+    formData.append("operational_hrs", clinicType);
+    formData.append("patient_demand", patientDemand);
+    formData.append("patient_reminder", sendReminders ? "1" : "0");
+
+    console.log(formData)
+    axios
+      .post(
+        "http://localhost:8989/api/clinics/update-clinic-profile",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
+      .then((res) => toast.success(res.data.message))
+      .catch((err) => toast.error(err.message));
+  };
+  return (
+    <div className=" mx-6 m-4 px-6 py-4  bg-white shadow-lg rounded-2xl">
       {/* Branding */}
-      <section className="mb-5">
+      <section className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">
           Clinic Branding
         </h3>
@@ -84,7 +110,7 @@ const Profile: React.FC = () => {
       </section>
 
       {/* Operational Hours */}
-      <section className="mb-5">
+      <section className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">
           Operational Hours & Patient Demand
         </h3>
@@ -133,7 +159,7 @@ const Profile: React.FC = () => {
       </section>
 
       {/* Communication */}
-      <section className="mb-5">
+      <section className="mb-4">
         <div className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition rounded-xl px-4 py-2 border">
           <span className="font-medium text-gray-700">
             Send follow-ups and reminders?
@@ -146,7 +172,7 @@ const Profile: React.FC = () => {
       </section>
 
       {/* Appointment length */}
-      <section className="mb-8">
+      <section className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">
           Appointment & Break Scheduling
         </h3>
@@ -161,7 +187,7 @@ const Profile: React.FC = () => {
       </section>
 
       {/* Daily Schedules */}
-      <section className="mb-8">
+      <section className="mb-5">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">
           Daily Schedule
         </h3>
@@ -178,6 +204,7 @@ const Profile: React.FC = () => {
         variant="contained"
         color="primary"
         fullWidth
+        onClick={handleSave}
         className="rounded-xl py-3 text-lg font-semibold shadow-md hover:shadow-lg transition">
         Save & Complete
       </Button>

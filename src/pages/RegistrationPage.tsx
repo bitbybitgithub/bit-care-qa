@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  CircularProgress,
 } from "@mui/material";
 import { MdDiversity1, MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
@@ -31,6 +32,7 @@ import { getPincodeDetails } from "../api/ServiceApi";
 import { registerApi } from "../api/formApi";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Snackbar, Alert } from "@mui/material";
 
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -56,7 +58,17 @@ const Registration = () => {
   const [showEmailOtp, setShowEmailOtp] = useState(false);
 
   const navigate = useNavigate();
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastSeverity, setToastSeverity] = useState<"success" | "error">(
+    "success"
+  );
 
+  const showToast = (message: string, severity: "success" | "error") => {
+    setToastMessage(message);
+    setToastSeverity(severity);
+    setToastOpen(true);
+  };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -116,13 +128,12 @@ const Registration = () => {
   useEffect(() => {
     const handleOtpFlow = async () => {
       if (formData.phone.length === 10) {
-        setShowOtp(true);
         if (!Regex.MOBILEREGEX.test(formData.phone)) {
           setErrors({ phone: "Number should start with 6,7,8,9" });
           return;
         }
-
         try {
+          setShowOtp(true);
           console.log("Pretend sending OTP to:", formData.phone);
           setErrors({});
         } catch (error) {
@@ -141,32 +152,51 @@ const Registration = () => {
     handleOtpFlow();
   }, [formData.phone]);
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-
-    if (name === "email") {
-      if (Regex.email.test(value)) {
-        setShowEmailOtp(true);
-        console.log("Pretend sending OTP to email:", value);
-      } else if (value.length > 0) {
-        setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
-        setShowEmailOtp(false);
-      } else {
-        setShowEmailOtp(false);
-      }
+    if (Regex.email.test(value)) {
+      setShowEmailOtp(true);
+      console.log("Pretend sending OTP to email:", value);
+    } else if (value.length > 0) {
+      setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
+      setShowEmailOtp(false);
+    } else {
+      setShowEmailOtp(false);
     }
   };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   console.log(formData);
+  //   const validationErrors = validateRegistration(formData as FormDataBase);
+  //   setErrors(validationErrors);
+
+  //   if (Object.keys(validationErrors).length === 0) {
+  //     setLoading(true);
+  //     try {
+  //       const response = await registerApi(formData);
+  //       console.log("Registration API Response:", response);
+  //       if (response.isRegistered == true) {
+  //         toast.success("Registration Successful");
+  //         navigate("/login");
+  //       } else {
+  //         toast.error("Something Went Wrong");
+  //       }
+  //     } catch (err: any) {
+  //       setErrors({ general: err.message || "Registration failed" });
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(formData);
+
     const validationErrors = validateRegistration(formData as FormDataBase);
     setErrors(validationErrors);
 
@@ -175,14 +205,21 @@ const Registration = () => {
       try {
         const response = await registerApi(formData);
         console.log("Registration API Response:", response);
-        if (response.isRegistered == true) {
-          toast.success("Registration Successful");
-          navigate("/login");
+        // const response = { isRegistered: true };
+        if (response.isRegistered === true) {
+          showToast(
+            `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.`,
+            "success"
+          );
+          setTimeout(() => {
+            navigate("/login");
+          }, 15000);
         } else {
-          toast.error("Something Went Wrong");
+          showToast("Something went wrong. Please try again.", "error");
         }
       } catch (err: any) {
         setErrors({ general: err.message || "Registration failed" });
+        showToast(err.message || "Registration failed", "error");
       } finally {
         setLoading(false);
       }
@@ -194,7 +231,7 @@ const Registration = () => {
       <div className="bg-white rounded-2xl shadow-2xl flex w-full max-w-6xl overflow-hidden">
         <div className="w-2/5 relative bg-blue-700 items-center justify-center hidden md:flex p-10">
           <img
-            src={DrBgReg} 
+            src={DrBgReg}
             alt="Medical Icons Background"
             className="absolute inset-0 w-full h-full object-cover opacity-50 z-0"
           />
@@ -210,6 +247,11 @@ const Registration = () => {
               component="form"
               onSubmit={handleSubmit}
               className="grid grid-cols-2 gap-4"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                }
+              }}
             >
               <Typography
                 variant="h5"
@@ -281,20 +323,29 @@ const Registration = () => {
               </FormControl>
 
               <Dialog
-                open={showOtp} // Control visibility
+                open={showOtp}
                 onClose={() => setShowOtp(false)}
                 maxWidth="xs"
                 fullWidth
               >
                 <DialogTitle className="flex justify-between items-center">
                   Enter OTP
-                  <IconButton onClick={() => setShowOtp(false)}>
-                    {/* <FaTimes /> */}
-                  </IconButton>
+                  <IconButton onClick={() => setShowOtp(false)} />
                 </DialogTitle>
 
                 <DialogContent>
-                  <Otpverification type="MOBILE" identifier={formData.phone} />
+                  <Otpverification
+                    type="MOBILE"
+                    identifier={formData.phone}
+                    onVerified={() => {
+                      setShowOtp(false);
+                      showToast("Mobile OTP verified successfully!", "success");
+                    }}
+                    onFailed={(error) => {
+                      setShowOtp(false);
+                      showToast(error, "error");
+                    }}
+                  />
                 </DialogContent>
               </Dialog>
 
@@ -305,7 +356,12 @@ const Registration = () => {
                   name="email"
                   size="small"
                   value={formData.email}
-                  onChange={handleEmailChange}
+                  onChange={(e) => {
+                    const { name, value } = e.target;
+                    setFormData((prev) => ({ ...prev, [name]: value }));
+                    setErrors((prev) => ({ ...prev, [name]: "" }));
+                  }}
+                  onBlur={(e) => handleEmailBlur(e)}
                   error={!!errors.email}
                   slotProps={{
                     input: {
@@ -336,15 +392,24 @@ const Registration = () => {
               >
                 <DialogTitle className="flex justify-between items-center">
                   Enter OTP
-                  <IconButton onClick={() => setShowEmailOtp(false)}>
-                    {/* <FaTimes /> */}
-                  </IconButton>
+                  <IconButton onClick={() => setShowEmailOtp(false)} />
                 </DialogTitle>
 
                 <DialogContent>
-                  <Otpverification type="EMAIL" identifier={formData.email} />
+                  <Otpverification
+                    type="EMAIL"
+                    identifier={formData.email}
+                    onVerified={() => {
+                      setShowEmailOtp(false);
+                      showToast("Email OTP verified successfully!", "success");
+                    }}
+                    onFailed={(error) => {
+                      showToast(error, "error");
+                    }}
+                  />
                 </DialogContent>
               </Dialog>
+
               <FormControl fullWidth>
                 <TextField
                   placeholder="Pincode"
@@ -491,9 +556,14 @@ const Registration = () => {
                   sx={{ backgroundColor: "#0f46c9", color: "#fff" }}
                   className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl py-2 transition"
                 >
-                  {loading ? "Registering..." : "Register"}
+                  {loading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Register"
+                  )}
                 </Button>
               </div>
+
               {errors.general && (
                 <Typography color="error" align="center" className="col-span-2">
                   {errors.general}
@@ -501,8 +571,11 @@ const Registration = () => {
               )}
               <div className="text-center col-span-2 text-sm">
                 <label>
-                  Already have an account? 
-                  <Link to="/login" className="text-blue-600 hover:underline cursor-pointer">
+                  Already have an account?
+                  <Link
+                    to="/login"
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
                     Click Here to login
                   </Link>
                 </label>
@@ -511,8 +584,24 @@ const Registration = () => {
           </Container>
         </div>
       </div>
+      <Snackbar
+        className="mt-2"
+        open={toastOpen}
+        onClose={() => setToastOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setToastOpen(false)}
+          severity={toastSeverity}
+          sx={{
+            width: "100%",
+            bgcolor: toastSeverity === "success" ? "#A7F3D0" : "#F87171",
+          }}
+        >
+          {toastMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
-
 export default Registration;

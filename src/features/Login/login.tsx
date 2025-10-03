@@ -7,6 +7,7 @@ import { loginSuccess } from "../../redux/authSlice";
 import type { AppDispatch } from "../../redux/store";
 import Regex from "../../context/Regex";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -371,7 +372,21 @@ const Login = () => {
                 >
                   Patient?
                 </span>
+               
               </p>
+              <footer>
+                  <p className="text-xs">
+              <span>Don't have and Account? 
+                <Link
+                    to="/register"
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
+                    Click Here to Register
+                  </Link>
+                </span>
+                </p>
+              </footer>
+             
             </form>
           </div>
 

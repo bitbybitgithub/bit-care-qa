@@ -42,7 +42,7 @@ const Profile: React.FC = () => {
     }
   };
   return (
-    <div className="max-w-4xl mx-auto p-6 md:p-10 bg-white shadow-lg rounded-2xl">
+    <div className="max-w-11/12 mx-auto p-6 md:p-10 mt-4 bg-white shadow-lg rounded-2xl">
       <h2 className="text-2xl md:text-2xl font-bold mb-5 text-gray-800">
         Clinic App Settings
       </h2>
@@ -166,10 +166,10 @@ const Profile: React.FC = () => {
           Daily Schedule
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* {daysOfWeek.map((day) => (
+          {daysOfWeek.map((day) => (
             <DailySchedule key={day} day={day} />
-          ))} */}
-          Comming Soon...
+          ))}
+          {/* Comming Soon... */}
         </div>
       </section>
 

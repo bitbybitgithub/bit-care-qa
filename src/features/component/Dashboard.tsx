@@ -286,7 +286,7 @@ const Dashboard = () => {
   }, []);
 
   const StatCard = ({ title, value }: { title: string; value: number | string }) => (
-    <div className="bg-blue-500 text-white rounded-2xl transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer shadow p-6 flex flex-col items-center justify-center min-w-[150px]">
+    <div className="bg-blue-700 text-white rounded-2xl transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer shadow p-6 flex flex-col items-center justify-center min-w-[150px]">
       {loading ? (
         <div className="loader border-t-4 border-white border-solid rounded-full w-10 h-10 animate-spin"></div>
       ) : error ? (

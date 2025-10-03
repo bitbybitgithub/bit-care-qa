@@ -121,7 +121,7 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="h-full bg-blue-500 text-white rounded-r-3xl p-4 flex flex-col transition-all duration-300">
+    <div className="h-full bg-blue-700 text-white rounded-r-3xl p-4 flex flex-col transition-all duration-300">
       {/* Logo */}
       <div className="mb-8 mt-2 flex items-center justify-center md:justify-start">
         {/* Icon on small screens */}
@@ -143,7 +143,7 @@ const Sidebar: React.FC = () => {
                 flex items-center justify-center md:justify-start gap-3 px-4 py-2 rounded-2xl font-medium transition-all duration-200
                 ${isActive
                   ? "bg-gray-100 text-blue-600 font-semibold shadow"
-                  : "hover:bg-blue-400 hover:text-black"}
+                  : "hover:bg-blue-200 hover:text-black"}
               `}
             >
               {/* Always show icon */}

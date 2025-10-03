@@ -189,7 +189,7 @@ const MainLayout = () => {
               <FaSignOutAlt className="text-red-500" /> Confirm Logout
             </h2>
             <p className="text-gray-600 mt-2">
-              Are you sure you want to log out of your account?
+              Are you sure you want to logout?
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button

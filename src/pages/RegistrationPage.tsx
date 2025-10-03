@@ -96,7 +96,9 @@ const Registration = () => {
   ) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (value.length <= 6) { 
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
     setErrors((prev) => ({ ...prev, [name]: "" }));
     if (name === "PINCode") {
       if (value.length < 6) {

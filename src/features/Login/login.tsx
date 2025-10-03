@@ -376,12 +376,12 @@ const Login = () => {
               </p>
               <footer>
                   <p className="text-xs">
-              <span>Don't have and Account? 
+              <span>Don't have an Account? 
                 <Link
                     to="/register"
-                    className="text-blue-600 hover:underline cursor-pointer"
+                    className="text-indigo-600 hover:underline cursor-pointer"
                   >
-                    Click Here to Register
+                    Register Clinic
                   </Link>
                 </span>
                 </p>

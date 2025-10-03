@@ -166,10 +166,10 @@ const Profile: React.FC = () => {
           Daily Schedule
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {daysOfWeek.map((day) => (
+          {/* {daysOfWeek.map((day) => (
             <DailySchedule key={day} day={day} />
-          ))}
-          {/* Comming Soon... */}
+          ))} */}
+          Comming Soon...
         </div>
       </section>
 

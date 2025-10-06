@@ -8,22 +8,23 @@ import type { AppDispatch } from "../../redux/store";
 import Regex from "../../context/Regex";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { loginApi } from "../../api/loginApi"; 
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const [isClinic, setIsClinic] = useState(false); // false = Patient, true = Clinic
+  const [isClinic, setIsClinic] = useState(true); // false = Patient, true = Clinic
   const [patientNumber, setPatientNumber] = useState("");
   const [patientPassword, setPatientPassword] = useState<string>("");
   const [clinicUserId, setClinicUserId] = useState("");
   const [clinicPassword, setClinicPassword] = useState<string>("");
   const [errors, setErrors] = useState({ number: "", password: "" });
   const [loading, setLoading] = useState(false);
+
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     if (isClinic) {
-      
       setClinicUserId(value);
       setErrors((prev) => ({ ...prev, number: "" }));
     } else {
@@ -47,9 +48,9 @@ const Login = () => {
     let val = e.target.value;
 
     if (isClinic) {
-      setClinicPassword(val); 
+      setClinicPassword(val);
     } else {
-      val = val.replace(/\D/g, ""); 
+      val = val.replace(/\D/g, "");
       setPatientPassword(val);
     }
 
@@ -61,69 +62,66 @@ const Login = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const number = isClinic ? clinicUserId : patientNumber;
-    const password = isClinic ? clinicPassword : patientPassword;
-    if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
-      toast.error("Invalid mobile number");
-      return;
-    }
-    if (errors.password) {
-      toast.error("Invalid password");
-      return;
-    }
+  const number = isClinic ? clinicUserId : patientNumber;
+  const password = isClinic ? clinicPassword : patientPassword;
 
-    if (isClinic) {
-      try {
-        setLoading(true);
+  if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
+    toast.error("Invalid mobile number");
+    return;
+  }
 
-        const requestBody = {
-          userId: number,
-          password: password,
-          ip_address: "192.168.2.44",
-          platform: "web",
-        };
+  if (errors.password) {
+    toast.error("Invalid password");
+    return;
+  }
 
-        console.log("API Request Body", requestBody);
+  if (isClinic) {
+    try {
+      setLoading(true);
 
-        const res = await fetch("http://localhost:8989/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
+      const requestBody = {
+        userId: number,
+        password: password,
+        ip_address: "192.168.2.44",
+        platform: "web",
+      };
 
-            console.log("Raw Response ", res); 
-        const data = await res.json();
-            console.log("Parsed Response JSON", data); 
-        if (res.ok && data.success) {
-          toast.success("Login successful");
+      console.log("Before calling loginApi", requestBody);
 
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("user", JSON.stringify(data.user));
+      const data = await loginApi(requestBody); // call the API
 
-          dispatch(loginSuccess());
-          navigate("/dashboard");
-        } else {
-          toast.error(data.message || "Login failed");
-        }
-      } catch (error) {
-        console.error("API Error:", error);
-        toast.error("Something went wrong. Please try again later.");
-      } finally {
-        setLoading(false);
+      console.log("After calling loginApi, response:", data);
+
+      if (data.success) {
+        toast.success("Login successful");
+
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        dispatch(loginSuccess());
+        navigate("/dashboard");
+      } else {
+        toast.error(data.message || "Login failed");
       }
-    } else {
-      toast.success("Patient login successful");
-      dispatch(loginSuccess());
-      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("API Error:", error.message || error);
+      toast.error(error.message || "Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  };
+  } else {
+    toast.success("Patient login successful");
+    dispatch(loginSuccess());
+    navigate("/dashboard");
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-300 to-blue-200 font-montserrat p-7">
       <div className="relative bg-white rounded-3xl shadow-lg overflow-hidden w-full max-w-2xl min-h-[450px]">
-
         {/* MOBILE TABS */}
         <div className="block md:hidden">
           <div className="flex justify-center bg-indigo-500 rounded-full p-1 mx-4 mt-4">
@@ -372,21 +370,17 @@ const Login = () => {
                 >
                   Patient?
                 </span>
-               
               </p>
               <footer>
-                  <p className="text-xs">
-              <span>Don't have an Account? 
-                <Link
-                    to="/register"
-                    className="text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    Register Clinic
-                  </Link>
-                </span>
+                <p className="text-xs">
+                  <span>
+                    Don't have an Account?{" "}
+                    <Link to="/register" className="text-indigo-600 hover:underline cursor-pointer">
+                      Register Clinic
+                    </Link>
+                  </span>
                 </p>
               </footer>
-             
             </form>
           </div>
 
@@ -417,3 +411,4 @@ const Login = () => {
 };
 
 export default Login;
+

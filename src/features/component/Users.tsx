@@ -11,30 +11,44 @@ const Users = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const colors = ["bg-blue-300", "bg-green-300", "bg-purple-300", "bg-yellow-300", "bg-pink-300"];
+
+  // Generate random pastel color
+  const getRandomColor = () => {
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 70%, 80%)`; // soft pastel tones
+  };
+
+  // Assign a random color to each doctor once
+  const doctorColors = React.useMemo(() => {
+    const map: Record<number, string> = {};
+    doctors.forEach((d) => {
+      map[d.id] = getRandomColor();
+    });
+    return map;
+  }, [doctors]);
 
   const handleEdit = (id: number) => {
-    const doc = doctors.find(d => d.id === id);
+    const doc = doctors.find((d) => d.id === id);
     if (doc) console.log("Edit doctor:", doc);
   };
 
   const handleDelete = (id: number) => {
-    const doc = doctors.find(d => d.id === id);
+    const doc = doctors.find((d) => d.id === id);
     if (doc && window.confirm(`Are you sure you want to delete ${doc.name}?`)) {
-      setDoctors(prev => prev.filter(d => d.id !== id));
+      setDoctors((prev) => prev.filter((d) => d.id !== id));
       console.log("Deleted doctor:", doc);
     }
   };
 
   const handleAddClinic = () => {
     console.log("Add new clinic clicked");
-    // Here you can navigate to a form or open a modal
   };
 
   // Filter doctors by search term
-  const filteredDoctors = doctors.filter(doc =>
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.specialist.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDoctors = doctors.filter(
+    (doc) =>
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.specialist.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -65,17 +79,21 @@ const Users = () => {
         {filteredDoctors.length === 0 ? (
           <p className="text-gray-500 text-center py-6">No doctors found.</p>
         ) : (
-          filteredDoctors.map((doc, index) => (
+          filteredDoctors.map((doc) => (
             <div
               key={doc.id}
               className="flex items-center justify-between bg-white shadow-md rounded-2xl p-3 hover:shadow-lg transition"
+              style={{ borderLeft: `6px solid ${doctorColors[doc.id]}` }}
             >
               <div className="flex items-center gap-3">
                 {/* Profile circle */}
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${colors[index % colors.length]}`}
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: doctorColors[doc.id] }}
                 >
-                  <span className="text-white font-bold text-lg">{doc.name[0]}</span>
+                  <span className="text-white font-bold text-lg">
+                    {doc.name[0]}
+                  </span>
                 </div>
 
                 <div className="flex flex-col">
@@ -88,7 +106,9 @@ const Users = () => {
                 {/* Status pill */}
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    doc.status === "Active" ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"
+                    doc.status === "Active"
+                      ? "text-green-700 bg-green-100"
+                      : "text-red-700 bg-red-100"
                   }`}
                 >
                   {doc.status}
@@ -117,3 +137,4 @@ const Users = () => {
 };
 
 export default Users;
+

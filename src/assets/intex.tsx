@@ -1,1 +1,0 @@
-//remove index file and add any svg's, images here and export them to be used in other files

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { CircularProgress, Box } from "@mui/material";
 import "./Otpverification.css";
+import { toast } from "react-toastify";
 
 interface Props {
   identifier: string;
@@ -10,7 +11,7 @@ interface Props {
   onFailed?: (error: string) => void;
 }
 
-const Otpverification: React.FC<Props> = ({ identifier, type, onVerified, onFailed }) => {
+const OtpVerification: React.FC<Props> = ({ identifier, type, onVerified, onFailed }) => {
   const [otp, setOtp] = useState<string[]>(new Array(4).fill(""));
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -42,10 +43,12 @@ const Otpverification: React.FC<Props> = ({ identifier, type, onVerified, onFail
         .then(() => {
           setLoading(false);
           onVerified?.();
+          toast.success("Mobile Verified Success")
         })
         .catch((err) => {
           setLoading(false);
           onFailed?.(err);
+          toast.error(err)
         });
     }
   }, [otp, identifier, type, onVerified, onFailed]);
@@ -93,10 +96,10 @@ function fakeVerifyOtp(
       if (otp === "1234") {
         resolve(`${type} ${identifier} verified with OTP ${otp}`);
       } else {
-        reject("Invalid OTP");
+        toast.error("Invalid OTP");
       }
     });
   });
 }
 
-export default Otpverification;
+export default OtpVerification;

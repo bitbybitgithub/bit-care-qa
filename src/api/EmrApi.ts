@@ -1,5 +1,5 @@
-const BASE_URL = "http://devapi.emrproject.com/api"; 
-// const BASE_URL = "http://localhost:5000/api";
+// const BASE_URL = "http://devapi.emrproject.com/api"; 
+const BASE_URL = "http://localhost:8989/api";
 
 const defaultHeaders: HeadersInit = {
   "Content-Type": "application/json",

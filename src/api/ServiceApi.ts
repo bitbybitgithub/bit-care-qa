@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PincodeUrl } from "../utils/Utils";
+import { PincodeUrl } from "../utils/Utils"; 
 
 export const getPincodeDetails = async (pincode: string) => {
   try {

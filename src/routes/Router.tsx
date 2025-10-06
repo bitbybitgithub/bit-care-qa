@@ -24,8 +24,6 @@ const Router = [
     children: [
       { path: '/dashboard', element: <Dashboard /> },
       { path: '/users', element: <Users /> },
-
-
       { path: '/clinic-settings', element: <Profile /> },
     ]
   }

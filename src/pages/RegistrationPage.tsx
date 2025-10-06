@@ -15,7 +15,7 @@ import {
   DialogTitle,
   CircularProgress,
 } from "@mui/material";
-import { MdDiversity1, MdEmail, MdLocationOn } from "react-icons/md";
+import { MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
 
 import type {
@@ -26,22 +26,19 @@ import type {
 import DocFaceMask from "../assets/DocStaff2.png";
 import DrBgReg from "../assets/DrBgReg.png";
 import Regex, { regex } from "../context/Regex";
-import Otpverification from "../components/forms/Otpverification";
 import { validateRegistration } from "../Helper/ErrorHandler";
 import { getPincodeDetails } from "../api/ServiceApi";
-import { registerApi } from "../api/formApi";
+import { registerApi } from "../api";
 import { useNavigate, Link } from "react-router-dom";
+import OtpVerification from "../components/common/OtpVerification";
 import { toast } from "react-toastify";
-import { Snackbar, Alert } from "@mui/material";
 
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
     name: "",
     email: "",
     phone: "",
-    type: "",
     address: "",
-    strNumber: "B3",
     PINCode: "",
     area: "",
     district: "",
@@ -58,22 +55,22 @@ const Registration = () => {
   const [showEmailOtp, setShowEmailOtp] = useState(false);
 
   const navigate = useNavigate();
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastSeverity, setToastSeverity] = useState<"success" | "error">(
-    "success"
-  );
 
-  const showToast = (message: string, severity: "success" | "error") => {
-    setToastMessage(message);
-    setToastSeverity(severity);
-    setToastOpen(true);
-  };
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  if (name === "name") {
+    let error = "";
+    if (!value.trim()) {
+      error = "Name is required";
+    } else if (value.length < 5) {
+      error = "Name must be at least 5 characters long";
+    } else if (!Regex.name.test(value)) {
+      error = "Cannot enter numbers or special characters";
+    }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  }
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
 
   const fetchLocationList = (responseData: LocationItem[]) => {
     const stateSet = new Set<string>();
@@ -96,7 +93,7 @@ const Registration = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (value.length <= 6) { 
+    if (value.length <= 6) {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
     setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -157,43 +154,21 @@ const Registration = () => {
   const handleEmailBlur = (
     e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
+    const { value } = e.target;
+    const trimmedValue = value.trim(); // Remove leading/trailing spaces
 
-    if (Regex.email.test(value)) {
+    if (Regex.email.test(trimmedValue)) {
       setShowEmailOtp(true);
-      console.log("Pretend sending OTP to email:", value);
-    } else if (value.length > 0) {
+      setErrors((prev) => ({ ...prev, email: "" })); // Clear any previous error
+      console.log("Pretend sending OTP to email:", trimmedValue);
+    } else if (trimmedValue.length > 0) {
       setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
       setShowEmailOtp(false);
     } else {
       setShowEmailOtp(false);
+      setErrors((prev) => ({ ...prev, email: "" })); // Clear error if empty
     }
   };
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   console.log(formData);
-  //   const validationErrors = validateRegistration(formData as FormDataBase);
-  //   setErrors(validationErrors);
-
-  //   if (Object.keys(validationErrors).length === 0) {
-  //     setLoading(true);
-  //     try {
-  //       const response = await registerApi(formData);
-  //       console.log("Registration API Response:", response);
-  //       if (response.isRegistered == true) {
-  //         toast.success("Registration Successful");
-  //         navigate("/login");
-  //       } else {
-  //         toast.error("Something Went Wrong");
-  //       }
-  //     } catch (err: any) {
-  //       setErrors({ general: err.message || "Registration failed" });
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,21 +182,22 @@ const Registration = () => {
       try {
         const response = await registerApi(formData);
         console.log("Registration API Response:", response);
-        // const response = { isRegistered: true };
+
         if (response.isRegistered === true) {
-          showToast(
-            `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.`,
-            "success"
+          toast.success(
+            `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.`
+   
           );
           setTimeout(() => {
             navigate("/login");
-          }, 15000);
+          }, 5000);
         } else {
-          showToast("Something went wrong. Please try again.", "error");
+          toast.error("Something went wrong. Please try again.");
         }
-      } catch (err: any) {
-        setErrors({ general: err.message || "Registration failed" });
-        showToast(err.message || "Registration failed", "error");
+      } catch (err) {
+        // Always show generic error message
+        setErrors({ general: "Registration failed" });
+        toast.error("Registration failed");
       } finally {
         setLoading(false);
       }
@@ -336,16 +312,16 @@ const Registration = () => {
                 </DialogTitle>
 
                 <DialogContent>
-                  <Otpverification
+                  <OtpVerification
                     type="MOBILE"
                     identifier={formData.phone}
                     onVerified={() => {
                       setShowOtp(false);
-                      showToast("Mobile OTP verified successfully!", "success");
+                      // toast.success("Mobile OTP verified successfully!");
                     }}
                     onFailed={(error) => {
                       setShowOtp(false);
-                      showToast(error, "error");
+                      toast.error(error);
                     }}
                   />
                 </DialogContent>
@@ -360,7 +336,8 @@ const Registration = () => {
                   value={formData.email}
                   onChange={(e) => {
                     const { name, value } = e.target;
-                    setFormData((prev) => ({ ...prev, [name]: value }));
+                    const cleanedValue = value.replace(/\s/g, "");
+                    setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
                     setErrors((prev) => ({ ...prev, [name]: "" }));
                   }}
                   onBlur={(e) => handleEmailBlur(e)}
@@ -398,15 +375,15 @@ const Registration = () => {
                 </DialogTitle>
 
                 <DialogContent>
-                  <Otpverification
+                  <OtpVerification
                     type="EMAIL"
                     identifier={formData.email}
                     onVerified={() => {
                       setShowEmailOtp(false);
-                      showToast("Email OTP verified successfully!", "success");
+                      toast.success("Email OTP verified successfully!");
                     }}
-                    onFailed={(error) => {
-                      showToast(error, "error");
+                    onFailed={(error: string) => {
+                      toast.error(error,);
                     }}
                   />
                 </DialogContent>
@@ -565,18 +542,12 @@ const Registration = () => {
                   )}
                 </Button>
               </div>
-
-              {errors.general && (
-                <Typography color="error" align="center" className="col-span-2">
-                  {errors.general}
-                </Typography>
-              )}
               <div className="text-center col-span-2 text-sm">
                 <label>
                   Already have an account?
                   <Link
                     to="/login"
-                    className="text-blue-600 hover:underline cursor-pointer"
+                    className="text-blue-600 hover:underline cursor-pointer ml-1"
                   >
                     Click Here to login
                   </Link>
@@ -586,23 +557,6 @@ const Registration = () => {
           </Container>
         </div>
       </div>
-      <Snackbar
-        className="mt-2"
-        open={toastOpen}
-        onClose={() => setToastOpen(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setToastOpen(false)}
-          severity={toastSeverity}
-          sx={{
-            width: "100%",
-            bgcolor: toastSeverity === "success" ? "#A7F3D0" : "#F87171",
-          }}
-        >
-          {toastMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

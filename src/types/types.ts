@@ -4,14 +4,11 @@ export interface FormDataBase {
   name: string;
   email: string;
   phone: string;
-  type: string;
   address: string;
-  strNumber?: string;
   PINCode: string;
   area: string;
   district: string;
   state: string;  
-  
 }
 
 // ==========================
@@ -43,9 +40,13 @@ export interface ApiResponse<T> {
 // ==========================
 export interface RegexCollection {
   mobile: RegExp;
-  password: RegExp;
   email: RegExp;
   pincode: RegExp;
+  name: RegExp;
+  state: RegExp;
+  district: RegExp;
+  area: RegExp;
+  address: RegExp;
   [key: string]: RegExp;
 }
 

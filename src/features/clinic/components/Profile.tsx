@@ -11,7 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import DailySchedule from "./DailySchedule";
-import UploadControl from "../../../components/forms/UploadControl";
+import UploadControl from "../../../components/common/UploadControl";
 import axios from "axios";
 import { toast } from "react-toastify";
 

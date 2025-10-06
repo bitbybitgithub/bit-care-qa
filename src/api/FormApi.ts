@@ -1,5 +1,5 @@
-import axios from "axios";
 import type { FormDataBase } from "../types/types";
+import { EmrApi } from "./EmrApi";
 const BASE_URL = "http://localhost:8989/api/clinics";
 
 export const registerApi = async (formData: FormDataBase) => {
@@ -15,11 +15,7 @@ export const registerApi = async (formData: FormDataBase) => {
       state: formData.state,
     };
   console.log("Register data",apiPayload)
-    const response = await axios.post(`${BASE_URL}/register`, apiPayload, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await EmrApi.post<any>(`${BASE_URL}/register`, apiPayload);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || error.message || "Registration failed");

@@ -1,4 +1,5 @@
-import React, { useState, DragEvent, ChangeEvent } from "react";
+import React, { useState } from "react";
+import type { DragEvent, ChangeEvent } from "react";
 import { IconContext } from "react-icons";
 import { FiUploadCloud, FiX } from "react-icons/fi";
 

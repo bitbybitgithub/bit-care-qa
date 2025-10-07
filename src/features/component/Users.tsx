@@ -72,9 +72,18 @@ const Users = () => {
                 className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
                 style={{ backgroundColor: doctorColors[doc.id] }}
               >
-                <span className="text-xl sm:text-2xl font-bold text-white">
+                {/* <span className="text-xl sm:text-2xl font-bold text-white">
                   {doc.name[0]}
-                </span>
+                </span> */}
+                <span className="text-xl sm:text-2xl font-bold text-white">
+  {doc.name
+    .split(" ")              // Split by space
+    .filter((w) => w.length > 0 && w.toLowerCase() !== "dr.") // Remove "Dr."
+    .map((w) => w[0])        // Take first letter of each name part
+    .join("")                
+    .toUpperCase()}          
+</span>
+
               </div>
 
               {/* Content */}
@@ -111,7 +120,7 @@ const Users = () => {
 
               {/* Edit Icon */}
               <button
-                onClick={() => setShowAddUser(true)}
+                // onClick={() => setShowAddUser(true)}
                 className="absolute top-4 right-4 text-gray-500 hover:text-blue-600"
                 title="Edit Doctor"
               >
@@ -125,7 +134,6 @@ const Users = () => {
       {/* Add User Modal */}
       {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
 
-      {/* Activate / Deactivate Modal */}
       {selectedDoctor && (
         <DeactivateUser
           doctor={selectedDoctor}

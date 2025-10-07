@@ -35,23 +35,24 @@ const OtpVerification: React.FC<Props> = ({ identifier, type, onVerified, onFail
     }
   };
 
-  useEffect(() => {
-    const otpValue = otp.join("");
-    if (otpValue.length === 4) {
-      setLoading(true);
-      fakeVerifyOtp(identifier, otpValue, type)
-        .then(() => {
-          setLoading(false);
-          onVerified?.();
-          toast.success("Mobile Verified Success")
-        })
-        .catch((err) => {
-          setLoading(false);
-          onFailed?.(err);
-          toast.error(err)
-        });
-    }
-  }, [otp, identifier, type, onVerified, onFailed]);
+useEffect(() => {
+  const otpValue = otp.join("");
+  if (otpValue.length === 4) {
+    setLoading(true);
+    fakeVerifyOtp(identifier, otpValue, type)
+      .then(() => {
+        setLoading(false);
+        onVerified?.();
+        toast.success("OTP Verified Success");
+      })
+      .catch((err) => {
+        setLoading(false);
+        onFailed?.(err);
+        toast.error(err);
+      });
+  }
+}, [otp]); 
+
 
   return (
     <Box className="otp-container flex flex-col items-center">

@@ -1,4 +1,5 @@
-import { useEffect, ReactNode } from 'react';
+import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface ScrollToTopProps {

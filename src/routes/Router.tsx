@@ -5,7 +5,7 @@ import Registration from "../pages/RegistrationPage";
 import MainLayout from "../layout/main/MainLayout";
 import BlankLayout from "../layout/main/BlankLayout";
 import Users from "../features/component/Users";
-import Profile from "../pages/Clinic/ProfilePage";
+import Profile from "../pages/clinic/ProfilePage";
 
 
 const Router = [

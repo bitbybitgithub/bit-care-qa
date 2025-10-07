@@ -5,7 +5,7 @@ import { TextField, Button, InputAdornment, CircularProgress } from "@mui/materi
 import { FaPhoneAlt, FaLock } from "react-icons/fa";
 import { loginSuccess } from "../../redux/authSlice";
 import type { AppDispatch } from "../../redux/store";
-import Regex from "../../context/Regex";
+import Regex from "../../helper/Regex";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { loginApi } from "../../api/loginApi"; 

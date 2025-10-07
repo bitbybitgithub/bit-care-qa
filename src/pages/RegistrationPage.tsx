@@ -25,8 +25,8 @@ import type {
 } from "../types/types";
 import DocFaceMask from "../assets/DocStaff2.png";
 import DrBgReg from "../assets/DrBgReg.png";
-import Regex, { regex } from "../context/Regex";
-import { validateRegistration } from "../Helper/ErrorHandler";
+import Regex, { regex } from "../helper/Regex";
+import { validateRegistration } from "../helper/ErrorHandler";
 import { getPincodeDetails } from "../api/ServiceApi";
 import { registerApi } from "../api";
 import { useNavigate, Link } from "react-router-dom";
@@ -56,21 +56,36 @@ const Registration = () => {
 
   const navigate = useNavigate();
 
-const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-  if (name === "name") {
-    let error = "";
-    if (!value.trim()) {
-      error = "Name is required";
-    } else if (value.length < 5) {
-      error = "Name must be at least 5 characters long";
-    } else if (!Regex.name.test(value)) {
-      error = "Cannot enter numbers or special characters";
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "name") {
+      let error = "";
+      if (!value.trim()) {
+        error = "Name is required";
+      } else if (value.length < 5) {
+        error = "Name must be at least 5 characters long";
+      } else if (!Regex.name.test(value)) {
+        error = "Cannot enter numbers or special characters";
+      }
+      setErrors((prev) => ({ ...prev, [name]: error }));
     }
-    setErrors((prev) => ({ ...prev, [name]: error }));
-  }
-  setFormData((prev) => ({ ...prev, [name]: value }));
-};
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "address") {
+      if (!Regex.address.test(value)) {
+        setErrors((prev) => ({
+          ...prev,
+          address: "Address must be at least 10 characters",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, address: "" }));
+      }
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const fetchLocationList = (responseData: LocationItem[]) => {
     const stateSet = new Set<string>();
@@ -166,9 +181,18 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setShowEmailOtp(false);
     } else {
       setShowEmailOtp(false);
-      setErrors((prev) => ({ ...prev, email: "" })); // Clear error if empty
+      setErrors((prev) => ({ ...prev, email: "" })); 
     }
   };
+
+  const handleEmailKeyDown = (
+  e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+) => {
+  if (e.key === " " && (e.currentTarget.selectionStart === 0 || e.currentTarget.value.length === 0)) {
+    e.preventDefault();
+  }
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,12 +205,9 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setLoading(true);
       try {
         const response = await registerApi(formData);
-        console.log("Registration API Response:", response);
-
         if (response.isRegistered === true) {
           toast.success(
             `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.`
-   
           );
           setTimeout(() => {
             navigate("/login");
@@ -195,7 +216,6 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           toast.error("Something went wrong. Please try again.");
         }
       } catch (err) {
-        // Always show generic error message
         setErrors({ general: "Registration failed" });
         toast.error("Registration failed");
       } finally {
@@ -317,11 +337,9 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                     identifier={formData.phone}
                     onVerified={() => {
                       setShowOtp(false);
-                      // toast.success("Mobile OTP verified successfully!");
                     }}
-                    onFailed={(error) => {
+                    onFailed={() => {
                       setShowOtp(false);
-                      toast.error(error);
                     }}
                   />
                 </DialogContent>
@@ -336,14 +354,15 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   value={formData.email}
                   onChange={(e) => {
                     const { name, value } = e.target;
-                    const cleanedValue = value.replace(/\s/g, "");
+                    const cleanedValue = value.replace(/\s/g, ""); // remove all spaces
                     setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
                     setErrors((prev) => ({ ...prev, [name]: "" }));
                   }}
-                  onBlur={(e) => handleEmailBlur(e)}
+                  onBlur={handleEmailBlur}
                   error={!!errors.email}
                   slotProps={{
                     input: {
+                      onKeyDown: handleEmailKeyDown,
                       startAdornment: (
                         <InputAdornment position="start">
                           <MdEmail className="text-gray-500" />
@@ -351,9 +370,8 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                       ),
                     },
                   }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                  }}
+                  sx={{"& .MuiOutlinedInput-root": {
+                      borderRadius: "0.75rem",},}}
                 />
                 <FormHelperText
                   error={!!errors.email}
@@ -383,7 +401,7 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                       toast.success("Email OTP verified successfully!");
                     }}
                     onFailed={(error: string) => {
-                      toast.error(error,);
+                      toast.error(error);
                     }}
                   />
                 </DialogContent>
@@ -510,7 +528,7 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   name="address"
                   size="small"
                   value={formData.address}
-                  onChange={handleInputChange}
+                  onChange={handleAddressChange}
                   error={!!errors.address}
                   multiline
                   rows={3}
@@ -520,8 +538,7 @@ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 />
                 <FormHelperText
                   error={!!errors.address}
-                  className="h-[20px] 
-                text-xs"
+                  className="h-[20px] text-xs"
                 >
                   {errors.address || ""}
                 </FormHelperText>

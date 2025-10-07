@@ -1,105 +1,3 @@
-// import { Outlet } from "react-router-dom";
-// import Sidebar from "../sidebar/Sidebar";
-// const MainLayout =() => {
-//     return (
-//         <div className="flex h-screen">
-//             {/* Sidebar - 20% width */}
-//             <div className="w-1/5 min-w-[200px] max-w-xs">
-//                 <Sidebar />
-//             </div>
-//             {/* Main Content - 80% width */}
-//             <div className="flex-1 bg-gray-100 p-3 overflow-auto">
-//                 <Outlet />
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default MainLayout;
-
-// import { Outlet, useLocation, useNavigate } from "react-router-dom";
-// import Sidebar from "../sidebar/Sidebar";
-// import { FaSignOutAlt } from "react-icons/fa";
-// import { useState } from "react";
-// import { useDispatch } from "react-redux";
-// import { logout } from "../../redux/authSlice"; // adjust import if needed
-
-// const MainLayout = () => {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-//   const dispatch = useDispatch();
-
-//   const [showConfirm, setShowConfirm] = useState(false);
-
-//   // convert path into readable title
-//   const getTitleFromPath = (pathname: string) => {
-//     const parts = pathname.split("/").filter(Boolean);
-//     if (parts.length === 0) return "Dashboard";
-//     return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" / ");
-//   };
-
-//   const title = getTitleFromPath(location.pathname);
-
-//   const handleLogout = () => {
-//     setShowConfirm(false); // close modal
-//     dispatch(logout());
-//     navigate("/login");
-//   };
-
-//   return (
-//     <div className="flex h-screen">
-//       {/* Sidebar */}
-//       <div className="w-16 md:w-1/5 min-w-[60px] md:min-w-[200px] max-w-xs transition-all duration-300">
-//         <Sidebar />
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="flex-1 bg-gray-100 p-3 overflow-auto">
-//         {/* Header */}
-//         <div className="flex justify-between items-center mt-2 bg-white p-4 ml-6 mr-6 shadow rounded-2xl">
-//           <h1 className="text-2xl font-bold">{title}</h1>
-//           <button
-//             onClick={() => setShowConfirm(true)}
-//             className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-2xl shadow hover:bg-red-600 transition"
-//           >
-//             <FaSignOutAlt />
-//             Logout
-//           </button>
-//         </div>
-
-//         {/* Page content */}
-//         <Outlet />
-//       </div>
-
-//       {/* Logout Confirmation Modal */}
-//        {showConfirm && (
-//           <div className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white border border-gray-200 shadow-lg rounded-xl p-4 z-50 animate-fadeIn">
-//             <h2 className="text-lg font-semibold text-gray-800">Confirm Logout</h2>
-//             <p className="text-sm text-gray-600 mt-1">
-//               Are you sure you want to log out?
-//             </p>
-//             <div className="flex justify-end gap-3 mt-4">
-//               <button
-//                 onClick={() => setShowConfirm(false)}
-//                 className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 onClick={handleLogout}
-//                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-//               >
-//                 Logout
-//               </button>
-//             </div>
-//           </div>
-//         )}
-//     </div>
-//   );
-// };
-
-// export default MainLayout;
-
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../sidebar/Sidebar";
 import { FaSignOutAlt } from "react-icons/fa";
@@ -141,7 +39,7 @@ const MainLayout = () => {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="w-16 md:w-1/5 min-w-[60px] md:min-w-[200px] max-w-xs transition-all duration-300">
+      <div className="w-16 md:w-1/5  rounded-r-3xl min-w-[60px] md:min-w-[200px] max-w-xs transition-all duration-300">
         <Sidebar />
       </div>
 

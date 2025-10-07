@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaUserEdit, FaPlus, FaSearch } from "react-icons/fa";
+import AddUser from "../../features/component/AddUser";
+import DeactivateUser from "./DeactivateUser";
 
 const Users = () => {
   const [doctors, setDoctors] = useState([
@@ -7,44 +9,23 @@ const Users = () => {
     { id: 2, name: "Dr. Rohan Verma", specialist: "Dermatologist", status: "Inactive" },
     { id: 3, name: "Dr. Priya Nair", specialist: "Pediatrician", status: "Active" },
     { id: 4, name: "Dr. Sameer Khan", specialist: "Orthopedic", status: "Active" },
-    { id: 5, name: "Dr. Neha Joshi", specialist: "Neurologist", status: "Inactive" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<null | typeof doctors[0]>(null);
 
-  // Generate random pastel color
   const getRandomColor = () => {
     const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 70%, 80%)`; // soft pastel tones
+    return `hsl(${hue}, 50%, 70%)`;
   };
 
-  // Assign a random color to each doctor once
   const doctorColors = React.useMemo(() => {
     const map: Record<number, string> = {};
-    doctors.forEach((d) => {
-      map[d.id] = getRandomColor();
-    });
+    doctors.forEach((d) => (map[d.id] = getRandomColor()));
     return map;
   }, [doctors]);
 
-  const handleEdit = (id: number) => {
-    const doc = doctors.find((d) => d.id === id);
-    if (doc) console.log("Edit doctor:", doc);
-  };
-
-  const handleDelete = (id: number) => {
-    const doc = doctors.find((d) => d.id === id);
-    if (doc && window.confirm(`Are you sure you want to delete ${doc.name}?`)) {
-      setDoctors((prev) => prev.filter((d) => d.id !== id));
-      console.log("Deleted doctor:", doc);
-    }
-  };
-
-  const handleAddClinic = () => {
-    console.log("Add new clinic clicked");
-  };
-
-  // Filter doctors by search term
   const filteredDoctors = doctors.filter(
     (doc) =>
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,89 +33,115 @@ const Users = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Header with Add Button and Search */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen mt-4 rounded-2xl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 mb-8 w-full">
+        {/* Add Button */}
         <button
-          onClick={handleAddClinic}
-          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl shadow transition"
+          onClick={() => setShowAddUser(true)}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-2xl shadow transition w-full sm:w-auto justify-center"
         >
-          <FaPlus /> Add New Clinic
+          <FaPlus /> Add New User
         </button>
 
-        <div className="relative w-full md:w-64">
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-64 mt-2 sm:mt-0">
           <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
             placeholder="Search doctor or specialist..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            className="w-full pl-10 pr-3 py-2 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
       </div>
 
-      {/* Doctor list */}
-      <div className="flex flex-col gap-3">
-        {filteredDoctors.length === 0 ? (
-          <p className="text-gray-500 text-center py-6">No doctors found.</p>
-        ) : (
-          filteredDoctors.map((doc) => (
+      {/* Doctor Cards */}
+      {filteredDoctors.length === 0 ? (
+        <p className="text-gray-500 text-center py-6">No doctors found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {filteredDoctors.map((doc) => (
             <div
               key={doc.id}
-              className="flex items-center justify-between bg-white shadow-md rounded-2xl p-3 hover:shadow-lg transition"
-              style={{ borderLeft: `6px solid ${doctorColors[doc.id]}` }}
+              className="relative bg-white border-b-4 rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:-translate-y-1 hover:shadow-xl w-full"
             >
-              <div className="flex items-center gap-3">
-                {/* Profile circle */}
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: doctorColors[doc.id] }}
-                >
-                  <span className="text-white font-bold text-lg">
-                    {doc.name[0]}
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <h2 className="font-semibold text-md">{doc.name}</h2>
-                  <p className="text-gray-500 text-sm">{doc.specialist}</p>
-                </div>
+              {/* Circle */}
+              <div
+                className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
+                style={{ backgroundColor: doctorColors[doc.id] }}
+              >
+                <span className="text-xl sm:text-2xl font-bold text-white">
+                  {doc.name[0]}
+                </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Status pill */}
+              {/* Content */}
+              <div className="mt-12">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-800">
+                  {doc.name}
+                </h2>
+                <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                  {doc.specialist}
+                </p>
+
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  className={`inline-block mt-3 px-3 py-1.5 rounded-full text-xs font-semibold ${
                     doc.status === "Active"
-                      ? "text-green-700 bg-green-100"
-                      : "text-red-700 bg-red-100"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
                   }`}
                 >
                   {doc.status}
                 </span>
-
-                {/* Action icons */}
-                <button
-                  onClick={() => handleEdit(doc.id)}
-                  className="p-1 text-blue-500 hover:text-blue-700"
-                >
-                  <FaEdit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="p-1 text-red-500 hover:text-red-700"
-                >
-                  <FaTrash size={16} />
-                </button>
               </div>
+
+              {/* Deactivate / Activate Button */}
+              <button
+                onClick={() => setSelectedDoctor(doc)}
+                className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow-md transition-all ${
+                  doc.status === "Active"
+                    ? "bg-gradient-to-r from-orange-400 to-yellow-500 hover:opacity-90"
+                    : "bg-gradient-to-r from-green-400 to-emerald-500 hover:opacity-90"
+                }`}
+              >
+                {doc.status === "Active" ? "Deactivate" : "Activate"}
+              </button>
+
+              {/* Edit Icon */}
+              <button
+                onClick={() => setShowAddUser(true)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-blue-600"
+                title="Edit Doctor"
+              >
+                <FaUserEdit size={16} />
+              </button>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
+
+      {/* Activate / Deactivate Modal */}
+      {selectedDoctor && (
+        <DeactivateUser
+          doctor={selectedDoctor}
+          onClose={() => setSelectedDoctor(null)}
+          onToggleStatus={(id, newStatus, phone) => {
+            setDoctors((prev) =>
+              prev.map((d) =>
+                d.id === id ? { ...d, status: newStatus, phone } : d
+              )
+            );
+            setSelectedDoctor(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default Users;
-

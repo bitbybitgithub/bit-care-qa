@@ -5,7 +5,7 @@ import { TextField, Button, InputAdornment, CircularProgress } from "@mui/materi
 import { FaPhoneAlt, FaLock } from "react-icons/fa";
 import { loginSuccess } from "../../redux/authSlice";
 import type { AppDispatch } from "../../redux/store";
-import Regex from "../../helper/Regex";
+import Regex from "../../Helper/Regex";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { loginApi } from "../../api/loginApi"; 
@@ -88,16 +88,16 @@ const Login = () => {
         platform: "web",
       };
 
-      console.log("Before calling loginApi", requestBody);
+      //  console.log("Before calling loginApi", requestBody);
 
-      const data = await loginApi(requestBody); // call the API
+        const data = await loginApi(requestBody); 
 
-      console.log("After calling loginApi, response:", data);
+      //  console.log("After calling loginApi, response:", data);
 
       if (data.success) {
         toast.success("Login successful");
 
-        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("accessToken", data.accessToken!);
         localStorage.setItem("user", JSON.stringify(data.user));
 
         dispatch(loginSuccess());
@@ -106,7 +106,7 @@ const Login = () => {
         toast.error(data.message || "Login failed");
       }
     } catch (error: any) {
-      console.error("API Error:", error.message || error);
+       console.error("API Error:", error.message || error);
       toast.error(error.message || "Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
@@ -205,6 +205,19 @@ const Login = () => {
               >
                 {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
               </Button>
+               {isClinic && (
+        <footer className="text-center">
+          <p className="text-xs mt-2">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-indigo-600 hover:underline cursor-pointer font-semibold"
+            >
+              Register Clinic
+            </Link>
+          </p>
+        </footer>
+      )}
             </form>
           </div>
         </div>
@@ -411,4 +424,3 @@ const Login = () => {
 };
 
 export default Login;
-

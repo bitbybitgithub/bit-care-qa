@@ -3,7 +3,7 @@ import Sidebar from "../sidebar/Sidebar";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { logout } from "../../redux/authSlice"; // adjust import if needed
+import { logout } from "../../redux/authSlice"; 
 
 const MainLayout = () => {
   const location = useLocation();
@@ -28,7 +28,7 @@ const MainLayout = () => {
       setShowConfirm(false);
       dispatch(logout());
       navigate("/login");
-    }, 300); // wait for animation
+    }, 300); 
   };
 
   const handleCancel = () => {
@@ -39,7 +39,7 @@ const MainLayout = () => {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="w-16 md:w-1/5  rounded-r-3xl min-w-[60px] md:min-w-[200px] max-w-xs transition-all duration-300">
+      <div className="w-16 md:w-1/5 rounded-r-3xl min-w-[60px] md:min-w-[200px] max-w-xs transition-all duration-300">
         <Sidebar />
       </div>
 
@@ -111,5 +111,3 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
-
-

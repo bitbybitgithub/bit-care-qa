@@ -1,19 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaUserEdit, FaPlus, FaSearch } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
 import DeactivateUser from "./DeactivateUser";
+import { getDoctorSpecializationList } from "../../api/DocListApi"; 
 
 const Users = () => {
-  const [doctors, setDoctors] = useState([
-    { id: 1, name: "Dr. Aditi Sharma", specialist: "Cardiologist", status: "Active" },
-    { id: 2, name: "Dr. Rohan Verma", specialist: "Dermatologist", status: "Inactive" },
-    { id: 3, name: "Dr. Priya Nair", specialist: "Pediatrician", status: "Active" },
-    { id: 4, name: "Dr. Sameer Khan", specialist: "Orthopedic", status: "Active" },
-  ]);
-
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState<null | typeof doctors[0]>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSpecializations = async () => {
+      try {
+        setLoading(true);
+        const data = await getDoctorSpecializationList();
+        console.log(" Specialization API response:", data);
+        const mappedDoctors = data.map((item: any, index: number) => ({
+          id: item.speciality_id,
+          name: `Dr. ${item.title} Specialist`, 
+          specialist: item.title,
+          status: item.is_active === "1" ? "Active" : "Inactive",
+        }));
+        // console.log("Mapped doctor list:", mappedDoctors);
+        setDoctors(mappedDoctors);
+      } catch (error) {
+        console.error("Failed to fetch doctor list", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpecializations();
+  }, []);
 
   const getRandomColor = () => {
     const hue = Math.floor(Math.random() * 360);
@@ -35,8 +55,7 @@ const Users = () => {
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen mt-4 rounded-2xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 mb-8 w-full">
-        {/* Add Button */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 w-full">
         <button
           onClick={() => setShowAddUser(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-2xl shadow transition w-full sm:w-auto justify-center"
@@ -44,7 +63,6 @@ const Users = () => {
           <FaPlus /> Add New User
         </button>
 
-        {/* Search Bar */}
         <div className="relative w-full sm:w-64 mt-2 sm:mt-0">
           <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
           <input
@@ -57,8 +75,10 @@ const Users = () => {
         </div>
       </div>
 
-      {/* Doctor Cards */}
-      {filteredDoctors.length === 0 ? (
+      {/* Loader */}
+      {loading ? (
+        <p className="text-center text-gray-500 py-10">Loading doctors...</p>
+      ) : filteredDoctors.length === 0 ? (
         <p className="text-gray-500 text-center py-6">No doctors found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -67,26 +87,23 @@ const Users = () => {
               key={doc.id}
               className="relative bg-white border-b-4 rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:-translate-y-1 hover:shadow-xl w-full"
             >
-              {/* Circle */}
+              {/* Circle Avatar */}
               <div
                 className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
                 style={{ backgroundColor: doctorColors[doc.id] }}
               >
-                {/* <span className="text-xl sm:text-2xl font-bold text-white">
-                  {doc.name[0]}
-                </span> */}
                 <span className="text-xl sm:text-2xl font-bold text-white">
-  {doc.name
-    .split(" ")              // Split by space
-    .filter((w) => w.length > 0 && w.toLowerCase() !== "dr.") // Remove "Dr."
-    .map((w) => w[0])        // Take first letter of each name part
-    .join("")                
-    .toUpperCase()}          
-</span>
+                 {doc.name
+                  .split(" ")
+                  .filter((w: string) => w.length > 0 && w.toLowerCase() !== "dr.")
+                  .map((w: string) => w[0])
+                  .join("")
+                  .toUpperCase()
+                  }
 
+                </span>
               </div>
 
-              {/* Content */}
               <div className="mt-12">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-800">
                   {doc.name}
@@ -94,7 +111,6 @@ const Users = () => {
                 <p className="text-gray-500 text-xs sm:text-sm mt-1">
                   {doc.specialist}
                 </p>
-
                 <span
                   className={`inline-block mt-3 px-3 py-1.5 rounded-full text-xs font-semibold ${
                     doc.status === "Active"
@@ -106,7 +122,6 @@ const Users = () => {
                 </span>
               </div>
 
-              {/* Deactivate / Activate Button */}
               <button
                 onClick={() => setSelectedDoctor(doc)}
                 className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow-md transition-all ${
@@ -118,9 +133,7 @@ const Users = () => {
                 {doc.status === "Active" ? "Deactivate" : "Activate"}
               </button>
 
-              {/* Edit Icon */}
               <button
-                // onClick={() => setShowAddUser(true)}
                 className="absolute top-4 right-4 text-gray-500 hover:text-blue-600"
                 title="Edit Doctor"
               >
@@ -131,9 +144,8 @@ const Users = () => {
         </div>
       )}
 
-      {/* Add User Modal */}
+      {/* Modals */}
       {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
-
       {selectedDoctor && (
         <DeactivateUser
           doctor={selectedDoctor}

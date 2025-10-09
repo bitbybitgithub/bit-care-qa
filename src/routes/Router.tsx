@@ -8,6 +8,7 @@ import Users from "../features/component/Users";
 import Profile from "../pages/Clinic/ProfilePage";
 import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
+import ResetPasswordPage from "../components/common/ResetPasswordPage";
 
 
 const Router = [
@@ -18,6 +19,7 @@ const Router = [
       { path: '/', element: <Navigate to="/login" /> },
       { path: '/register', element: <Registration /> },
       {path: '/login', exact: true, element: <Login /> },
+      {path: '/resetpassword', exact: true, element: <ResetPasswordPage /> },
     ]
   },
   {

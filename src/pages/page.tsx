@@ -1,1 +1,0 @@
-//create page component that can be reused across the application

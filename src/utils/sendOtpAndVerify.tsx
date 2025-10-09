@@ -1,6 +1,6 @@
 // src/utils/sendOtpAndVerify.tsx
 import axios from "axios";
-import { EmrApi } from "../api/EmrApi";
+import { emrAPI } from "../api/EmrApi";
 import { OtpType } from "../context/contextApi";
 import { API_BASE } from "./Utils";
 
@@ -14,7 +14,7 @@ export function sendOtp(sendOtpRequest: SendOtpRequest) {
   if (sendOtpRequest) {
     sendOtpRequest.IsExtOtpReq =
       sendOtpRequest.OtpType === OtpType.MOBILE_VERIFICATION;
-    return EmrApi.post("/GenerateOtp", sendOtpRequest);
+    return emrAPI.post("/GenerateOtp", sendOtpRequest);
   } else {
     throw new Error("Invalid sendOtpRequest: request object is required.");
   }

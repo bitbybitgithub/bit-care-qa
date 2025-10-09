@@ -1,5 +1,5 @@
 // loginApi.ts
-import { EmrApi } from "./EmrApi";
+import { emrAPI } from "./EmrApi";
 
 const BASE_URL = "/auth";
 
@@ -21,8 +21,7 @@ export const loginApi = async (
   formData: LoginFormData
 ): Promise<LoginResponse> => {
   try {
-    // EmrApi.post now returns data directly (not { data })
-    const response = await EmrApi.post<LoginResponse>(
+    const response = await emrAPI.post<LoginResponse>(
       `${BASE_URL}/login`,
       formData
     );

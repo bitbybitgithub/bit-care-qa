@@ -11,13 +11,12 @@ export interface FormDataBase {
   state: string;  
 }
 
-// ==========================
-// Validation Errors (Generic)
-// ==========================
-export type ValidationErrors<T = FormDataBase> = Partial<Record<keyof T, string>> & {
-  general?: string; // global errors
-};
-
+export interface ResetPassword {
+  phone:string;
+  otp:string;
+  password:string;
+  confirmPassword:string;
+}
 // ==========================
 // User / API Types
 // ==========================
@@ -63,4 +62,15 @@ export interface RegexCollection {
   State?: string;
   District?: string;
   Name?:string;
+};
+
+// ==========================
+// Validation Errors (Generic)
+// ==========================
+export type ValidationErrors<T = FormDataBase> = Partial<Record<keyof T, string>> & {
+  general?: string; // global errors
+};
+
+export type ResetPassErrors<T = ResetPassword> = Partial<Record<keyof T, string>> & {
+  general?: string; // global errors
 };

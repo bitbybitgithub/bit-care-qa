@@ -1,19 +1,25 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { TextField, Button, InputAdornment, CircularProgress } from "@mui/material";
+import {
+  TextField,
+  Button,
+  InputAdornment,
+  CircularProgress,
+} from "@mui/material";
 import { FaPhoneAlt, FaLock } from "react-icons/fa";
 import { loginSuccess } from "../../redux/authSlice";
 import type { AppDispatch } from "../../redux/store";
-import Regex from "../../Helper/Regex";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { loginApi } from "../../api/loginApi"; 
+import { loginApi } from "../../api/clinic/loginApi";
+import Regex from "../../helper/Regex";
+
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const [isClinic, setIsClinic] = useState(true); // false = Patient, true = Clinic
+  const [isClinic, setIsClinic] = useState(true);
   const [patientNumber, setPatientNumber] = useState("");
   const [patientPassword, setPatientPassword] = useState<string>("");
   const [clinicUserId, setClinicUserId] = useState("");
@@ -62,68 +68,72 @@ const Login = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const number = isClinic ? clinicUserId : patientNumber;
-  const password = isClinic ? clinicPassword : patientPassword;
+    const number = isClinic ? clinicUserId : patientNumber;
+    const password = isClinic ? clinicPassword : patientPassword;
 
-  if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
-    toast.error("Invalid mobile number");
-    return;
-  }
-
-  if (errors.password) {
-    toast.error("Invalid password");
-    return;
-  }
-
-  if (isClinic) {
-    try {
-      setLoading(true);
-
-      const requestBody = {
-        userId: number,
-        password: password,
-        ip_address: "192.168.2.44",
-        platform: "web",
-      };
-
-       console.log("Before calling loginApi", requestBody);
-
-        const data = await loginApi(requestBody); 
-
-       console.log("After calling loginApi, response:", data);
-
-      if (data.success) {
-        toast.success("Login successful");
-
-        localStorage.setItem("accessToken", data.accessToken!);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        dispatch(loginSuccess());
-        navigate("/dashboard");
-      } else {
-        toast.error(data.message || "Login failed");
-      }
-    } catch (error: any) {
-  console.error("API Error:", error?.response?.data || error);
-  const errMsg =
-    error?.response?.data?.message ||
-    error?.message ||
-    "Something went wrong. Please try again later.";
-  toast.error(errMsg);
-} finally {
-
-      setLoading(false);
+    if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
+      toast.error("Invalid mobile number");
+      return;
     }
-  }
-   else {
-    toast.success("Patient login successful");
-    dispatch(loginSuccess());
-    navigate("/dashboard");
-  }
-};
 
+    if (errors.password) {
+      toast.error("Invalid password");
+      return;
+    }
+
+    if (isClinic) {
+      try {
+        setLoading(true);
+
+        const requestBody = {
+          userId: number,
+          password: password,
+          ip_address: "192.168.2.44",
+          platform: "web",
+        };
+
+        console.log("Before calling loginApi", requestBody);
+
+        const data = await loginApi(requestBody);
+
+        console.log("After calling loginApi, response:", data);
+
+        
+        if (data.success) {
+
+          localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          if(data.user.is_temp_password ==="1")
+            {
+              setTimeout(() => {
+             navigate("/ResetPassword?from="+data.user.user_id);
+             toast.success("Please reset your temporary password");
+          }, 1000);
+            }
+            else{
+              navigate("/dashboard");
+              toast.success("Login successful");
+            }
+            dispatch(loginSuccess());
+        } else {
+          toast.error(data.message || "Login failed");
+        }
+      } catch (error: any) {
+        console.error("API Error:", error.message || error);
+        toast.error(
+          error.message || "Something went wrong. Please try again later."
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast.success("Patient login successful");
+      dispatch(loginSuccess());
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-300 to-blue-200 font-montserrat p-7">
@@ -174,7 +184,10 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
 
               <TextField
@@ -193,7 +206,10 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
 
               <Button
@@ -209,7 +225,11 @@ const Login = () => {
                 }
                 sx={{ borderRadius: "12px", py: 1, fontWeight: 600 }}
               >
-                {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
+                {loading ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : (
+                  "Login"
+                )}
               </Button>
                {isClinic && (
         <footer className="text-center">
@@ -233,7 +253,9 @@ const Login = () => {
           {/* Patient Login Panel */}
           <div
             className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic ? "left-0 translate-x-full opacity-0 z-10" : "left-0 opacity-100 z-50"
+              isClinic
+                ? "left-0 translate-x-full opacity-0 z-10"
+                : "left-0 opacity-100 z-50"
             }`}
           >
             <form
@@ -260,7 +282,10 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
 
               <TextField
@@ -279,11 +304,17 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
 
               <div className="text-right -mt-2 mb-3 w-full">
-                <a href="#" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                <a
+                  href="#"
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
                   Forgot Password?
                 </a>
               </div>
@@ -292,7 +323,12 @@ const Login = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={!patientNumber || !patientPassword || !!errors.number || !!errors.password}
+                disabled={
+                  !patientNumber ||
+                  !patientPassword ||
+                  !!errors.number ||
+                  !!errors.password
+                }
                 sx={{
                   width: "65%",
                   borderRadius: "12px",
@@ -319,7 +355,9 @@ const Login = () => {
           {/* Clinic Login Panel */}
           <div
             className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic ? "left-1/2 opacity-100 z-50" : "left-1/2 -translate-x-full opacity-0 z-10"
+              isClinic
+                ? "left-1/2 opacity-100 z-50"
+                : "left-1/2 -translate-x-full opacity-0 z-10"
             }`}
           >
             <form
@@ -343,7 +381,10 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
 
               <TextField
@@ -362,14 +403,29 @@ const Login = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" }, mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                  mb: 2,
+                }}
               />
-
+              <div className="text-left -mt-2 mb-3 w-full">
+                <Link
+                  to="/ResetPassword?from=login"
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={!clinicUserId || !clinicPassword || !!errors.password || loading}
+                disabled={
+                  !clinicUserId ||
+                  !clinicPassword ||
+                  !!errors.password ||
+                  loading
+                }
                 sx={{
                   width: "65%",
                   borderRadius: "12px",
@@ -378,7 +434,11 @@ const Login = () => {
                   "&:hover": { backgroundColor: "#4338ca" },
                 }}
               >
-                {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
+                {loading ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : (
+                  "Login"
+                )}
               </Button>
 
               <p className="text-sm mt-2">
@@ -390,11 +450,15 @@ const Login = () => {
                   Patient?
                 </span>
               </p>
+
               <footer>
                 <p className="text-xs">
                   <span>
                     Don't have an Account?{" "}
-                    <Link to="/register" className="text-indigo-600 hover:underline cursor-pointer">
+                    <Link
+                      to="/register"
+                      className="text-indigo-600 hover:underline cursor-pointer"
+                    >
                       Register Clinic
                     </Link>
                   </span>
@@ -406,19 +470,25 @@ const Login = () => {
           {/* Toggle Panel */}
           <div
             className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${
-              isClinic ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none" : ""
+              isClinic
+                ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
+                : ""
             }`}
           >
             <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-white items-center justify-center text-center px-8">
               {isClinic ? (
                 <div className="space-y-2 animate-fadeIn">
                   <h1 className="text-2xl font-bold">Welcome, Clinic!</h1>
-                  <p className="text-sm opacity-90">Login to manage patients and records.</p>
+                  <p className="text-sm opacity-90">
+                    Login to manage patients and records.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2 animate-fadeIn">
                   <h1 className="text-2xl font-bold">Welcome Back, Patient!</h1>
-                  <p className="text-sm opacity-90">Access your health records and appointments.</p>
+                  <p className="text-sm opacity-90">
+                    Access your health records and appointments.
+                  </p>
                 </div>
               )}
             </div>

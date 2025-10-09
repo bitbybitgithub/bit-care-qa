@@ -6,18 +6,18 @@ import {
   Typography,
   Box,
   InputAdornment,
-  IconButton,
   Autocomplete,
   FormControl,
   FormHelperText,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   CircularProgress,
 } from "@mui/material";
 import { MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
-
+import { toast } from "react-toastify";
+import { useNavigate, Link } from "react-router-dom";
+import { validateRegistration } from "../helper/ErrorHandler";
+import { getPincodeDetails } from "../api/ServiceApi";
+import { registerApi } from "../api";
 import type {
   FormDataBase,
   ValidationErrors,
@@ -26,13 +26,6 @@ import type {
 import DocFaceMask from "../assets/DocStaff2.png";
 import DrBgReg from "../assets/DrBgReg.png";
 import Regex, { regex } from "../helper/Regex";
-import { validateRegistration } from "../helper/ErrorHandler";
-import { getPincodeDetails } from "../api/ServiceApi";
-import { registerApi } from "../api";
-import { useNavigate, Link } from "react-router-dom";
-import OtpVerification from "../components/common/OtpVerification";
-import { toast } from "react-toastify";
-
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
     name: "",
@@ -44,15 +37,24 @@ const Registration = () => {
     district: "",
     state: "",
   });
-  const [districList, setDistricList] = useState<string[]>([]);
-  const [stateList, setStateList] = useState<string[]>([]);
-  const [areaList, setAreaList] = useState<string[]>([]);
+
+  const [otpData, setOtpData] = useState({
+    mobileOtp: "",
+    emailOtp: "",
+  });
+
+  const [verified, setVerified] = useState({
+    mobile: false,
+    email: false,
+  });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [loading, setLoading] = useState(false);
-
   const [showOtp, setShowOtp] = useState(false);
   const [showEmailOtp, setShowEmailOtp] = useState(false);
+  const [districList, setDistricList] = useState<string[]>([]);
+  const [stateList, setStateList] = useState<string[]>([]);
+  const [areaList, setAreaList] = useState<string[]>([]);
 
   const navigate = useNavigate();
 
@@ -60,13 +62,11 @@ const Registration = () => {
     const { name, value } = e.target;
     if (name === "name") {
       let error = "";
-      if (!value.trim()) {
-        error = "Name is required";
-      } else if (value.length < 5) {
+      if (!value.trim()) error = "Name is required";
+      else if (value.length < 5)
         error = "Name must be at least 5 characters long";
-      } else if (!Regex.name.test(value)) {
+      else if (!Regex.name.test(value))
         error = "Cannot enter numbers or special characters";
-      }
       setErrors((prev) => ({ ...prev, [name]: error }));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -85,6 +85,95 @@ const Registration = () => {
       }
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 10) {
+      setFormData((prev) => ({ ...prev, phone: value }));
+    }
+  };
+
+  useEffect(() => {
+    if (formData.phone.length === 10 && !verified.mobile) {
+      if (!Regex.MOBILEREGEX.test(formData.phone)) {
+        setErrors({ phone: "Number should start with 6,7,8,9" });
+        return;
+      }
+      setShowOtp(true);
+      toast.info("OTP sent to your mobile");
+      console.log("Send OTP to:", formData.phone);
+      setErrors({});
+    } else if (formData.phone.length < 10) {
+      setShowOtp(false);
+      setOtpData((prev) => ({ ...prev, mobileOtp: "" }));
+    }
+  }, [formData.phone]);
+
+  const handleMobileOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 6) {
+      setOtpData((prev) => ({ ...prev, mobileOtp: value }));
+    }
+
+    if (value.length === 6) {
+      if (value === "123456") {
+        toast.success("Mobile OTP verified successfully!");
+        setVerified((prev) => ({ ...prev, mobile: true }));
+        setShowOtp(false);
+      } else {
+        toast.error("Invalid mobile OTP!");
+        setOtpData((prev) => ({ ...prev, mobileOtp: "" }));
+        setVerified((prev) => ({ ...prev, mobile: false }));
+      }
+    }
+  };
+
+  const handleEmailKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    if (
+      e.key === " " &&
+      (e.currentTarget.selectionStart === 0 ||
+        e.currentTarget.value.length === 0)
+    ) {
+      e.preventDefault();
+    }
+  };
+  const handleEmailBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { value } = e.target;
+    const cleanedValue = value.replace(/\s/g, "");
+    setFormData((prev) => ({ ...prev, email: cleanedValue }));
+    setErrors((prev) => ({ ...prev, email: "" }));
+
+    if (Regex.email.test(cleanedValue) && !verified.email) {
+      toast.info("OTP sent to your email");
+      console.log("Send email OTP to:", cleanedValue);
+      setShowEmailOtp(true);
+    } else {
+      setShowEmailOtp(false);
+      setOtpData((prev) => ({ ...prev, emailOtp: "" }));
+    }
+  };
+
+  const handleEmailOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 6) {
+      setOtpData((prev) => ({ ...prev, emailOtp: value }));
+    }
+    if (value.length === 6) {
+      if (value === "123456") {
+        toast.success("Email OTP verified successfully!");
+        setVerified((prev) => ({ ...prev, email: true }));
+        setShowEmailOtp(false);
+      } else {
+        toast.error("Invalid email OTP!");
+        setOtpData((prev) => ({ ...prev, emailOtp: "" }));
+        setVerified((prev) => ({ ...prev, email: false }));
+      }
+    }
   };
 
   const fetchLocationList = (responseData: LocationItem[]) => {
@@ -131,83 +220,23 @@ const Registration = () => {
       }
     }
   };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 10) {
-      setFormData((prev) => ({ ...prev, phone: value }));
-    }
-  };
-
-  useEffect(() => {
-    const handleOtpFlow = async () => {
-      if (formData.phone.length === 10) {
-        if (!Regex.MOBILEREGEX.test(formData.phone)) {
-          setErrors({ phone: "Number should start with 6,7,8,9" });
-          return;
-        }
-        try {
-          setShowOtp(true);
-          console.log("Pretend sending OTP to:", formData.phone);
-          setErrors({});
-        } catch (error) {
-          console.error("Send OTP failed:", error);
-          setErrors({ phone: "Failed to send OTP. Try again." });
-        }
-      } else if (formData.phone.length > 0 && formData.phone.length < 10) {
-        setShowOtp(false);
-        setErrors({ phone: "Invalid number" });
-      } else {
-        setShowOtp(false);
-        setErrors({});
-      }
-    };
-
-    handleOtpFlow();
-  }, [formData.phone]);
-
-  const handleEmailBlur = (
-    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { value } = e.target;
-    const trimmedValue = value.trim(); // Remove leading/trailing spaces
-
-    if (Regex.email.test(trimmedValue)) {
-      setShowEmailOtp(true);
-      setErrors((prev) => ({ ...prev, email: "" })); // Clear any previous error
-      console.log("Pretend sending OTP to email:", trimmedValue);
-    } else if (trimmedValue.length > 0) {
-      setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
-      setShowEmailOtp(false);
-    } else {
-      setShowEmailOtp(false);
-      setErrors((prev) => ({ ...prev, email: "" })); 
-    }
-  };
-
-  const handleEmailKeyDown = (
-  e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
-) => {
-  if (e.key === " " && (e.currentTarget.selectionStart === 0 || e.currentTarget.value.length === 0)) {
-    e.preventDefault();
-  }
-};
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(formData);
-
     const validationErrors = validateRegistration(formData as FormDataBase);
     setErrors(validationErrors);
-
     if (Object.keys(validationErrors).length === 0) {
       setLoading(true);
       try {
         const response = await registerApi(formData);
-        if (response.isRegistered === true) {
+        console.log("Registration API Response:", response);
+        if (response.success === true) {
           toast.success(
-            `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.`
+            `Welcome ${formData.name}!\nYour registration request has been submitted successfully. We will verify your clinic and notify you once it’s approved.
+            Your User ID: ${response.data.user_id}
+            Temporary Password: ${response.data.password}
+            Please change your password after your first login.
+            `
           );
           setTimeout(() => {
             navigate("/login");
@@ -227,41 +256,33 @@ const Registration = () => {
   return (
     <Box className="bg-gray-100 min-h-screen flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-2xl flex w-full max-w-6xl overflow-hidden">
-        <div className="w-2/5 relative bg-blue-700 items-center justify-center hidden md:flex p-10">
+        <div className="w-2/5 relative bg-blue-700 hidden md:flex items-center justify-center p-10">
           <img
             src={DrBgReg}
-            alt="Medical Icons Background"
-            className="absolute inset-0 w-full h-full object-cover opacity-50 z-0"
+            alt="bg"
+            className="absolute inset-0 w-full h-full object-cover opacity-50"
           />
           <img
             src={DocFaceMask}
-            alt="Doctor with Mask"
-            className="relative  rounded-lg shadow-lg z-10"
+            alt="doctor"
+            className="relative rounded-lg shadow-lg z-10"
           />
         </div>
+
         <div className="w-full md:w-3/5 p-8 flex items-center justify-center">
           <Container>
             <Box
               component="form"
               onSubmit={handleSubmit}
               className="grid grid-cols-2 gap-4"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                }
-              }}
             >
               <Typography
                 variant="h5"
-                sx={{
-                  fontWeight: "bold",
-                  fontFamily: "'Playfair Display', serif",
-                  marginBottom: "10px",
-                }}
-                className="col-span-2 text-center font-bold text-blue-800"
+                className="col-span-2 text-center font-bold text-blue-800 mb-2"
               >
                 Register Your Clinic
               </Typography>
+
               <FormControl fullWidth>
                 <TextField
                   placeholder="Clinic Name"
@@ -270,83 +291,50 @@ const Registration = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   error={!!errors.name}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <FaHospital className="text-gray-500" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaHospital className="text-gray-500" />
+                      </InputAdornment>
+                    ),
                   }}
                 />
-                <FormHelperText
-                  error={!!errors.name}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.name || ""}
-                </FormHelperText>
+                <FormHelperText error>{errors.name}</FormHelperText>
               </FormControl>
 
-              <FormControl fullWidth>
+              <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
+                  fullWidth
                   placeholder="Mobile Number"
                   size="small"
                   value={formData.phone}
                   onChange={handleNumberChange}
                   error={!!errors.phone}
+                  disabled={verified.mobile}
                   inputProps={{ maxLength: 10 }}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <FaPhoneAlt className="text-gray-500" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaPhoneAlt className="text-gray-500" />
+                      </InputAdornment>
+                    ),
                   }}
                 />
-                <FormHelperText
-                  error={!!errors.phone}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.phone || ""}
-                </FormHelperText>
-              </FormControl>
-
-              <Dialog
-                open={showOtp}
-                onClose={() => setShowOtp(false)}
-                maxWidth="xs"
-                fullWidth
-              >
-                <DialogTitle className="flex justify-between items-center">
-                  Enter OTP
-                  <IconButton onClick={() => setShowOtp(false)} />
-                </DialogTitle>
-
-                <DialogContent>
-                  <OtpVerification
-                    type="MOBILE"
-                    identifier={formData.phone}
-                    onVerified={() => {
-                      setShowOtp(false);
-                    }}
-                    onFailed={() => {
-                      setShowOtp(false);
-                    }}
+                {showOtp && !verified.mobile && (
+                  <TextField
+                    placeholder="Enter OTP"
+                    size="small"
+                    value={otpData.mobileOtp}
+                    onChange={handleMobileOtpChange}
+                    inputProps={{ maxLength: 6 }}
+                    sx={{ width: "65%" }}
                   />
-                </DialogContent>
-              </Dialog>
+                )}
+              </Box>
 
-              <FormControl fullWidth>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <TextField
+                  fullWidth
                   placeholder="Email Address"
                   type="email"
                   name="email"
@@ -370,179 +358,92 @@ const Registration = () => {
                       ),
                     },
                   }}
-                  sx={{"& .MuiOutlinedInput-root": {
-                      borderRadius: "0.75rem",},}}
                 />
-                <FormHelperText
-                  error={!!errors.email}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.email || ""}
-                </FormHelperText>
-              </FormControl>
-
-              <Dialog
-                open={showEmailOtp}
-                onClose={() => setShowEmailOtp(false)}
-                maxWidth="xs"
-                fullWidth
-              >
-                <DialogTitle className="flex justify-between items-center">
-                  Enter OTP
-                  <IconButton onClick={() => setShowEmailOtp(false)} />
-                </DialogTitle>
-
-                <DialogContent>
-                  <OtpVerification
-                    type="EMAIL"
-                    identifier={formData.email}
-                    onVerified={() => {
-                      setShowEmailOtp(false);
-                      toast.success("Email OTP verified successfully!");
-                    }}
-                    onFailed={(error: string) => {
-                      toast.error(error);
-                    }}
+                {showEmailOtp && !verified.email && (
+                  <TextField
+                    placeholder="Enter OTP"
+                    size="small"
+                    value={otpData.emailOtp}
+                    onChange={handleEmailOtpChange}
+                    inputProps={{ maxLength: 6 }}
+                    sx={{ width: "65%" }}
                   />
-                </DialogContent>
-              </Dialog>
+                )}
+              </Box>
 
-              <FormControl fullWidth>
-                <TextField
-                  placeholder="Pincode"
-                  name="PINCode"
-                  value={formData.PINCode}
-                  size="small"
-                  onChange={handlePincodeChange}
-                  error={!!errors.PINCode}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                  }}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <MdLocationOn className="text-gray-500" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-                <FormHelperText
-                  error={!!errors.PINCode}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.PINCode || ""}
-                </FormHelperText>
-              </FormControl>
-              <FormControl fullWidth>
-                <Autocomplete
-                  disabled={stateList.length === 0}
-                  options={stateList}
-                  value={formData.state || null}
-                  onChange={(e, newValue) =>
-                    setFormData((prev) => ({ ...prev, state: newValue || "" }))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="State"
-                      error={!!errors.state}
-                      size="small"
-                      sx={{
-                        "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                      }}
-                    />
-                  )}
-                />
-                <FormHelperText
-                  error={!!errors.state}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.state || ""}
-                </FormHelperText>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <Autocomplete
-                  disabled={districList.length === 0}
-                  options={districList}
-                  size="small"
-                  value={formData.district || null}
-                  onChange={(e, newValue) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      district: newValue || "",
-                    }))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="District"
-                      error={!!errors.district}
-                      sx={{
-                        "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                      }}
-                    />
-                  )}
-                />
-                <FormHelperText
-                  error={!!errors.district}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.district || ""}
-                </FormHelperText>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <Autocomplete
-                  disabled={areaList.length === 0}
-                  options={areaList}
-                  size="small"
-                  value={formData.area || null}
-                  onChange={(e, newValue) =>
-                    setFormData((prev) => ({ ...prev, area: newValue || "" }))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="Area"
-                      error={!!errors.area}
-                      sx={{
-                        "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                      }}
-                    />
-                  )}
-                />
-                <FormHelperText
-                  error={!!errors.area}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.area || ""}
-                </FormHelperText>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <TextField
-                  placeholder="Address"
-                  name="address"
-                  size="small"
-                  value={formData.address}
-                  onChange={handleAddressChange}
-                  error={!!errors.address}
-                  multiline
-                  rows={3}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { borderRadius: "0.75rem" },
-                  }}
-                />
-                <FormHelperText
-                  error={!!errors.address}
-                  className="h-[20px] text-xs"
-                >
-                  {errors.address || ""}
-                </FormHelperText>
-              </FormControl>
+              <TextField
+                placeholder="Pincode"
+                name="PINCode"
+                size="small"
+                value={formData.PINCode}
+                onChange={handlePincodeChange}
+                error={!!errors.PINCode}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <MdLocationOn className="text-gray-500" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Autocomplete
+                disabled={stateList.length === 0}
+                options={stateList}
+                value={formData.state || null}
+                onChange={(e, val) =>
+                  setFormData((p) => ({ ...p, state: val || "" }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="State"
+                    size="small"
+                    error={!!errors.district}
+                  />
+                )}
+              />
+              <Autocomplete
+                disabled={districList.length === 0}
+                options={districList}
+                value={formData.district || null}
+                onChange={(e, val) =>
+                  setFormData((p) => ({ ...p, district: val || "" }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    error={!!errors.district}
+                    placeholder="District"
+                    size="small"
+                  />
+                )}
+              />
+              <Autocomplete
+                disabled={areaList.length === 0}
+                options={areaList}
+                value={formData.area || null}
+                onChange={(e, val) =>
+                  setFormData((p) => ({ ...p, area: val || "" }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Area"
+                    size="small"
+                    error={!!errors.area}
+                  />
+                )}
+              />
+              <TextField
+                placeholder="Address"
+                name="address"
+                size="small"
+                value={formData.address}
+                onChange={handleAddressChange}
+                error={!!errors.address}
+                multiline
+                rows={3}
+              />
 
               <div className="col-span-2 mt-2">
                 <Button
@@ -550,7 +451,6 @@ const Registration = () => {
                   fullWidth
                   disabled={loading}
                   sx={{ backgroundColor: "#0f46c9", color: "#fff" }}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl py-2 transition"
                 >
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />
@@ -559,12 +459,13 @@ const Registration = () => {
                   )}
                 </Button>
               </div>
+
               <div className="text-center col-span-2 text-sm">
                 <label>
                   Already have an account?
                   <Link
                     to="/login"
-                    className="text-blue-600 hover:underline cursor-pointer ml-1"
+                    className="text-blue-600 hover:underline ml-1"
                   >
                     Click Here to login
                   </Link>
@@ -577,4 +478,5 @@ const Registration = () => {
     </Box>
   );
 };
+
 export default Registration;

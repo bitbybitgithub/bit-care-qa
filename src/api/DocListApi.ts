@@ -1,12 +1,48 @@
-import { EmrApi } from "./EmrApi"; 
+import { EmrApi } from "./EmrApi";
+import type { AxiosResponse } from "axios";
 
-const BASE_URL = "/master"; 
-export const getDoctorSpecializationList = async (): Promise<any[]> => {
+export interface Doctor {
+  id: number;
+  name: string;
+  qualification: string;
+  specialist: string;
+  license_no: string;
+  status: "Active" | "Inactive";
+  phone?: string;
+}
+
+// Specialize map
+const specializationMap: Record<number, string> = {
+  1: "Cardiology",
+  2: "Dermatology",
+  3: "Neurology",
+  4: "Orthopedics",
+  5: "Homeopathy",
+};
+
+export const getDoctorList = async (): Promise<Doctor[]> => {
   try {
-    const response = await EmrApi.get<any[]>(`${BASE_URL}/getSpecialization`);
-    return response; 
+    const response: AxiosResponse<any> = await EmrApi.post("/doctors/getdoctorlist", { clinic_id: 1 });
+
+    console.log("Full API response:", response); 
+
+    if (!response || !response?.doctorList) {
+      throw new Error("doctorList is missing in API response");
+    }
+
+    console.log(response)
+    const mappedDoctors: Doctor[] = response?.doctorList.map((d: any) => ({
+      id: d.doctor_id,
+      name: d.name,
+      qualification: d.qualification,
+      specialist: specializationMap[d.specialization] || "Unknown",
+      license_no: d.license_no,
+      status: d.isActive === "1" ? "Active" : "Inactive",
+    }));
+
+    return mappedDoctors;
   } catch (error: any) {
-    console.error("Error fetching specialization list:", error);
+    console.error("Error fetching doctor list:", error);
     throw error;
   }
 };

@@ -2,29 +2,22 @@ import React, { useEffect, useState } from "react";
 import { FaUserEdit, FaPlus, FaSearch } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
 import DeactivateUser from "./DeactivateUser";
-import { getDoctorSpecializationList } from "../../api/DocListApi"; 
-
-const Users = () => {
-  const [doctors, setDoctors] = useState<any[]>([]);
+import { getDoctorList } from "../../api/DocListApi";
+import type { Doctor } from "../../api/DocListApi";
+const Users: React.FC = () => {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSpecializations = async () => {
+    const fetchDoctors = async () => {
       try {
         setLoading(true);
-        const data = await getDoctorSpecializationList();
-        console.log(" Specialization API response:", data);
-        const mappedDoctors = data.map((item: any, index: number) => ({
-          id: item.speciality_id,
-          name: `Dr. ${item.title} Specialist`, 
-          specialist: item.title,
-          status: item.is_active === "1" ? "Active" : "Inactive",
-        }));
-        // console.log("Mapped doctor list:", mappedDoctors);
-        setDoctors(mappedDoctors);
+        const response = await getDoctorList();
+        console.log("Doctor List API response:", response);
+        setDoctors(response);
       } catch (error) {
         console.error("Failed to fetch doctor list", error);
       } finally {
@@ -32,7 +25,7 @@ const Users = () => {
       }
     };
 
-    fetchSpecializations();
+    fetchDoctors();
   }, []);
 
   const getRandomColor = () => {
@@ -49,12 +42,12 @@ const Users = () => {
   const filteredDoctors = doctors.filter(
     (doc) =>
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialist.toLowerCase().includes(searchTerm.toLowerCase())
+      (doc.specialist?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen mt-4 rounded-2xl">
-      {/* Header */}
+      
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 w-full">
         <button
           onClick={() => setShowAddUser(true)}
@@ -74,8 +67,7 @@ const Users = () => {
           />
         </div>
       </div>
-
-      {/* Loader */}
+      
       {loading ? (
         <p className="text-center text-gray-500 py-10">Loading doctors...</p>
       ) : filteredDoctors.length === 0 ? (
@@ -93,15 +85,15 @@ const Users = () => {
                 style={{ backgroundColor: doctorColors[doc.id] }}
               >
                 <span className="text-xl sm:text-2xl font-bold text-white">
-                 {doc.name
-                  .split(" ")
-                  .filter((w: string) => w.length > 0 && w.toLowerCase() !== "dr.")
-                  .map((w: string) => w[0])
-                  .join("")
-                  .toUpperCase()
-                  }
-
+                {doc.name
+                .replace(/^Dr\.\s*/i, "") 
+                .split(" ")
+                .filter((w) => w.length > 0) 
+                .map((w) => w[0]) 
+                .join("")
+                .toUpperCase()}
                 </span>
+
               </div>
 
               <div className="mt-12">
@@ -146,7 +138,7 @@ const Users = () => {
 
       {/* Modals */}
       {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
-      {selectedDoctor && (
+      {/* {selectedDoctor && (
         <DeactivateUser
           doctor={selectedDoctor}
           onClose={() => setSelectedDoctor(null)}
@@ -159,9 +151,10 @@ const Users = () => {
             setSelectedDoctor(null);
           }}
         />
-      )}
+      )} */}
     </div>
   );
 };
 
 export default Users;
+

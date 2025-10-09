@@ -18,6 +18,13 @@ const Sidebar: React.FC = () => {
     { title: "Clinic Operations", link: "/clinic-operations", icon: <FaHospital /> },
   ];
 
+  // const Menus: MenuItem[] = [
+  //   { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
+  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
+  //   { title: "Manage availability", link: "/manage", icon: <FaCog /> },
+  // ];
+  
+
   return (
     <div className="h-full bg-blue-700 text-white rounded-r-3xl p-4 flex flex-col transition-all duration-300">
       {/* Logo */}

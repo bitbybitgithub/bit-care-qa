@@ -1,5 +1,3 @@
-
-
 // loginApi.ts
 import { EmrApi } from "./EmrApi";
 
@@ -23,14 +21,15 @@ export const loginApi = async (
   formData: LoginFormData
 ): Promise<LoginResponse> => {
   try {
+    // EmrApi.post now returns data directly (not { data })
     const response = await EmrApi.post<LoginResponse>(
       `${BASE_URL}/login`,
       formData
     );
-    return response;
+
+    return response; 
   } catch (error: any) {
     console.error("Login API error:", error);
     throw new Error(error?.message || "Login failed");
   }
 };
-

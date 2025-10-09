@@ -88,11 +88,11 @@ const Login = () => {
         platform: "web",
       };
 
-      //  console.log("Before calling loginApi", requestBody);
+       console.log("Before calling loginApi", requestBody);
 
         const data = await loginApi(requestBody); 
 
-      //  console.log("After calling loginApi, response:", data);
+       console.log("After calling loginApi, response:", data);
 
       if (data.success) {
         toast.success("Login successful");
@@ -106,12 +106,18 @@ const Login = () => {
         toast.error(data.message || "Login failed");
       }
     } catch (error: any) {
-       console.error("API Error:", error.message || error);
-      toast.error(error.message || "Something went wrong. Please try again later.");
-    } finally {
+  console.error("API Error:", error?.response?.data || error);
+  const errMsg =
+    error?.response?.data?.message ||
+    error?.message ||
+    "Something went wrong. Please try again later.";
+  toast.error(errMsg);
+} finally {
+
       setLoading(false);
     }
-  } else {
+  }
+   else {
     toast.success("Patient login successful");
     dispatch(loginSuccess());
     navigate("/dashboard");

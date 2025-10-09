@@ -5,7 +5,9 @@ import Registration from "../pages/RegistrationPage";
 import MainLayout from "../layout/main/MainLayout";
 import BlankLayout from "../layout/main/BlankLayout";
 import Users from "../features/component/Users";
-import Profile from "../pages/clinic/ProfilePage";
+import Profile from "../pages/Clinic/ProfilePage";
+import DoctorProfile from "../features/component/DocProfile";
+import DocDashboard from "../features/component/DocDashboard";
 
 
 const Router = [
@@ -25,6 +27,9 @@ const Router = [
       { path: '/dashboard', element: <Dashboard /> },
       { path: '/users', element: <Users /> },
       { path: '/clinic-settings', element: <Profile /> },
+      { path: '/profile', element: <DoctorProfile /> },
+      { path: '/docdashboard', element: <DocDashboard /> },
+
     ]
   }
 

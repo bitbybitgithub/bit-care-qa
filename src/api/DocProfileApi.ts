@@ -1,5 +1,5 @@
 // src/api/docProfileApi.ts
-import { EmrApi } from "./EmrApi";
+import {emrAPI } from "./EmrApi";
 
 export interface DoctorProfileResponse {
   clinic_id: number;
@@ -16,7 +16,7 @@ export const getDoctorProfile = async (
   doctor_id: number
 ): Promise<DoctorProfileResponse> => {
   try {
-    const response = await EmrApi.post<DoctorProfileResponse>(
+    const response = await emrAPI.post<DoctorProfileResponse>(
       "/doctors/getdoctorProfile",
       { doctor_id }
     );

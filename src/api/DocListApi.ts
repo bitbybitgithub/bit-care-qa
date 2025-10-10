@@ -1,4 +1,4 @@
-import { EmrApi } from "./EmrApi";
+import { emrAPI } from "./EmrApi";
 import type { AxiosResponse } from "axios";
 
 export interface Doctor {
@@ -22,7 +22,7 @@ const specializationMap: Record<number, string> = {
 
 export const getDoctorList = async (): Promise<Doctor[]> => {
   try {
-    const response: AxiosResponse<any> = await EmrApi.post("/doctors/getdoctorlist", { clinic_id: 1 });
+    const response: AxiosResponse<any> = await emrAPI.post("/doctors/getdoctorlist", { clinic_id: 1 });
 
     console.log("Full API response:", response); 
 

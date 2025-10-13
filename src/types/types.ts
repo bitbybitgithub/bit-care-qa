@@ -1,3 +1,4 @@
+import { Dayjs } from "dayjs";
 // ==========================
 // Core Form Data Interface
 export interface FormDataBase {
@@ -14,6 +15,7 @@ export interface FormDataBase {
 export interface ResetPassword {
   phone:string;
   otp:string;
+  userId:number;
   password:string;
   confirmPassword:string;
 }
@@ -72,5 +74,30 @@ export type ValidationErrors<T = FormDataBase> = Partial<Record<keyof T, string>
 };
 
 export type ResetPassErrors<T = ResetPassword> = Partial<Record<keyof T, string>> & {
+  general?: string; // global errors
+};
+
+
+
+export interface BlockedSlot {
+  start: string;
+  end: string;
+  reason: string;
+}
+
+export interface DailySchedule {
+  date: string; // YYYY-MM-DD
+  blocks: BlockedSlot[];
+}
+
+export interface AvailabilityProps {
+  schedule: DailySchedule[];
+  selectedDate: Dayjs;
+  setSelectedDate: (date: Dayjs) => void;
+  addBlock: (block: BlockedSlot) => void;
+  replaceFullDayBlock: () => void;
+}
+
+export type DoctorCalendar<T = AvailabilityProps> = Partial<Record<keyof T, string>> & {
   general?: string; // global errors
 };

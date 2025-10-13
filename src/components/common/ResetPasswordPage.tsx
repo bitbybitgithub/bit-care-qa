@@ -26,18 +26,16 @@ const ResetPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     mobile: "",
-    userId: "",
+    userId : "",
     otp: "",
     newPassword: "",
     confirmPassword: "",
   });
+  const userId = Number(localStorage.getItem("userId")) || 0;
   const [search] = useSearchParams();
   const navigate = useNavigate();
   const from = search.get("from");
-  const showMobileBox = from === "login";
-
-  console.log("first time form", search.get("from"));
-  console.log("showMobileBox", showMobileBox);
+  const showMobileBox = from === "forgotenPassword";
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -73,7 +71,7 @@ const ResetPasswordPage: React.FC = () => {
   };
 
   const handleVerifyOtp = () => {
-    if (formData.otp === "1234") {
+    if (formData.otp === "123456") {
       setIsOtpVerified(true);
       setShowOtp(false);
       toast.success("OTP verified successfully");
@@ -83,25 +81,6 @@ const ResetPasswordPage: React.FC = () => {
       setIsOtpVerified(false);
     }
   };
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!formData.newPassword || !formData.confirmPassword) {
-  //     toast.error("Please fill both password fields");
-  //     return;
-  //   }
-  //   else if (formData.newPassword !== formData.confirmPassword) {
-  //     toast.error("Passwords do not match");
-  //     setErrors({ confirmPassword: "Passwords do not match" });
-  //     return;
-  //   }
-  //   else  {
-  //     // const response = await registerApi();
-  //   }
-  //   toast.success("Password reset successfully");
-  //   console.log("Form submitted:", formData);
-  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +107,7 @@ const ResetPasswordPage: React.FC = () => {
       const payload = {
         phone: formData.mobile || "",
         otp: formData.otp,
+        userId: Number(userId),
         password: formData.newPassword,
         confirmPassword: formData.confirmPassword,
       };
@@ -218,7 +198,7 @@ const ResetPasswordPage: React.FC = () => {
                   size="small"
                   value={formData.otp}
                   onChange={handleChange}
-                  inputProps={{ maxLength: 4 }}
+                  inputProps={{ maxLength: 6 }}
                   sx={{ width: "40%" }}
                 />
               )}
@@ -232,7 +212,7 @@ const ResetPasswordPage: React.FC = () => {
               fullWidth
               sx={{ mb: 2 }}
               onClick={handleVerifyOtp}
-              disabled={formData.otp.length !== 4}
+              disabled={formData.otp.length !== 6}
             >
               Verify OTP
             </Button>

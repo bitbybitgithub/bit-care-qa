@@ -24,12 +24,13 @@ export const registerApi = async (formData: FormDataBase) => {
 export const resetPasswordApi = async (formData: ResetPassword) => {
   try {
     const resetPayload = {
-      mobile_number: formData.phone,
+      phone: formData.phone,
+      userId: Number(formData.userId),
       otp: formData.otp,
-      new_password: formData.password,
+      newPassword: formData.password,
     };
 console.log("Reset Data",resetPayload)
-const response = await emrAPI.post<any>(`/reset-password`, resetPayload);
+const response = await emrAPI.post<any>(`/auth/reset-password`, resetPayload);
 return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || error.message || "Password reset failed");

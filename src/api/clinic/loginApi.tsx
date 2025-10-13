@@ -1,7 +1,5 @@
-import axios from "axios";
 import { emrAPI } from "../EmrApi";
 
-const BASE_URL = "http://localhost:8989/api/auth";
 
 interface LoginFormData {
   userId: string;

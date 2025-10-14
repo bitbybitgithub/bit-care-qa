@@ -167,7 +167,7 @@ const Login = () => {
             </h2>
             <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
               <TextField
-                label={isClinic ? "User Id" : "Mobile Number"}
+                label={isClinic ? "User Name" : "Mobile Number"}
                 value={isClinic ? clinicUserId : patientNumber}
                 size="small"
                 onChange={handleNumberChange}
@@ -367,7 +367,7 @@ const Login = () => {
               </h1>
 
               <TextField
-                label="User Id"
+                label="User Name"
                 value={clinicUserId}
                 onChange={handleNumberChange}
                 size="small"

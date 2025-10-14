@@ -13,11 +13,9 @@ export interface FormDataBase {
 }
 
 export interface ResetPassword {
-  phone:string;
-  otp:string;
+  // otp:string;
   userId:number;
-  password:string;
-  confirmPassword:string;
+  newPassword:string;
 }
 // ==========================
 // User / API Types

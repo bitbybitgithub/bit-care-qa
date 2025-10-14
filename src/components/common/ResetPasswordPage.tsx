@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -10,59 +10,22 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { FaPhoneAlt } from "react-icons/fa";
-import type { ResetPassErrors } from "../../types/types";
-import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { registerApi, resetPasswordApi } from "../../api";
-import Regex from "../../helper/Regex";
+import { resetPasswordApi } from "../../api";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [errors, setErrors] = useState<ResetPassErrors>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
-    mobile: "",
-    userId : "",
-    otp: "",
+    userId: Number(localStorage.getItem("userId")) || 0,
     newPassword: "",
     confirmPassword: "",
   });
-  const userId = Number(localStorage.getItem("userId")) || 0;
-  const [search] = useSearchParams();
+
   const navigate = useNavigate();
-  const from = search.get("from");
-  const showMobileBox = from === "forgotenPassword";
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 10) {
-      setFormData((prev) => ({ ...prev, mobile: value }));
-    }
-  };
-
-  useEffect(() => {
-    if (formData.mobile.length === 10) {
-      if (!Regex.MOBILEREGEX.test(formData.mobile)) {
-        setErrors({ phone: "Number should start with 6,7,8,9" });
-        setShowOtp(false);
-        return;
-      }
-
-      setErrors({});
-      setShowOtp(true);
-      toast.success("OTP sent to your mobile number");
-      console.log("Pretend sending OTP to:", formData.mobile);
-    } else if (formData.mobile.length > 0 && formData.mobile.length < 10) {
-      setShowOtp(false);
-      setErrors({ phone: "Invalid number" });
-    } else {
-      setShowOtp(false);
-    }
-  }, [formData.mobile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,63 +33,48 @@ const ResetPasswordPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleVerifyOtp = () => {
-    if (formData.otp === "123456") {
-      setIsOtpVerified(true);
-      setShowOtp(false);
-      toast.success("OTP verified successfully");
-    } else {
-      toast.error("Invalid OTP. Please try again.");
-      setFormData((prev) => ({ ...prev, otp: "" }));
-      setIsOtpVerified(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (showMobileBox && !formData.mobile) {
-      toast.error("Mobile number is required");
+    if (!formData.userId) {
+      toast.error("User ID is required");
       return;
     }
-    if (showMobileBox && !isOtpVerified) {
-      toast.error("Please verify OTP first");
-      return;
-    }
+
     if (!formData.newPassword || !formData.confirmPassword) {
       toast.error("Please fill both password fields");
       return;
     }
+
     if (formData.newPassword !== formData.confirmPassword) {
       toast.error("Passwords do not match");
       setErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
+
     try {
       setLoading(true);
       const payload = {
-        phone: formData.mobile || "",
-        otp: formData.otp,
-        userId: Number(userId) || Number(formData.userId),
-        password: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+        userId: Number(formData.userId),
+        newPassword: formData.newPassword,
+
       };
-      console.log("Final Payload before API:", payload);
+
+      console.log("Reset Password Payload:", payload);
+
       const response = await resetPasswordApi(payload);
-      toast.success(response?.message || "Password reset successfully");
-      console.log("API Response:", response);
+      toast.success(response?.message || "Password reset successful");
+
       setFormData({
-        mobile: "",
-        userId: "",
-        otp: "",
+        userId: Number(localStorage.getItem("userId")) || 0,
         newPassword: "",
         confirmPassword: "",
       });
-      setIsOtpVerified(false);
+
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Password reset failed");
       console.error("Reset Password Error:", error);
+      toast.error(error.message || "Password reset failed");
     } finally {
       setLoading(false);
     }
@@ -151,72 +99,34 @@ const ResetPasswordPage: React.FC = () => {
           borderRadius: 2,
         }}
       >
-        {showMobileBox ? (
-          <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2}>
-            Create new password
-          </Typography>
-        ) : (
-          <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2}>
-            Reset Your Password
-          </Typography>
-        )}
+        <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2}>
+          Reset Your Password
+        </Typography>
+
         <Typography
           variant="body2"
           textAlign="center"
           mb={3}
           color="text.secondary"
         >
-          Enter and confirm your new password
+          Enter your User ID and new password
         </Typography>
+
         <form onSubmit={handleSubmit} noValidate>
-          {showMobileBox && (
-            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-              <TextField
-                fullWidth
-                placeholder="Mobile Number"
-                size="small"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleNumberChange}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                inputProps={{ maxLength: 10 }}
-                disabled={isOtpVerified}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaPhoneAlt className="text-gray-500" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+          <TextField
+            placeholder="Enter User ID"
+            name="userId"
+            type="text"
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={formData.userId || ""}
+            onChange={handleChange}
+            error={!!errors.userId}
+            helperText={errors.userId}
+            sx={{ mb: 2 }}
+          />
 
-              {showOtp && !isOtpVerified && (
-                <TextField
-                  placeholder="Enter OTP"
-                  name="otp"
-                  size="small"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  inputProps={{ maxLength: 6 }}
-                  sx={{ width: "40%" }}
-                />
-              )}
-            </Box>
-          )}
-
-          {showMobileBox && showOtp && !isOtpVerified && (
-            <Button
-              variant="outlined"
-              size="small"
-              fullWidth
-              sx={{ mb: 2 }}
-              onClick={handleVerifyOtp}
-              disabled={formData.otp.length !== 6}
-            >
-              Verify OTP
-            </Button>
-          )}
           <TextField
             placeholder="New password"
             name="newPassword"
@@ -226,14 +136,10 @@ const ResetPasswordPage: React.FC = () => {
             size="small"
             value={formData.newPassword}
             onChange={handleChange}
-            disabled={showMobileBox ? !isOtpVerified : false}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={showMobileBox ? !isOtpVerified : false}
-                  >
+                  <IconButton onClick={() => setShowPassword((prev) => !prev)}>
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -241,6 +147,7 @@ const ResetPasswordPage: React.FC = () => {
             }}
             sx={{ mb: 2 }}
           />
+
           <TextField
             placeholder="Confirm password"
             name="confirmPassword"
@@ -252,14 +159,10 @@ const ResetPasswordPage: React.FC = () => {
             onChange={handleChange}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
-            disabled={showMobileBox ? !isOtpVerified : false}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirm((prev) => !prev)}
-                    disabled={showMobileBox ? !isOtpVerified : false}
-                  >
+                  <IconButton onClick={() => setShowConfirm((prev) => !prev)}>
                     {showConfirm ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -268,13 +171,8 @@ const ResetPasswordPage: React.FC = () => {
             sx={{ mb: 3 }}
           />
 
-          <Button
-            variant="contained"
-            fullWidth
-            type="submit"
-            disabled={showMobileBox ? !isOtpVerified : false}
-          >
-            Continue
+          <Button variant="contained" fullWidth type="submit" disabled={loading}>
+            {loading ? "Please wait..." : "Continue"}
           </Button>
         </form>
       </Paper>

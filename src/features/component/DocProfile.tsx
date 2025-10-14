@@ -9,28 +9,50 @@ import {
   Button,
   CircularProgress,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import doc from "../../assets/doc.jpg";
 import { getDoctorProfile } from "../../api/DocProfileApi";
+import {
+  updateDoctorProfile,
+  type UpdateDoctorProfileResponse,
+} from "../../api/UpdateDocProfileApi";
 
 const DoctorProfile = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [saving, setSaving] = useState(false);
+
+  // Snackbar state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState<"success" | "error">(
+    "success"
+  );
+
+  const showAlert = (message: string, severity: "success" | "error") => {
+    setAlertMessage(message);
+    setAlertSeverity(severity);
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => setAlertOpen(false);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
       try {
-        const data = await getDoctorProfile(2); // doctor_id = 2 (can be dynamic)
+        const data = await getDoctorProfile(2); // doctor_id = 2 (example)
         setDoctor(data);
         setFormData(data);
       } catch (error) {
         console.error("Failed to load doctor profile:", error);
+        showAlert("Failed to load doctor profile", "error");
       } finally {
         setLoading(false);
       }
@@ -44,19 +66,52 @@ const DoctorProfile = () => {
     setOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const handleClose = () => setOpen(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    console.log("Updated Data:", formData);
-    // TODO: call your update API here (e.g., updateDoctorProfile(formData))
-    setDoctor(formData);
-    setOpen(false);
+  // ✅ Save changes API call
+  const handleSave = async () => {
+    if (!doctor) return;
+    try {
+      setSaving(true);
+
+      // map formData to backend expected payload
+      const payload = {
+        doctor_id: 2, // from fetched doctorv fetch from localstorage
+        clinic_id: 101, // as you said
+        doctor_name: formData.doctor_name,
+        qualification: formData.qualification,
+        specialization: formData.title, // map Specialty input to specialization
+        phone: formData.phone,
+        experience: Number(formData.experience),
+      };
+
+      const response: UpdateDoctorProfileResponse = await updateDoctorProfile(
+        payload
+      );
+
+      if (response.success) {
+        setDoctor({ ...doctor, ...payload });
+        setOpen(false);
+        enqueueSnackbar(response.message || "Profile updated successfully!", {
+          variant: "success",
+        });
+      } else {
+        enqueueSnackbar(response.message || "Failed to update profile", {
+          variant: "error",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      enqueueSnackbar("Something went wrong while updating profile", {
+        variant: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -77,12 +132,14 @@ const DoctorProfile = () => {
 
   return (
     <div className="flex justify-center mt-10">
-      {/* Common Card */}
-<div className="flex flex-col md:flex-row w-full max-w-full md:max-w-4xl
-                bg-blue-100 p-4
-                rounded-md md:rounded-lg lg:rounded-l-full lg:rounded-r-lg
-                shadow-xl overflow-hidden
-                transition-all duration-300 hover:shadow-2xl">
+      {/* Profile Card */}
+      <div
+        className="flex flex-col md:flex-row w-full max-w-full md:max-w-4xl
+          bg-blue-100 p-4
+          rounded-md md:rounded-lg lg:rounded-l-full lg:rounded-r-lg
+          shadow-xl overflow-hidden
+          transition-all duration-300 hover:shadow-2xl"
+      >
         {/* Left Section */}
         <div className="md:w-2/5 w-full bg-blue-200 flex rounded-l-full justify-center items-center p-6 relative">
           <img
@@ -98,7 +155,7 @@ const DoctorProfile = () => {
             {doctor.doctor_name}
           </h2>
           <p className="text-indigo-600 font-medium text-sm mb-4">
-            {doctor.title}
+            {doctor.specialized_in}
           </p>
 
           <h3 className="text-lg font-medium text-gray-800 mb-2">
@@ -119,7 +176,7 @@ const DoctorProfile = () => {
             </p>
             <p className="flex items-center">
               <FaCalendarAlt className="mr-2 text-yellow-500" />{" "}
-              {doctor.experience} years experience
+              {doctor.experience} years
             </p>
             <p className="flex items-center">
               <FaMapMarkerAlt className="mr-2 text-red-500" /> {doctor.address}
@@ -145,218 +202,167 @@ const DoctorProfile = () => {
       </div>
 
       {/* Edit Profile Dialog */}
-      {/* <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Doctor Profile</DialogTitle>
-        <DialogContent dividers>
-          <div className="flex flex-col gap-4 mt-2">
-            <TextField
-              label="Name"
-              name="doctor_name"
-              value={formData.doctor_name || ""}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Title"
-              name="title"
-              value={formData.title || ""}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Qualification"
-              name="qualification"
-              value={formData.qualification || ""}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Phone"
-              name="phone"
-              value={formData.phone || ""}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Experience (years)"
-              name="experience"
-              value={formData.experience || ""}
-              onChange={handleChange}
-              fullWidth
-              type="number"
-            />
-            <TextField
-              label="Address"
-              name="address"
-              value={formData.address || ""}
-              onChange={handleChange}
-              fullWidth
-            />
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: "24px",
+            overflow: "hidden",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+            background: "linear-gradient(145deg, #ebf8ff, #f8fafc)",
+            width: "500px",
+            maxWidth: "90%",
+          },
+        }}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-start gap-4 text-white rounded-b-3xl rounded-tr-3xl shadow-md">
+          <img
+            src={doc}
+            alt="Doctor"
+            className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
+          />
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-semibold leading-tight">
+              {formData.doctor_name || "Dr. Name"}
+            </h2>
+            <p className="text-sm text-blue-100">
+              {formData.title || "Specialist"}
+            </p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <DialogContent
+          dividers
+          sx={{ border: "none", px: 4, backgroundColor: "#f9fafb" }}
+        >
+          <div className="flex flex-col gap-5 mt-2 ">
+            <div className="text-center mb-2 px-2">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Edit Profile Details
+              </h3>
+              <p className="text-gray-500 text-sm">
+                Update your clinic and personal information below.
+              </p>
+            </div>
+
+            {[
+              { label: "Full Name", name: "doctor_name" },
+              { label: "Specialty", name: "title" },
+              { label: "Qualification", name: "qualification" },
+              { label: "Phone Number", name: "phone" },
+              {
+                label: "Experience (years)",
+                name: "experience",
+                type: "number",
+              },
+            ].map((field, index) => (
+              <TextField
+                key={index}
+                label={field.label}
+                name={field.name}
+                value={formData[field.name] || ""}
+                onChange={handleChange}
+                type={field.type || "text"}
+                fullWidth
+                variant="outlined"
+                sx={{
+                  marginY: 0,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "18px",
+                    backgroundColor: "white",
+                    padding: "0.1px 10px",
+                    "&:hover fieldset": { borderColor: "#60a5fa" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#2563eb",
+                      borderWidth: 1,
+                    },
+                  },
+                  "& .MuiInputLabel-root": { margin: 0, fontSize: "0.875rem" },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#2563eb",
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            ))}
           </div>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">
+
+        {/* Actions */}
+        <DialogActions
+          sx={{
+            justifyContent: "space-between",
+            px: 4,
+            py: 2,
+            borderTop: "1px solid #e5e7eb",
+            backgroundColor: "#f9fafb",
+          }}
+        >
+          <Button
+            onClick={handleClose}
+            sx={{
+              textTransform: "none",
+              borderRadius: "50px",
+              px: 3,
+              py: 1,
+              fontWeight: 500,
+              backgroundColor: "#e5e7eb",
+              color: "#374151",
+              "&:hover": { backgroundColor: "#d1d5db" },
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
-            Save
+
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={saving}
+            sx={{
+              textTransform: "none",
+              borderRadius: "50px",
+              px: 3,
+              py: 1,
+              fontWeight: 600,
+              background:
+                "linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)",
+              "&:hover": {
+                background:
+                  "linear-gradient(90deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%)",
+              },
+              color: "white",
+              boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
+            }}
+          >
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </DialogActions>
-      </Dialog> */}
+      </Dialog>
 
-      {/*  Edit Doctor Profile Dialog (Themed UI) */}
-<Dialog
-  open={open}
-  onClose={handleClose}
-  maxWidth="xs" 
-  PaperProps={{
-    sx: {
-      borderRadius: "24px",
-      overflow: "hidden",
-      boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
-      background: "linear-gradient(145deg, #ebf8ff, #f8fafc)",
-      width: "500px", 
-      maxWidth: "90%", 
-    },
-  }}
->
-
-  {/* Header Section */}
-  <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-start gap-4 text-white rounded-b-3xl rounded-tr-3xl shadow-md">
-  <img
-    src={doc}
-    alt="Doctor"
-    className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
-  />
-
-  <div className="flex flex-col">
-    <h2 className="text-2xl font-semibold leading-tight">
-      {formData.doctor_name || "Dr. Name"}
-    </h2>
-    <p className="text-sm text-blue-100">{formData.title || "Specialist"}</p>
-  </div>
-</div>
-
-
-  {/* Content Section */}
-  <DialogContent
-    dividers
-    sx={{
-      border: "none",
-      px: 4,
-      
-      backgroundColor: "#f9fafb",
-    }}
-  >
-    <div className="flex flex-col gap-5 mt-2 ">
-      <div className="text-center mb-2 px-2">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Edit Profile Details
-        </h3>
-        <p className="text-gray-500 text-sm">
-          Update your clinic and personal information below.
-        </p>
-      </div>
-
-      {[
-        { label: "Full Name", name: "doctor_name" },
-        { label: "Specialty", name: "title" },
-        { label: "Qualification", name: "qualification" },
-        { label: "Phone Number", name: "phone" },
-        { label: "Experience (years)", name: "experience", type: "number" },
-        { label: "Clinic Address", name: "address" },
-      ].map((field, index) => (
-        <TextField
-  key={index}
-  label={field.label}
-  name={field.name}
-  value={formData[field.name] || ""}
-  onChange={handleChange}
-  type={field.type || "text"}
-  fullWidth
-  variant="outlined"
-  sx={{
-    marginY: 0, // vertical margin (top & bottom)
-    "& .MuiOutlinedInput-root": {
-      borderRadius: "18px",
-      backgroundColor: "white",
-      padding: "0.1px 10px", // inner padding of the input
-      "&:hover fieldset": {
-        borderColor: "#60a5fa",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "#2563eb",
-        borderWidth: 1,
-      },
-    },
-    "& .MuiInputLabel-root": {
-      margin: 0, // remove default margin
-      fontSize: "0.875rem", // smaller label
-    },
-    "& .MuiInputLabel-root.Mui-focused": {
-      color: "#2563eb",
-      fontWeight: 500,
-    },
-  }}
-/>
-
-      ))}
-    </div>
-  </DialogContent>
-
-  {/* Action Buttons */}
-  <DialogActions
-    sx={{
-      justifyContent: "space-between",
-      px: 4,
-      py: 2,
-      borderTop: "1px solid #e5e7eb",
-      backgroundColor: "#f9fafb",
-    }}
-  >
-    <Button
-      onClick={handleClose}
-      sx={{
-        textTransform: "none",
-        borderRadius: "50px",
-        px: 3,
-        py: 1,
-        fontWeight: 500,
-        backgroundColor: "#e5e7eb",
-        color: "#374151",
-        "&:hover": { backgroundColor: "#d1d5db" },
-      }}
-    >
-      Cancel
-    </Button>
-
-    <Button
-      onClick={handleSave}
-      variant="contained"
-      sx={{
-        textTransform: "none",
-        borderRadius: "50px",
-        px: 3,
-        py: 1,
-        fontWeight: 600,
-        background:
-          "linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)",
-        "&:hover": {
-          background:
-            "linear-gradient(90deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%)",
-        },
-        color: "white",
-        boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
-      }}
-    >
-      Save Changes
-    </Button>
-  </DialogActions>
-</Dialog>
+      {/* Snackbar Alerts */}
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={4000}
+        onClose={handleAlertClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity={alertSeverity}
+          sx={{ width: "100%" }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
 export default DoctorProfile;
-
-
+function enqueueSnackbar(arg0: string, arg1: { variant: string }) {
+  throw new Error("Function not implemented.");
+}

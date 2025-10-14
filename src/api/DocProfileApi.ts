@@ -17,7 +17,7 @@ export const getDoctorProfile = async (
 ): Promise<DoctorProfileResponse> => {
   try {
     const response = await emrAPI.post<DoctorProfileResponse>(
-      "/doctors/getdoctorProfile",
+      "/doctors/get-doctor-profile",
       { doctor_id }
     );
     return response;

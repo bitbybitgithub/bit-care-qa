@@ -44,7 +44,7 @@ const fetchWithTimeout = (
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
 
-  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+  return fetch(url, { ...options, signal: controller.signal ,   credentials: "include", }).finally(() =>
     clearTimeout(timer)
   );
 };

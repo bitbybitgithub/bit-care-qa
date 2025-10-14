@@ -3,7 +3,9 @@ import Sidebar from "../sidebar/Sidebar";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { logout } from "../../redux/authSlice"; 
+import { logout } from "../../redux/authSlice";
+import { logoutApi } from "../../api/LogoutApi";
+
 
 const MainLayout = () => {
   const location = useLocation();
@@ -22,14 +24,38 @@ const MainLayout = () => {
 
   const title = getTitleFromPath(location.pathname);
 
-  const handleLogout = () => {
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setShowConfirm(false);
-      dispatch(logout());
+  // const handleLogout = () => {
+  //   setAnimatingOut(true);
+  //   setTimeout(() => {
+  //     setShowConfirm(false);
+  //     dispatch(logout());
+  //     navigate("/login");
+  //   }, 300); 
+  // };
+
+const handleLogout = async () => {
+  setAnimatingOut(true);
+
+  try {
+    const res = await logoutApi();
+    if (res.success) {
+      dispatch(logout()); // clear redux
+      localStorage.removeItem("accessToken"); // remove token
+      localStorage.removeItem("user"); // remove token
       navigate("/login");
-    }, 300); 
-  };
+    } else {
+      alert(res.error || "Logout failed");
+      setAnimatingOut(false);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Logout failed due to network error");
+    setAnimatingOut(false);
+  } finally {
+    setShowConfirm(false);
+  }
+};
+
 
   const handleCancel = () => {
     setAnimatingOut(true);

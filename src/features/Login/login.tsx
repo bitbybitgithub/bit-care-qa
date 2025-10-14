@@ -15,7 +15,6 @@ import { Link } from "react-router-dom";
 import { loginApi } from "../../api/clinic/loginApi";
 import Regex from "../../helper/Regex";
 
-
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -100,23 +99,19 @@ const Login = () => {
 
         console.log("After calling loginApi, response:", data);
 
-        
         if (data.success) {
-
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("user", JSON.stringify(data.user));
-          if(data.user.is_temp_password ==="1")
-            {
-              setTimeout(() => {
-             navigate("/ResetPassword?from="+data.user.user_id);
-             toast.success("Please reset your temporary password");
-          }, 1000);
-            }
-            else{
-              navigate("/dashboard");
-              toast.success("Login successful");
-            }
-            dispatch(loginSuccess());
+          if (data.user.is_temp_password === "1") {
+            setTimeout(() => {
+              navigate("/ResetPassword?from=" + data.user.user_id);
+              toast.success("Please reset your temporary password");
+            }, 1000);
+          } else {
+            navigate("/dashboard");
+            toast.success("Login successful");
+          }
+          dispatch(loginSuccess());
         } else {
           toast.error(data.message || "Login failed");
         }
@@ -231,19 +226,19 @@ const Login = () => {
                   "Login"
                 )}
               </Button>
-               {isClinic && (
-        <footer className="text-center">
-          <p className="text-xs mt-2">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-indigo-600 hover:underline cursor-pointer font-semibold"
-            >
-              Register Clinic
-            </Link>
-          </p>
-        </footer>
-      )}
+              {isClinic && (
+                <footer className="text-center">
+                  <p className="text-xs mt-2">
+                    Don't have an account?{" "}
+                    <Link
+                      to="/register"
+                      className="text-indigo-600 hover:underline cursor-pointer font-semibold"
+                    >
+                      Register Clinic
+                    </Link>
+                  </p>
+                </footer>
+              )}
             </form>
           </div>
         </div>

@@ -107,7 +107,7 @@ const ResetPasswordPage: React.FC = () => {
       const payload = {
         phone: formData.mobile || "",
         otp: formData.otp,
-        userId: Number(userId),
+        userId: Number(userId) || Number(formData.userId),
         password: formData.newPassword,
         confirmPassword: formData.confirmPassword,
       };

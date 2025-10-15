@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchTodayAppointments } from "../../api/PatientQueueApi";
 import type { AppointmentDto } from "../../api/PatientQueueApi";
+import { LuClock4 } from "react-icons/lu";
+
 
 
 interface Patient {
@@ -14,6 +16,7 @@ interface Patient {
 interface PatientQueueProps {
   doctorId?: number; // default to 2 if not provided
   className?: string;
+   mode?: "doctor" | "staff"; 
 }
 
 const badgeClasses = (status: string) => {
@@ -43,7 +46,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({ doctorId = 2, className }) 
 
 
     fetchTodayAppointments(doctorId)
-      .then((appointments) => {
+      .then((appointments) => { 
          console.log("API Response (appointments):", appointments);
 
         if (!isMounted) return;
@@ -73,7 +76,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({ doctorId = 2, className }) 
   }, [doctorId]);
 
   return (
-    <div className={className ?? "bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300"}>
+    <div className={className ?? "bg-white rounded-2xl shadow-lg p-6  transition-all duration-300"}>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Patient's Queue</h2>
 
       {loading ? (
@@ -87,14 +90,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({ doctorId = 2, className }) 
           {patients.map((patient, index) => (
             <div
               key={index}
-              className="flex flex-col sm:flex-row items-center justify-between border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative bg-[#f9f9ff]"
+              className="flex flex-col sm:flex-row items-center border-l-4 justify-between border-blue-500 rounded-2xl p-4 shadow-sm transition-all duration-300 relative bg-[#f9f9ff]"
             >
-              {/* Blue left border */}
-              <div className="absolute left-0 top-0 h-full w-1 bg-blue-600 rounded-l-2xl"></div>
-
               {/* Time + Name */}
               <div className="flex flex-col items-center sm:items-start w-full sm:w-1/4 px-4">
-                <p className="text-xs text-gray-500">{patient.time}</p>
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                <LuClock4 className="text-gray-400" /> {/* Clock icon */}
+                {patient.time}
+                </p>
                 <p className="text-lg font-semibold text-gray-800 mt-1">{patient.name}</p>
               </div>
 

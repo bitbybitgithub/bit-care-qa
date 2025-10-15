@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   FaPhoneAlt,
   FaMapMarkerAlt,
-  FaCertificate,
   FaCalendarAlt,
+  FaTimes,
 } from "react-icons/fa";
 import {
   Button,
@@ -21,6 +21,8 @@ import {
   updateDoctorProfile,
   type UpdateDoctorProfileResponse,
 } from "../../api/UpdateDocProfileApi";
+import { FaGraduationCap } from "react-icons/fa6";
+
 
 const DoctorProfile = () => {
   const [doctor, setDoctor] = useState<any>(null);
@@ -68,9 +70,22 @@ const DoctorProfile = () => {
 
   const handleClose = () => setOpen(false);
 
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const { name, value, type } = e.target;
+
+  // Restrict negative numbers for experience
+  if (name === "experience" && type === "number") {
+    const numValue = Number(value);
+    if (numValue < 0) return; // prevent updating if below 0
+  }
+
+  setFormData({ ...formData, [name]: value });
+};
+
 
   // ✅ Save changes API call
   const handleSave = async () => {
@@ -138,7 +153,7 @@ const DoctorProfile = () => {
           bg-blue-100 p-4
           rounded-md md:rounded-lg lg:rounded-l-full lg:rounded-r-lg
           shadow-xl overflow-hidden
-          transition-all duration-300 hover:shadow-2xl"
+          transition-all duration-300 "
       >
         {/* Left Section */}
         <div className="md:w-2/5 w-full bg-blue-200 flex rounded-l-full justify-center items-center p-6 relative">
@@ -162,13 +177,13 @@ const DoctorProfile = () => {
             About Doctor
           </h3>
           <p className="text-gray-600 text-sm leading-relaxed mb-4">
-            {doctor.doctor_name} is a {doctor.title} with over{" "}
+            {doctor.doctor_name} is a {doctor.specialized_in} with over{" "}
             {doctor.experience} years of experience.
           </p>
 
           <div className="space-y-2 text-gray-700 text-sm">
             <p className="flex items-center">
-              <FaCertificate className="mr-2 text-blue-500" />{" "}
+              <FaGraduationCap className="mr-2 text-blue-500" />{" "}
               {doctor.qualification}
             </p>
             <p className="flex items-center">
@@ -202,7 +217,7 @@ const DoctorProfile = () => {
       </div>
 
       {/* Edit Profile Dialog */}
-      <Dialog
+      {/* <Dialog
         open={open}
         onClose={handleClose}
         maxWidth="xs"
@@ -216,9 +231,30 @@ const DoctorProfile = () => {
             maxWidth: "90%",
           },
         }}
-      >
+      > */}
+
+      <Dialog
+  open={open}
+  onClose={(_, reason) => {
+    if (reason === "backdropClick" || reason === "escapeKeyDown") return;
+    handleClose();
+  }}
+  disableEscapeKeyDown
+  maxWidth="xs"
+  PaperProps={{
+    sx: {
+      borderRadius: "24px",
+      overflow: "hidden",
+      boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+      background: "linear-gradient(145deg, #ebf8ff, #f8fafc)",
+      width: "500px",
+      maxWidth: "90%",
+    },
+  }}
+>
+
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-start gap-4 text-white rounded-b-3xl rounded-tr-3xl shadow-md">
+        {/* <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-start gap-4 text-white rounded-b-3xl rounded-tr-3xl shadow-md">
           <img
             src={doc}
             alt="Doctor"
@@ -232,7 +268,33 @@ const DoctorProfile = () => {
               {formData.title || "Specialist"}
             </p>
           </div>
-        </div>
+        </div> */}
+
+        {/* Header */}
+<div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center justify-between gap-4 text-white rounded-b-3xl rounded-tr-3xl shadow-md relative">
+  <div className="flex items-center gap-4">
+    <img
+      src={doc}
+      alt="Doctor"
+      className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
+    />
+    <div className="flex flex-col">
+      <h2 className="text-2xl font-semibold leading-tight">
+        {formData.doctor_name || "Dr. Name"}
+      </h2>
+      <p className="text-sm text-blue-100">{formData.title || "Specialist"}</p>
+    </div>
+  </div>
+
+  {/* Close Icon */}
+  <button
+    onClick={handleClose}
+    className="absolute top-3 right-3 text-white text-xl p-1 rounded-full hover:bg-gray hover:bg-opacity-10 transition"
+  >
+    <FaTimes />
+  </button>
+</div>
+
 
         {/* Content */}
         <DialogContent
@@ -258,6 +320,7 @@ const DoctorProfile = () => {
                 label: "Experience (years)",
                 name: "experience",
                 type: "number",
+                inpurProps:{ min:0 },
               },
             ].map((field, index) => (
               <TextField

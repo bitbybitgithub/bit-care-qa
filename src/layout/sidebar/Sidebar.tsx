@@ -22,25 +22,25 @@ interface MenuItem {
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
+  // const Menus: MenuItem[] = [
+  //   { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+  //   { title: "Users", link: "/users", icon: <FaUsers /> },
+  //   { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
+  //   {
+  //     title: "Clinic Operations",
+  //     link: "/clinic-operations",
+  //     icon: <FaHospital />,
+  //   },
+  // ];
+
   const Menus: MenuItem[] = [
-    { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
-    { title: "Users", link: "/users", icon: <FaUsers /> },
-    { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
-    {
-      title: "Clinic Operations",
-      link: "/clinic-operations",
-      icon: <FaHospital />,
-    },
+    { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
+    { title: "Profile", link: "/profile", icon: <FaUsers /> },
+    { title: "Manage availability", link: "/manage", icon: <FaCog /> },
   ];
 
   // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
-  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
-  //   { title: "Manage availability", link: "/manage", icon: <FaCog /> },
-  // ];
-
-  // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+  //   { title: "Dashboard", link: "/staffdashboard", icon: <FaHome /> },
   //   { title: "Tasks & Reminder", link: "/taskandreminder", icon: <FaTasks /> },
   //   { title: "Assigned Patients", link: "/assignpatient", icon: <FaPeopleGroup /> },
   //   { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
@@ -55,8 +55,8 @@ const Sidebar: React.FC = () => {
         {/* Icon on small screens */}
         <FaClinicMedical className="text-3xl md:hidden" />
         {/* Text on medium+ screens */}
-        {/* <span className="hidden md:inline text-2xl font-bold">Clinic Admin</span> */}
-        <span className="hidden md:inline text-2xl font-bold">Doctor </span>
+        <span className="hidden md:inline text-2xl font-bold">Clinic Admin</span>
+        {/* <span className="hidden md:inline text-2xl font-bold">Doctor </span> */}
       </div>
 
       {/* Menu */}

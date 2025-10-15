@@ -23,7 +23,7 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
       {items.map((item, index) => (
         <div
           key={index}
-          className={`rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-gray-300 p-6 flex flex-col items-center justify-center cursor-pointer ${
+          className={`rounded-xl shadow-md transition-all duration-300 border-l-4 border-gray-300 p-6 flex flex-col items-center justify-center cursor-pointer ${
   item.color ?? "bg-gray-200 text-gray-900"
 }`}
 

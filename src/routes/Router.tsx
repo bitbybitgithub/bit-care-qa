@@ -10,7 +10,8 @@ import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
-import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
+// import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
+import Staffdashboard from "../features/component/StaffDashboard";
 
 
 const Router = [
@@ -31,9 +32,18 @@ const Router = [
       { path: '/dashboard', element: <Dashboard /> },
       { path: '/users', element: <Users /> },
       { path: '/clinic-settings', element: <Profile /> },
-      { path: '/profile', element: <DoctorProfile /> },
+
       { path: '/docdashboard', element: <DocDashboard /> },
-      {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
+      { path: '/profile', element: <DoctorProfile /> },
+      
+      { path: '/staffdashboard', element: <Staffdashboard /> },
+      { path: '/taskandreminder', element: <Staffdashboard /> },
+      { path: '/assignpatient', element: <Staffdashboard /> },
+      { path: '/message', element: <Staffdashboard /> },
+      { path: '/clnprotocol', element: <Staffdashboard /> },
+      { path: '/shiftschedule', element: <Staffdashboard /> },
+
+      // {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
 
     ]
   }

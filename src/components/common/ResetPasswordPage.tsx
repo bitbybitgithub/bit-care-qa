@@ -124,6 +124,7 @@ const ResetPasswordPage: React.FC = () => {
             onChange={handleChange}
             error={!!errors.userId}
             helperText={errors.userId}
+            disabled={!!formData.userId && formData.userId !== 0}
             sx={{ mb: 2 }}
           />
 

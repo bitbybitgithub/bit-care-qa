@@ -8,12 +8,13 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { FaPhoneAlt, FaLock } from "react-icons/fa";
-import { loginSuccess } from "../../redux/authSlice";
-import type { AppDispatch } from "../../redux/store";
+import { loginSuccess } from "../../../redux/authSlice";
+import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { loginApi } from "../../api/clinic/loginApi";
-import Regex from "../../helper/Regex";
+import { loginApi } from "../../../api/clinic/loginApi";
+import Regex from "../../../helper/Regex";
+
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -85,7 +86,6 @@ const Login = () => {
     if (isClinic) {
       try {
         setLoading(true);
-
         const requestBody = {
           userId: number,
           password: password,
@@ -94,24 +94,27 @@ const Login = () => {
         };
 
         console.log("Before calling loginApi", requestBody);
-
         const data = await loginApi(requestBody);
-
         console.log("After calling loginApi, response:", data);
-
         if (data.success) {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("user", JSON.stringify(data.user));
-          if (data.user.is_temp_password === "1") {
-            setTimeout(() => {
-              navigate("/ResetPassword?from=" + data.user.user_id);
-              toast.success("Please reset your temporary password");
-            }, 1000);
-          } else {
-            navigate("/dashboard");
-            toast.success("Login successful");
-          }
-          dispatch(loginSuccess());
+          localStorage.setItem("userId", String(data.user.user_id));
+
+          if(data.user.is_temp_password ==="1")
+            {
+             console.log(data.user.user_id)
+             setTimeout(() => {
+             navigate("/ResetPassword");
+             toast.success("Please reset your temporary password");
+          }, 1000);
+            }
+
+            else{
+              navigate("/dashboard");
+              toast.success("Login successful");
+            }
+            dispatch(loginSuccess());
         } else {
           toast.error(data.message || "Login failed");
         }
@@ -226,19 +229,19 @@ const Login = () => {
                   "Login"
                 )}
               </Button>
-              {isClinic && (
-                <footer className="text-center">
-                  <p className="text-xs mt-2">
-                    Don't have an account?{" "}
-                    <Link
-                      to="/register"
-                      className="text-indigo-600 hover:underline cursor-pointer font-semibold"
-                    >
-                      Register Clinic
-                    </Link>
-                  </p>
-                </footer>
-              )}
+               {isClinic && (
+        <footer className="text-center">
+          <p className="text-xs mt-2">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-indigo-600 hover:underline cursor-pointer font-semibold"
+            >
+              Register Clinic
+            </Link>
+          </p>
+        </footer>
+      )}
             </form>
           </div>
         </div>
@@ -364,7 +367,7 @@ const Login = () => {
               </h1>
 
               <TextField
-                label="User Id"
+                label="User Name"
                 value={clinicUserId}
                 onChange={handleNumberChange}
                 size="small"
@@ -405,7 +408,7 @@ const Login = () => {
               />
               <div className="text-left -mt-2 mb-3 w-full">
                 <Link
-                  to="/ResetPassword?from=login"
+                  to="/ResetPassword?from=forgotenPassword"
                   className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
                 >
                   Forgot Password?

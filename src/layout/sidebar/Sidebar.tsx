@@ -6,8 +6,8 @@ import {
   FaCog,
   FaHospital,
   FaClinicMedical,
+  FaTasks,
 } from "react-icons/fa";
-import { FaTasks } from "react-icons/fa";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
@@ -22,23 +22,22 @@ interface MenuItem {
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
-  // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
-  //   { title: "Users", link: "/users", icon: <FaUsers /> },
-  //   { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
-  //   {
-  //     title: "Clinic Operations",
-  //     link: "/clinic-operations",
-  //     icon: <FaHospital />,
-  //   },
-  // ];
-
+  // ---------Clinic admin----------------
   const Menus: MenuItem[] = [
-    { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
-    { title: "Profile", link: "/profile", icon: <FaUsers /> },
-    { title: "Manage availability", link: "/manage", icon: <FaCog /> },
+    { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+    { title: "Users", link: "/users", icon: <FaUsers /> },
+    { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
+    {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,},
   ];
 
+  //----------- Doctor------------------
+  // const Menus: MenuItem[] = [
+  //   { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
+  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
+  //   { title: "Manage availability", link: "/manage", icon: <FaCog /> },
+  // ];
+
+  // -------------Staff--------------
   // const Menus: MenuItem[] = [
   //   { title: "Dashboard", link: "/staffdashboard", icon: <FaHome /> },
   //   { title: "Tasks & Reminder", link: "/taskandreminder", icon: <FaTasks /> },

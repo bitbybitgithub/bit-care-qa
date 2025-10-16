@@ -319,8 +319,6 @@ const DoctorProfile = () => {
               {
                 label: "Experience (years)",
                 name: "experience",
-                type: "number",
-                inpurProps:{ min:0 },
               },
             ].map((field, index) => (
               <TextField
@@ -329,7 +327,7 @@ const DoctorProfile = () => {
                 name={field.name}
                 value={formData[field.name] || ""}
                 onChange={handleChange}
-                type={field.type || "text"}
+                type= "text"
                 fullWidth
                 variant="outlined"
                 sx={{

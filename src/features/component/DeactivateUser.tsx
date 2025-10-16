@@ -1,16 +1,10 @@
 import React, { useState } from "react";
+import type { Doctor } from "../../api/DocListApi";
 
 interface DeactivateUserProps {
-  doctor: {
-    id: number;
-    name: string;
-    email?: string;
-    role?: string;
-    phone?: string;
-    status: string;
-  };
+  doctor: Doctor;
   onClose: () => void;
-  onToggleStatus: (id: number, newStatus: string, phone?: string) => void;
+  onToggleStatus: (id: number, newStatus: "Active" | "Inactive", phone?: string) => void;
 }
 
 const DeactivateUser: React.FC<DeactivateUserProps> = ({
@@ -22,11 +16,10 @@ const DeactivateUser: React.FC<DeactivateUserProps> = ({
   const isActive = doctor.status === "Active";
 
   const handleToggle = () => {
-    const newStatus = isActive ? "Inactive" : "Active";
-    onToggleStatus(doctor.id, newStatus, phone);
-    onClose();
-  };
-
+  const newStatus: "Active" | "Inactive" = isActive ? "Inactive" : "Active";
+  onToggleStatus(doctor.id, newStatus, phone);
+  onClose();
+};
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/20">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg relative">
@@ -35,12 +28,18 @@ const DeactivateUser: React.FC<DeactivateUserProps> = ({
         <div className="flex flex-col gap-3">
           {/* Read-only fields */}
           <input
-            type="text"
-            value={doctor.name}
-            readOnly
-            className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
-          />
-          <input
+  type="text"
+  value={doctor.name}
+  readOnly
+  className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
+/>
+<input
+  type="text"
+  value={doctor.specialist || ""}
+  readOnly
+  className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
+/>
+          {/* <input
             type="email"
             value={doctor.email || ""}
             readOnly
@@ -51,7 +50,7 @@ const DeactivateUser: React.FC<DeactivateUserProps> = ({
             value={doctor.role || ""}
             readOnly
             className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
-          />
+          /> */}
 
           {/* Editable phone field */}
           <input

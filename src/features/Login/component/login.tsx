@@ -13,7 +13,7 @@ import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { loginApi } from "../../../api/clinic/loginApi";
-import Regex from "../../../helper/Regex";
+import Regex from "../../../Helper/Regex";
 
 
 const Login = () => {

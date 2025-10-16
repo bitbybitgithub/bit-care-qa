@@ -10,7 +10,7 @@ import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
-// import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
+import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
 import Staffdashboard from "../features/component/StaffDashboard";
 
 
@@ -43,7 +43,7 @@ const Router = [
       { path: '/clnprotocol', element: <Staffdashboard /> },
       { path: '/shiftschedule', element: <Staffdashboard /> },
 
-      // {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
+      {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
 
     ]
   }

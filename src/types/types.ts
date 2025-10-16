@@ -77,6 +77,35 @@ export type ResetPassErrors<T = ResetPassword> = Partial<Record<keyof T, string>
 
 
 
+/* -------------------- API Models -------------------- */
+export interface BreakTime {
+  da_id: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  reason: string;
+}
+
+export interface CalendarDay {
+  date: string;
+  clinic_id: number;
+  doctor_id: number;
+  breakTime: BreakTime[];
+}
+
+export interface DoctorAvailabilityResponse {
+  success: boolean;
+  data: CalendarDay[];
+}
+export interface SaveDoctorAvailabilityResponse {
+  success: boolean;
+  message: string;
+}
+export interface DeleteDoctorAvailabilityResponse {
+  success: boolean;
+  message: string;
+}
+/* -------------------- Frontend Models -------------------- */
 export interface BlockedSlot {
   start: string;
   end: string;
@@ -84,18 +113,21 @@ export interface BlockedSlot {
 }
 
 export interface DailySchedule {
-  date: string; // YYYY-MM-DD
+  date: string;
   blocks: BlockedSlot[];
 }
 
+/* -------------------- Component Props -------------------- */
 export interface AvailabilityProps {
-  schedule: DailySchedule[];
+  schedule: CalendarDay[];
   selectedDate: Dayjs;
   setSelectedDate: (date: Dayjs) => void;
-  addBlock: (block: BlockedSlot) => void;
-  replaceFullDayBlock: () => void;
 }
 
-export type DoctorCalendar<T = AvailabilityProps> = Partial<Record<keyof T, string>> & {
-  general?: string; // global errors
-};
+export interface SummaryProps {
+  selectedDate: Dayjs;
+  daySchedule: CalendarDay | null;
+  addBlock: (slot: BlockedSlot) => void;
+  replaceFullDayBlock: () => void;
+  deleteBlock?: (index: number) => void;
+}

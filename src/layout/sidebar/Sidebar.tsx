@@ -3,15 +3,17 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaHome,
   FaUsers,
-  FaCog,
+ 
   FaHospital,
   FaClinicMedical,
   FaTasks,
 } from "react-icons/fa";
+import { FaCog } from "react-icons/fa";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 import { GrSchedules } from "react-icons/gr";
+import { MdOutlineManageAccounts } from "react-icons/md";
 
 interface MenuItem {
   icon: ReactNode;
@@ -28,6 +30,9 @@ const Sidebar: React.FC = () => {
     { title: "Users", link: "/users", icon: <FaUsers /> },
     { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
     {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,},
+    { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
+    { title: "Profile", link: "/profile", icon: <FaUsers /> },
+    { title: "Manage availability", link: "/clinic-manage", icon: <MdOutlineManageAccounts/> },
   ];
 
   //----------- Doctor------------------

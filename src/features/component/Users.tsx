@@ -160,6 +160,7 @@
 
 
 
+
 import React, { useEffect, useState } from "react";
 import { FaUserEdit, FaPlus, FaSearch } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
@@ -173,6 +174,7 @@ const Users: React.FC = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -253,57 +255,52 @@ const Users: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredDoctors.map((doc) => (
+            
             <div
-              key={doc.id}
-              className="relative bg-white border-b-4 rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:-translate-y-1 hover:shadow-xl w-full"
-            >
-              {/* Avatar */}
-              <div
-                className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
-                style={{ backgroundColor: doctorColors[doc.id] }}
-              >
-                <span className="text-xl sm:text-2xl font-bold text-white">
-                  {doc.name
-                    .replace(/^Dr\.\s*/i, "")
-                    .split(" ")
-                    .filter((w) => w.length > 0)
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase()}
-                </span>
-              </div>
+  key={doc.id}
+  className="relative bg-white border-b-4 border rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:-translate-y-1 hover:shadow-xl w-full"
+>
+  {/* Status Badge - only color */} 
+  <span
+    className={`absolute top-4 right-4 w-3 h-3 rounded-full shadow-md ${
+      doc.status === "Active" ? "bg-green-500" : "bg-red-500"
+    }`}
+  />
 
-              <div className="mt-12">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-800">{doc.name}</h2>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1">{doc.specialist}</p>
-                <span
-                  className={`inline-block mt-3 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                    doc.status === "Active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {doc.status}
-                </span>
-              </div>
+  {/* Avatar */}
+  <div
+    className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
+    style={{ backgroundColor: doctorColors[doc.id] }}
+  >
+    <span className="text-xl sm:text-2xl font-bold text-white">
+      {doc.name
+        .replace(/^Dr\.\s*/i, "")
+        .split(" ")
+        .filter((w) => w.length > 0)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()}
+    </span>
+  </div>
 
-              {/* Activate/Deactivate button */}
-              <button
-                onClick={() => setSelectedDoctor(doc)}
-                className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow-md transition-all ${
-                  doc.status === "Active"
-                    ? "bg-gradient-to-r from-orange-400 to-yellow-500 hover:opacity-90"
-                    : "bg-gradient-to-r from-green-400 to-emerald-500 hover:opacity-90"
-                }`}
-              >
-                {doc.status === "Active" ? "Deactivate" : "Activate"}
-              </button>
+  <div className="mt-12">
+    <h2 className="text-base sm:text-lg font-semibold text-gray-800">{doc.name}</h2>
+    <p className="text-gray-500 text-xs sm:text-sm mt-1">{doc.specialist}</p>
+  </div>
 
-              {/* Edit Icon */}
-              <button className="absolute top-4 right-4 text-gray-500 hover:text-blue-600" title="Edit Doctor">
-                <FaUserEdit size={16} />
-              </button>
-            </div>
+  {/* Activate/Deactivate button */}
+  <button
+    onClick={() => setSelectedDoctor(doc)}
+    className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow-md transition-all ${
+      doc.status === "Active"
+        ? "bg-orange-400 hover:opacity-90"
+        : "bg-green-400  hover:opacity-90"
+    }`}
+  >
+    {doc.status === "Active" ? "Deactivate" : "Activate"}
+  </button>
+</div>
+
           ))}
         </div>
       )}

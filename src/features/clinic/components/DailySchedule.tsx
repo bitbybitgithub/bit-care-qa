@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Switch,
   TextField,
@@ -7,106 +7,243 @@ import {
   Typography,
 } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
+import { toast } from "react-toastify";
 
-interface BreakSlot {
+interface ShiftSlot {
   start: string;
   end: string;
+  error?: string | null;
+}
+
+interface ShiftPayload {
+  clinic_id: number | string;
+  co_id: number | string;
+  shift: number;
+  shift_start: string;
+  shift_end: string;
+  is_active: number | boolean;
 }
 
 interface DailyScheduleProps {
   day: string;
+  opShift: {
+    co_id: string | number;
+    clinic_id: string | number;
+    day: string;
+    is_active: boolean;
+  };
+  handleOperationDay: (
+    coId: string | number,
+    clinicId: string | number,
+    value: boolean
+  ) => void;
+  onShiftChange: (
+    coId: number | string,
+    formattedShifts: ShiftPayload[]
+  ) => void;
+  initialShifts?: { start: string; end: string }[];
 }
 
-const DailySchedule: React.FC<DailyScheduleProps> = ({ day }) => {
-  const [isHoliday, setIsHoliday] = useState(false);
-  const [openTime, setOpenTime] = useState("09:00");
-  const [closeTime, setCloseTime] = useState("17:00");
-  const [breaks, setBreaks] = useState<BreakSlot[]>([]);
+const DailySchedule: React.FC<DailyScheduleProps> = ({
+  day,
+  opShift,
+  handleOperationDay,
+  onShiftChange,
+  initialShifts = [],
+}) => {
+  const [shifts, setShifts] = useState<ShiftSlot[]>(() =>
+    initialShifts.map((s) => ({ ...s, error: null }))
+  );
 
-  const addBreak = () => {
-    setBreaks([...breaks, { start: "", end: "" }]);
-  };
+  // Convert "HH:mm" → minutes since midnight
+  const toMinutes = useCallback((time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  }, []);
 
-  const removeBreak = (index: number) => {
-    setBreaks(breaks.filter((_, i) => i !== index));
-  };
+  // Main validation logic
+  const validateShifts = useCallback(
+    (updated: ShiftSlot[]): ShiftSlot[] => {
+      const validated = updated.map((s) => ({ ...s, error: null }));
 
-  const updateBreak = (index: number, field: keyof BreakSlot, value: string) => {
-    const updated = [...breaks];
-    updated[index][field] = value;
-    setBreaks(updated);
-  };
+      // Sort by start time (for easier sequence validation)
+      const sorted = validated
+        .map((s, idx) => ({ ...s, idx }))
+        .sort((a, b) => {
+          if (!a.start || !b.start) return 0;
+          return toMinutes(a.start) - toMinutes(b.start);
+        });
+
+      // Check duplicates (exact start–end pairs)
+      const seen = new Set<string>();
+      sorted.forEach((s) => {
+        const key = `${s.start}-${s.end}`;
+        if (s.start && s.end && seen.has(key)) {
+          validated[s.idx].error = "Duplicate shift timings.";
+        } else if (s.start && s.end) {
+          seen.add(key);
+        }
+      });
+
+      // Sequential validation
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i - 1];
+        const curr = sorted[i];
+
+        if (prev.start && prev.end && curr.start && curr.end) {
+          const prevEnd = toMinutes(prev.end);
+          const currStart = toMinutes(curr.start);
+          const currEnd = toMinutes(curr.end);
+
+          // Overlap / non-sequence check
+          if (currStart <= prevEnd) {
+            validated[curr.idx].error =
+              "Shift must start after previous shift ends.";
+          } else if (currEnd <= currStart) {
+            validated[curr.idx].error =
+              "End time must be after start time.";
+          }
+        }
+      }
+
+      return validated;
+    },
+    [toMinutes]
+  );
+
+  // Update shift value
+  const updateShift = useCallback(
+    (index: number, field: keyof ShiftSlot, value: string) => {
+      setShifts((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value };
+        const validated = validateShifts(updated);
+        return validated;
+      });
+    },
+    [validateShifts]
+  );
+
+  // Add new shift (automatically starts after last shift end if possible)
+  const handleAddShift = useCallback(() => {
+    setShifts((prev) => {
+      let suggestedStart = "";
+      if (prev.length > 0 && prev[prev.length - 1].end) {
+        const lastEnd = toMinutes(prev[prev.length - 1].end);
+        const hrs = Math.floor((lastEnd + 1) / 60)
+          .toString()
+          .padStart(2, "0");
+        const mins = ((lastEnd + 1) % 60).toString().padStart(2, "0");
+        suggestedStart = `${hrs}:${mins}`;
+      }
+      return [...prev, { start: suggestedStart, end: "", error: null }];
+    });
+  }, [toMinutes]);
+
+  // Remove shift
+  const handleRemoveShift = useCallback(
+    (idx: number) => {
+      if (idx < initialShifts.length) {
+        toast.warn("Removing saved shifts not implemented yet.");
+        return;
+      }
+      setShifts((prev) => prev.filter((_, i) => i !== idx));
+    },
+    [initialShifts.length]
+  );
+
+  // Push valid shifts to parent when changed
+  useEffect(() => {
+    const validShifts = shifts.filter(
+      (s) => s.start && s.end && !s.error
+    );
+    const formatted: ShiftPayload[] = validShifts.map((s, i) => ({
+      clinic_id: opShift.clinic_id,
+      co_id: opShift.co_id,
+      shift: i + 1,
+      shift_start: s.start,
+      shift_end: s.end,
+      is_active: opShift.is_active ? 1 : 0,
+    }));
+
+    onShiftChange(opShift.co_id, formatted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shifts, opShift.is_active]);
 
   return (
-    <div className="bg-white shadow rounded-2xl p-4 mb-4">
+    <div className="bg-white shadow rounded-2xl p-4 mb-4 border-2 border-gray-200">
+      {/* Header */}
       <div className="flex justify-between items-center mb-3">
-        <Typography variant="h6">{day}</Typography>
+        <Typography variant="h6" className="font-semibold text-gray-700">
+          {day}
+        </Typography>
         <div className="flex items-center gap-2">
           <Typography variant="body2">Holiday:</Typography>
           <Switch
-            checked={isHoliday}
-            onChange={(e) => setIsHoliday(e.target.checked)}
+            checked={!opShift.is_active}
+            onChange={(e) =>
+              handleOperationDay(
+                opShift.co_id,
+                opShift.clinic_id,
+                !e.target.checked
+              )
+            }
           />
         </div>
       </div>
 
-      {!isHoliday && (
-        <div className="grid grid-cols-2 gap-4 mb-3">
-          <TextField
-            label="Open"
-            type="time"
-            value={openTime}
-            onChange={(e) => setOpenTime(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-          <TextField
-            label="Close"
-            type="time"
-            value={closeTime}
-            onChange={(e) => setCloseTime(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-        </div>
-      )}
-
-      {!isHoliday && (
+      {/* Shift inputs */}
+      {opShift.is_active && (
         <>
-          <div className="space-y-3">
-            {breaks.map((brk, idx) => (
-              <div key={idx} className="grid grid-cols-2 gap-3 items-center">
-                <TextField
-                  label="Start"
-                  type="time"
-                  value={brk.start}
-                  onChange={(e) => updateBreak(idx, "start", e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                />
-                <div className="flex gap-2 items-center">
+          <div className="space-y-3 mb-3">
+            {shifts.map((shift, idx) => {
+              const isDisabled = idx < initialShifts.length;
+              return (
+                <div
+                  key={idx}
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-center"
+                >
                   <TextField
-                    label="End"
+                    label="Shift Start"
                     type="time"
-                    value={brk.end}
-                    onChange={(e) => updateBreak(idx, "end", e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    value={shift.start}
+                    disabled={isDisabled}
+                    onChange={(e) =>
+                      updateShift(idx, "start", e.target.value)
+                    }
                     fullWidth
+                    error={!!shift.error}
                   />
-                  <IconButton color="error" onClick={() => removeBreak(idx)}>
+                  <TextField
+                    label="Shift End"
+                    type="time"
+                    value={shift.end}
+                    disabled={isDisabled}
+                    onChange={(e) =>
+                      updateShift(idx, "end", e.target.value)
+                    }
+                    fullWidth
+                    error={!!shift.error}
+                    helperText={shift.error || ""}
+                  />
+                  <IconButton
+                    color="error"
+                    onClick={() => handleRemoveShift(idx)}
+                  >
                     <Remove />
                   </IconButton>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
           <Button
             startIcon={<Add />}
-            onClick={addBreak}
-            className="mt-3"
+            onClick={handleAddShift}
             variant="outlined"
+            className="mt-2"
           >
-            Add Break
+            Add Shift
           </Button>
         </>
       )}
@@ -114,4 +251,4 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({ day }) => {
   );
 };
 
-export default DailySchedule;
+export default React.memo(DailySchedule);

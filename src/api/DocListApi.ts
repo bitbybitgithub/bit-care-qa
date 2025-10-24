@@ -2,6 +2,7 @@ import { emrAPI } from "./EmrApi";
 import type { AxiosResponse } from "axios";
 
 export interface Doctor {
+  clinic_id: number;  
   id: number;
   name: string;
   qualification: string;

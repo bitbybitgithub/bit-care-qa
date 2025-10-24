@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaHome,
   FaUsers,
- 
   FaHospital,
   FaClinicMedical,
   FaTasks,
@@ -29,27 +28,24 @@ const Sidebar: React.FC = () => {
     { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
     { title: "Users", link: "/users", icon: <FaUsers /> },
     { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
-    {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,},
-    { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
-    { title: "Profile", link: "/profile", icon: <FaUsers /> },
-    { title: "Manage availability", link: "/clinic-manage", icon: <MdOutlineManageAccounts/> },
+    {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,}, 
   ];
 
   //----------- Doctor------------------
   // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/docdashboard", icon: <FaHome /> },
-  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
-  //   { title: "Manage availability", link: "/manage", icon: <FaCog /> },
+  //  { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
+  //   { title: "Profile", link: "/profile", icon: <FaUsers /> }, 
+  //   { title: "Manage availability", link: "/clinic-manage", icon: <MdOutlineManageAccounts/> },
   // ];
 
-  // -------------Staff--------------
+  // // -------------Staff--------------
   // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/staffdashboard", icon: <FaHome /> },
-  //   { title: "Tasks & Reminder", link: "/taskandreminder", icon: <FaTasks /> },
-  //   { title: "Assigned Patients", link: "/assignpatient", icon: <FaPeopleGroup /> },
+  //   { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
+  //   { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
+  //   { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
   //   { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
-  //   { title: "Clinic Protocol", link: "/clnprotocol", icon: <HiOutlineDocumentReport /> },
-  //   { title: "Shift Schedule", link: "/shiftschedule", icon: <GrSchedules /> },
+  //   { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
+  //   { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
   // ];
 
   return (

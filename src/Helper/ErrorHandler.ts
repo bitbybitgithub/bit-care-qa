@@ -6,7 +6,7 @@ export type Errors = Partial<Record<keyof FormDataBase, string>>;
 export const validateRegistration = (form: FormDataBase): Errors => {
   const errors: Errors = {};
   if (!form.name?.trim()) {errors.name = "Name is required";} 
-  if (form.name && form.name.length < 5){errors.name = "Name must be at least 5 characters long";}
+  if (form.name && form.name.length < 2){errors.name = "Name must be at least 2 characters long";}
   if (!regex.name.test(form.name)) {errors.name ="Cannot Enter numbers or special characters";}
   if (!form.email?.trim()) errors.email = "Email is required";
   if (form.email && !Regex.email.test(form.email)) {errors.email = "Email is not valid";}

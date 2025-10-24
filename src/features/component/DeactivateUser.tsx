@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { Doctor } from "../../api/DocListApi";
-import  regex  from "../../Helper/Regex"; // adjust path
-import Regex from "../../Helper/Regex";
-
+import Regex from "../../Helper/Regex"; // single clean import
 
 interface DeactivateUserProps {
   doctor: Doctor;
   onClose: () => void;
-  onToggleStatus: (id: number, newStatus: "Active" | "Inactive", phone?: string) => void;
+  onToggleStatus: (
+    id: number,
+    newStatus: "Active" | "Inactive",
+    phone?: string
+  ) => void;
 }
 
 const DeactivateUser: React.FC<DeactivateUserProps> = ({
@@ -16,21 +18,29 @@ const DeactivateUser: React.FC<DeactivateUserProps> = ({
   onToggleStatus,
 }) => {
   const [phone, setPhone] = useState(doctor.phone || "");
+  const [phoneError, setPhoneError] = useState("");
   const isActive = doctor.status === "Active";
-  const [phoneError, setPhoneError] = useState(""); // track validation error
 
+  // ✅ Reset phone whenever modal opens or doctor changes
+  useEffect(() => {
+    setPhone(doctor.phone || "");
+    setPhoneError("");
+  }, [doctor]);
 
   const handleToggle = () => {
-  // Validate phone
-  if (!Regex.MOBILEREGEX.test(phone)) {
-    alert("Invalid phone number. Must start with 6-9 and be 10 digits.");
-    return; // stop if invalid
-  }
+    if (!Regex.MOBILEREGEX.test(phone)) {
+      alert("Invalid phone number. Must start with 6-9 and be 10 digits.");
+      return;
+    }
 
-  const newStatus: "Active" | "Inactive" = isActive ? "Inactive" : "Active";
-  onToggleStatus(doctor.id, newStatus, phone);
-  onClose();
-};
+    const newStatus: "Active" | "Inactive" = isActive ? "Inactive" : "Active";
+    onToggleStatus(doctor.id, newStatus, phone);
+
+    // ✅ Clear phone before closing
+    setPhone("");
+    setPhoneError("");
+    setTimeout(onClose, 0);
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/20">
@@ -40,54 +50,46 @@ const DeactivateUser: React.FC<DeactivateUserProps> = ({
         <div className="flex flex-col gap-3">
           {/* Read-only fields */}
           <input
-  type="text"
-  value={doctor.name}
-  readOnly
-  className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
-/>
-<input
-  type="text"
-  value={doctor.specialist || ""}
-  readOnly
-  className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
-/>
-          {/* <input
-            type="email"
-            value={doctor.email || ""}
+            type="text"
+            value={doctor.name}
             readOnly
             className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
           />
           <input
             type="text"
-            value={doctor.role || ""}
+            value={doctor.specialist || ""}
             readOnly
             className="w-full px-3 py-2 border rounded-xl bg-gray-100 text-gray-700"
-          /> */}
+          />
 
           {/* Editable phone field */}
-         <input
-  type="text"
-  placeholder="Phone"
-  value={phone}
-  onChange={(e) => {
-    const value = e.target.value;
-    setPhone(value);
+          <input
+            type="text"
+            placeholder="Phone"
+            value={phone}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPhone(value);
 
-    // validate live
-    if (!regex.MOBILEREGEX.test(value)) {
-      setPhoneError("Invalid phone number. Must start with 6-9 and be 10 digits.");
-    } else {
-      setPhoneError("");
-    }
-  }}
-  className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
-    phoneError ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
-  }`}
-    maxLength={10} 
-/>
+              if (!Regex.MOBILEREGEX.test(value)) {
+                setPhoneError(
+                  "Invalid phone number. Must start with 6-9 and be 10 digits."
+                );
+              } else {
+                setPhoneError("");
+              }
+            }}
+            className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
+              phoneError
+                ? "border-red-500 focus:ring-red-400"
+                : "focus:ring-blue-400"
+            }`}
+            maxLength={10}
+          />
 
-{phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-
+          {phoneError && (
+            <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+          )}
         </div>
 
         {/* Toggle Button */}

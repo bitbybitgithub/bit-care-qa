@@ -535,7 +535,6 @@
 
 // export default StaffDashboard;
 
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   FaClipboardList,
@@ -550,34 +549,43 @@ import { generateOtpApi } from "../../api/GenerateOtpApi";
 import { verifyOtpApi } from "../../api/VerifyOtpApi";
 import { fetchTodayAppointments } from "../../api/PatientQueueApi";
 
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { type AlertProps } from "@mui/material/Alert";
+
+// Wrap Alert to satisfy TS
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 const StaffDashboard: React.FC = () => {
-  // ---- OTP & Walk-in states ----
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
   const [showOtp, setShowOtp] = useState(false);
-  const [loadingOtp, setLoadingOtp] = useState(false);
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false);
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [userId, setUserId] = useState<number | null>(null);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // ---- Patient queue states ----
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
 
-  // ---- Fetch staff patient queue ----
+  // Snackbar states
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const fetchQueue = () => {
     setLoadingQueue(true);
     setErrorQueue(null);
-
-    fetchTodayAppointments(null) // staff sees all appointments
+    fetchTodayAppointments(null)
       .then((appointments) => {
         const mapped: Patient[] = appointments.map((a) => ({
           time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
           name: a.patient_name,
           status: a.status,
-          doctor: a.doctor_name,          
+          doctor: a.doctor_name,
           source: a.source,
           raw: a,
         }));
@@ -593,7 +601,6 @@ const StaffDashboard: React.FC = () => {
     fetchQueue();
   }, []);
 
-  // ---- Handlers ----
   const handleAddWalkIn = () => setOpen(true);
 
   const handleClose = () => {
@@ -602,8 +609,9 @@ const StaffDashboard: React.FC = () => {
     setError("");
     setShowOtp(false);
     setOtp(["", "", "", "", "", ""]);
-    setLoadingOtp(false);
     setUserId(null);
+    setLoadingGenerate(false);
+    setLoadingVerify(false);
   };
 
   const handleSendOtp = async () => {
@@ -613,7 +621,7 @@ const StaffDashboard: React.FC = () => {
     }
 
     setError("");
-    setLoadingOtp(true);
+    setLoadingGenerate(true);
 
     try {
       const res = await generateOtpApi({
@@ -628,11 +636,10 @@ const StaffDashboard: React.FC = () => {
       } else {
         setError(res.message || "Failed to send OTP");
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch {
       setError("Something went wrong. Please try again later.");
     } finally {
-      setLoadingOtp(false);
+      setLoadingGenerate(false);
     }
   };
 
@@ -641,16 +648,11 @@ const StaffDashboard: React.FC = () => {
     const updatedOtp = [...otp];
     updatedOtp[index] = val;
     setOtp(updatedOtp);
-
-    if (val && index < otp.length - 1) {
-      otpRefs.current[index + 1]?.focus();
-    }
+    if (val && index < otp.length - 1) otpRefs.current[index + 1]?.focus();
   };
 
   const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
+    if (e.key === "Backspace" && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
   };
 
   const handleConfirm = async () => {
@@ -664,7 +666,7 @@ const StaffDashboard: React.FC = () => {
       return;
     }
 
-    setLoadingOtp(true);
+    setLoadingVerify(true);
     setError("");
 
     try {
@@ -675,22 +677,22 @@ const StaffDashboard: React.FC = () => {
       });
 
       if (res.success) {
-        setShowOtp(false);
-        alert(res.message);
+        // Show success snackbar
+        setSnackbarMessage(res.message || "OTP verified successfully!");
+        setSnackbarOpen(true);
+
         handleClose();
-        fetchQueue(); // Refresh queue to show new walk-in
+        fetchQueue();
       } else {
         setError(res.message || "Invalid or expired OTP");
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch {
       setError("Something went wrong while verifying OTP");
     } finally {
-      setLoadingOtp(false);
+      setLoadingVerify(false);
     }
   };
 
-  // ---- Cards Data ----
   const cardItems = [
     { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: "bg-violet-200 text-blue-800 border-violet-600" },
     { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: "bg-yellow-100 text-yellow-800 border-yellow-400" },
@@ -700,8 +702,10 @@ const StaffDashboard: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <Cards items={cardItems} gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-2" />
-
+<Cards
+  items={cardItems}
+  gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
+/>
       <PatientQueue
         mode="staff"
         patientsData={patients}
@@ -709,28 +713,47 @@ const StaffDashboard: React.FC = () => {
         onAddWalkIn={handleAddWalkIn}
       />
 
-      {/* Walk-In Modal */}
+      {/* Snackbar for success */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
       {open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4">
-          <div className="bg-gray-50 border-gray-500 rounded-2xl shadow-lg w-full max-w-md p-6 mx-auto">
+<div className="bg-gray-50 border-gray-500 rounded-2xl shadow-lg w-full max-w-md sm:max-w-lg p-4 sm:p-6 mx-auto">
             <h2 className="text-center text-xl font-bold text-gray-800">Add Walk-In Patient</h2>
 
-            <div className="mt-4 w-full">
+            <div className="mt-4 w-full ">
               <div className="flex items-center justify-between w-full space-x-4">
                 <label className="text-gray-700 font-semibold min-w-[120px]">Contact Number :</label>
-                <div className="flex-1 flex flex-col">
-                  <input
-                    type="tel"
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value.replace(/\D/g, ""))}
-                    maxLength={10}
-                    placeholder="Enter 10-digit number"
-                    className={`w-52 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-                      ${error ? "border-red-400 focus:ring-red-300" : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"}`}
-                  />
+                <div className="flex-1 flex flex-col relative">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="tel"
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value.replace(/\D/g, ""))}
+                      maxLength={10}
+                      placeholder="Enter 10-digit number"
+                      className={`w-60 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
+                        ${error ? "border-red-400 focus:ring-red-300" : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"}`}
+                    />
+                    {loadingGenerate && (
+                      <div className="relative w-5 h-5">
+                        <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
+                      </div>
+                    )}
+                  </div>
+
                   {error && <p className="text-sm text-red-500 font-medium mt-1">{error}</p>}
 
-                  {!showOtp && Regex.MOBILEREGEX.test(contact.trim()) && !loadingOtp && (
+                  {!showOtp && Regex.MOBILEREGEX.test(contact.trim()) && !loadingGenerate && (
                     <p onClick={handleSendOtp} className="text-blue-500 font-medium text-sm cursor-pointer hover:underline mt-1">
                       Send OTP
                     </p>
@@ -738,19 +761,10 @@ const StaffDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {loadingOtp && (
-                <div className="flex flex-col items-center justify-center py-6 w-full">
-                  <div className="relative w-8 h-8">
-                    <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
-                  </div>
-                  <p className="mt-2 mb-2 text-gray-600 text-sm text-center">Sending OTP...</p>
-                </div>
-              )}
-
               {showOtp && (
                 <div className="flex flex-col items-center space-y-2 mt-4 w-full">
                   <p className="text-gray-700 font-medium">Enter 6-digit OTP</p>
-                  <div className="flex justify-center gap-1 sm:gap-3 md:gap-4 w-full flex-wrap">
+                  <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
                     {otp.map((digit, index) => (
                       <input
                         key={index}
@@ -764,6 +778,11 @@ const StaffDashboard: React.FC = () => {
                           focus:border-blue-500 focus:ring-2 focus:ring-blue-300 outline-none transition-transform duration-200 focus:scale-105"
                       />
                     ))}
+                    {loadingVerify && (
+                      <div className="relative w-5 h-5 mt-1">
+                        <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-green-500"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -781,8 +800,9 @@ const StaffDashboard: React.FC = () => {
                 <button
                   onClick={handleConfirm}
                   className="px-4 py-1 rounded-xl bg-green-500 text-white hover:bg-green-600 transition"
+                  disabled={loadingVerify}
                 >
-                  Confirm
+                  {loadingVerify ? "Verifying..." : "Confirm"}
                 </button>
               )}
             </div>
@@ -794,3 +814,5 @@ const StaffDashboard: React.FC = () => {
 };
 
 export default StaffDashboard;
+
+

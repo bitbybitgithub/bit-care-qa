@@ -4,22 +4,25 @@ import type { AppointmentDto } from "../../api/PatientQueueApi";
 import { LuClock4 } from "react-icons/lu";
 
 export interface Patient {
-  time?: string; // optional in staff mode
+  time?: string;
   name: string;
-  reason?: string;       // service
+  reason?: string;
   status: string;
-  doctor?: string;       // for staff
-  waitingMinutes?: number; // for staff
-  raw?: AppointmentDto;  // for doctor
+  doctor?: string;           // staff mode
+  waitingMinutes?: number;   // staff mode
+  appointmentDate?: string;  // staff mode
+  endTime?: string;          // staff mode
+  source?: string;           // both modes
+  raw?: AppointmentDto;      // doctor mode
 }
 
 interface PatientQueueProps {
   mode?: "doctor" | "staff";
   doctorId?: number;
   className?: string;
-  patientsData?: Patient[];       // staff dummy data
+  patientsData?: Patient[];
   onStartConsultation?: (patient: Patient) => void;
-  onAddWalkIn?: () => void;       // for staff
+  onAddWalkIn?: () => void; // staff only
 }
 
 const badgeClasses = (status: string) => {
@@ -41,7 +44,7 @@ const badgeClasses = (status: string) => {
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
-  doctorId = 2,
+  doctorId = 4,
   className,
   patientsData,
   onStartConsultation,
@@ -53,10 +56,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   useEffect(() => {
     if (mode === "staff") {
-  setPatients(patientsData || []);
-  setLoading(false);
-  return;
-}
+      setPatients(patientsData || []);
+      setLoading(false);
+      return;
+    }
 
     let isMounted = true;
     setLoading(true);
@@ -65,13 +68,20 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     fetchTodayAppointments(doctorId)
       .then((appointments) => {
         if (!isMounted) return;
+
         const mapped: Patient[] = appointments.map((a) => ({
-          time: `${a.start_time} - ${a.end_time}`,
+          time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
           name: a.patient_name,
           reason: a.reason,
           status: a.status,
+          doctor: a.doctor_name,
+          waitingMinutes: a.waitingMinutes,
+          appointmentDate: a.appointment_date,
+          endTime: a.end_time,
+          source: a.source ?? "—",
           raw: a,
         }));
+
         setPatients(mapped);
       })
       .catch((err) => {
@@ -114,10 +124,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           {patients.map((patient, index) => (
             <div
               key={index}
-              className="flex flex-col sm:flex-row items-center border-l-4 justify-between border-blue-500 rounded-2xl p-4 shadow-sm transition-all duration-300 relative bg-[#f9f9ff]"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-l-4 border-blue-500 rounded-2xl p-4 shadow-sm transition-all duration-300 relative bg-[#f9f9ff] hover:shadow-md"
             >
-              {/* Time + Name */}
-              <div className="flex flex-col items-center sm:items-start w-full sm:w-1/4 px-4">
+              {/* Left: Time + Name */}
+              <div className="flex flex-col items-start sm:w-1/4 px-2">
                 {mode === "doctor" && patient.time && (
                   <p className="text-xs text-gray-500 flex items-center gap-1">
                     <LuClock4 className="text-gray-400" /> {patient.time}
@@ -126,46 +136,75 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                 <p className="text-lg font-semibold text-gray-800 mt-1">{patient.name}</p>
               </div>
 
-              {mode === "doctor" && <div className="hidden sm:block w-px h-10 bg-gray-300"></div>}
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-12 bg-gray-300"></div>
 
-              {/* Reason / Service */}
-              <div className="w-full sm:w-1/3 text-center sm:text-left mt-3 sm:mt-0 px-4">
-                <p className="text-sm text-gray-500">{mode === "doctor" ? "Service" : "Assigned Doctor"}</p>
-                <p className="text-gray-800 font-medium">
-                  {mode === "doctor" ? patient.reason ?? "—" : patient.doctor ?? "—"}
-                </p>
+              {/* Center: Info */}
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 px-2 mt-2 sm:mt-0">
+                {mode === "doctor" ? (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Service</span>
+                      <span className="text-gray-800 font-medium">{patient.reason ?? "—"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Source</span>
+                      <span className="text-gray-800 font-medium">{patient.source ?? "—"}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Doctor</span>
+                      <span className="text-gray-800 font-medium">{patient.doctor ?? "—"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500"> Time</span>
+                      <span className="text-gray-800 font-medium">{patient.time ?? "—"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Source</span>
+                      <span className="text-gray-800 font-medium">{patient.source ?? "—"}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {mode === "doctor" && <div className="hidden sm:block w-px h-10 bg-gray-300"></div>}
-
-              {/* Start Consultation button (doctor only) */}
-              {mode === "doctor" && (
-                <div className="w-full sm:w-auto flex justify-center mt-3 sm:mt-0 px-2">
-                  <button
-                    onClick={() => onStartConsultation?.(patient)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all duration-200 shadow-sm"
-                  >
-                    Start Consultation
-                  </button>
-                </div>
-              )}
-
-              {mode === "staff" && <div className="hidden sm:block w-px h-10 bg-gray-300"></div>}
-
-              {/* Status Badge */}
-              <div className="w-full sm:w-auto flex justify-center mt-3 sm:mt-0 px-2">
+              
+ {/* Status Badge */}
                 <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${badgeClasses(patient.status)}`}>
                   {patient.status}
                 </span>
-              </div>
 
-              {/* Waiting Minutes (staff only) */}
-              {mode === "staff" && patient.waitingMinutes !== undefined && (
-                <div className="w-full sm:w-auto flex justify-center mt-2 sm:mt-0 px-2 text-gray-600 text-sm">
-                  Waiting: {patient.waitingMinutes} min
-                </div>
-              )}
+{/* Divider */}
+              <div className="hidden sm:block w-px h-12 bg-gray-300 mr-6 ml-4"></div>
+
+ {mode === "doctor" && (
+                  <button
+                    onClick={() => onStartConsultation?.(patient)}
+                    className="mt-1 mr-6 bg-indigo-600 text-white px-3 py-4 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all duration-200 shadow-sm"
+                  >
+                    Start Consultation
+                  </button>
+                )}
+
+              {/* Right: Actions / Status */}
+              <div className="flex flex-col sm:items-end justify-center mt-2 sm:mt-0 px-2 gap-2">
+                {/* Status Badge
+                <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${badgeClasses(patient.status)}`}>
+                  {patient.status}
+                </span> */}
+
+                {/* Waiting Minutes (staff only) */}
+                {mode === "staff" && patient.waitingMinutes !== undefined && (
+                  <span className="text-gray-600 text-sm">Waiting: {patient.waitingMinutes} min</span>
+                )}
+
+                
+              </div>
             </div>
+
+            
           ))}
         </div>
       )}

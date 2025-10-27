@@ -39,7 +39,7 @@ const Profile: React.FC = () => {
     ShiftPayload[]
   >([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clinicId = 5;
+  const clinicId = Number(sessionStorage.getItem("clinic_id"));
 
   useEffect(() => {
     getClinicProfileDetails();
@@ -97,7 +97,7 @@ const Profile: React.FC = () => {
         setClinicType(response.operational_hrs);
         setPatientDemand(response.patient_demand);
         setSendReminders(response.patient_reminder == 1 ? true : false);
-        setLogoImg(Base64ToImage(response.logo));
+        response?.logo && setLogoImg(Base64ToImage(response.logo));
         setOperationalDays(response.operational_days);
         setShiftDetails(response.shifts);
         setInitialAllShifts(response.shifts);
@@ -115,17 +115,17 @@ const Profile: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!clinicLogo) {
-      toast.error("Please select a logo");
-      return;
-    }
+    // if (!clinicLogo) {
+    //   toast.error("Please select a logo");
+    //   return;
+    // }
 
     const formData = new FormData();
-    formData.append("clinic_logo", clinicLogo); 
+    clinicLogo && formData.append("clinic_logo", clinicLogo); 
     formData.append("clinic_id", clinicId.toString());
-    formData.append("operational_hrs", clinicType);
-    formData.append("patient_demand", patientDemand);
-    formData.append("patient_reminder", sendReminders ? "1" : "0");
+    clinicType && formData.append("operational_hrs", clinicType);
+    patientDemand && formData.append("patient_demand", patientDemand);
+    sendReminders && formData.append("patient_reminder", sendReminders ? "1" : "0");
 
     // console.log(formData);
     await saveProfileSettingDetails(formData);

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   TextField,
   Button,
-  Container,
   Typography,
   Box,
   InputAdornment,
@@ -15,7 +14,7 @@ import { MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import { validateRegistration } from "../helper/ErrorHandler";
+import { validateRegistration } from "../Helper/ErrorHandler";
 import { getPincodeDetails } from "../api/ServiceApi";
 import { registerApi } from "../api";
 import type {
@@ -23,9 +22,9 @@ import type {
   ValidationErrors,
   LocationItem,
 } from "../types/types";
-import DocFaceMask from "../assets/DocStaff2.png";
-import DrBgReg from "../assets/DrBgReg.png";
-import Regex, { regex } from "../helper/Regex";
+// import DocFaceMask from "../assets/DocStaff2.png";
+// import DrBgReg from "../assets/DrBgReg.png";
+import Regex, { regex } from "../Helper/Regex";
 const Registration = () => {
   const [formData, setFormData] = useState<FormDataBase>({
     name: "",
@@ -55,6 +54,13 @@ const Registration = () => {
   const [districList, setDistricList] = useState<string[]>([]);
   const [stateList, setStateList] = useState<string[]>([]);
   const [areaList, setAreaList] = useState<string[]>([]);
+
+ const features = [
+  { icon: FaHospital, title: "Quick Setup", description: "Get started in minutes." },
+  { icon: FaHospital, title: "Reliable Service", description: "Always up and running." },
+  { icon: FaHospital, title: "Secure Platform", description: "Your data is protected." },
+  { icon: FaHospital, title: "24/7 Support", description: "We’re here to help anytime." },
+];
 
   const navigate = useNavigate();
 
@@ -254,228 +260,274 @@ const Registration = () => {
   };
 
   return (
-    <Box className="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-2xl flex w-full max-w-6xl overflow-hidden">
-        <div className="w-2/5 relative bg-blue-700 hidden md:flex items-center justify-center p-10">
-          <img
-            src={DrBgReg}
-            alt="bg"
-            className="absolute inset-0 w-full h-full object-cover opacity-50"
-          />
-          <img
-            src={DocFaceMask}
-            alt="doctor"
-            className="relative rounded-lg shadow-lg z-10"
-          />
+ <div className="bg-[var(--color-surface)] md:min-h-screen min-w-full md:flex md:flex-row flex flex-col items-center justify-center px-2 md:px-30 gap-x-2">
+    {/* Left Image Section */}
+    
+<div className="w-full md:w-[50%]
+ md:h-[80vh]  p-2">
+<h1 className=" font-[var(--font-weight-bold)] bg-text mb-5" style={{fontSize:'var(--font-h1)'}}>Register Your <span className="text-[var(--color-primary)]">Clinic</span></h1>
+
+<p>Join Our network of healthcare providers and start delivering exceptional care to your community.</p>
+
+<div className="grid grid-cols-2 gap-2 text-[var(--color-text)] p-2 bg-error">
+      {features.map(({ icon: Icon, title, description }, index) => (
+        <div key={index} className="bg-[var(--color-bg)] p-4 rounded-[var(--radius-lg)]">
+          <Icon />
+          <h3 className="mt-2 font-semibold">{title}</h3>
+          <p className="text-sm">{description}</p>
         </div>
+      ))}
+    </div>
 
-        <div className="w-full md:w-3/5 p-8 flex items-center justify-center">
-          <Container>
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              className="grid grid-cols-2 gap-4"
-            >
-              <Typography
-                variant="h5"
-                className="col-span-2 text-center font-bold text-blue-800 mb-2"
-              >
-                Register Your Clinic
-              </Typography>
 
-              <FormControl fullWidth>
-                <TextField
-                  placeholder="Clinic Name"
-                  name="name"
-                  size="small"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  error={!!errors.name}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <FaHospital className="text-gray-500" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <FormHelperText error>{errors.name}</FormHelperText>
-              </FormControl>
 
-              <Box sx={{ display: "flex", gap: 2 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Mobile Number"
-                  size="small"
-                  value={formData.phone}
-                  onChange={handleNumberChange}
-                  error={!!errors.phone}
-                  disabled={verified.mobile}
-                  inputProps={{ maxLength: 10 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <FaPhoneAlt className="text-gray-500" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                {showOtp && !verified.mobile && (
-                  <TextField
-                    placeholder="Enter OTP"
-                    size="small"
-                    value={otpData.mobileOtp}
-                    onChange={handleMobileOtpChange}
-                    inputProps={{ maxLength: 6 }}
-                    sx={{ width: "65%" }}
-                  />
-                )}
-              </Box>
+</div>
+    {/* Right Form Section */}
+    <div className="w-full md:w-[50%] h-[80vh] bg-[var(--color-bg)] flex items-center justify-center rounded-2xl shadow-2xl md:py-10">
+      {/* <Container> */}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          className="h-[70vh] grid md:grid-cols-2 gap-4"
+        >
+          {/* Title */}
+          <Typography
+            variant="h5"
+            className="col-span-2 text-center font-bold mb-2 text-[var(--color-text)]"
+          >
+            Register Your Clinic
+          </Typography>
 
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Email Address"
-                  type="email"
-                  name="email"
-                  size="small"
-                  value={formData.email}
-                  onChange={(e) => {
-                    const { name, value } = e.target;
-                    const cleanedValue = value.replace(/\s/g, ""); // remove all spaces
-                    setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
-                    setErrors((prev) => ({ ...prev, [name]: "" }));
-                  }}
-                  onBlur={handleEmailBlur}
-                  error={!!errors.email}
-                  slotProps={{
-                    input: {
-                      onKeyDown: handleEmailKeyDown,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <MdEmail className="text-gray-500" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-                {showEmailOtp && !verified.email && (
-                  <TextField
-                    placeholder="Enter OTP"
-                    size="small"
-                    value={otpData.emailOtp}
-                    onChange={handleEmailOtpChange}
-                    inputProps={{ maxLength: 6 }}
-                    sx={{ width: "65%" }}
-                  />
-                )}
-              </Box>
-
-              <TextField
-                placeholder="Pincode"
-                name="PINCode"
-                size="small"
-                value={formData.PINCode}
-                onChange={handlePincodeChange}
-                error={!!errors.PINCode}
-                InputProps={{
+          {/* Clinic Name */}
+          <FormControl fullWidth>
+            <TextField
+              placeholder="Clinic Name"
+              name="name"
+              size="small"
+              value={formData.name}
+              onChange={handleInputChange}
+              error={!!errors.name}
+              slotProps={{
+                input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <MdLocationOn className="text-gray-500" />
+                      <FaHospital className="text-[var(--color-text)]" />
                     </InputAdornment>
                   ),
+                },
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+            <FormHelperText error>{errors.name}</FormHelperText>
+          </FormControl>
+
+          {/* Mobile + OTP */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              fullWidth
+              placeholder="Mobile Number"
+              size="small"
+              value={formData.phone}
+              onChange={handleNumberChange}
+              error={!!errors.phone}
+              disabled={verified.mobile}
+              inputProps={{ maxLength: 10 }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FaPhoneAlt className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+            {showOtp && !verified.mobile && (
+              <TextField
+                placeholder="Enter OTP"
+                size="small"
+                value={otpData.mobileOtp}
+                onChange={handleMobileOtpChange}
+                inputProps={{ maxLength: 6 }}
+                sx={{
+                  width: "65%",
+                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 }}
               />
-              <Autocomplete
-                disabled={stateList.length === 0}
-                options={stateList}
-                value={formData.state || null}
-                onChange={(e, val) =>
-                  setFormData((p) => ({ ...p, state: val || "" }))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="State"
-                    size="small"
-                    error={!!errors.district}
-                  />
-                )}
-              />
-              <Autocomplete
-                disabled={districList.length === 0}
-                options={districList}
-                value={formData.district || null}
-                onChange={(e, val) =>
-                  setFormData((p) => ({ ...p, district: val || "" }))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={!!errors.district}
-                    placeholder="District"
-                    size="small"
-                  />
-                )}
-              />
-              <Autocomplete
-                disabled={areaList.length === 0}
-                options={areaList}
-                value={formData.area || null}
-                onChange={(e, val) =>
-                  setFormData((p) => ({ ...p, area: val || "" }))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Area"
-                    size="small"
-                    error={!!errors.area}
-                  />
-                )}
-              />
+            )}
+          </Box>
+
+          {/* Email + OTP */}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <TextField
+              fullWidth
+              placeholder="Email Address"
+              type="email"
+              name="email"
+              size="small"
+              value={formData.email}
+              onChange={(e) => {
+                const { name, value } = e.target;
+                const cleanedValue = value.replace(/\s/g, "");
+                setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+                setErrors((prev) => ({ ...prev, [name]: "" }));
+              }}
+              onBlur={handleEmailBlur}
+              error={!!errors.email}
+              slotProps={{
+                input: {
+                  onKeyDown: handleEmailKeyDown,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <MdEmail className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+            {showEmailOtp && !verified.email && (
               <TextField
-                placeholder="Address"
-                name="address"
+                placeholder="Enter OTP"
                 size="small"
-                value={formData.address}
-                onChange={handleAddressChange}
-                error={!!errors.address}
-                multiline
-                rows={3}
+                value={otpData.emailOtp}
+                onChange={handleEmailOtpChange}
+                inputProps={{ maxLength: 6 }}
+                sx={{
+                  width: "65%",
+                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                }}
               />
+            )}
+          </Box>
 
-              <div className="col-span-2 mt-2">
-                <Button
-                  type="submit"
-                  fullWidth
-                  disabled={loading}
-                  sx={{ backgroundColor: "#0f46c9", color: "#fff" }}
-                >
-                  {loading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Register"
-                  )}
-                </Button>
-              </div>
+          {/* Pincode */}
+          <TextField
+            placeholder="Pincode"
+            name="PINCode"
+            size="small"
+            value={formData.PINCode}
+            onChange={handlePincodeChange}
+            error={!!errors.PINCode}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdLocationOn className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+          />
 
-              <div className="text-center col-span-2 text-sm">
-                <label>
-                  Already have an account?
-                  <Link
-                    to="/login"
-                    className="text-blue-600 hover:underline ml-1"
-                  >
-                    Click Here to login
-                  </Link>
-                </label>
-              </div>
-            </Box>
-          </Container>
-        </div>
-      </div>
-    </Box>
+          {/* Autocomplete Fields */}
+          <Autocomplete
+            disabled={stateList.length === 0}
+            options={stateList}
+            value={formData.state || null}
+            onChange={(e, val) =>
+              setFormData((p) => ({ ...p, state: val || "" }))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="State"
+                size="small"
+                error={!!errors.state}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            )}
+          />
+          <Autocomplete
+            disabled={districList.length === 0}
+            options={districList}
+            value={formData.district || null}
+            onChange={(e, val) =>
+              setFormData((p) => ({ ...p, district: val || "" }))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="District"
+                size="small"
+                error={!!errors.district}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            )}
+          />
+          <Autocomplete
+            disabled={areaList.length === 0}
+            options={areaList}
+            value={formData.area || null}
+            onChange={(e, val) =>
+              setFormData((p) => ({ ...p, area: val || "" }))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Area"
+                size="small"
+                error={!!errors.area}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            )}
+          />
+
+          {/* Address */}
+          <TextField
+            placeholder="Address"
+            name="address"
+            size="small"
+            value={formData.address}
+            onChange={handleAddressChange}
+            error={!!errors.address}
+            multiline
+            rows={3}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+          />
+
+          {/* Submit Button */}
+          <div className="col-span-2 mt-2">
+            <Button
+              type="submit"
+              fullWidth
+              disabled={loading}
+              sx={{
+                backgroundColor: "var(--color-primary)",
+                color: "var(--color-bg)",
+                "&:hover": {
+                  backgroundColor: "var(--color-surface)",
+                },
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Register"
+              )}
+            </Button>
+          </div>
+
+          {/* Already Registered */}
+          <div className="text-center col-span-2 text-sm">
+            <label>
+              Already have an account?
+              <Link
+                to="/login"
+                className="text-[var(--color-primary)] hover:underline ml-1"
+              >
+                Click Here to login
+              </Link>
+            </label>
+          </div>
+        </Box>
+    </div>
+  </div>
+
+
+   
   );
 };
 

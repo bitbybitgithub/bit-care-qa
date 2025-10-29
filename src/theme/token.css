@@ -1,0 +1,177 @@
+/* ==========================================================
+   🧱 GLOBAL DESIGN TOKENS — BASE (Do not theme here)
+   Shared across all modes (light, dark, ocean)
+========================================================== */
+:root {
+  /* TYPOGRAPHY */
+  --font-family: "Inter", "Roboto", "Segoe UI", system-ui, sans-serif;
+
+  --font-h1: 2.25rem;   /* 36px */
+  --font-h2: 1.75rem;   /* 28px */
+  --font-h3: 1.5rem;    /* 24px */
+  --font-body: 1rem;    /* 16px */
+  --font-small: 0.875rem;
+  --font-xs: 0.75rem;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* RADII */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* SHADOWS (default fallback, overridden in dark/ocean) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+
+  /* OPACITY */
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.85;
+  --opacity-focus: 0.95;
+
+  /* TRANSITIONS */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Z-INDEX */
+  --z-header: 1000;
+  --z-modal: 1050;
+  --z-overlay: 1100;
+  --z-tooltip: 1200;
+}
+
+/* ==========================================================
+   🌞 THEME: LIGHT (Default)
+========================================================== */
+[data-theme="light"] {
+  --color-primary: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1e3a8a;
+
+  --color-secondary: #16a34a;
+  --color-accent: #f59e0b;
+
+  --color-success: #10b981;
+  --color-error: #dc2626;
+  --color-warning: #facc15;
+  --color-info: #0284c7;
+
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f3f4f6;
+  --color-border: #e5e7eb;
+
+  --color-text: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-disabled: #9ca3af;
+}
+
+/* ==========================================================
+   🌙 THEME: DARK
+========================================================== */
+[data-theme="dark"] {
+  --color-primary: #60a5fa;
+  --color-primary-light: #93c5fd;
+  --color-primary-dark: #2563eb;
+
+  --color-secondary: #22c55e;
+  --color-accent: #fbbf24;
+
+  --color-success: #34d399;
+  --color-error: #ef4444;
+  --color-warning: #facc15;
+  --color-info: #38bdf8;
+
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-alt: #334155;
+  --color-border: #475569;
+
+  --color-text: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================
+   🌊 THEME: OCEAN (Enterprise Violet–Blue)
+========================================================== */
+[data-theme="ocean"] {
+  --color-primary: #0284c7;
+  --color-primary-light: #38bdf8;
+  --color-primary-dark: #0369a1;
+
+  --color-secondary: #0ea5e9;
+  --color-accent: #14b8a6;
+
+  --color-success: #0ea5e9;
+  --color-error: #f43f5e;
+  --color-warning: #fbbf24;
+  --color-info: #22d3ee;
+
+  --color-bg: #e0f2fe;
+  --color-surface: #f0f9ff;
+  --color-surface-alt: #e0f7fa;
+  --color-border: #bae6fd;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #0369a1;
+  --color-disabled: #93c5fd;
+
+  --shadow-xs: 0 1px 2px rgba(3, 105, 161, 0.05);
+  --shadow-md: 0 4px 6px rgba(14, 165, 233, 0.1);
+  --shadow-lg: 0 10px 15px rgba(14, 165, 233, 0.15);
+}
+/* ✅ Healthcare / EMR Green Theme */
+[data-theme="green"] {
+  --color-primary: #16a34a; /* medical green */
+  --color-primary-light: #4ade80;
+  --color-primary-dark: #15803d;
+
+  --color-secondary: #10b981; /* teal accent */
+  --color-accent: #22c55e;
+
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #eab308;
+  --color-info: #059669;
+
+  --color-bg: #f0fdf4; /* gentle mint background */
+  --color-surface: #ecfdf5;
+  --color-surface-alt: #d1fae5;
+  --color-border: #bbf7d0;
+
+  --color-text: #064e3b;
+  --color-text-secondary: #065f46;
+  --color-disabled: #86efac;
+
+  --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
+  --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);
+  --shadow-lg: 0 10px 15px rgba(5, 150, 105, 0.15);
+}
+
+
+/* ==========================================================
+   🧩 BASE STYLES — Applies Globally
+========================================================== */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  transition:
+    background var(--transition-normal),
+    color var(--transition-normal);
+}

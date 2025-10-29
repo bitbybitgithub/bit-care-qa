@@ -4,14 +4,13 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import { ToastContainer } from "react-toastify";
 
-function App() {
+export default function App() {
   const routing = useRoutes(Router);
 
   return (
-    <div className="App">
       <ErrorBoundary>
-        <ToastContainer
-          position="top-right" // top-left, bottom-right, bottom-left
+     <ToastContainer
+          position="top-center" // top-left, bottom-right, bottom-left
           autoClose={3000} // 3 seconds
           hideProgressBar={false}
           newestOnTop={false}
@@ -24,8 +23,5 @@ function App() {
         />
         <ScrollToTop>{routing}</ScrollToTop>
       </ErrorBoundary>
-    </div>
   );
 }
-
-export default App;

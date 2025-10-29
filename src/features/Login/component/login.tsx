@@ -100,7 +100,9 @@ const Login = () => {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("user", JSON.stringify(data.user));
           localStorage.setItem("userId", String(data.user.user_id));
-
+          Object.entries(data.user).forEach(([key, value]) => {
+            sessionStorage.setItem(key, value);
+          });
           if(data.user.is_temp_password ==="1")
             {
              console.log(data.user.user_id)

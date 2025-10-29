@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUser,
   FaCalendarAlt,
   FaEnvelope,
-  FaPhone,
   FaUserMd,
   FaClipboardList,
 } from "react-icons/fa";
+import { MdPhoneInTalk } from "react-icons/md";
 import {
   validateRegistration,
   type Errors as ValidationErrors,
@@ -21,9 +21,14 @@ type WalkinFormData = {
   reason: string;
 };
 
+type WalkInRegisterFormProps = {
+  onClose: () => void;
+    patientData?: any; 
+};
+
 const doctors = ["Dr. A. Patel", "Dr. R. Mehta", "Dr. S. Rao", "Dr. K. Singh"];
 
-const WalkInRegisterForm: React.FC = () => {
+const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({ onClose, patientData }) => {
   const [formData, setFormData] = useState<WalkinFormData>({
     name: "",
     dob: "",
@@ -34,6 +39,59 @@ const WalkInRegisterForm: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<ValidationErrors>>({});
+//   useEffect(() => {
+//     console.log(patientData);
+    
+//   if (patientData) {
+//     setFormData({
+//       name: patientData.patient_name ||"",
+      
+//       dob:
+//         patientData.date_of_birth ||  
+//         "",
+//       email: patientData.email || "",
+//       phone: patientData.mobile_number || patientData.mobile_number || "",
+//       doctor: "",
+//       reason: "",
+//     });
+//   } else {
+//     // reset to empty if no existing patient
+//     setFormData({
+//       name: "",
+//       dob: "",
+//       email: "",
+//       phone: "",
+//       doctor: "",
+//       reason: "",
+//     });
+//   }
+// }, [patientData]);
+useEffect(() => {
+  console.log(patientData);
+
+  if (patientData) {
+    setFormData({
+      name: patientData.patient_name || "",
+      dob: patientData.date_of_birth
+        ? new Date(patientData.date_of_birth).toISOString().split("T")[0]
+        : "",
+      email: patientData.email || "",
+      phone: patientData.mobile_number || "",
+      doctor: "",
+      reason: "",
+    });
+  } else {
+    // reset to empty if no existing patient
+    setFormData({
+      name: "",
+      dob: "",
+      email: "",
+      phone: "",
+      doctor: "",
+      reason: "",
+    });
+  }
+}, [patientData]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -55,7 +113,6 @@ const WalkInRegisterForm: React.FC = () => {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-    
     };
 
     const validationErrors = validateRegistration(payload as any);
@@ -73,20 +130,23 @@ const WalkInRegisterForm: React.FC = () => {
       reason: "",
     });
     setErrors({});
+    onClose(); 
   };
 
+  
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
+    <div className="fixed inset-0 flex justify-center items-center bg-black/40 z-50">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg"
+        className="relative bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg"
       >
+
         <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">
           Walk-In Patient Registration
         </h2>
 
         {/* Name */}
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-gray-700 font-medium mb-1">Full Name</label>
           <div
             className={`flex items-center border rounded-lg px-3 py-2 transition-all ${
@@ -95,11 +155,6 @@ const WalkInRegisterForm: React.FC = () => {
                 : "focus-within:ring-2 focus-within:ring-blue-400"
             }`}
           >
-            {/* <FaUser
-              className={`mr-2 ${
-                errors.name ? "text-red-500" : "text-gray-500"
-              }`}
-            /> */}
             <input
               name="name"
               value={formData.name}
@@ -114,7 +169,7 @@ const WalkInRegisterForm: React.FC = () => {
         </div>
 
         {/* DOB + Phone */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
           <div>
             <label className="block text-gray-700 font-medium mb-1">
               Date of Birth
@@ -142,7 +197,7 @@ const WalkInRegisterForm: React.FC = () => {
                   : "focus-within:ring-2 focus-within:ring-blue-400"
               }`}
             >
-              <FaPhone
+              <MdPhoneInTalk
                 className={`mr-2 ${
                   errors.phone ? "text-red-500" : "text-gray-500"
                 }`}
@@ -151,7 +206,7 @@ const WalkInRegisterForm: React.FC = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="10-digit mobile"
+                placeholder="10-digit mobile number"
                 maxLength={10}
                 inputMode="numeric"
                 className="w-full outline-none"
@@ -164,7 +219,7 @@ const WalkInRegisterForm: React.FC = () => {
         </div>
 
         {/* Email */}
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-gray-700 font-medium mb-1">
             Email Address
           </label>
@@ -195,7 +250,7 @@ const WalkInRegisterForm: React.FC = () => {
         </div>
 
         {/* Doctor */}
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-gray-700 font-medium mb-1">
             Select Doctor
           </label>
@@ -218,7 +273,7 @@ const WalkInRegisterForm: React.FC = () => {
         </div>
 
         {/* Reason */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">
             Reason for Visit
           </label>
@@ -245,24 +300,18 @@ const WalkInRegisterForm: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() =>
-              setFormData({
-                name: "",
-                dob: "",
-                email: "",
-                phone: "",
-                doctor: "",
-                reason: "",
-              })
-            }
+            onClick={onClose}
             className="flex-1 border border-gray-300 hover:bg-gray-100 rounded-full py-2 font-medium transition"
           >
-            Reset
+            Close
           </button>
         </div>
       </form>
     </div>
   );
+
+
+  
 };
 
 export default WalkInRegisterForm;

@@ -8,6 +8,8 @@ export interface VerifyOtpRequest {
 }
 
 export interface VerifyOtpResponse {
+  found: any;
+  patients(patients: any): unknown;
   success: boolean;
   message: string;
 }

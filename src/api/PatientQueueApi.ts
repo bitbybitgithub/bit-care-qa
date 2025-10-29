@@ -1,6 +1,7 @@
 import { emrAPI } from "./EmrApi"; 
 
 export interface AppointmentDto {
+  doctor_name: any;
   source: string;
   waitingMinutes: any;
   assigned_doctor_name: any;

@@ -4,6 +4,10 @@ import type { AppointmentDto } from "../../api/PatientQueueApi";
 import { LuClock4 } from "react-icons/lu";
 
 export interface Patient {
+  patient_name: ReactNode;
+  date_of_birth: string | number | Date;
+  gender: number;
+  age: ReactNode;
   time?: string;
   name: string;
   reason?: string;

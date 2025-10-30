@@ -7,6 +7,7 @@ import { logout } from "../../redux/authSlice";
 import { logoutApi } from "../../api/LogoutApi";
 import { useLoader } from "../../context/LoaderContext";
 import Loader from "../../components/shared/Loader/Loader";
+import { clearSession } from "../../context/sessions/userSession";
 
 
 const MainLayout = () => {
@@ -48,8 +49,7 @@ const handleLogout = async () => {
     const res = await logoutApi();
     if (res.success) {
       dispatch(logout()); // clear redux
-      localStorage.removeItem("accessToken"); // remove token
-      localStorage.removeItem("user"); // remove token
+      clearSession();
       navigate("/login");
     } else {
       alert(res.error || "Logout failed");

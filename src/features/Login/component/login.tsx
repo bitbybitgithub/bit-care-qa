@@ -14,11 +14,15 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { loginApi } from "../../../api/clinic/loginApi";
 import Regex from "../../../Helper/Regex";
+import useClientIp from "../../../hooks/useClientIp";
+import { setSession } from "../../../context/sessions/userSession";
+import { TokenManager } from "../../../api/auth/tokenManager";
 
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { ip } = useClientIp();
   const [isClinic, setIsClinic] = useState(true);
   const [patientNumber, setPatientNumber] = useState("");
   const [patientPassword, setPatientPassword] = useState<string>("");
@@ -26,6 +30,7 @@ const Login = () => {
   const [clinicPassword, setClinicPassword] = useState<string>("");
   const [errors, setErrors] = useState({ number: "", password: "" });
   const [loading, setLoading] = useState(false);
+
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -89,7 +94,7 @@ const Login = () => {
         const requestBody = {
           userId: number,
           password: password,
-          ip_address: "192.168.2.44",
+          ip_address: ip,
           platform: "web",
         };
 
@@ -97,12 +102,8 @@ const Login = () => {
         const data = await loginApi(requestBody);
         console.log("After calling loginApi, response:", data);
         if (data.success) {
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("userId", String(data.user.user_id));
-          Object.entries(data.user).forEach(([key, value]) => {
-            sessionStorage.setItem(key, value);
-          });
+          setSession(data.user);
+          TokenManager.setAccessToken(data.accessToken);
           if(data.user.is_temp_password ==="1")
             {
              console.log(data.user.user_id)

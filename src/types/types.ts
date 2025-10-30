@@ -105,6 +105,12 @@ export interface DeleteDoctorAvailabilityResponse {
   success: boolean;
   message: string;
 }
+
+
+export interface RefreshToken{
+   ip_address: string;
+   platform: string;
+}
 /* -------------------- Frontend Models -------------------- */
 export interface BlockedSlot {
   start: string;

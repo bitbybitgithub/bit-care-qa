@@ -1,5 +1,6 @@
 // src/api/dashboardApi.ts
 import axios from "axios";
+import { emrAPI } from "./EmrApi";
 
 export interface Stats {
   totalDoctors: number;
@@ -11,13 +12,15 @@ export interface Stats {
 
 export const fetchDashboardStats = async (clinic_id: number): Promise<Stats> => {
   try {
-    const response = await axios.post(
-      "http://localhost:8989/api/clinics/dashboard/overview",
+    const response = await emrAPI.post<Stats>(
+      "/clinics/dashboard/overview",
       { clinic_id }
     );
-    return response.data;
+
+    return response;
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
     throw error;
   }
 };
+

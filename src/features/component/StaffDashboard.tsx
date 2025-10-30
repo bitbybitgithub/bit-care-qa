@@ -10,7 +10,6 @@ import MuiAlert, { type AlertProps } from "@mui/material/Alert";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
 import { io, Socket } from "socket.io-client"
-import { toast } from "react-toastify";
 // Wrap Alert to satisfy TS
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;

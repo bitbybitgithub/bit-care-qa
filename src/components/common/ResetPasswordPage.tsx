@@ -15,6 +15,7 @@ import type { ResetPassErrors } from "../../types/types";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {resetPasswordApi } from "../../api";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +31,7 @@ const ResetPasswordPage: React.FC = () => {
     newPassword: "",
     confirmPassword: "",
   });
-  const localuserId = Number(localStorage.getItem("userId")) || 0;
+  const localuserId = getSessionItem("user_id")
 
   console.log("localUser Id",localuserId)
 

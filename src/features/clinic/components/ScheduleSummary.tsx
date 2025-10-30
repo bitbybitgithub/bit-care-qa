@@ -16,6 +16,7 @@ import {
   deleteDoctorBlockApi,
 } from "../../../api/AppoinmentApi/DoctorAvailibityApi";
 import type { SummaryProps } from "../../../types/types";
+import { getSessionItem } from "../../../context/sessions/userSession";
 
 const ScheduleSummary: React.FC<SummaryProps> = ({
   selectedDate,
@@ -28,7 +29,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
   const [endTime, setEndTime] = useState("22:00");
   const [loading, setLoading] = useState(false);
 
-  const doctorId = Number(localStorage.getItem("userId")) || 0;
+  const doctorId = getSessionItem("doctor_id")
 
   const blocksForDate = useMemo(
     () => daySchedule?.breakTime || [],
@@ -36,7 +37,6 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
   );
 
   const handleSave = async () => {
-    debugger;
     if (!reason.trim()) return toast.error("Please enter a reason");
     if (startTime >= endTime)
       return toast.error("Start time must be before end time");

@@ -24,12 +24,12 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
 
   // ---------Clinic admin----------------
-  // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
-  //   { title: "Users", link: "/users", icon: <FaUsers /> },
-  //   { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
-  //   {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,}, 
-  // ];
+  const Menus: MenuItem[] = [
+    { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+    { title: "Users", link: "/users", icon: <FaUsers /> },
+    { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
+    {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,}, 
+  ];
 
   //----------- Doctor------------------
   // const Menus: MenuItem[] = [
@@ -39,14 +39,14 @@ const Sidebar: React.FC = () => {
   // ];
 
   // // -------------Staff--------------
-  const Menus: MenuItem[] = [
-    { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
-    { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
-    { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
-    { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
-    { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
-    { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
-  ];
+  // const Menus: MenuItem[] = [
+  //   { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
+  //   { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
+  //   { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
+  //   { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
+  //   { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
+  //   { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
+  // ];
 
   return (
     <div className="h-full bg-blue-700 text-white rounded-r-3xl p-4 flex flex-col transition-all duration-300">

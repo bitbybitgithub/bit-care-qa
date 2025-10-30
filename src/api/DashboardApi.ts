@@ -1,7 +1,7 @@
 // src/api/dashboardApi.ts
 import axios from "axios";
 
-interface Stats {
+export interface Stats {
   totalDoctors: number;
   totalStaff: number;
   totalPatients: number;

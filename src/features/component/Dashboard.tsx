@@ -104,13 +104,16 @@ import { useDispatch } from "react-redux";
 import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { fetchDashboardStats } from "../../api/dashboardApi";
+import { fetchDashboardStats, type Stats } from "../../api/dashboardApi";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
+import { useQuery } from "@tanstack/react-query";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const clinicId = Number(sessionStorage.getItem("clinic_id"));
+
 
   const [stats, setStats] = useState({
     totalDoctors: 0,
@@ -123,23 +126,20 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
 
-  const getStats = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await fetchDashboardStats(101);
-      console.log("Dashboard API called:", data); // ✅ check API response in console
-      setStats(data);
-    } catch (err) {
-      console.error("API error:", err);
-      setError("Failed to load stats. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data } = useQuery<Stats>({
+      queryKey: ["clinicProfile", clinicId],
+      queryFn: () => fetchDashboardStats(Number(clinicId)),
+      enabled: !!clinicId, // Only run if clinicId is available
+      staleTime: Infinity, // Treat the data as fresh after fetch
+    });
+  
 
   useEffect(() => {
-    getStats();
+    setLoading(true);
+    if (data) {
+      setStats(data);
+      setLoading(false);
+    }
   }, []);
 
   const cardItems = [

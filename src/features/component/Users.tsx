@@ -165,6 +165,7 @@ import AddUser from "../../features/component/AddUser";
 import DeactivateUser from "./DeactivateUser";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { deleteDoctorApi } from "../../api/DeleteDocApi";
+import { useQuery } from "@tanstack/react-query";
 
 const Users: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -175,20 +176,30 @@ const Users: React.FC = () => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Fetch doctors
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        setLoading(true);
-        const response = await getDoctorList();
-        setDoctors(response);
-      } catch (error) {
-        console.error("❌ Failed to fetch doctor list:", error);
-      } finally {
+
+
+    const { data } = useQuery<Doctor>({
+      queryKey: ["doctorList"],
+      queryFn: () => getDoctorList(),
+      staleTime: Infinity, // Treat the data as fresh after fetch,
+    });
+
+    useEffect(() => {
+
+      if (data) {
+        setDoctors(data);
         setLoading(false);
+      } else {
+        setLoading(true);
       }
-    };
-    fetchDoctors();
-  }, []);
+    }, [data]);
+
+
+
+
+  console.log({ data });
+
+  
 
   // Random avatar colors
   const doctorColors = useMemo(() => {

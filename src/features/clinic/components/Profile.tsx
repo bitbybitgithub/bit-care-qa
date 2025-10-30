@@ -1,30 +1,56 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query"; // 👈 NEW IMPORT
 import {
   Button,
-  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
   Radio,
   RadioGroup,
   Switch,
-  TextField,
 } from "@mui/material";
-import DailySchedule from "./DailySchedule";
 import UploadControl from "../../../components/common/UploadControl";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Base64ToImage } from "../../../utils/converter";
+import { useLoader } from "../../../context/LoaderContext";
+import ScheduleDayWrapper from "./ScheduleDayWrapper";
 
-
+// --- INTERFACES FOR TYPE SAFETY ---
 interface ShiftPayload {
-    clinic_id: number | string;
-    co_id: number | string;
-    shift: number;
-    shift_start: string;
-    shift_end: string;
-    is_active: number;
+  clinic_id: number | string;
+  co_id: number | string;
+  shift: number;
+  shift_start: string;
+  shift_end: string;
+  is_active: number;
 }
+interface OperationalDay {
+  co_id: number | string;
+  clinic_id: number | string;
+  day: string;
+  is_active: number; // 0 or 1 from API
+}
+interface ClinicProfileData {
+  operational_hrs: string;
+  patient_demand: string;
+  patient_reminder: number;
+  logo?: string;
+  operational_days: OperationalDay[];
+  shifts: ShiftPayload[];
+}
+
+const fetchClinicProfile = async (
+  clinicId: number
+): Promise<ClinicProfileData> => {
+  const req = { clinic_id: clinicId };
+  const res = await axios.post(
+    "http://localhost:8989/api/clinics/get-clinic-profile",
+    req
+  );
+  return res.data;
+};
+
 const Profile: React.FC = () => {
   const [clinicType, setClinicType] = useState("Full-time");
   const [patientDemand, setPatientDemand] = useState("Heavy");
@@ -32,118 +58,147 @@ const Profile: React.FC = () => {
   const [clinicLogo, setClinicLogo] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [logoImg, setLogoImg] = useState<string | null>(null);
-  const [operationalDays, setOperationalDays] = useState([]);
+
+  // State initialized from API data
+  const [operationalDays, setOperationalDays] = useState<OperationalDay[]>([]);
   const [shiftDetails, setShiftDetails] = useState<ShiftPayload[]>([]);
-  const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
   const [updatedShiftDetails, setUpdatedShiftDetails] = useState<
     ShiftPayload[]
   >([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // API data source
+  const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
+
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const clinicId = Number(sessionStorage.getItem("clinic_id"));
+  const { setLoading } = useLoader();
+ 
+  const { data, isLoading, isSuccess , isError, isFetched } = useQuery<ClinicProfileData>({
+    queryKey: ["clinicProfile", clinicId],
+    queryFn: () => fetchClinicProfile(clinicId),
+    enabled: !!clinicId, // Only run if clinicId is available
+    staleTime: Infinity, // Treat the data as fresh after fetch
+  });
+
+
 
   useEffect(() => {
-    getClinicProfileDetails();
-  }, []);
+    if (data && isFetched) {
+      setClinicType(data.operational_hrs);
+      setPatientDemand(data.patient_demand);
+      setSendReminders(data.patient_reminder === 1);
+      data.logo && setLogoImg(Base64ToImage(data.logo));
 
-  const handleShiftChange = (coId: number, formattedShifts: ShiftPayload[]) => {
-    setShiftDetails((prev) => {
-      const others = prev.filter((p) => p.co_id !== coId);
-      return [...others, ...formattedShifts];
-    });
+      // Initialize the mutable and immutable parts of the state
+      setOperationalDays(data.operational_days);
+      setShiftDetails(data.shifts);
+      setInitialAllShifts(data.shifts);
+    }
+  }, [data, isFetched]);
 
-    const originalDayShifts = initialAllShifts.filter((s) => s.co_id === coId);
+  // --- MEMOIZED HANDLERS ---
 
-    const newlyAddedShifts = formattedShifts.filter((newShift) => {
-      const isOriginal = originalDayShifts.some(
-        (originalShift) =>
-          originalShift.shift_start === newShift.shift_start &&
-          originalShift.shift_end === newShift.shift_end
+  // 💡 Optimized: Memoize this function (passed as a prop)
+  const handleShiftChange = useCallback(
+    (coId: number | string, formattedShifts: ShiftPayload[]) => {
+      setShiftDetails((prev) => {
+        const others = prev.filter((p) => p.co_id !== coId);
+        return [...others, ...formattedShifts];
+      });
+
+      const originalDayShifts = initialAllShifts.filter(
+        (s) => s.co_id === coId
       );
-      return !isOriginal;
-    });
 
-    setUpdatedShiftDetails((prev) => {
-      const others = prev.filter((p) => p.co_id !== coId);
-      return [...others, ...newlyAddedShifts];
-    });
-  };
+      const newlyAddedShifts = formattedShifts.filter((newShift) => {
+        const isOriginal = originalDayShifts.some(
+          (originalShift) =>
+            originalShift.shift_start === newShift.shift_start &&
+            originalShift.shift_end === newShift.shift_end
+        );
+        return !isOriginal;
+      });
 
-  console.log({ updatedShiftDetails });
+      setUpdatedShiftDetails((prev) => {
+        const others = prev.filter((p) => p.co_id !== coId);
+        return [...others, ...newlyAddedShifts];
+      });
+    },
+    [initialAllShifts] // Stable dependency
+  );
 
-  //Called when user toggles active/inactive day
-  const handleOperationDay = (
-    coId: number | string,
-    clinicId: number | string,
-    value: boolean
-  ) => {
-    setOperationalDays((prevData) =>
-      prevData.map((dayItem) =>
-        dayItem.co_id === coId ? { ...dayItem, is_active: value } : dayItem
-      )
-    );
-    debouncedUpdateClinicOperationStatus(coId, clinicId, value);
-  };
+  // 💡 Optimized: Memoize debounced function
+  const debouncedUpdateClinicOperationStatus = useCallback(
+    (coId: number | string, clinicId: number | string, value: boolean) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const req = {
+            co_id: coId,
+            clinic_id: clinicId,
+            is_active: value ? "1" : "0",
+            modified_by: "Internal Admin",
+          };
+          await axios.post(
+            "http://localhost:8989/api/clinics/update-clinic-operation-status",
+            req
+          );
+        } catch (err: any) {
+          toast.error(err.message || "Failed to update status");
+        }
+      }, 2500);
+    },
+    [] // No dependencies means it's fully stable
+  );
 
-  console.log({ operationalDays });
-  console.log({ shiftDetails });
+  // 💡 Optimized: Memoize this function (passed as a prop)
+  const handleOperationDay = useCallback(
+    (coId: number | string, clinicId: number | string, value: boolean) => {
+      setOperationalDays((prevData) =>
+        prevData.map(
+          (dayItem: OperationalDay) =>
+            dayItem.co_id === coId
+              ? { ...dayItem, is_active: value ? 1 : 0 }
+              : dayItem // Ensure state updates match type
+        )
+      );
+      debouncedUpdateClinicOperationStatus(coId, clinicId, value);
+    },
+    [debouncedUpdateClinicOperationStatus]
+  );
 
-  const getClinicProfileDetails = () => {
-    const req = { clinic_id: clinicId };
-    axios
-      .post("http://localhost:8989/api/clinics/get-clinic-profile", req)
-      .then((res) => {
-        console.log(res);
-        const response = res.data;
-        setClinicType(response.operational_hrs);
-        setPatientDemand(response.patient_demand);
-        setSendReminders(response.patient_reminder == 1 ? true : false);
-        response?.logo && setLogoImg(Base64ToImage(response.logo));
-        setOperationalDays(response.operational_days);
-        setShiftDetails(response.shifts);
-        setInitialAllShifts(response.shifts);
-      })
-      .catch((err) => toast.error(err.message));
-  };
+  // --- NON-API HANDLERS ---
   const handleFileChange = (file: File | null) => {
     if (file) {
       setClinicLogo(file);
-      setPreview(URL.createObjectURL(file)); 
+      setPreview(URL.createObjectURL(file));
     } else {
       setClinicLogo(null);
-      setPreview(null); 
+      setPreview(null);
     }
   };
 
   const handleSave = async () => {
-    // if (!clinicLogo) {
-    //   toast.error("Please select a logo");
-    //   return;
-    // }
-
     const formData = new FormData();
-    clinicLogo && formData.append("clinic_logo", clinicLogo); 
+    clinicLogo && formData.append("clinic_logo", clinicLogo);
     formData.append("clinic_id", clinicId.toString());
     clinicType && formData.append("operational_hrs", clinicType);
     patientDemand && formData.append("patient_demand", patientDemand);
-    sendReminders && formData.append("patient_reminder", sendReminders ? "1" : "0");
+    sendReminders &&
+      formData.append("patient_reminder", sendReminders ? "1" : "0");
 
-    // console.log(formData);
     await saveProfileSettingDetails(formData);
     if (updatedShiftDetails.length > 0) {
       await saveCilnicShifts();
     }
   };
 
-  const saveProfileSettingDetails = (formData) => {
+  const saveProfileSettingDetails = (formData: FormData) => {
     axios
       .post(
         "http://localhost:8989/api/clinics/update-clinic-profile",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       )
       .then((res) => toast.success(res.data.message))
       .catch((err) => toast.error(err.message));
@@ -161,32 +216,8 @@ const Profile: React.FC = () => {
       });
   };
 
-  const debouncedUpdateClinicOperationStatus = (
-    coId: number | string,
-    clinicId: number | string,
-    value: boolean
-  ) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const req = {
-          co_id: coId,
-          clinic_id: clinicId,
-          is_active: value ? "1" : "0",
-          modified_by: "Internal Admin",
-        };
-        await axios.post(
-          "http://localhost:8989/api/clinics/update-clinic-operation-status",
-          req
-        );
-      } catch (err: any) {
-        toast.error(err.message || "Failed to update status");
-      }
-    }, 2500);
-  };
-
   return (
-    <div className=" mx-6 m-4 px-6 py-4  bg-white shadow-lg rounded-2xl">
+    <div className=" mx-6 m-4 px-6 py-4  bg-white shadow-lg rounded-2xl">
       {/* Branding */}
       <section className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">
@@ -291,22 +322,16 @@ const Profile: React.FC = () => {
           Daily Schedule
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {operationalDays.map((day) => {
-            const dayShifts = initialAllShifts
-              .filter((s) => s.co_id === day.co_id)
-              .map((s) => ({ start: s.shift_start, end: s.shift_end }));
-
-            return (
-              <DailySchedule
-                key={day.co_id}
-                day={day.day}
-                opShift={day}
-                handleOperationDay={handleOperationDay}
-                onShiftChange={handleShiftChange}
-                initialShifts={dayShifts}
-              />
-            );
-          })}
+          {operationalDays.map((day) => (
+            // ✅ Calling the new wrapper component
+            <ScheduleDayWrapper
+              key={day.co_id}
+              day={day}
+              initialAllShifts={initialAllShifts}
+              handleOperationDay={handleOperationDay}
+              onShiftChange={handleShiftChange}
+            />
+          ))}
         </div>
       </section>
 

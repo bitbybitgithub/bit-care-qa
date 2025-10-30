@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { fetchTodayAppointments } from "../../api/PatientQueueApi";
+// import { fetchTodayAppointments } from "../../api/PatientQueueApi";
 import type { AppointmentDto } from "../../api/PatientQueueApi";
 import { LuClock4 } from "react-icons/lu";
 
 export interface Patient {
-  patient_name: ReactNode;
+  patient_name: string;
   date_of_birth: string | number | Date;
   gender: number;
-  age: ReactNode;
+  age: number;
   time?: string;
   name: string;
   reason?: string;
@@ -22,87 +22,48 @@ export interface Patient {
 
 interface PatientQueueProps {
   mode?: "doctor" | "staff";
+  loading:false | true;
   doctorId?: number;
-  className?: string;
+  classProp?: string;
   patientsData?: Patient[];
+  error:string;
   onStartConsultation?: (patient: Patient) => void;
   onAddWalkIn?: () => void; // staff only
 }
 
 const badgeClasses = (status: string) => {
-  switch (status) {
-    case "Waiting":
-      return "bg-yellow-100 text-yellow-700";
-    case "In Consultation":
-      return "bg-blue-100 text-blue-700";
-    case "Completed":
-      return "bg-green-100 text-green-700";
-    case "Cancelled":
-      return "bg-red-100 text-red-700";
-    case "Scheduled":
-      return "bg-[#c3e7ff] text-[#0074b7]";
+  switch (status.toLowerCase()) {
+    case "waiting":
+      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+    case "in consultation":
+      return "bg-blue-100 text-blue-700 border border-blue-300";
+    case "completed":
+      return "bg-green-100 text-green-700 border border-green-300";
+    case "cancelled":
+      return "bg-red-100 text-red-700 border border-red-300";
+    case "scheduled":
+      return "bg-cyan-100 text-cyan-700 border border-cyan-300";
+    case "started":
+      return "bg-indigo-100 text-indigo-700 border border-indigo-300";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800 border border-gray-300";
   }
 };
+
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
   doctorId = 4,
-  className,
+  error,
+  loading,
+  classProp,
   patientsData,
   onStartConsultation,
   onAddWalkIn,
 }) => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (mode === "staff") {
-      setPatients(patientsData || []);
-      setLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-    setLoading(true);
-    setError(null);
-
-    fetchTodayAppointments(doctorId)
-      .then((appointments) => {
-        if (!isMounted) return;
-
-        const mapped: Patient[] = appointments.map((a) => ({
-          time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
-          name: a.patient_name,
-          reason: a.reason,
-          status: a.status,
-          doctor: a.doctor_name,
-          waitingMinutes: a.waitingMinutes,
-          appointmentDate: a.appointment_date,
-          endTime: a.end_time,
-          source: a.source ?? "—",
-          raw: a,
-        }));
-
-        setPatients(mapped);
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        setError(err?.message || "Failed to fetch appointments");
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [mode, doctorId, patientsData]);
 
   return (
-    <div className={className ?? "bg-white rounded-2xl shadow-lg p-6 transition-all duration-300"}>
+    <div className={classProp ?? "bg-white rounded-2xl shadow-lg p-6 transition-all duration-300"}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
         <h2 className="text-xl font-semibold text-gray-800">Patient Queue</h2>
@@ -121,11 +82,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         <div className="py-8 text-center text-gray-500">Loading appointments...</div>
       ) : error ? (
         <div className="py-4 text-center text-red-600">Error: {error}</div>
-      ) : patients.length === 0 ? (
+      ) : patientsData.length === 0 ? (
         <div className="py-8 text-center text-gray-500">No patients found.</div>
       ) : (
         <div className="flex flex-col gap-4">
-          {patients.map((patient, index) => (
+          {patientsData.map((patient, index) => (
             <div
               key={index}
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-l-4 border-blue-500 rounded-2xl p-4 shadow-sm transition-all duration-300 relative bg-[#f9f9ff] hover:shadow-md"
@@ -176,9 +137,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
               
  {/* Status Badge */}
+           {mode === "staff" &&
                 <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${badgeClasses(patient.status)}`}>
                   {patient.status}
                 </span>
+}
 
 {/* Divider */}
               <div className="hidden sm:block w-px h-12 bg-gray-300 mr-6 ml-4"></div>
@@ -216,4 +179,4 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   );
 };
 
-export default PatientQueue;
+export default React.memo(PatientQueue);

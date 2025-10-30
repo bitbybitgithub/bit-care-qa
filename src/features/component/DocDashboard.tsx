@@ -110,117 +110,136 @@
 // export default DocDashboard;
 
 
-
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { HiClipboardList } from "react-icons/hi";
 import { FaNotesMedical } from "react-icons/fa";
 import { GiMedicines } from "react-icons/gi";
 import { RiUserSharedLine } from "react-icons/ri";
+import { toast } from "react-toastify";
+
 import Cards from "../../components/common/Cards";
 import PatientProgressCard from "../../components/common/PatientProgressCard";
 import PatientQueue, { type Patient } from "./PatientQueue";
-import { fetchTodayAppointments } from "../../api/PatientQueueApi";
+import {
+  fetchTodayAppointments,
+  updatePatientStatus,
+  type AppointmentDto,
+} from "../../api/PatientQueueApi";
 
+interface UpdateStatusPayload {
+  appointment_id: number;
+  user_id: number;
+  status: string;
+}
+
+// ---------------- Component ----------------
 const DocDashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Replace this with actual logged-in doctor's ID
-  const doctorId = 4; // cannot be null
+  const doctorId = 4; // required; should ideally come from auth context or route param
 
-  // useEffect(() => {
-  //   if (!doctorId) {
-  //     setError("Doctor ID is required to fetch appointments");
-  //     setLoading(false);
-  //     return;
-  //   }
+  // ---------------- Fetch Appointments ----------------
+  const fetchAppointments = useCallback(async () => {
+    if (!doctorId) {
+      setError("Doctor ID is required to fetch appointments.");
+      setLoading(false);
+      return;
+    }
 
-  //   let isMounted = true;
-  //   setLoading(true);
-  //   setError(null);
+    setLoading(true);
+    setError(null);
 
-  //   fetchTodayAppointments(doctorId)
-  //     .then((appointments) => {
-  //       if (!isMounted) return;
-  //       const mapped: Patient[] = appointments.map((a) => ({
-  //         time: `${a.start_time} - ${a.end_time}`,
-  //         name: a.patient_name,
-  //         reason: a.reason,
-  //         status: a.status,
-  //         raw: a,
-  //       }));
-  //       setPatients(mapped);
-  //     })
-  //     .catch((err) => {
-  //       if (!isMounted) return;
-  //       setError(err?.message || "Failed to fetch today's appointments");
-  //     })
-  //     .finally(() => {
-  //       if (isMounted) setLoading(false);
-  //     });
+    try {
+      const appointments: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+      console.log(appointments)
 
-  //   return () => {
-  //     isMounted = false;
-  //   };
-  // }, [doctorId]);
-
-  useEffect(() => {
-  let isMounted = true;
-  setLoading(true);
-  setError(null);
-
-  fetchTodayAppointments(doctorId)
-    .then((appointments) => {
-      if (!isMounted) return;
       const mapped: Patient[] = appointments.map((a) => ({
+        appointment_id: a.appointment_id,
         time: `${a.start_time} - ${a.end_time}`,
         name: a.patient_name,
         reason: a.reason,
         status: a.status,
         raw: a,
       }));
+
       setPatients(mapped);
-    })
-    .catch((err) => {
-      if (!isMounted) return;
+    } catch (err: any) {
       setError(err?.message || "Failed to fetch today's appointments");
-    })
-    .finally(() => {
-      if (isMounted) setLoading(false);
-    });
+    } finally {
+      setLoading(false);
+    }
+  }, [doctorId]);
 
-  return () => { isMounted = false; };
-}, [doctorId]);
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
-  const cardItems = [
-    {
-      title: "Patients Records",
-      icon: <HiClipboardList className="text-3xl mb-2" />,
-      // color: "bg-amber-500 text-white",
-      onClick: () => console.log("Patients Records clicked"),
-    },
-    {
-      title: "Add Diagnosis Notes",
-      icon: <FaNotesMedical className="text-3xl mb-2" />,
-      // color: "bg-blue-500 text-white",
-      onClick: () => console.log("Add diagnosis notes clicked"),
-    },
-    {
-      title: "Manage Medication",
-      icon: <GiMedicines className="text-3xl mb-2" />,
-      // color: "bg-fuchsia-500 text-white",
-      onClick: () => console.log("Manage medication clicked"),
-    },
-    {
-      title: "Refer Patient",
-      icon: <RiUserSharedLine className="text-3xl mb-2" />,
-      // color: "bg-green-500 text-white",
-      onClick: () => console.log("Refer Patient clicked"),
-    },
-  ];
+  // ---------------- Update Patient Status ----------------
+  const handleUpdatePatientStatus = useCallback(async (patient: Patient) => {
+    if (!patient?.raw?.appointment_id) {
+      toast.error("Invalid appointment ID.");
+      return;
+    }
 
+    const payload: UpdateStatusPayload = {
+      appointment_id: patient.raw.appointment_id,
+      user_id: 2,
+      status: "scheduled",
+    };
+
+    try {
+      const res = await updatePatientStatus(payload);
+      if (res.success) {
+        toast.success("Consultation started successfully!");
+
+        // // Optimistic update
+        // setPatients((prev) =>
+        //   prev.map((p) =>
+        //     p.raw.appointment_id === patient.raw.appointment_id
+        //       ? { ...p, status: "started" }
+        //       : p
+        //   )
+        // );
+      } else {
+        toast.error(res.message || "Failed to update appointment status.");
+        console.error("❌", res.message);
+      }
+    } catch (err: any) {
+      toast.error("Error updating patient status.");
+      console.error("🔥 Error:", err.message || err);
+    }
+  }, []);
+
+  // ---------------- Card Items ----------------
+  const cardItems = useMemo(
+    () => [
+      {
+        title: "Patients Records",
+        icon: <HiClipboardList className="text-3xl mb-2" />,
+        onClick: () => console.log("Patients Records clicked"),
+      },
+      {
+        title: "Add Diagnosis Notes",
+        icon: <FaNotesMedical className="text-3xl mb-2" />,
+        onClick: () => console.log("Add diagnosis notes clicked"),
+      },
+      {
+        title: "Manage Medication",
+        icon: <GiMedicines className="text-3xl mb-2" />,
+        onClick: () => console.log("Manage medication clicked"),
+      },
+      {
+        title: "Refer Patient",
+        icon: <RiUserSharedLine className="text-3xl mb-2" />,
+        onClick: () => console.log("Refer Patient clicked"),
+      },
+    ],
+    []
+  );
+
+  // ---------------- Render ----------------
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center mt-4">
       <h1 className="text-3xl font-bold text-gray-800 mb-8 self-start">
@@ -228,23 +247,27 @@ const DocDashboard: React.FC = () => {
       </h1>
 
       <div className="flex flex-col gap-6 w-full max-w-5xl">
-        {/* ================= Patient Queue ================= */}
+        {/* ========== Patient Queue ========== */}
         <PatientQueue
           mode="doctor"
           doctorId={doctorId}
-          className="bg-white rounded-xl shadow-md p-4 sm:p-6"
-          patientsData={patients} // optional, already handled in PatientQueue
+          classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
+          patientsData={patients}
+          error={error}
+          onStartConsultation={handleUpdatePatientStatus}
         />
 
-        {/* ================= Clinical Actions Cards ================= */}
+        {/* ========== Action Cards ========== */}
         <Cards gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" items={cardItems} />
 
-        {/* ================= Patient Progress Card ================= */}
+        {/* ========== Progress Card ========== */}
         <PatientProgressCard />
 
-        {/* ================= Loading / Error Handling ================= */}
+        {/* ========== Loading / Error ========== */}
         {loading && (
-          <div className="py-8 text-center text-gray-500">Loading appointments...</div>
+          <div className="py-8 text-center text-gray-500">
+            Loading appointments...
+          </div>
         )}
         {error && <div className="py-4 text-center text-red-600">{error}</div>}
       </div>
@@ -253,10 +276,3 @@ const DocDashboard: React.FC = () => {
 };
 
 export default DocDashboard;
-
-
-
-
-
-
-

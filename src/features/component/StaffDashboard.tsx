@@ -9,7 +9,8 @@ import { fetchTodayAppointments } from "../../api/PatientQueueApi";
 import MuiAlert, { type AlertProps } from "@mui/material/Alert";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
-
+import {io,Socket} from "socket.io-client"
+import { toast } from "react-toastify";
 // Wrap Alert to satisfy TS
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -28,25 +29,55 @@ const StaffDashboard: React.FC = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loadingQueue, setLoadingQueue] = useState(false);
+  const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(null);
 
   const [selectedPatient, setSelectedPatient] = useState(null);
+
+    const clinicId = 1;
+
+ useEffect(() => {
+    const socket: Socket = io("http://localhost:8989", {
+      transports: ["websocket"],
+    });
+
+    socket.emit("joinClinic", clinicId);
+
+    socket.on("appointmentUpdate", (data: { appointment_id: number; status: string }) => {
+      console.log("Real-time appointment update:", data);
+
+      // Optional: update your patient list UI instantly
+      setPatients((prev) =>
+        prev.map((p) =>
+          p?.raw.appointment_id === data.appointment_id
+            ? { ...p, status: data.status }
+            : p
+        )
+      );
+
+      // toast.info(`Appointment ${data.appointment_id} status updated to ${data.status}`);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [clinicId]);
 
   const fetchQueue = () => {
     setLoadingQueue(true);
     setErrorQueue(null);
     fetchTodayAppointments(null)
       .then((appointments) => {
-        const mapped: Patient[] = appointments.map((a) => ({
+        const mapped:Patient[] = appointments.map((a) => ({
+         appointment_id:a.appointment_id,
           time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
           name: a.patient_name,
           status: a.status,
           doctor: a.doctor_name,
           source: a.source,
           raw: a,
-          age: a.age,
+          // age: a.age,
 
         }));
         setPatients(mapped);
@@ -370,7 +401,9 @@ return (
     <PatientQueue
       mode="staff"
       patientsData={patients}
-      className="bg-white rounded-xl shadow-md p-4 sm:p-6"
+      loading={loadingQueue}
+      error={errorQueue}
+      classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
       onAddWalkIn={handleAddWalkIn}
     />
 

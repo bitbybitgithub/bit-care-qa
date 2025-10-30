@@ -4,14 +4,14 @@ import { emrAPI } from "./EmrApi";
 export interface VerifyOtpRequest {
   userId: number;
   otp: number;
-  otp_type: number; // e.g. 2
+  otp_type: 2; 
   mobile_number: string;
 }
 
 export interface VerifyOtpResponse {
   found: boolean;
   message: string;
-  patients: any[]; // if you know structure, replace 'any' with patient type
+  patients: any[]; 
 }
 
 export const verifyPatientpApi = async (

@@ -1,7 +1,12 @@
 //-----------------------------------------------------------------------------------------
 
 import React, { useEffect, useState } from "react";
-import { FaCalendarAlt, FaEnvelope, FaUserMd, FaClipboardList } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaEnvelope,
+  FaUserMd,
+  FaClipboardList,
+} from "react-icons/fa";
 import { MdPhoneInTalk } from "react-icons/md";
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
@@ -20,14 +25,21 @@ type WalkinFormData = {
 type WalkInRegisterFormProps = {
   onClose: () => void;
   patientData?: any;
+  onSuccess: () => void;
+  contact: string;
 };
 
-const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({ onClose, patientData }) => {
+const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
+  onClose,
+  patientData,
+  onSuccess,
+  contact,
+}) => {
   const [formData, setFormData] = useState<WalkinFormData>({
     name: "",
     dob: "",
     email: "",
-    phone: "",
+    phone: contact,
     doctor: "",
     reason: "",
   });
@@ -37,13 +49,13 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({ onClose, patien
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [doctorLoading, setDoctorLoading] = useState(false);
   // Get current time
-const now = new Date();
+  const now = new Date();
 
-// Format function for HH:mm
-const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
+  // Format function for HH:mm
+  const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
 
-// Calculate end time (15 minutes later)
-const endTime = new Date(now.getTime() + 15 * 60 * 1000);
+  // Calculate end time (15 minutes later)
+  const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
   //  Fetch doctors list on mount
   useEffect(() => {
@@ -71,7 +83,7 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
           ? new Date(patientData.date_of_birth).toISOString().split("T")[0]
           : "",
         email: patientData.email || "",
-        phone: patientData.mobile_number || "",
+        phone: patientData.mobile_number || contact,
         doctor: "",
         reason: "",
       });
@@ -80,7 +92,7 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
         name: "",
         dob: "",
         email: "",
-        phone: "",
+        phone:contact,
         doctor: "",
         reason: "",
       });
@@ -92,14 +104,17 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
     const newErrors: Record<string, string> = {};
     if (!data.name.trim()) newErrors.name = "Full name is required";
     if (!data.phone.trim()) newErrors.phone = "Mobile number is required";
-    else if (!/^\d{10}$/.test(data.phone)) newErrors.phone = "Enter valid 10-digit mobile";
+    else if (!/^\d{10}$/.test(data.phone))
+      newErrors.phone = "Enter valid 10-digit mobile";
     if (data.email && !/^\S+@\S+\.\S+$/.test(data.email))
       newErrors.email = "Invalid email format";
     return newErrors;
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -128,51 +143,60 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
     try {
       setLoading(true);
-      console.log(" Calling savePatient with:", reqBody);
 
-      const res: any = await savePatient(reqBody);
-      console.log(" Patient API Response:", res);
+      let patientId = patientData?.patientId; // existing patient check
 
-      if (res && res.patientId) {
-        console.log(" Patient created with ID:", res.patientId);
+      if (!patientId) {
+        console.log("Calling savePatient with:", reqBody);
+        const res: any = await savePatient(reqBody);
+        console.log("Patient API Response:", res);
 
-        // Find doctor info
-        const selectedDoctor = doctors.find((d) => d.name === formData.doctor);
+        if (!res || !res.patientId) {
+          throw new Error(res?.message || "Failed to register patient.");
+        }
 
-        const appointmentData = {
-          patient_id: res.patientId,
-          doctor_id: selectedDoctor?.id || 0,
-          patient_name: formData.name,
-          doctor_name: formData.doctor,
-          appointment_date: new Date().toISOString().split("T")[0],
-          start_time: formatTime(now),
-          end_time: formatTime(endTime),
-          status: "scheduled",
-          source: "walk_in",
-          reason: formData.reason || "Regular checkup",
-          user_id: 2,
-        };
-
-        console.log(" Calling saveAppointment with:", appointmentData);
-        const appointmentRes = await saveAppointment(appointmentData);
-        console.log(" Appointment API Response:", appointmentRes);
-
-        alert("Patient and Appointment saved successfully!");
-        setFormData({
-          name: "",
-          dob: "",
-          email: "",
-          phone: "",
-          doctor: "",
-          reason: "",
-        });
-        setErrors({});
-        onClose();
+        patientId = res.patientId;
+        console.log("Patient created with ID:", patientId);
       } else {
-        alert(res?.message || "Failed to register patient.");
+        console.log("Existing patient found with ID:", patientId);
       }
+
+      // Find doctor info
+      const selectedDoctor = doctors.find((d) => d.name === formData.doctor);
+
+      const appointmentData = {
+        patient_id: patientId,
+        doctor_id: selectedDoctor?.id || 0,
+        patient_name: formData.name,
+        doctor_name: formData.doctor,
+        appointment_date: new Date().toISOString().split("T")[0],
+        start_time: formatTime(now),
+        end_time: formatTime(endTime),
+        status: "scheduled",
+        source: "walk_in",
+        reason: formData.reason || "Regular checkup",
+        user_id: 2,
+      };
+
+      console.log("Calling saveAppointment with:", appointmentData);
+      const appointmentRes = await saveAppointment(appointmentData);
+      console.log("Appointment API Response:", appointmentRes);
+
+      alert("Patient and Appointment saved successfully!");
+
+      setFormData({
+        name: "",
+        dob: "",
+        email: "",
+        phone: "",
+        doctor: "",
+        reason: "",
+      });
+      onSuccess();
+      setErrors({});
+      onClose();
     } catch (err: any) {
-      console.error(" Error in save flow:", err);
+      console.error("Error in save flow:", err);
       alert(err?.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -180,10 +204,7 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4"
-      
-    >
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
@@ -195,16 +216,17 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
         {/* Name */}
         <div className="mb-2">
-          <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+          <label className="block text-gray-700 font-medium mb-1">
+            Full Name
+          </label>
           <div
-  className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
     ${
       errors.name
         ? "border-red-500 ring-1 ring-red-400"
         : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
     }`}
->
-
+          >
             <input
               name="name"
               value={formData.name}
@@ -213,22 +235,26 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
               className="w-full outline-none"
             />
           </div>
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+          )}
         </div>
 
         {/* DOB + Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Date of Birth</label>
-           <div
-  className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+            <label className="block text-gray-700 font-medium mb-1">
+              Date of Birth
+            </label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border 
     ${
       errors.dob
         ? "border-red-500 ring-1 ring-red-400"
         : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
     }`}
->
-  <FaCalendarAlt className="text-gray-500 mr-2" />
+            >
+              <FaCalendarAlt className="text-gray-500 mr-2" />
 
               <input
                 type="date"
@@ -241,17 +267,21 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Contact Number</label>
-             <div
-  className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+            <label className="block text-gray-700 font-medium mb-1">
+              Contact Number
+            </label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border 
     ${
       errors.phone
         ? "border-red-500 ring-1 ring-red-400"
         : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
     }`}
->
+            >
               <MdPhoneInTalk
-                className={`mr-2 ${errors.phone ? "text-red-500" : "text-gray-500"}`}
+                className={`mr-2 ${
+                  errors.phone ? "text-red-500" : "text-gray-500"
+                }`}
               />
               <input
                 name="phone"
@@ -268,17 +298,21 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
         {/* Email */}
         <div className="mb-2">
-          <label className="block text-gray-700 font-medium mb-1">Email Address</label>
-           <div
-  className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+          <label className="block text-gray-700 font-medium mb-1">
+            Email Address
+          </label>
+          <div
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
     ${
       errors.email
         ? "border-red-500 ring-1 ring-red-400"
         : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
     }`}
->
+          >
             <FaEnvelope
-              className={`mr-2 ${errors.email ? "text-red-500" : "text-gray-500"}`}
+              className={`mr-2 ${
+                errors.email ? "text-red-500" : "text-gray-500"
+              }`}
             />
             <input
               name="email"
@@ -293,12 +327,16 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
         {/* Doctor */}
         <div className="mb-2">
-          <label className="block text-gray-700 font-medium mb-1">Select Doctor</label>
-<div
-  className={`flex items-center rounded-lg px-3 py-2 border border-gray-300 
+          <label className="block text-gray-700 font-medium mb-1">
+            Select Doctor
+          </label>
+          <div
+            className={`flex items-center rounded-lg px-3 py-2 border border-gray-300 
     transition-all hover:border-blue-400 hover:shadow-md 
     focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400 focus-within:shadow-lg`}
->            <FaUserMd className="text-gray-500 mr-2" />
+          >
+            {" "}
+            <FaUserMd className="text-gray-500 mr-2" />
             <select
               name="doctor"
               value={formData.doctor}
@@ -320,15 +358,19 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 
         {/* Reason */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Reason for Visit</label>
- <div
-  className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+          <label className="block text-gray-700 font-medium mb-1">
+            Reason for Visit
+          </label>
+          <div
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
     ${
       errors.email
         ? "border-red-500 ring-1 ring-red-400"
         : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
     }`}
->            <FaClipboardList className="text-gray-500 mr-2" />
+          >
+            {" "}
+            <FaClipboardList className="text-gray-500 mr-2" />
             <textarea
               name="reason"
               value={formData.reason}
@@ -363,4 +405,3 @@ const endTime = new Date(now.getTime() + 15 * 60 * 1000);
 };
 
 export default WalkInRegisterForm;
-

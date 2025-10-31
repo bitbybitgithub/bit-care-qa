@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { Base64ToImage } from "../../../utils/converter";
 import { useLoader } from "../../../context/LoaderContext";
 import ScheduleDayWrapper from "./ScheduleDayWrapper";
+import { getSessionItem } from "../../../context/sessions/userSession";
 
 // --- INTERFACES FOR TYPE SAFETY ---
 interface ShiftPayload {
@@ -70,7 +71,7 @@ const Profile: React.FC = () => {
   const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
 
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clinicId = Number(sessionStorage.getItem("clinic_id"));
+  const clinicId = getSessionItem("user", "clinic_id"); 
   const { setLoading } = useLoader();
  
   const { data, isLoading, isSuccess , isError, isFetched } = useQuery<ClinicProfileData>({
@@ -322,7 +323,7 @@ const Profile: React.FC = () => {
           Daily Schedule
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {operationalDays.map((day) => (
+          {operationalDays?.map((day) => (
             // ✅ Calling the new wrapper component
             <ScheduleDayWrapper
               key={day.co_id}

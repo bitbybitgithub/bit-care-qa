@@ -29,7 +29,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
   const [endTime, setEndTime] = useState("22:00");
   const [loading, setLoading] = useState(false);
 
-  const doctorId = getSessionItem("doctor_id")
+  const doctorId = getSessionItem("user","doctor_id")
 
   const blocksForDate = useMemo(
     () => daySchedule?.breakTime || [],

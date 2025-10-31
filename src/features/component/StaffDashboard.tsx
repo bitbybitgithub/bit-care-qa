@@ -35,8 +35,6 @@ const StaffDashboard: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   const clinicId = 1;
-
-  console.log(showRegistrationForm,"uyyutr");
   
 
   useEffect(() => {
@@ -178,7 +176,6 @@ const StaffDashboard: React.FC = () => {
 // };
 
   const handleConfirm = async () => {
-    debugger;
   const finalOtp = otp.join("");
   if (finalOtp.length !== 6) {
     setError("Please enter all 6 digits of the OTP");

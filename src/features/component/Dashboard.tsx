@@ -108,12 +108,14 @@ import { fetchDashboardStats, type Stats } from "../../api/dashboardApi";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
 import { useQuery } from "@tanstack/react-query";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const clinicId = Number(sessionStorage.getItem("clinic_id"));
+  // const clinicId = Number(sessionStorage.getItem("clinic_id"));
 
+  const clinicId = getSessionItem("user","clinic_id")
 
   const [stats, setStats] = useState({
     totalDoctors: 0,

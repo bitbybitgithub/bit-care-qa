@@ -7,19 +7,22 @@ import { ApiInterceptor } from "./api";
 import { logoutApi } from "./api/LogoutApi";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
-import { clearSession } from "./context/sessions/userSession";
+import { clearSession, getSession } from "./context/sessions/userSession";
 import useClientIp from "./hooks/useClientIp";
 import { useEffect } from "react";
+import { TokenManager } from "./api/auth/tokenManager";
 
 export default function App() {
   const dispatch=useDispatch();
   const navigate=useNavigate();
+
+
 ApiInterceptor.set({
   onAuthError: async() => {
       const res = await logoutApi();
         if (res.success) {
           dispatch(logout()); // clear redux
-          clearSession();
+          clearSession("user");
           navigate("/login");
         } else {
           alert(res.error || "Logout failed");
@@ -35,6 +38,14 @@ useEffect(() => {
   if (ip) sessionStorage.setItem("client_ip", ip);
 }, [ip]);
 
+useEffect(() => {
+  const sessionUser = getSession("user");
+  if (sessionUser && ip) {
+    (async () => {
+      await TokenManager.rehydrate();
+    })();
+  }
+}, [ip]);
 
   return (
       <ErrorBoundary>

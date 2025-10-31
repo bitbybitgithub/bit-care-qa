@@ -102,7 +102,7 @@ const Login = () => {
         const data = await loginApi(requestBody);
         console.log("After calling loginApi, response:", data);
         if (data.success) {
-          setSession(data.user);
+          setSession("user",data.user);
           TokenManager.setAccessToken(data.accessToken);
           if(data.user.is_temp_password ==="1")
             {

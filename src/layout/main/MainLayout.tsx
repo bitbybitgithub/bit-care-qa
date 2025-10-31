@@ -49,7 +49,7 @@ const handleLogout = async () => {
     const res = await logoutApi();
     if (res.success) {
       dispatch(logout()); // clear redux
-      clearSession();
+      clearSession("user");
       navigate("/login");
     } else {
       alert(res.error || "Logout failed");

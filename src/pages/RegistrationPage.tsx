@@ -1,28 +1,32 @@
-import { FaHospital, FaPhoneAlt } from "react-icons/fa";
+import { FaPhoneAlt } from "react-icons/fa";
+import { IoMdSettings } from "react-icons/io";
+import { MdPrivacyTip,MdMedicalServices } from "react-icons/md";
 import { HeartPulse } from "lucide-react";
 import RegistrationForm from "./Clinic/RegistrationForm";
+import { RiCustomerServiceFill } from "react-icons/ri";
 
 const Registration = () => {
   const features = [
-    { icon: FaHospital, title: "Quick Setup", description: "Get started in minutes.", bg: "var(--color-info)" },
-    { icon: FaHospital, title: "Reliable Service", description: "Always up and running.", bg: "var(--color-error)" },
-    { icon: FaHospital, title: "Secure Platform", description: "Your data is protected.", bg: "var(--color-success)" },
-    { icon: FaHospital, title: "24/7 Support", description: "We’re here to help anytime.", bg: "var(--color-warning)" },
+    { icon: IoMdSettings, title: "Quick Setup", description: "Get started in minutes.", bg: "var(--color-info)" },
+    { icon: MdMedicalServices, title: "Reliable Service", description: "Always up and running.", bg: "var(--color-error)" },
+    { icon: MdPrivacyTip, title: "Secure Platform", description: "Your data is protected.", bg: "var(--color-success)" },
+    { icon: RiCustomerServiceFill, title: "24/7 Support", description: "We’re here to help anytime.", bg: "var(--color-warning)" },
   ];
  
   return (
-    <div className="bg-[var(--color-surface)] md:min-h-screen min-w-full md:flex md:flex-row flex flex-col items-center justify-center px-2 md:px-30 gap-x-2">
+    <div className="bg-[var(--color-surface)] lg:min-h-screen min-w-full lg:flex lg:flex-row flex flex-col-reverse items-center justify-center px-2 lg:px-30 gap-x-2">
       {/* Left Image Section */}
-      <div className="relative w-full md:w-[50%] md:h-[80vh] p-2 border-b-2 border-[var(--color-primary)]">
+      <div className="relative w-full flex justify-center items-center h-auto lg:h-auto lg:w-[50%] p-2 border-b-2 border-[var(--color-primary)] ">
+        <div>
         <h1
-          className="font-[var(--font-weight-bold)] bg-text mb-5"
+          className="font-[var(--font-weight-bold)] hidden lg:block mb-5"
           style={{ fontSize: "var(--font-h1)" }}
         >
           Register Your{" "}
           <span className="text-[var(--color-primary)]">Clinic</span>
         </h1>
 
-        <p>
+        <p className="text-center lg:text-start">
           Join Our network of healthcare providers and start delivering exceptional
           care to your community.
         </p>
@@ -34,8 +38,8 @@ const Registration = () => {
               style={localStorage.getItem("theme") === "light" ? { backgroundColor: bg } : {}}
               className="bg-[var(--color-bg)] p-4 rounded-[var(--radius-lg)] shadow-md border-b-2 border-[var(--color-primary)]"
             >
-              <Icon />
-              <h3 className="mt-2 font-semibold">{title}</h3>
+              <Icon className="text-xl" />
+              <h3 className="mt-2 font-semibold text-[var(--color-primary)]">{title}</h3>
               <p className="text-sm">{description}</p>
             </div>
           ))}
@@ -57,9 +61,10 @@ const Registration = () => {
           className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[var(--color-primary)] w-20 h-20 animate-pulse"
         />
       </div>
+      </div>
 
       {/* Right Form Section */}
-      <div className="w-full md:w-[50%] p-4">
+      <div className="w-full p-2 lg:p-5 lg:h-auto  lg:w-[50%]">
         <RegistrationForm />
       </div>
     </div>

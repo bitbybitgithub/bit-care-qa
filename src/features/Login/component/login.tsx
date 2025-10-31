@@ -137,8 +137,8 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-300 to-blue-200 font-montserrat p-7">
-      <div className="relative bg-white rounded-3xl shadow-lg overflow-hidden w-full max-w-2xl min-h-[450px]">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] font-montserrat p-7">
+      <div className="relative bg-[var(--color-bg)] rounded-3xl shadow-lg overflow-hidden w-full max-w-2xl min-h-[450px]">
         {/* MOBILE TABS */}
         <div className="block md:hidden">
           <div className="flex justify-center bg-indigo-500 rounded-full p-1 mx-4 mt-4">
@@ -370,7 +370,7 @@ const Login = () => {
               </h1>
 
               <TextField
-                label="User Name"
+                placeholder="User Name"
                 value={clinicUserId}
                 onChange={handleNumberChange}
                 size="small"
@@ -389,7 +389,7 @@ const Login = () => {
               />
 
               <TextField
-                label="Password"
+                placeholder="Password"
                 type="password"
                 value={clinicPassword}
                 onChange={handlePasswordChange}

@@ -200,12 +200,17 @@ const StaffDashboard: React.FC = () => {
     console.log("OTP Verify Response:", res);
 
     // OTP is valid
-    if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
+    if(!res.isOtpValid){
+       setError("Please Enter Valid OTP");
+       return;
+    }
+    else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
       // Existing patient(s) found — show list
       setVerifiedPatients(res.patients);
       setShowRegistrationForm(false);
       // toast.success("OTP verified. Select an existing patient.");
-    } else {
+    }
+    else {
       // OTP valid but no existing patient found — go straight to registration
       setShowRegistrationForm(true)
     }

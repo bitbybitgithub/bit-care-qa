@@ -9,6 +9,7 @@ export interface VerifyOtpRequest {
 }
 
 export interface VerifyOtpResponse {
+  isOtpValid:boolean;
   found: boolean;
   message: string;
   patients: any[]; 

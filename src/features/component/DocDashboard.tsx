@@ -125,6 +125,8 @@ import {
   updatePatientStatus,
   type AppointmentDto,
 } from "../../api/PatientQueueApi";
+import { AppointmentStatus } from "../../context/constant/enum";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 interface UpdateStatusPayload {
   appointment_id: number;
@@ -138,6 +140,7 @@ const DocDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const userId=getSessionItem("user","user_id")
   const doctorId = 4; // required; should ideally come from auth context or route param
 
   // ---------------- Fetch Appointments ----------------
@@ -153,7 +156,6 @@ const DocDashboard: React.FC = () => {
 
     try {
       const appointments: AppointmentDto[] = await fetchTodayAppointments(doctorId);
-      console.log(appointments)
 
       const mapped: Patient[] = appointments.map((a) => ({
         appointment_id: a.appointment_id,
@@ -185,8 +187,8 @@ const DocDashboard: React.FC = () => {
 
     const payload: UpdateStatusPayload = {
       appointment_id: patient.raw.appointment_id,
-      user_id: 2,
-      status: "scheduled",
+      user_id:userId,
+      status: AppointmentStatus.Started,
     };
 
     try {
@@ -208,9 +210,9 @@ const DocDashboard: React.FC = () => {
       }
     } catch (err: any) {
       toast.error("Error updating patient status.");
-      console.error("🔥 Error:", err.message || err);
+      console.error("🔥 Error:", err.message || err);  
     }
-  }, []);
+  }, [userId]);
 
   // ---------------- Card Items ----------------
   const cardItems = useMemo(

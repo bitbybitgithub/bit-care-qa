@@ -1,5 +1,3 @@
-//-----------------------------------------------------------------------------------------
-
 import React, { useEffect, useState } from "react";
 import {
   FaCalendarAlt,
@@ -11,6 +9,7 @@ import { MdPhoneInTalk } from "react-icons/md";
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
+import { toast } from "react-toastify";
 
 type WalkinFormData = {
   name: string;
@@ -103,6 +102,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const validate = (data: WalkinFormData) => {
     const newErrors: Record<string, string> = {};
     if (!data.name.trim()) newErrors.name = "Full name is required";
+      if (!data.dob) newErrors.dob = "Date of birth is required";  // ✅ Added line
+
     if (!data.phone.trim()) newErrors.phone = "Mobile number is required";
     else if (!/^\d{10}$/.test(data.phone))
       newErrors.phone = "Enter valid 10-digit mobile";
@@ -182,8 +183,10 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const appointmentRes = await saveAppointment(appointmentData);
       console.log("Appointment API Response:", appointmentRes);
 
-      alert("Patient and Appointment saved successfully!");
-
+      toast.success("Patient and Appointment saved successfully!", {
+  className: "rounded-xl", // Tailwind class for rounded corners
+  style: { borderRadius: "12px" }, // fallback if Tailwind not applied
+})
       setFormData({
         name: "",
         dob: "",

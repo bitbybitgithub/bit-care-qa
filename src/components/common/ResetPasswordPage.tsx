@@ -31,7 +31,7 @@ const ResetPasswordPage: React.FC = () => {
     newPassword: "",
     confirmPassword: "",
   });
-  const localuserId = getSessionItem("user_id")
+  const localuserId = getSessionItem("user","user_id")
 
   console.log("localUser Id",localuserId)
 

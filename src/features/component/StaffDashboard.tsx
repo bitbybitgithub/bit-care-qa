@@ -223,10 +223,10 @@ const StaffDashboard: React.FC = () => {
   }
 };
   const cardItems = [
-    { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: "bg-violet-200 text-blue-800 border-violet-600" },
-    { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: "bg-yellow-100 text-yellow-800 border-yellow-400" },
-    { title: "Available Doctors", value: 12, icon: <FaUserMd />, color: "bg-green-100 text-green-800 border-green-400" },
-    { title: "Pending Messages", value: 3, icon: <FaEnvelopeOpenText />, color: "bg-red-100 text-red-800 border-red-400" },
+    { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: " text-blue-800 border border-violet-600" },
+    { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: " text-yellow-800 border border-yellow-400" },
+    { title: "Available Doctors", value: 12, icon: <FaUserMd />, color: " text-green-800 border border-green-400" },
+    { title: "Pending Messages", value: 3, icon: <FaEnvelopeOpenText />, color: " text-red-800 border border-red-400" },
   ];
 
 
@@ -268,7 +268,7 @@ const StaffDashboard: React.FC = () => {
                     Contact Number :
                   </label>
                   <div className="flex-1 flex flex-col relative">
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                       <input
                         type="tel"
                         value={contact}
@@ -288,7 +288,29 @@ const StaffDashboard: React.FC = () => {
                           <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
                         </div>
                       )}
-                    </div>
+                    </div> */}
+
+<div className="flex flex-col sm:flex-row items-center w-full gap-2">
+  <input
+    type="tel"
+    value={contact}
+    onChange={(e) => setContact(e.target.value.replace(/\D/g, ""))}
+    maxLength={10}
+    placeholder="Enter 10-digit number"
+    className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
+      ${
+        error
+          ? "border-red-400 focus:ring-red-300"
+          : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+      }`}
+  />
+  {loadingGenerate && (
+    <div className="relative w-5 h-5 shrink-0">
+      <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
+    </div>
+  )}
+</div>
+
 
                     {error && (
                       <p className="text-sm text-red-500 font-medium mt-1">
@@ -421,24 +443,6 @@ const StaffDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* {showRegistrationForm && (
-      <WalkInRegisterForm
-        onClose={() => setShowRegistrationForm(false)}
-        patientData={selectedPatient}
-        contact={contact}
-      />
-    )} */}
-
-      {/* {showRegistrationForm && (
-  <WalkInRegisterForm
-    onClose={() => {
-      // close entire flow and reset
-      resetModalState();
-    }}
-    patientData={selectedPatient}
-    contact={contact}
-  />
-)} */}
 
       {showRegistrationForm && (
         <WalkInRegisterForm

@@ -34,17 +34,17 @@ interface PatientQueueProps {
 const badgeClasses = (status: string) => {
   switch (status.toLowerCase()) {
     case "waiting":
-      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+      return "bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700  border-yellow-200  rounded-full px-3 py-1";
     case "in consultation":
-      return "bg-blue-100 text-blue-700 border border-blue-300";
+      return "bg-gradient-to-r from-violet-50 to-violet-100 text-violet-700  border-violet-200  rounded-full px-3 py-1";
     case "completed":
-      return "bg-green-100 text-green-700 border border-green-300";
+      return "bg-gradient-to-r from-green-50 to-green-100 text-green-700  border-green-200  rounded-full px-3 py-1";
     case "cancelled":
-      return "bg-red-100 text-red-700 border border-red-300";
+      return "bg-gradient-to-r from-red-50 to-red-100 text-red-700  border-red-200 rounded-full px-3 py-1";
     case "scheduled":
-      return "bg-cyan-100 text-cyan-700 border border-cyan-300";
+      return "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700  border-blue-200  rounded-full px-3 py-1";
     case "started":
-      return "bg-indigo-100 text-indigo-700 border border-indigo-300";
+      return "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700  border-indigo-200  rounded-full px-3 py-1";
     default:
       return "bg-gray-100 text-gray-800 border border-gray-300";
   }
@@ -102,38 +102,52 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
               </div>
 
               {/* Divider */}
-              <div className="hidden sm:block w-px h-12 bg-gray-300"></div>
+              <div className="hidden sm:block w-px h-12 ml-1 bg-gray-300"></div>
 
-              {/* Center: Info */}
-              <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 px-2 mt-2 sm:mt-0">
-                {mode === "doctor" ? (
-                  <>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Service</span>
-                      <span className="text-gray-800 font-medium">{patient.reason ?? "—"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Source</span>
-                      <span className="text-gray-800 font-medium">{patient.source ?? "—"}</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Doctor</span>
-                      <span className="text-gray-800 font-medium">{patient.doctor ?? "—"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500"> Time</span>
-                      <span className="text-gray-800 font-medium">{patient.time ?? "—"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Source</span>
-                      <span className="text-gray-800 font-medium">{patient.source ?? "—"}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+{/* Center: Info */}
+<div
+  className="
+    flex-1 
+    grid 
+    grid-cols-2 
+    sm:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] 
+    gap-2 sm:gap-4 
+    px-2 
+    mt-2 sm:mt-0
+  "
+>
+  {mode === "doctor" ? (
+    <>
+      <div className="flex flex-col min-w-[100px]">
+        <span className="text-xs text-gray-500">Service</span>
+        <span className="text-gray-800 font-medium truncate">{patient.reason ?? "—"}</span>
+      </div>
+      <div className="flex flex-col min-w-[100px]">
+        <span className="text-xs text-gray-500">Source</span>
+        <span className="text-gray-800 font-medium truncate">{patient.source ?? "—"}</span>
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="flex flex-col min-w-[100px]">
+        <span className="text-xs text-gray-500">Doctor</span>
+        <span className="text-gray-800 font-medium truncate" title={patient.doctor}>
+          {patient.doctor ?? "—"}
+        </span>
+      </div>
+      <div className="flex flex-col min-w-[100px]">
+        <span className="text-xs text-gray-500">Time</span>
+        <span className="text-gray-800 font-medium">{patient.time ?? "—"}</span>
+      </div>
+      <div className="flex flex-col min-w-[100px]">
+        <span className="text-xs text-gray-500">Source</span>
+        <span className="text-gray-800 font-medium truncate" title={patient.source}>
+          {patient.source ?? "—"}
+        </span>
+      </div>
+    </>
+  )}
+</div>
 
               
  {/* Status Badge */}

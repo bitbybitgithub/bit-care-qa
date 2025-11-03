@@ -382,7 +382,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, clinicId }) => {
     email: "",
     phone: "",
     role: "",
-    doctor: "",
+    // doctor: "",
     username: "",
     password: "",
   });
@@ -450,7 +450,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, clinicId }) => {
           email: "",
           phone: "",
           role: "",
-          doctor: "",
+          // doctor: "",
           username: "",
           password: "",
         });
@@ -472,7 +472,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, clinicId }) => {
     { name: "email", icon: <FaEnvelope />, type: "email" },
     { name: "phone", icon: <FaPhone /> },
     { name: "role", icon: <FaUserMd /> },
-    { name: "doctor", icon: <FaClipboardList /> },
+    // { name: "doctor", icon: <FaClipboardList /> },
     { name: "username", icon: <FaUser /> },
     { name: "password", icon: <FaKey />, type: "password" },
   ];

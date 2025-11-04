@@ -4,6 +4,7 @@ import type { AppointmentDto } from "../../api/PatientQueueApi";
 import { LuClock4 } from "react-icons/lu";
 
 export interface Patient {
+  patient_id: number;
   patient_name: string;
   date_of_birth: string | number | Date;
   gender: number;
@@ -82,11 +83,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         <div className="py-8 text-center text-gray-500">Loading appointments...</div>
       ) : error ? (
         <div className="py-4 text-center text-red-600">Error: {error}</div>
-      ) : patientsData.length === 0 ? (
+      ) : patientsData?.length === 0 ? (
         <div className="py-8 text-center text-gray-500">No patients found.</div>
       ) : (
         <div className="flex flex-col gap-4">
-          {patientsData.map((patient, index) => (
+          {patientsData?.map((patient, index) => (
             <div
               key={index}
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-l-4 border-blue-500 rounded-2xl p-4 shadow-sm transition-all duration-300 relative bg-[#f9f9ff] hover:shadow-md"

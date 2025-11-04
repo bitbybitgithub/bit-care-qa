@@ -82,6 +82,9 @@ const Profile: React.FC = () => {
   });
 
 
+//   useEffect(() => {
+//     setLoading(isLoading);
+// }, [isLoading, isFetched, isError]);
 
   useEffect(() => {
     if (data && isFetched) {

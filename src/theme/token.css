@@ -6,6 +6,11 @@
   /* TYPOGRAPHY */
   --font-family: "Inter", "Roboto", "Segoe UI", system-ui, sans-serif;
 
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #eab308;
+  --color-info: #0284c7;
+
   --font-h1: 2.25rem;   /* 36px */
   --font-h2: 1.75rem;   /* 28px */
   --font-h3: 1.5rem;    /* 24px */
@@ -61,11 +66,6 @@
   --color-secondary: #16a34a;
   --color-accent: #f59e0b;
 
-  --color-success: #10b981;
-  --color-error: #dc2626;
-  --color-warning: #facc15;
-  --color-info: #0284c7;
-
   --color-bg: #f9fafb;
   --color-surface: #ffffff;
   --color-surface-alt: #f3f4f6;
@@ -86,11 +86,6 @@
 
   --color-secondary: #22c55e;
   --color-accent: #fbbf24;
-
-  --color-success: #34d399;
-  --color-error: #ef4444;
-  --color-warning: #facc15;
-  --color-info: #38bdf8;
 
   --color-bg: #0f172a;
   --color-surface: #1e293b;
@@ -117,11 +112,6 @@
   --color-secondary: #0ea5e9;
   --color-accent: #14b8a6;
 
-  --color-success: #0ea5e9;
-  --color-error: #f43f5e;
-  --color-warning: #fbbf24;
-  --color-info: #22d3ee;
-
   --color-bg: #e0f2fe;
   --color-surface: #f0f9ff;
   --color-surface-alt: #e0f7fa;
@@ -143,11 +133,6 @@
 
   --color-secondary: #10b981; /* teal accent */
   --color-accent: #22c55e;
-
-  --color-success: #16a34a;
-  --color-error: #dc2626;
-  --color-warning: #eab308;
-  --color-info: #059669;
 
   --color-bg: #f0fdf4; /* gentle mint background */
   --color-surface: #ecfdf5;

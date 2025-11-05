@@ -7,7 +7,7 @@ export const validateRegistration = (form: FormDataBase): Errors => {
   const errors: Errors = {};
  if (!form.name?.trim()) {
   errors.name = "Clinic name is required";
-} else if (form.name.trim().length < 5) {
+} else if (form.name.trim().length < 2) {
   errors.name = "Clinic name must be at least 5 characters long";
 } else if (form.name.trim().length > 50) {
   errors.name = "Clinic name cannot exceed 50 characters";

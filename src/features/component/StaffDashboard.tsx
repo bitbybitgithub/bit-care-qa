@@ -6,14 +6,12 @@ import PatientQueue, { type Patient } from "../../features/component/PatientQueu
 import Regex from "../../Helper/Regex";
 import { generateOtpApi } from "../../api/GenerateOtpApi";
 import { fetchTodayAppointments } from "../../api/PatientQueueApi";
-import MuiAlert, { type AlertProps } from "@mui/material/Alert";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
-import { io, Socket } from "socket.io-client"
-// Wrap Alert to satisfy TS
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
+import { io, Socket } from "socket.io-client";
+import { IoCall } from "react-icons/io5";
+
+
 
 const StaffDashboard: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -35,7 +33,7 @@ const StaffDashboard: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   const clinicId = 1;
-  
+
 
   useEffect(() => {
     const socket: Socket = io("http://localhost:8989", {
@@ -56,7 +54,6 @@ const StaffDashboard: React.FC = () => {
         )
       );
 
-      // toast.info(`Appointment ${data.appointment_id} status updated to ${data.status}`);
     });
 
     return () => {
@@ -168,60 +165,53 @@ const StaffDashboard: React.FC = () => {
     if (e.key === "Backspace" && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
   };
 
-//   const openRegistrationForNewPatient = () => {
-//   // Close the OTP modal UI and open the registration form
-//   setOpen(false);                // close OTP modal
-//   setVerifiedPatients(null);     // clear any old patient list
-//   setShowRegistrationForm(true); // open registration form
-// };
+
 
   const handleConfirm = async () => {
-  const finalOtp = otp.join("");
-  if (finalOtp.length !== 6) {
-    setError("Please enter all 6 digits of the OTP");
-    return;
-  }
-  if (!userId) {
-    setError("User ID not found. Please resend OTP.");
-    return;
-  }
-
-  setLoadingVerify(true);
-  setError("");
-
-  try {
-    const res = await verifyPatientpApi({
-      userId,
-      otp: Number(finalOtp),
-      otp_type: 2,
-      mobile_number: contact,
-    });
-
-    console.log("OTP Verify Response:", res);
-
-    // OTP is valid
-    if(!res.isOtpValid){
-       setError("Please Enter Valid OTP");
-       return;
+    const finalOtp = otp.join("");
+    if (finalOtp.length !== 6) {
+      setError("Please enter all 6 digits of the OTP");
+      return;
     }
-    else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
-      // Existing patient(s) found — show list
-      setVerifiedPatients(res.patients);
-      setShowRegistrationForm(false);
-      // toast.success("OTP verified. Select an existing patient.");
-    }
-    else {
-      // OTP valid but no existing patient found — go straight to registration
-      setShowRegistrationForm(true)
+    if (!userId) {
+      setError("User ID not found. Please resend OTP.");
+      return;
     }
 
-  } catch (err) {
-    console.error("OTP verification error:", err);
-    setError("Something went wrong while verifying OTP. Please try again.");
-  } finally {
-    setLoadingVerify(false);
-  }
-};
+    setLoadingVerify(true);
+    setError("");
+
+    try {
+      const res = await verifyPatientpApi({
+        userId,
+        otp: Number(finalOtp),
+        otp_type: 2,
+        mobile_number: contact,
+      });
+
+      console.log("OTP Verify Response:", res);
+      if (!res.isOtpValid) {
+        setError("Please enter valid OTP");
+        return;
+      }
+      // OTP is valid
+      else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
+        // Existing patient(s) found — show list
+        setVerifiedPatients(res.patients);
+        setShowRegistrationForm(false);
+        // toast.success("OTP verified. Select an existing patient.");
+      } else {
+        // OTP valid but no existing patient found — go straight to registration
+        setShowRegistrationForm(true)
+      }
+
+    } catch (err) {
+      console.error("OTP verification error:", err);
+      setError("Something went wrong while verifying OTP. Please try again.");
+    } finally {
+      setLoadingVerify(false);
+    }
+  };
   const cardItems = [
     { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: " text-blue-800 border border-violet-600" },
     { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: " text-yellow-800 border border-yellow-400" },
@@ -241,7 +231,7 @@ const StaffDashboard: React.FC = () => {
         patientsData={patients}
         loading={loadingQueue}
         error={errorQueue}
-        classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
+        // classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
         onAddWalkIn={handleAddWalkIn}
       />
 
@@ -268,48 +258,43 @@ const StaffDashboard: React.FC = () => {
                     Contact Number :
                   </label>
                   <div className="flex-1 flex flex-col relative">
-                    {/* <div className="flex items-center gap-2">
+
+
+                    <div className="flex flex-col sm:flex-row items-center w-full gap-2">
+
+
                       <input
                         type="tel"
                         value={contact}
-                        onChange={(e) =>
-                          setContact(e.target.value.replace(/\D/g, ""))
-                        }
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, ""); // allow only digits
+
+                          //  Block if first digit is 0–5
+                          if (val.length === 1 && /[0-5]/.test(val)) return;
+
+                          //  Allow only digits and limit to 10
+                          if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
+                            setContact(val);
+                            setError("");
+                          } else if (val.length === 1) {
+                            setError("Contact number should start from 6");
+                          }
+                        }}
                         maxLength={10}
                         placeholder="Enter 10-digit number"
-                        className={`w-60 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-                        ${error
+                        className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
+    ${error
                             ? "border-red-400 focus:ring-red-300"
                             : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
                           }`}
                       />
+
                       {loadingGenerate && (
-                        <div className="relative w-5 h-5">
+                        <div className="relative w-5 h-5 shrink-0">
                           <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
                         </div>
                       )}
-                    </div> */}
-
-<div className="flex flex-col sm:flex-row items-center w-full gap-2">
-  <input
-    type="tel"
-    value={contact}
-    onChange={(e) => setContact(e.target.value.replace(/\D/g, ""))}
-    maxLength={10}
-    placeholder="Enter 10-digit number"
-    className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-      ${
-        error
-          ? "border-red-400 focus:ring-red-300"
-          : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
-      }`}
-  />
-  {loadingGenerate && (
-    <div className="relative w-5 h-5 shrink-0">
-      <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-blue-500"></div>
-    </div>
-  )}
-</div>
+                    </div>
 
 
                     {error && (
@@ -373,7 +358,7 @@ const StaffDashboard: React.FC = () => {
                   {contact}
                 </h3>
 
-                <div className="space-y-4">
+                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
                   {verifiedPatients.map((p, i) => (
                     <div
                       key={i}
@@ -389,10 +374,10 @@ const StaffDashboard: React.FC = () => {
                           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center">
                             <FaUser className="text-white text-xl" />
                           </div>
-                          <h4 className="font-semibold text-xl text-gray-900 group-hover:text-blue-700 transition-colors ">
+                          <h4 className="font-semibold text-xl text-gray-900 group-hover:text-blue-700 transition-colors">
                             {p.patient_name}
                           </h4>
-                          <p className="text-sm text-gray-600 ">
+                          <p className="text-sm text-gray-600">
                             {p.gender === 1 ? "Male" : "Female"}
                           </p>
                         </div>
@@ -400,13 +385,11 @@ const StaffDashboard: React.FC = () => {
                         <div className="flex items-center gap-6 ml-12 text-sm text-gray-700">
                           <div className="flex items-center gap-2">
                             <FaCalendarAlt className="text-blue-500" />
-                            <span>
-                              {new Date(p.date_of_birth).toLocaleDateString()}
-                            </span>
+                            <span>{new Date(p.date_of_birth).toLocaleDateString()}</span>
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <FaPhone className="text-blue-500" />
+                            <IoCall className="text-blue-500" />
                             <span>+91 {contact}</span>
                           </div>
                         </div>
@@ -418,6 +401,7 @@ const StaffDashboard: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
               </div>
             )}
 

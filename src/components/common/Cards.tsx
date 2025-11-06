@@ -18,15 +18,16 @@ interface CardsProps {
 const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
   return (
     <div
-      className={`grid gap-4 mb-6 ${gridCols || "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"}`}
+      className={`grid gap-4 mb-6 ${
+        gridCols || "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"
+      }`}
     >
       {items.map((item, index) => (
         <div
           key={index}
-          className={`rounded-xl shadow-md transition-all duration-300 border-l-4 border-blue-600 p-6 flex flex-col items-center justify-center cursor-pointer ${
-  item.color ?? "bg-gray-200 text-gray-900"
-}`}
-
+          className={`rounded-xl shadow-md transition-all duration-300 border-l-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center cursor-pointer ${
+            item.color ?? "bg-[var(--color-bg)] text-[--color-text]"
+          }`}
           onClick={item.onClick}
         >
           {loading ? (
@@ -36,10 +37,8 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
           ) : (
             <>
               {item.icon && <div className="text-3xl mb-2">{item.icon}</div>}
-              <p className="text-3xl font-bold text-gray-900">{item.value}</p>
-              <p className="mt-2 text-gray-700 font-medium text-center">
-                {item.title}
-              </p>
+              <p className="text-3xl font-bold ">{item.value}</p>
+              <p className="mt-2 font-medium text-center">{item.title}</p>
             </>
           )}
         </div>

@@ -6,8 +6,10 @@ import {
   Button,
   InputAdornment,
   CircularProgress,
+  FormHelperText,
+  FormControl,
 } from "@mui/material";
-import { FaPhoneAlt, FaLock } from "react-icons/fa";
+import { FaPhoneAlt, FaUser, FaLock } from "react-icons/fa";
 import { loginSuccess } from "../../../redux/authSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
@@ -18,7 +20,6 @@ import useClientIp from "../../../hooks/useClientIp";
 import { setSession } from "../../../context/sessions/userSession";
 import { TokenManager } from "../../../api/auth/tokenManager";
 
-
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -28,25 +29,24 @@ const Login = () => {
   const [patientPassword, setPatientPassword] = useState<string>("");
   const [clinicUserId, setClinicUserId] = useState("");
   const [clinicPassword, setClinicPassword] = useState<string>("");
-  const [errors, setErrors] = useState({ number: "", password: "" });
+  const [errors, setErrors] = useState({
+    username: "",
+    number: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
-
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setErrors((prev) => ({ ...prev, number: "" }));
 
     if (isClinic) {
       setClinicUserId(value);
-      setErrors((prev) => ({ ...prev, number: "" }));
     } else {
       const numVal = value.replace(/\D/g, "");
       setPatientNumber(numVal);
 
-      if (numVal.length === 0) {
-        setErrors((prev) => ({ ...prev, number: "" }));
-      } else if (Regex.MOBILEREGEX.test(numVal)) {
-        setErrors((prev) => ({ ...prev, number: "" }));
-      } else {
+      if (numVal && !Regex.MOBILEREGEX.test(numVal)) {
         setErrors((prev) => ({
           ...prev,
           number: "Mobile Number must start from 6-9 and be 10 digits",
@@ -56,27 +56,41 @@ const Login = () => {
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-
+    const val = e.target.value;
+    setErrors((prev) => ({ ...prev, password: "" }));
     if (isClinic) {
       setClinicPassword(val);
     } else {
-      val = val.replace(/\D/g, "");
-      setPatientPassword(val);
-    }
-
-    if (val.length === 0) {
-      setErrors((prev) => ({ ...prev, password: "" }));
-    } else {
-      setErrors((prev) => ({ ...prev, password: "" }));
+      setPatientPassword(val.replace(/\D/g, ""));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const number = isClinic ? clinicUserId.trim() : patientNumber.trim();
+    const password = isClinic ? clinicPassword.trim() : patientPassword.trim();
+    let newErrors: any = {};
+    if (!number) {
+      newErrors.number = isClinic
+        ? "User Name is required"
+        : "Mobile number is required";
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+    }
 
-    const number = isClinic ? clinicUserId : patientNumber;
-    const password = isClinic ? clinicPassword : patientPassword;
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
+      setErrors((prev) => ({
+        ...prev,
+        number: "Mobile Number must start from 6-9 and be 10 digits",
+      }));
+      return;
+    }
 
     if (!isClinic && !Regex.MOBILEREGEX.test(number)) {
       toast.error("Invalid mobile number");
@@ -105,14 +119,12 @@ const Login = () => {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
           if (data.user.is_temp_password === "1") {
-            console.log(data.user.user_id)
+            console.log(data.user.user_id);
             setTimeout(() => {
               navigate("/ResetPassword");
               toast.success("Please reset your temporary password");
             }, 1000);
-          }
-
-          else {
+          } else {
             navigate("/dashboard");
             toast.success("Login successful");
           }
@@ -137,24 +149,26 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] font-montserrat p-7">
-      <div className="relative bg-[var(--color-bg)] rounded-3xl shadow-lg overflow-hidden w-full max-w-2xl min-h-[450px]">
+      <div className="relative bg-[var(--color-bg)] rounded-3xl shadow-2xl overflow-hidden w-full max-w-2xl md:min-h-[450px]">
         {/* MOBILE TABS */}
         <div className="block md:hidden">
-          <div className="flex justify-center bg-indigo-500 rounded-full p-1 mx-4 mt-4">
+          <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${!isClinic
-                  ? "bg-white text-indigo-600 shadow-md"
-                  : "bg-indigo-500 text-white hover:bg-indigo-400/70"
-                }`}
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
+                !isClinic
+                  ? "bg-[var(--color-white)] text-[var(--color-primary)]  shadow-md"
+                  : "bg-[var(--color-primary)]  text-[var(--color-white)] hover:opacity-90"
+              }`}
               onClick={() => setIsClinic(false)}
             >
               Patient
             </button>
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${isClinic
-                  ? "bg-white text-indigo-600 shadow-md"
-                  : "bg-indigo-500 text-white hover:bg-indigo-400/70"
-                }`}
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
+                isClinic
+                  ? "bg-[var(--color-white)] text-[var(--color-primary)]  shadow-md"
+                  : "bg-[var(--color-primary)]  text-[var(--color-white)] hover:opacity-900"
+              }`}
               onClick={() => setIsClinic(true)}
             >
               Clinic
@@ -162,23 +176,27 @@ const Login = () => {
           </div>
 
           <div className="p-6 relative">
-            <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">
+            <h2 className="text-2xl font-bold text-center text-[var(--color-primary)] mb-6">
               {isClinic ? "Clinic Login" : "Patient Login"}
             </h2>
             <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
               <TextField
-                label={isClinic ? "User Id" : "Mobile Number"}
+                placeholder={isClinic ? "User Name" : "Mobile Number"}
                 value={isClinic ? clinicUserId : patientNumber}
                 size="small"
                 onChange={handleNumberChange}
-                error={!isClinic && !!errors.number}
-                helperText={!isClinic ? errors.number : ""}
+                error={!!errors.number}
+                helperText={errors.number}
                 fullWidth
                 inputProps={!isClinic ? { maxLength: 10 } : {}}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <FaPhoneAlt className="text-indigo-500" />
+                      {isClinic ? (
+                        <FaUser className="text-[var(--color-text)]" />
+                      ) : (
+                        <FaPhoneAlt className="text-[var(--color-text)]" />
+                      )}
                     </InputAdornment>
                   ),
                 }}
@@ -189,7 +207,7 @@ const Login = () => {
               />
 
               <TextField
-                label="Password"
+                placeholder="Password"
                 type="password"
                 value={isClinic ? clinicPassword : patientPassword}
                 size="small"
@@ -200,7 +218,7 @@ const Login = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <FaLock className="text-indigo-500" />
+                      <FaLock className="text-[var(--color-text)]]" />
                     </InputAdornment>
                   ),
                 }}
@@ -214,13 +232,6 @@ const Login = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={
-                  loading ||
-                  !!errors.number ||
-                  !!errors.password ||
-                  !(isClinic ? clinicUserId : patientNumber) ||
-                  !(isClinic ? clinicPassword : patientPassword)
-                }
                 sx={{ borderRadius: "12px", py: 1, fontWeight: 600 }}
               >
                 {loading ? (
@@ -235,7 +246,7 @@ const Login = () => {
                     Don't have an account?{" "}
                     <Link
                       to="/register"
-                      className="text-indigo-600 hover:underline cursor-pointer font-semibold"
+                      className="text-[var(--color-info)] hover:underline cursor-pointer font-semibold"
                     >
                       Register Clinic
                     </Link>
@@ -250,67 +261,79 @@ const Login = () => {
         <div className="hidden md:flex">
           {/* Patient Login Panel */}
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${isClinic
+            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
+              isClinic
                 ? "left-0 translate-x-full opacity-0 z-10"
                 : "left-0 opacity-100 z-50"
-              }`}
+            }`}
           >
             <form
               onSubmit={handleSubmit}
               className="flex flex-col items-center justify-center h-full px-10 space-y-5 w-full"
             >
-              <h1 className="text-3xl font-extrabold bg-blue-900 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
                 Patient Login
               </h1>
-
-              <TextField
-                label="Mobile Number"
-                value={patientNumber}
-                onChange={handleNumberChange}
-                size="small"
-                error={!!errors.number}
-                helperText={errors.number}
-                fullWidth
-                inputProps={{ maxLength: 10 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaPhoneAlt className="text-indigo-500" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
-                  mb: 2,
-                }}
-              />
-
-              <TextField
-                label="Password"
-                type="password"
-                value={patientPassword}
-                onChange={handlePasswordChange}
-                size="small"
-                error={!!errors.password}
-                helperText={errors.password}
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaLock className="text-indigo-500" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
-                  mb: 2,
-                }}
-              />
+              <FormControl>
+                <TextField
+                  placeholder="Mobile Number"
+                  value={patientNumber}
+                  onChange={handleNumberChange}
+                  size="small"
+                  error={!!errors.number}
+                  fullWidth
+                  inputProps={{ maxLength: 10 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaPhoneAlt className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" } }}
+                />
+                <FormHelperText
+                  error={!!errors.number}
+                  sx={{
+                    minHeight: "20px",
+                    visibility: errors.number ? "visible" : "hidden",
+                  }}
+                >
+                  {errors.number}
+                </FormHelperText>
+              </FormControl>
+              <FormControl>
+                <TextField
+                  placeholder="Password"
+                  type="password"
+                  value={patientPassword}
+                  onChange={handlePasswordChange}
+                  size="small"
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaLock className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" } }}
+                />
+                <FormHelperText
+                  error={!!errors.password}
+                  sx={{
+                    minHeight: "20px",
+                    visibility: errors.password ? "visible" : "hidden",
+                  }}
+                >
+                  {errors.password}
+                </FormHelperText>
+              </FormControl>
 
               <div className="text-right -mt-2 mb-3 w-full">
                 <a
                   href="#"
-                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                  className="text-sm text-[var(--color-info)] hover:underline font-medium"
                 >
                   Forgot Password?
                 </a>
@@ -331,7 +354,6 @@ const Login = () => {
                   borderRadius: "12px",
                   py: 1,
                   fontWeight: 600,
-                  "&:hover": { backgroundColor: "#4338ca" },
                 }}
               >
                 Login
@@ -340,7 +362,7 @@ const Login = () => {
               <p className="text-sm mt-2">
                 Are you a{" "}
                 <span
-                  className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+                  className="text-[var(--color-info)] font-semibold cursor-pointer hover:underline"
                   onClick={() => setIsClinic(true)}
                 >
                   Clinic?
@@ -351,63 +373,78 @@ const Login = () => {
 
           {/* Clinic Login Panel */}
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${isClinic
+            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
+              isClinic
                 ? "left-1/2 opacity-100 z-50"
                 : "left-1/2 -translate-x-full opacity-0 z-10"
-              }`}
+            }`}
           >
             <form
               onSubmit={handleSubmit}
               className="flex flex-col items-center justify-center h-full px-10 space-y-5"
             >
-              <h1 className="text-3xl font-extrabold bg-blue-900 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
                 Clinic Login
               </h1>
-
-              <TextField
-                placeholder="User Name"
-                value={clinicUserId}
-                onChange={handleNumberChange}
-                size="small"
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaPhoneAlt className="text-indigo-500" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
-                  mb: 2,
-                }}
-              />
-
-              <TextField
-                placeholder="Password"
-                type="password"
-                value={clinicPassword}
-                onChange={handlePasswordChange}
-                size="small"
-                error={!!errors.password}
-                helperText={errors.password}
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaLock className="text-indigo-500" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
-                  mb: 2,
-                }}
-              />
+              <FormControl>
+                <TextField
+                  placeholder="User Name"
+                  value={clinicUserId}
+                  onChange={handleNumberChange}
+                  error={!!errors.number}
+                  size="small"
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaUser className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" } }}
+                />
+                <FormHelperText
+                  error={!!errors.number}
+                  sx={{
+                    minHeight: "25px",
+                    visibility: errors.number ? "visible" : "hidden",
+                  }}
+                >
+                  {errors.number}
+                </FormHelperText>
+              </FormControl>
+              <FormControl>
+                <TextField
+                  placeholder="Password"
+                  type="password"
+                  value={clinicPassword}
+                  onChange={handlePasswordChange}
+                  size="small"
+                  error={!!errors.password}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaLock className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "12px" } }}
+                />
+                <FormHelperText
+                  error={!!errors.password}
+                  sx={{
+                    minHeight: "25px",
+                    visibility: errors.password ? "visible" : "hidden",
+                  }}
+                >
+                  {errors.password}
+                </FormHelperText>
+              </FormControl>
               <div className="text-left -mt-2 mb-3 w-full">
                 <Link
-                  to="/ResetPassword?from=forgotenPassword"
-                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                  to="/ResetPassword?from=forgottenPassword"
+                  className="text-sm text-[var(--color-info)] hover:underline font-medium"
                 >
                   Forgot Password?
                 </Link>
@@ -421,10 +458,8 @@ const Login = () => {
                   borderRadius: "12px",
                   py: 1,
                   fontWeight: 600,
-                  "&:hover": { backgroundColor: "#4338ca" },
                 }}
               >
-
                 {loading ? (
                   <CircularProgress size={22} color="inherit" />
                 ) : (
@@ -435,7 +470,7 @@ const Login = () => {
               <p className="text-sm mt-2">
                 Are you a{" "}
                 <span
-                  className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+                  className="text-[var(--color-info)] font-semibold cursor-pointer hover:underline"
                   onClick={() => setIsClinic(false)}
                 >
                   Patient?
@@ -448,7 +483,7 @@ const Login = () => {
                     Don't have an Account?{" "}
                     <Link
                       to="/register"
-                      className="text-indigo-600 hover:underline cursor-pointer"
+                      className="text-[var(--color-info)] hover:underline cursor-pointer"
                     >
                       Register Clinic
                     </Link>
@@ -460,12 +495,13 @@ const Login = () => {
 
           {/* Toggle Panel */}
           <div
-            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${isClinic
+            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${
+              isClinic
                 ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
                 : ""
-              }`}
+            }`}
           >
-            <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-white items-center justify-center text-center px-8">
+            <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-[var(--color-white)] items-center justify-center text-center px-8">
               {isClinic ? (
                 <div className="space-y-2 animate-fadeIn">
                   <h1 className="text-2xl font-bold">Welcome, Clinic!</h1>

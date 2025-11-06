@@ -6,6 +6,8 @@
   /* TYPOGRAPHY */
   --font-family: "Inter", "Roboto", "Segoe UI", system-ui, sans-serif;
 
+  --color-white: #ffffff;
+  --color-black: #000000;
   --color-success: #16a34a;
   --color-error: #dc2626;
   --color-warning: #eab308;

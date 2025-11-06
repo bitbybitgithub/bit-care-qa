@@ -102,22 +102,21 @@ const Login = () => {
         const data = await loginApi(requestBody);
         console.log("After calling loginApi, response:", data);
         if (data.success) {
-          setSession("user",data.user);
+          setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
-          if(data.user.is_temp_password ==="1")
-            {
-             console.log(data.user.user_id)
-             setTimeout(() => {
-             navigate("/ResetPassword");
-             toast.success("Please reset your temporary password");
-          }, 1000);
-            }
+          if (data.user.is_temp_password === "1") {
+            console.log(data.user.user_id)
+            setTimeout(() => {
+              navigate("/ResetPassword");
+              toast.success("Please reset your temporary password");
+            }, 1000);
+          }
 
-            else{
-              navigate("/dashboard");
-              toast.success("Login successful");
-            }
-            dispatch(loginSuccess());
+          else {
+            navigate("/dashboard");
+            toast.success("Login successful");
+          }
+          dispatch(loginSuccess());
         } else {
           toast.error(data.message || "Login failed");
         }
@@ -143,21 +142,19 @@ const Login = () => {
         <div className="block md:hidden">
           <div className="flex justify-center bg-indigo-500 rounded-full p-1 mx-4 mt-4">
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
-                !isClinic
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${!isClinic
                   ? "bg-white text-indigo-600 shadow-md"
                   : "bg-indigo-500 text-white hover:bg-indigo-400/70"
-              }`}
+                }`}
               onClick={() => setIsClinic(false)}
             >
               Patient
             </button>
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
-                isClinic
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${isClinic
                   ? "bg-white text-indigo-600 shadow-md"
                   : "bg-indigo-500 text-white hover:bg-indigo-400/70"
-              }`}
+                }`}
               onClick={() => setIsClinic(true)}
             >
               Clinic
@@ -232,19 +229,19 @@ const Login = () => {
                   "Login"
                 )}
               </Button>
-               {isClinic && (
-        <footer className="text-center">
-          <p className="text-xs mt-2">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-indigo-600 hover:underline cursor-pointer font-semibold"
-            >
-              Register Clinic
-            </Link>
-          </p>
-        </footer>
-      )}
+              {isClinic && (
+                <footer className="text-center">
+                  <p className="text-xs mt-2">
+                    Don't have an account?{" "}
+                    <Link
+                      to="/register"
+                      className="text-indigo-600 hover:underline cursor-pointer font-semibold"
+                    >
+                      Register Clinic
+                    </Link>
+                  </p>
+                </footer>
+              )}
             </form>
           </div>
         </div>
@@ -253,11 +250,10 @@ const Login = () => {
         <div className="hidden md:flex">
           {/* Patient Login Panel */}
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic
+            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${isClinic
                 ? "left-0 translate-x-full opacity-0 z-10"
                 : "left-0 opacity-100 z-50"
-            }`}
+              }`}
           >
             <form
               onSubmit={handleSubmit}
@@ -355,11 +351,10 @@ const Login = () => {
 
           {/* Clinic Login Panel */}
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic
+            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${isClinic
                 ? "left-1/2 opacity-100 z-50"
                 : "left-1/2 -translate-x-full opacity-0 z-10"
-            }`}
+              }`}
           >
             <form
               onSubmit={handleSubmit}
@@ -421,12 +416,6 @@ const Login = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={
-                  !clinicUserId ||
-                  !clinicPassword ||
-                  !!errors.password ||
-                  loading
-                }
                 sx={{
                   width: "65%",
                   borderRadius: "12px",
@@ -435,6 +424,7 @@ const Login = () => {
                   "&:hover": { backgroundColor: "#4338ca" },
                 }}
               >
+
                 {loading ? (
                   <CircularProgress size={22} color="inherit" />
                 ) : (
@@ -470,11 +460,10 @@ const Login = () => {
 
           {/* Toggle Panel */}
           <div
-            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${
-              isClinic
+            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${isClinic
                 ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
                 : ""
-            }`}
+              }`}
           >
             <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-white items-center justify-center text-center px-8">
               {isClinic ? (

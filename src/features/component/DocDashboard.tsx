@@ -17,6 +17,7 @@ import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { SwipeableDrawer } from "@mui/material";
 import ConsultationView from "../appointment/components/ConsultationView";
+import { useSocket } from "../../context/SocketContext";
 
 interface UpdateStatusPayload {
   appointment_id: number;
@@ -26,13 +27,14 @@ interface UpdateStatusPayload {
 
 // ---------------- Component ----------------
 const DocDashboard: React.FC = () => {
+  const { socket, isConnected } = useSocket();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawreOpen] = useState(false);
   const [patientInfo, setPatientInfo] = useState<Patient>();
 
-  const userId=getSessionItem("user","user_id")
+  const userId = getSessionItem("user", "user_id");
   const doctorId = 4; // required; should ideally come from auth context or route param
 
   // ---------------- Fetch Appointments ----------------
@@ -47,7 +49,9 @@ const DocDashboard: React.FC = () => {
     setError(null);
 
     try {
-      const appointments: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+      const appointments: AppointmentDto[] = await fetchTodayAppointments(
+        doctorId
+      );
 
       const mapped: Patient[] = appointments.map((a) => ({
         appointment_id: a.appointment_id,
@@ -70,42 +74,85 @@ const DocDashboard: React.FC = () => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // ---------------- Update Patient Status ----------------
-  const handleUpdatePatientStatus = useCallback(async (patient: Patient) => {
-    if (!patient?.raw?.appointment_id) {
-      toast.error("Invalid appointment ID.");
-      return;
-    }
+  useEffect(() => {
+    if (!socket) return;
 
-    const payload: UpdateStatusPayload = {
-      appointment_id: patient.raw.appointment_id,
-      user_id:userId,
-      status: AppointmentStatus.Started,
+    const handleUpdate = (newAppointment: AppointmentDto) => {
+      console.log("Realtime update:", newAppointment);
+
+      // Map it in the same format as fetchAppointments
+      const mapped: Patient = {
+        appointment_id: newAppointment.appointment_id,
+        time: `${newAppointment.start_time} - ${newAppointment.end_time}`,
+        name: newAppointment.patient_name,
+        reason: newAppointment.reason,
+        status: newAppointment.status,
+        raw: newAppointment,
+      };
+
+      setPatients((prev) => {
+        const exists = prev.some(
+          (p) => p.appointment_id === mapped.appointment_id
+        );
+
+        if (exists) {
+          // Update the existing record
+          return prev.map((p) =>
+            p.appointment_id === mapped.appointment_id ? mapped : p
+          );
+        } else {
+          // Add new appointment to the top
+          return [mapped, ...prev];
+        }
+      });
     };
 
-    try {
-      const res = await updatePatientStatus(payload);
-      setPatientInfo(patient);
-      toggleDrawer(true);
-      if (res.success) {
-        // toast.success("Consultation started successfully!");
-        // // Optimistic update
-        // setPatients((prev) =>
-        //   prev.map((p) =>
-        //     p.raw.appointment_id === patient.raw.appointment_id
-        //       ? { ...p, status: "started" }
-        //       : p
-        //   )
-        // );
-      } else {
-        toast.error(res.message || "Failed to update appointment status.");
-        console.error("❌", res.message);
+    socket.on("newAppointment", handleUpdate);
+
+    return () => {
+      socket.off("newAppointment", handleUpdate);
+    };
+  }, [socket]);
+
+  // ---------------- Update Patient Status ----------------
+  const handleUpdatePatientStatus = useCallback(
+    async (patient: Patient) => {
+      if (!patient?.raw?.appointment_id) {
+        toast.error("Invalid appointment ID.");
+        return;
       }
-    } catch (err: any) {
-      toast.error("Error updating patient status.");
-      console.error("🔥 Error:", err.message || err);  
-    }
-  }, [userId]);
+
+      const payload: UpdateStatusPayload = {
+        appointment_id: patient.raw.appointment_id,
+        user_id: userId,
+        status: AppointmentStatus.Started,
+      };
+
+      try {
+        const res = await updatePatientStatus(payload);
+        setPatientInfo(patient);
+        toggleDrawer(true);
+        if (res.success) {
+          // toast.success("Consultation started successfully!");
+          // // Optimistic update
+          // setPatients((prev) =>
+          //   prev.map((p) =>
+          //     p.raw.appointment_id === patient.raw.appointment_id
+          //       ? { ...p, status: "started" }
+          //       : p
+          //   )
+          // );
+        } else {
+          toast.error(res.message || "Failed to update appointment status.");
+          console.error("❌", res.message);
+        }
+      } catch (err: any) {
+        toast.error("Error updating patient status.");
+        console.error("🔥 Error:", err.message || err);
+      }
+    },
+    [userId]
+  );
 
   // ---------------- Card Items ----------------
   const cardItems = useMemo(
@@ -136,7 +183,7 @@ const DocDashboard: React.FC = () => {
 
   const toggleDrawer = (val: boolean) => {
     setDrawreOpen(val);
-  }
+  };
 
   // ---------------- Render ----------------
   return (
@@ -144,6 +191,7 @@ const DocDashboard: React.FC = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-8 self-start">
         Today's Clinic Workflow
       </h1>
+      <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
 
       <div className="flex flex-col gap-6 w-full max-w-5xl">
         {/* ========== Patient Queue ========== */}
@@ -157,7 +205,10 @@ const DocDashboard: React.FC = () => {
         />
 
         {/* ========== Action Cards ========== */}
-        <Cards gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" items={cardItems} />
+        <Cards
+          gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          items={cardItems}
+        />
 
         {/* ========== Progress Card ========== */}
         <PatientProgressCard />
@@ -176,8 +227,10 @@ const DocDashboard: React.FC = () => {
         onOpen={() => toggleDrawer(true)}
         onClose={() => toggleDrawer(false)}
       >
-        <ConsultationView  patientInfo ={patientInfo} 
-          onCloseDrawer={() => toggleDrawer(false)}/>
+        <ConsultationView
+          patientInfo={patientInfo}
+          onCloseDrawer={() => toggleDrawer(false)}
+        />
       </SwipeableDrawer>
     </div>
   );

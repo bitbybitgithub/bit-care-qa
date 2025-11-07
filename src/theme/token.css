@@ -136,8 +136,10 @@
   --color-secondary: #10b981; /* teal accent */
   --color-accent: #22c55e;
 
-  --color-bg: #f0fdf4; /* gentle mint background */
-  --color-surface: #ecfdf5;
+  --color-bg: #f0fdf4; 
+  /* --color-bg: #d3f5dd;  */
+  /* --color-surface: #ecfdf5; */
+  --color-surface: #c9e7d9;
   --color-surface-alt: #d1fae5;
   --color-border: #bbf7d0;
 
@@ -161,4 +163,30 @@ body {
   transition:
     background var(--transition-normal),
     color var(--transition-normal);
+}
+
+/* ==========================================================
+   ✅ GLOBAL SCROLLBAR STYLE (All Themes)
+========================================================== */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;     /* small width */
+  height: 6px;    /* small height (horizontal) */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-dark);
 }

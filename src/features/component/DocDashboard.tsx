@@ -187,8 +187,8 @@ const DocDashboard: React.FC = () => {
 
   // ---------------- Render ----------------
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center mt-4">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 self-start">
+    <div className="min-h-screen   p-6 flex flex-col items-center mt-4">
+      <h1 className="text-3xl font-bold text-[var(--color-primary)] mb-8 self-start">
         Today's Clinic Workflow
       </h1>
       <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
@@ -215,7 +215,7 @@ const DocDashboard: React.FC = () => {
 
         {/* ========== Loading / Error ========== */}
         {loading && (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-center text-[var(--color-text)]">
             Loading appointments...
           </div>
         )}

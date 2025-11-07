@@ -53,7 +53,9 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="h-full bg-[var(--color-primary)]  text-[var(--color-white)] rounded-r-3xl p-4 flex flex-col transition-all duration-300">
+    <div className="h-full bg-[var(--color-primary)] text-[var(--color-white)] rounded-r-3xl p-4 flex flex-col transition-all duration-300"
+      // style={localStorage.getItem("theme") === "dark" ? { backgroundColor: "var(--color-bg)" } : {}}
+      >
       {/* Logo */}
       <div className="mb-8 mt-2 flex items-center justify-center md:justify-start">
         {/* Icon on small screens */}
@@ -78,8 +80,8 @@ const Sidebar: React.FC = () => {
                 flex items-center justify-center md:justify-start gap-3 px-4 py-2 rounded-2xl font-medium transition-all duration-200 
                 ${
                   isActive
-                    ? "bg-[var(--color-white)] text-[var(--color-primary)] font-semibold shadow"
-                    : "hover:bg-[var(--color-white)] hover:text-[var(--color-primary)]"
+                    ? "bg-[var(--color-white)] dark:bg-[var(--color-surface)] text-[var(--color-primary)] font-semibold shadow"
+                    : "hover:bg-[var(--color-white)] hover:text-[var(--color-primary)] dark:hover:bg-[var(--color-surface)] "
                 }
               `}
             >

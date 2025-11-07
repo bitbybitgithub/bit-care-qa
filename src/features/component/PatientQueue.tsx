@@ -52,7 +52,6 @@
 //   }
 // };
 
-
 // const PatientQueue: React.FC<PatientQueueProps> = ({
 //   mode = "doctor",
 //   doctorId = 4,
@@ -109,12 +108,12 @@
 // {/* Center: Info */}
 // <div
 //   className="
-//     flex-1 
-//     grid 
-//     grid-cols-2 
-//     sm:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] 
-//     gap-2 sm:gap-4 
-//     px-2 
+//     flex-1
+//     grid
+//     grid-cols-2
+//     sm:grid-cols-[repeat(auto-fit,minmax(120px,1fr))]
+//     gap-2 sm:gap-4
+//     px-2
 //     mt-2 sm:mt-0
 //   "
 // >
@@ -151,7 +150,6 @@
 //   )}
 // </div>
 
-              
 //  {/* Status Badge */}
 //            {mode === "staff" &&
 //                 <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${badgeClasses(patient.status)}`}>
@@ -183,11 +181,9 @@
 //                   <span className="text-gray-600 text-sm">Waiting: {patient.waitingMinutes} min</span>
 //                 )}
 
-                
 //               </div>
 //             </div>
 
-            
 //           ))}
 //         </div>
 //       )}
@@ -249,7 +245,6 @@ const badgeClasses = (status: string) => {
   }
 };
 
-
 const PAGE_SIZE = 5;
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
@@ -265,7 +260,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const currentPatients = patientsData.slice(startIndex, startIndex + PAGE_SIZE);
+  const currentPatients = patientsData.slice(
+    startIndex,
+    startIndex + PAGE_SIZE
+  );
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -275,17 +273,17 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   return (
     <div
       className={
-        classProp ??
-        "bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 relative"
+        classProp ?
+        "bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative":"bg-[var(--color-bg)]"
       }
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-        <h2 className="text-xl font-semibold text-gray-800">Patient Queue</h2>
+        <h2 className="text-xl font-semibold text-[var(--color-text)]">Patient Queue</h2>
         {mode === "staff" && onAddWalkIn && (
           <button
             onClick={onAddWalkIn}
-            className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
+            className="flex items-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base"
           >
             + Add Walk-in Patient
           </button>
@@ -293,7 +291,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       </div>
 
       {/* Column Headers */}
-<div className="bg-blue-50 py-4 px-6 rounded-lg border-b-2  border-blue-200 grid grid-cols-5 text-sm font-semibold text-gray-700">
+      <div className="bg-[var(--color-primary)] py-4 px-6 rounded-lg border-b-2  border-blue-200 grid grid-cols-5 text-sm font-semibold text-gray-700">
         {mode === "doctor" ? (
           <>
             <h2>Time</h2>
@@ -327,7 +325,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           {currentPatients.map((patient, index) => (
             <div
               key={index}
-              className="grid grid-cols-5 items-center border-l-4 border-blue-500 rounded-2xl p-4 shadow-sm bg-[#f9f9ff] hover:shadow-md transition-all duration-200"
+              className="grid grid-cols-5 items-center border-l-4 border-[var(--color-primary)] rounded-2xl p-4 shadow-sm bg-[#f9f9ff] hover:shadow-md transition-all duration-200"
             >
               {mode === "doctor" ? (
                 <>
@@ -361,14 +359,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   {/* Start Consultation Button */}
                   <div className="flex justify-center">
                     <button
-  onClick={() =>
-    onStartConsultation && onStartConsultation(patient)
-  }
-  className="bg-blue-600 text-white text-base px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-all font-medium shadow-sm hover:shadow-md"
->
-  Start Consultation
-</button>
-
+                      onClick={() =>
+                        onStartConsultation && onStartConsultation(patient)
+                      }
+                      className="bg-[var(--color-primary)] text-white text-base px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-all font-medium shadow-sm hover:shadow-md"
+                    >
+                      Start Consultation
+                    </button>
                   </div>
                 </>
               ) : (
@@ -395,13 +392,12 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
                   {/* Status */}
                   <div
-  className={`text-center text-sm sm:text-base font-semibold rounded-full px-5 py-2 shadow-sm ${badgeClasses(
-    patient.status
-  )}`}
->
-  {patient.status}
-</div>
-
+                    className={`text-center text-sm sm:text-base font-semibold rounded-full px-5 py-2 shadow-sm ${badgeClasses(
+                      patient.status
+                    )}`}
+                  >
+                    {patient.status}
+                  </div>
                 </>
               )}
             </div>
@@ -432,7 +428,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             className={`px-3 py-1 rounded-lg text-sm font-medium ${
               currentPage === totalPages
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-[var(--color-primary)] text-white hover:bg-blue-700"
             }`}
           >
             Next

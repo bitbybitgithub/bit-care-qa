@@ -13,9 +13,9 @@ const progressData: ProgressItem[] = [
 
 const PatientProgressCard: React.FC = () => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300">
-      <h2 className="text-xl font-semibold text-gray-800 mb-5">
-        Patient Progress <span className="text-gray-500 text-sm">(Trends)</span>
+    <div className="bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300">
+      <h2 className="text-xl font-semibold text-[var9--color-text] mb-5">
+        Patient Progress <span className=" text-sm">(Trends)</span>
       </h2>
 
       <div className="flex flex-col gap-5">

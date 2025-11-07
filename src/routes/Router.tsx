@@ -1,4 +1,4 @@
-import {  Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import Login from "../features/Login/component/login";
 import Dashboard from "../features/component/Dashboard";
 import Registration from "../pages/RegistrationPage";
@@ -14,44 +14,40 @@ import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
 import WalkInRegisterForm from "../features/component/WalkInRegisterForm";
 
-
 const Router = [
   {
-    path: '/',
+    path: "/",
     element: <BlankLayout />,
     children: [
-      { path: '/', element: <Navigate to="/login" /> },
-      { path: '/register', element: <Registration /> },
-      {path: '/login', exact: true, element: <Login /> },
-      {path: '/resetpassword', exact: true, element: <ResetPasswordPage /> },
-    ]
+      { path: "/", element: <Navigate to="/login" /> },
+      { path: "/register", element: <Registration /> },
+      { path: "/login", exact: true, element: <Login /> },
+      { path: "/resetpassword", exact: true, element: <ResetPasswordPage /> },
+    ],
   },
   {
-    path: '/',
+    path: "/",
     element: <MainLayout />,
     children: [
-      { path: '/dashboard', element: <Dashboard /> },
-      { path: '/users', element: <Users /> },
-      { path: '/clinic-settings', element: <Profile /> },
+      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/users", element: <Users /> },
+      { path: "/clinic-settings", element: <Profile /> },
 
-      { path: '/doc-dashboard', element: <DocDashboard /> },
-      { path: '/profile', element: <DoctorProfile /> },
-      
-      { path: '/staff-dashboard', element: <Staffdashboard /> },
-      { path: '/task-and-reminder', element: <Staffdashboard /> },
-      { path: '/assign-patient', element: <Staffdashboard /> },
-      { path: '/message', element: <Staffdashboard /> },
-      { path: '/cln-protocol', element: <Staffdashboard /> },
-      { path: '/shift-schedule', element: <Staffdashboard /> },
+      { path: "/doc-dashboard", element: <DocDashboard /> },
+      { path: "/profile", element: <DoctorProfile /> },
 
-      { path: '/walkin-register', element: <WalkInRegisterForm /> },
+      { path: "/staff-dashboard", element: <Staffdashboard /> },
+      { path: "/task-and-reminder", element: <Staffdashboard /> },
+      { path: "/assign-patient", element: <Staffdashboard /> },
+      { path: "/message", element: <Staffdashboard /> },
+      { path: "/cln-protocol", element: <Staffdashboard /> },
+      { path: "/shift-schedule", element: <Staffdashboard /> },
 
-
+      { path: "/walkin-register", element: <WalkInRegisterForm /> },
 
       // {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
-    ]
-  }
-
-]
+    ],
+  },
+];
 
 export default Router;

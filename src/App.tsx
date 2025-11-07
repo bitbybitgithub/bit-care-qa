@@ -38,14 +38,14 @@ useEffect(() => {
   if (ip) sessionStorage.setItem("client_ip", ip);
 }, [ip]);
 
-useEffect(() => {
-  const sessionUser = getSession("user");
-  if (sessionUser && ip) {
-    (async () => {
-      await TokenManager.rehydrate();
-    })();
-  }
-}, [ip]);
+// useEffect(() => {
+//   const sessionUser = getSession("user");
+//   if (sessionUser && ip) {
+//     (async () => {
+//       await TokenManager.rehydrate();
+//     })();
+//   }
+// }, [ip]);
 
   return (
       <ErrorBoundary>

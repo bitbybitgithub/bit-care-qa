@@ -32,25 +32,25 @@ const Sidebar: React.FC = () => {
   // ];
 
   //----------- Doctor------------------
-  const Menus: MenuItem[] = [
-    { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
-    { title: "Profile", link: "/profile", icon: <FaUsers /> },
-    {
-      title: "Manage availability",
-      link: "/clinic-manage",
-      icon: <MdOutlineManageAccounts />,
-    },
-  ];
+  // const Menus: MenuItem[] = [
+  //   { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
+  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
+  //   {
+  //     title: "Manage availability",
+  //     link: "/clinic-manage",
+  //     icon: <MdOutlineManageAccounts />,
+  //   },
+  // ];
 
   // // -------------Staff--------------
-  // const Menus: MenuItem[] = [
-  //   { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
-  //   { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
-  //   { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
-  //   { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
-  //   { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
-  //   { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
-  // ];
+  const Menus: MenuItem[] = [
+    { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
+    { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
+    { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
+    { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
+    { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
+    { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
+  ];
 
   return (
     <div className="h-full bg-[var(--color-primary)]  text-[var(--color-white)] rounded-r-3xl p-4 flex flex-col transition-all duration-300">

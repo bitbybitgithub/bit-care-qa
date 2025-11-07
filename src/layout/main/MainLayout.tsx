@@ -1,13 +1,19 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../sidebar/Sidebar";
 import { FaSignOutAlt } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/authSlice";
 import { logoutApi } from "../../api/LogoutApi";
 import { useLoader } from "../../context/LoaderContext";
 import Loader from "../../components/shared/Loader/Loader";
-import { clearSession } from "../../context/sessions/userSession";
+import {
+  clearSession,
+  getSession,
+  getSessionItem,
+} from "../../context/sessions/userSession";
+import { SocketProvider } from "../../context/SocketContext";
+import { TokenManager } from "../../api/auth/tokenManager";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -17,6 +23,18 @@ const MainLayout = () => {
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
+
+  const token = TokenManager.getAccessToken();
+  useEffect(() => {
+    const userSession = getSession("user");
+    if (!userSession) {
+      window.location.href = "/login";
+    }
+  }, [token]);
+
+  const clinicId = getSessionItem("user", "clinic_id");
+
+  
 
   // convert path into readable title
   function formatTitleHeader(path: string) {
@@ -97,7 +115,9 @@ const MainLayout = () => {
             </div>
 
             {/* Page content */}
-            <Outlet />
+            <SocketProvider token={token} clinicId={clinicId}>
+              <Outlet />
+            </SocketProvider>
           </div>
 
           {/* Logout Confirmation Modal */}

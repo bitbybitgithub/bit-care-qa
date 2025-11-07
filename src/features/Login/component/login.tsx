@@ -125,7 +125,7 @@ const Login = () => {
               toast.success("Please reset your temporary password");
             }, 1000);
           } else {
-            navigate("/dashboard");
+            navigate("/staff-dashboard");
             toast.success("Login successful");
           }
           dispatch(loginSuccess());

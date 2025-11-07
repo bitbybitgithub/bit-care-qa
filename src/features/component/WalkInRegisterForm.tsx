@@ -1,19 +1,16 @@
+//-----------------------------------------------------------------------------------------
+
 import React, { useEffect, useState } from "react";
 import {
+  FaCalendarAlt,
+  FaEnvelope,
   FaUserMd,
   FaClipboardList,
 } from "react-icons/fa";
+import { MdPhoneInTalk } from "react-icons/md";
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
-import { toast } from "react-toastify";
-import { IoCallOutline } from "react-icons/io5";
-import { IoCalendarOutline } from "react-icons/io5";
-import { IoMailOutline } from "react-icons/io5";
-import { IoPerson } from "react-icons/io5";
-import { FaUsers } from "react-icons/fa";
-
-
 
 type WalkinFormData = {
   name: string;
@@ -38,15 +35,14 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onSuccess,
   contact,
 }) => {
-  const [formData, setFormData] = useState<WalkinFormData>({
+  const [formData, setFormData] = useState({
     name: "",
     dob: "",
     email: "",
-    phone: contact,
+    phone: "",
     doctor: "",
     reason: "",
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -105,24 +101,14 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   //  Simple inline validation
   const validate = (data: WalkinFormData) => {
     const newErrors: Record<string, string> = {};
-
     if (!data.name.trim()) newErrors.name = "Full name is required";
-    if (!data.dob) newErrors.dob = "Date of birth is required";
-
     if (!data.phone.trim()) newErrors.phone = "Mobile number is required";
     else if (!/^\d{10}$/.test(data.phone))
-      newErrors.phone = "Enter valid 10-digit mobile number";
-
+      newErrors.phone = "Enter valid 10-digit mobile";
     if (data.email && !/^\S+@\S+\.\S+$/.test(data.email))
       newErrors.email = "Invalid email format";
-
-    if (!data.doctor.trim()) newErrors.doctor = "Please select a doctor";
-
-    if (!data.reason.trim()) newErrors.reason = "Reason for visit is required";
-
     return newErrors;
   };
-
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -157,7 +143,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     try {
       setLoading(true);
 
-      let patientId = patientData?.patientId; // existing patient check
+      let patientId = patientData?.patient_id; // existing patient check
 
       if (!patientId) {
         console.log("Calling savePatient with:", reqBody);
@@ -195,10 +181,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const appointmentRes = await saveAppointment(appointmentData);
       console.log("Appointment API Response:", appointmentRes);
 
-      toast.success("Patient and Appointment saved successfully!", {
-        className: "rounded-xl", // Tailwind class for rounded corners
-        style: { borderRadius: "12px" }, // fallback if Tailwind not applied
-      })
+      alert("Patient and Appointment saved successfully!");
+
       setFormData({
         name: "",
         dob: "",
@@ -218,131 +202,116 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     }
   };
 
- 
-
-return (
-  <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
-    <form
-      onClick={(e) => e.stopPropagation()}
-      onSubmit={handleSubmit}
-      className="relative bg-white shadow-2xl rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto z-[10000]"
-    >
-      {/* Back Button */}
-      <button
-        type="button"
-        // onClick={onBack}
-        className="absolute top-0 left-0 flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium text-sm"
+  return (
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="relative bg-white shadow-2xl rounded-2xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 sm:p-4 max-h-[85vh] overflow-y-auto z-[10000]"
       >
-        ← Back
-      </button>
-      
-      <div className="flex justify-center">
-  <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-800 mb-6">
-    <FaUsers className="text-blue-600 text-3xl" />
-    Walk-In Patient Registration
-  </h2>
-</div>
+        <h2 className="text-2xl font-semibold text-center mb-4 text-gray-800">
+          Walk-In Patient Registration
+        </h2>
 
-
-      {/* Row 1: Full Name */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-1">Full Name</label>
-        <div
-          className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-            errors.name
-              ? "border-red-500 ring-1 ring-red-400"
-              : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-          }`}
-        >
-          <IoPerson className="text-gray-500 mr-2" />
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter full name"
-            className="w-full outline-none text-gray-800"
-          />
-        </div>
-        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-      </div>
-
-      {/* Row 2: DOB + Age */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Date of Birth</label>
+        {/* Name */}
+        <div className="mb-2">
+          <label className="block text-gray-700 font-medium mb-1">
+            Full Name
+          </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.dob
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+    ${
+      errors.name
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
           >
-            <IoCalendarOutline className="text-gray-500 mr-2" />
             <input
-              type="date"
-              name="dob"
-              value={formData.dob}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
+              placeholder="Enter full name"
               className="w-full outline-none"
             />
           </div>
-          {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+          )}
         </div>
 
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Age</label>
-          <div className="flex items-center rounded-lg px-3 py-2 border border-gray-300 bg-gray-50">
-            <span className="text-gray-800">
-              {formData.dob
-                ? Math.floor(
-                    (new Date().getTime() - new Date(formData.dob).getTime()) /
-                      (365.25 * 24 * 60 * 60 * 1000)
-                  )
-                : "--"}
-            </span>
-            <span className="ml-1 text-gray-500">years</span>
+        {/* DOB + Phone */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">
+              Date of Birth
+            </label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+    ${
+      errors.dob
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
+            >
+              <FaCalendarAlt className="text-gray-500 mr-2" />
+
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                className="w-full outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">
+              Contact Number
+            </label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+    ${
+      errors.phone
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
+            >
+              <MdPhoneInTalk
+                className={`mr-2 ${
+                  errors.phone ? "text-red-500" : "text-gray-500"
+                }`}
+              />
+              <input
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="10-digit mobile number"
+                maxLength={10}
+                inputMode="numeric"
+                className="w-full outline-none"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Row 3: Contact + Email */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Contact Number</label>
+        {/* Email */}
+        <div className="mb-2">
+          <label className="block text-gray-700 font-medium mb-1">
+            Email Address
+          </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.phone
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+    ${
+      errors.email
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
           >
-            <IoCallOutline
-              className="mr-2"
-            />
-            <input
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="10-digit mobile number"
-              maxLength={10}
-              inputMode="numeric"
-              className="w-full outline-none"
-            />
-          </div>
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Email Address</label>
-          <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.email
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
-          >
-            <IoMailOutline
-              className={`mr-2 ${errors.email ? "text-red-500" : "text-gray-500"}`}
+            <FaEnvelope
+              className={`mr-2 ${
+                errors.email ? "text-red-500" : "text-gray-500"
+              }`}
             />
             <input
               name="email"
@@ -353,21 +322,19 @@ return (
               className="w-full outline-none"
             />
           </div>
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
         </div>
-      </div>
 
-      {/* Row 4: Doctor + Reason */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Select Doctor</label>
+        {/* Doctor */}
+        <div className="mb-2">
+          <label className="block text-gray-700 font-medium mb-1">
+            Select Doctor
+          </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.doctor
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
+            className={`flex items-center rounded-lg px-3 py-2 border border-gray-300 
+    transition-all hover:border-blue-400 hover:shadow-md 
+    focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400 focus-within:shadow-lg`}
           >
+            {" "}
             <FaUserMd className="text-gray-500 mr-2" />
             <select
               name="doctor"
@@ -386,54 +353,54 @@ return (
               ))}
             </select>
           </div>
-          {errors.doctor && <p className="text-red-500 text-sm mt-1">{errors.doctor}</p>}
         </div>
 
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Reason for Visit</label>
+        {/* Reason */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-medium mb-1">
+            Reason for Visit
+          </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.reason
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
+    ${
+      errors.email
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
           >
+            {" "}
             <FaClipboardList className="text-gray-500 mr-2" />
             <textarea
               name="reason"
               value={formData.reason}
               onChange={handleChange}
               placeholder="Describe reason for visit"
-              rows={1}
+              rows={3}
               className="w-full outline-none resize-none"
             />
           </div>
-          {errors.reason && <p className="text-red-500 text-sm mt-1">{errors.reason}</p>}
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-5 py-2 border border-gray-300 hover:bg-gray-100 rounded-full font-medium text-sm transition"
-        >
-          Close
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full text-sm transition disabled:opacity-60"
-        >
-          {loading ? "Saving..." : "Submit"}
-        </button>
-      </div>
-    </form>
-  </div>
-);
-
-
+        {/* Actions */}
+        <div className="flex gap-3 mt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-full transition disabled:opacity-60"
+          >
+            {loading ? "Saving..." : "Submit"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 border border-gray-300 hover:bg-gray-100 rounded-full py-2 font-medium transition"
+          >
+            Close
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default WalkInRegisterForm;

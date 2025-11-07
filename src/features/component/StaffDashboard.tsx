@@ -8,12 +8,25 @@ import { generateOtpApi } from "../../api/GenerateOtpApi";
 import { fetchTodayAppointments } from "../../api/PatientQueueApi";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
-import { io, Socket } from "socket.io-client";
+// import { io, Socket } from "socket.io-client"
+import { useSocket } from "../../context/SocketContext";
 import { IoCall } from "react-icons/io5";
+
+// Wrap Alert to satisfy TS
+// const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
+//   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+// });
+
+interface Appointment {
+  appointment_id: number;
+  status: string;
+}
 
 
 
 const StaffDashboard: React.FC = () => {
+
+   const { socket, isConnected } = useSocket();
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
@@ -32,34 +45,58 @@ const StaffDashboard: React.FC = () => {
 
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const clinicId = 1;
+  // const clinicId = 1;
+  
+
+  // useEffect(() => {
+  //   const socket: Socket = io("http://localhost:8989", {
+  //     transports: ["websocket"],
+  //   });
+
+  //   socket.emit("joinClinic", clinicId);
+
+  //   socket.on("appointmentUpdate", (data: { appointment_id: number; status: string }) => {
+  //     console.log("Real-time appointment update:", data);
+
+  //     // Optional: update your patient list UI instantly
+  //     setPatients((prev) =>
+  //       prev.map((p) =>
+  //         p?.raw.appointment_id === data.appointment_id
+  //           ? { ...p, status: data.status }
+  //           : p
+  //       )
+  //     );
+
+  //     // toast.info(`Appointment ${data.appointment_id} status updated to ${data.status}`);
+  //   });
+
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, [clinicId]);
 
 
-  useEffect(() => {
-    const socket: Socket = io("http://localhost:8989", {
-      transports: ["websocket"],
-    });
+    useEffect(() => {
+    if (!socket) return;
 
-    socket.emit("joinClinic", clinicId);
-
-    socket.on("appointmentUpdate", (data: { appointment_id: number; status: string }) => {
-      console.log("Real-time appointment update:", data);
-
-      // Optional: update your patient list UI instantly
-      setPatients((prev) =>
+    const handleUpdate = (data: Appointment) => {
+      console.log("Realtime update:", data);
+           setPatients((prev) =>
         prev.map((p) =>
           p?.raw.appointment_id === data.appointment_id
             ? { ...p, status: data.status }
             : p
         )
       );
+    };
 
-    });
+    socket.on("appointmentUpdate", handleUpdate);
 
     return () => {
-      socket.disconnect();
+      socket.off("appointmentUpdate", handleUpdate);
     };
-  }, [clinicId]);
+  }, [socket]);
+
 
 
   // add near top of StaffDashboard (below useState declarations)
@@ -222,6 +259,7 @@ const StaffDashboard: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 ">
+       <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
       <Cards
         items={cardItems}
         gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"

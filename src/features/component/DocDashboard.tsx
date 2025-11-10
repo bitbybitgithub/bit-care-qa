@@ -55,6 +55,7 @@ const DocDashboard: React.FC = () => {
 
       const mapped: Patient[] = appointments.map((a) => ({
         appointment_id: a.appointment_id,
+        gender:a.gender,
         time: `${a.start_time} - ${a.end_time}`,
         name: a.patient_name,
         reason: a.reason,
@@ -85,6 +86,7 @@ const DocDashboard: React.FC = () => {
         appointment_id: newAppointment.appointment_id,
         time: `${newAppointment.start_time} - ${newAppointment.end_time}`,
         name: newAppointment.patient_name,
+        gender:newAppointment.gender,
         reason: newAppointment.reason,
         status: newAppointment.status,
         raw: newAppointment,
@@ -102,7 +104,8 @@ const DocDashboard: React.FC = () => {
           );
         } else {
           // Add new appointment to the top
-          return [mapped, ...prev];
+          toast.success("Walk in Patient Added in Queue")
+          return [ ...prev,mapped];
         }
       });
     };

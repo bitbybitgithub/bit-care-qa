@@ -124,6 +124,7 @@ const StaffDashboard: React.FC = () => {
           appointment_id: a.appointment_id,
           time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
           name: a.patient_name,
+          gender: a.gender,
           status: a.status,
           doctor: a.doctor_name,
           source: a.source,
@@ -241,6 +242,8 @@ const StaffDashboard: React.FC = () => {
         // OTP valid but no existing patient found — go straight to registration
         setShowRegistrationForm(true)
       }
+      
+      
 
     } catch (err) {
       console.error("OTP verification error:", err);
@@ -249,6 +252,7 @@ const StaffDashboard: React.FC = () => {
       setLoadingVerify(false);
     }
   };
+  console.log("hsdgf",verifiedPatients);
   const cardItems = [
     { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: " text-blue-800 border border-violet-600" },
     { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: " text-yellow-800 border border-yellow-400" },
@@ -416,7 +420,7 @@ const StaffDashboard: React.FC = () => {
                             {p.patient_name}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            {p.gender === 1 ? "Male" : "Female"}
+                      {p.gender.toLowerCase() === "male" ? "(M)" : p.gender.toLowerCase() === "female" ? "(F)" : "(O)"}
                           </p>
                         </div>
 

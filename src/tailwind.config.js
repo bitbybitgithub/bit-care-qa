@@ -66,6 +66,17 @@ module.exports = {
         overlay: "var(--z-overlay)",
         tooltip: "var(--z-tooltip)",
       },
+
+        keyframes: {
+        pulseAlert: {
+          "0%, 100%": { opacity: 1, transform: "scale(1)" },
+          "50%": { opacity: 0.4, transform: "scale(1.15)" },
+        },
+      },
+      animation: {
+        pulseAlert: "pulseAlert 1.2s ease-in-out infinite",
+      },
+
     },
   },
   plugins: [],

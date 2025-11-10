@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import type { PatientDetails, PatientVitalsDetails } from "./ConsultationView";
+import SafetyContext from "../../../components/UI/SafetyContext";
 
 interface ConsultationSummaryProps {
   data: PatientVitalsDetails;
@@ -55,21 +56,30 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6 sm:p-10 overflow-y-auto">
-        {/* Vitals Section */}
+<div className="flex flex-col sm:flex-row h-full overflow-hidden bg-white dark:bg-gray-900">
+
+      {/* LEFT SIDEBAR */}
+<div className="w-full sm:w-1/3 lg:w-1/4 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 bg-white dark:bg-gray-900">
+        <SafetyContext />
+      </div>
+
+      {/* RIGHT CONTENT */}
+      <div className="flex-1 p-4 sm:p-10 overflow-y-auto">
+
+        {/* Vitals */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
             Latest Vitals
           </h3>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
             <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-xl text-center shadow-sm">
               <HeartPulse className="w-6 h-6 text-red-500 mx-auto mb-2" />
               <p className="text-xl font-semibold text-gray-900 dark:text-white">
                 {data?.blood_pressure_systolic}/{data?.blood_pressure_diastolic}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                BP (mmHg)
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">BP (mmHg)</p>
             </div>
 
             <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-center shadow-sm">
@@ -77,9 +87,7 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
               <p className="text-xl font-semibold text-gray-900 dark:text-white">
                 {data?.temperature_c}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Temp (°C)
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Temp (°C)</p>
             </div>
 
             <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-center shadow-sm">
@@ -87,9 +95,7 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
               <p className="text-xl font-semibold text-gray-900 dark:text-white">
                 {data?.respiration_rate}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                RR (BPM)
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">RR (BPM)</p>
             </div>
 
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl text-center shadow-sm">
@@ -97,42 +103,46 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
               <p className="text-xl font-semibold text-gray-900 dark:text-white">
                 {data?.oxygen_saturation}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                SpO₂ (%)
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">SpO₂ (%)</p>
             </div>
+
           </div>
         </div>
 
-        {/* Chief Complaint & Triage Notes */}
+        {/* Chief Complaint and Triage Notes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+
+          <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="w-5 h-5 text-indigo-500" />
               <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200">
                 Chief Complaint
               </h4>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {data?.chief_complaint || "No chief complaint recorded."}
             </p>
           </div>
 
-          <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <ClipboardList className="w-5 h-5 text-purple-500" />
               <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200">
                 Triage Notes
               </h4>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {data?.notes || "No triage notes available."}
             </p>
           </div>
+
         </div>
+
       </div>
+    </div>
     </div>
   );
 };
+
 
 export default ConsultationSummary;

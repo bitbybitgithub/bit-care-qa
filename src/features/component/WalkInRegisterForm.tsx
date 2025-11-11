@@ -191,7 +191,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         status: AppointmentStatus.Scheduled,
         source: "walk_in",
         reason: formData.reason || "Regular checkup",
-        user_id: user_id,
+        user_id: Number(user_id),
       };
 
       console.log("Calling saveAppointment with:", appointmentData);

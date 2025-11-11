@@ -93,6 +93,8 @@ export interface PatientVitalsDetails {
   bmi: string;
   notes: string;
   chief_complaint: string;
+  current_medications: string;
+  allergies: string;
 }
 
 export interface PatientAppointmentHistory {

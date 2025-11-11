@@ -32,8 +32,9 @@ const MainLayout = () => {
     }
   }, [token]);
 
-  const clinicId = getSessionItem("user", "clinic_id");
-
+  
+  // const clinicId = getSessionItem("user", "clinic_id");
+  const clinicId = 40
   
 
   // convert path into readable title

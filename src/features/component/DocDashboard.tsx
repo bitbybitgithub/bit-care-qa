@@ -128,7 +128,7 @@ const DocDashboard: React.FC = () => {
       const payload: UpdateStatusPayload = {
         appointment_id: patient.raw.appointment_id,
         user_id: userId,
-        status: AppointmentStatus.Started,
+        status: AppointmentStatus.InConsultation
       };
 
       try {
@@ -136,7 +136,7 @@ const DocDashboard: React.FC = () => {
         setPatientInfo(patient);
         toggleDrawer(true);
         if (res.success) {
-          // toast.success("Consultation started successfully!");
+          toast.success("Consultation started successfully!");
           // // Optimistic update
           // setPatients((prev) =>
           //   prev.map((p) =>
@@ -156,6 +156,9 @@ const DocDashboard: React.FC = () => {
     },
     [userId]
   );
+
+ 
+
 
   // ---------------- Card Items ----------------
   const cardItems = useMemo(

@@ -11,7 +11,7 @@ export interface AppointmentDto {
   appointment_date: string; 
   start_time: string;       
   end_time: string;         
-  status: "Scheduled" | "Completed" | "Cancelled" | string;
+  status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
   reason?: string;
 }
 

@@ -3,28 +3,32 @@ import { BiSolidHand } from "react-icons/bi";
 import { BsCapsulePill } from "react-icons/bs";
 import { PiSirenDuotone } from "react-icons/pi";
 
-const SafetyContext = () => {
-  const allergies = ["Penicillin", "Peanuts", "Latex"];
-  const medications = [
-    "Ibuprofen (PRN)",
-    "Lisinopril 10mg (Daily)",
-    "Folic Acid (Daily)",
-  ];
+interface SafetyContextProps {
+  allergies: string;               
+  current_medications: string;     
+}
+
+const SafetyContext: React.FC<SafetyContextProps> = ({
+  allergies,
+  current_medications,
+}) => {
+  const allergyList = allergies?.split(",").map(a => a.trim());
+  const medicationList = current_medications?.split(",").map(m => m.trim());
 
   return (
     <div className="w-full h-full flex flex-col gap-6">
-<style>
-  {`
-    @keyframes pulseAlert {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.15); }
-    }
+      <style>
+        {`
+        @keyframes pulseAlert {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.15); }
+        }
 
-    .pulse-alert {
-      animation: pulseAlert 1.2s ease-in-out infinite;
-    }
-  `}
-</style>
+        .pulse-alert {
+          animation: pulseAlert 1.2s ease-in-out infinite;
+        }
+      `}
+      </style>
 
       {/* Header */}
       <div className="flex items-center gap-2">
@@ -45,7 +49,7 @@ const SafetyContext = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {allergies.map((item, i) => (
+          {allergyList?.map((item, i) => (
             <span
               key={i}
               className="text-xs bg-red-200 text-red-800 px-2.5 py-1 rounded-md dark:bg-red-800/40 dark:text-red-200"
@@ -66,7 +70,7 @@ const SafetyContext = () => {
         </div>
 
         <ul className="space-y-1">
-          {medications.map((item, i) => (
+          {medicationList?.map((item, i) => (
             <li
               key={i}
               className="text-sm text-red-900 dark:text-red-200 leading-snug"

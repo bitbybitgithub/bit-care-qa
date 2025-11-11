@@ -33,6 +33,13 @@ const Sidebar: React.FC = () => {
 
   //----------- Doctor------------------
   // const Menus: MenuItem[] = [
+  //  { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
+  //   { title: "Profile", link: "/profile", icon: <FaUsers /> }, 
+  //   { title: "Manage availability", link: "/clinic-manage", icon: <MdOutlineManageAccounts/> },
+  // ];
+
+  // // -------------Staff--------------
+  // const Menus: MenuItem[] = [
   //   { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
   //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
   //   {
@@ -50,6 +57,7 @@ const Sidebar: React.FC = () => {
     { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
     { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
     { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
+    { title: "Patient Vitals", link: "/patient-vitals", icon: <FaPeopleGroup /> },
   ];
 
   return (

@@ -10,9 +10,10 @@ import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
-//  import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
+ import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
 import Staffdashboard from "../features/component/StaffDashboard";
 import WalkInRegisterForm from "../features/component/WalkInRegisterForm";
+import VitalsComponent from "../features/component/VitalsComponents";
 
 const Router = [
   {
@@ -36,6 +37,7 @@ const Router = [
       { path: "/doc-dashboard", element: <DocDashboard /> },
       { path: "/profile", element: <DoctorProfile /> },
 
+      { path: '/patient-vitals', element: <VitalsComponent/> },
       { path: "/staff-dashboard", element: <Staffdashboard /> },
       { path: "/task-and-reminder", element: <Staffdashboard /> },
       { path: "/assign-patient", element: <Staffdashboard /> },
@@ -43,11 +45,11 @@ const Router = [
       { path: "/cln-protocol", element: <Staffdashboard /> },
       { path: "/shift-schedule", element: <Staffdashboard /> },
 
-      { path: "/walkin-register", element: <WalkInRegisterForm /> },
+      // { path: '/walkin-register', element: <WalkInRegisterForm /> },
+      // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
+    ]
+  }
 
-      // {path:'/clinic-manage', element:<ManageAvailabilityPage/>}
-    ],
-  },
-];
+]
 
 export default Router;

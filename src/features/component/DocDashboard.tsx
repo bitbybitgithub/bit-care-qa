@@ -12,18 +12,13 @@ import {
   fetchTodayAppointments,
   updatePatientStatus,
   type AppointmentDto,
+  type UpdateAppointmentStatusRequest,
 } from "../../api/PatientQueueApi";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { SwipeableDrawer } from "@mui/material";
 import ConsultationView from "../appointment/consultation/ConsultationView";
 import { useSocket } from "../../context/SocketContext";
-
-interface UpdateStatusPayload {
-  appointment_id: number;
-  user_id: number;
-  status: string;
-}
 
 // ---------------- Component ----------------
 const DocDashboard: React.FC = () => {
@@ -55,7 +50,7 @@ const DocDashboard: React.FC = () => {
 
       const mapped: Patient[] = appointments.map((a) => ({
         appointment_id: a.appointment_id,
-        gender:a.gender,
+        gender: a.gender,
         time: `${a.start_time} - ${a.end_time}`,
         name: a.patient_name,
         reason: a.reason,
@@ -86,7 +81,7 @@ const DocDashboard: React.FC = () => {
         appointment_id: newAppointment.appointment_id,
         time: `${newAppointment.start_time} - ${newAppointment.end_time}`,
         name: newAppointment.patient_name,
-        gender:newAppointment.gender,
+        gender: newAppointment.gender,
         reason: newAppointment.reason,
         status: newAppointment.status,
         raw: newAppointment,
@@ -104,8 +99,8 @@ const DocDashboard: React.FC = () => {
           );
         } else {
           // Add new appointment to the top
-          toast.success("Walk in Patient Added in Queue")
-          return [ ...prev,mapped];
+          toast.success("Walk in Patient Added in Queue");
+          return [...prev, mapped];
         }
       });
     };
@@ -125,10 +120,10 @@ const DocDashboard: React.FC = () => {
         return;
       }
 
-      const payload: UpdateStatusPayload = {
+      const payload: UpdateAppointmentStatusRequest = {
         appointment_id: patient.raw.appointment_id,
         user_id: userId,
-        status: AppointmentStatus.InConsultation
+        status: AppointmentStatus.Started,
       };
 
       try {
@@ -136,7 +131,7 @@ const DocDashboard: React.FC = () => {
         setPatientInfo(patient);
         toggleDrawer(true);
         if (res.success) {
-          toast.success("Consultation started successfully!");
+          // toast.success("Consultation started successfully!");
           // // Optimistic update
           // setPatients((prev) =>
           //   prev.map((p) =>
@@ -156,9 +151,6 @@ const DocDashboard: React.FC = () => {
     },
     [userId]
   );
-
- 
-
 
   // ---------------- Card Items ----------------
   const cardItems = useMemo(

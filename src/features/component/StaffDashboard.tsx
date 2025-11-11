@@ -1,16 +1,32 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaClipboardList, FaUserMd, FaEnvelopeOpenText, FaPhone, FaCalendarAlt, FaUser, } from "react-icons/fa";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import {
+  FaClipboardList,
+  FaUserMd,
+  FaEnvelopeOpenText,
+  FaPhone,
+  FaCalendarAlt,
+  FaUser,
+} from "react-icons/fa";
 import { FaPeopleGroup } from "react-icons/fa6";
 import Cards from "../../components/common/Cards";
-import PatientQueue, { type Patient } from "../../features/component/PatientQueue";
+import PatientQueue, {
+  type Patient,
+} from "../../features/component/PatientQueue";
 import Regex from "../../Helper/Regex";
 import { generateOtpApi } from "../../api/GenerateOtpApi";
-import { fetchTodayAppointments } from "../../api/PatientQueueApi";
+import {
+  fetchTodayAppointments,
+  updatePatientStatus,
+  type UpdateAppointmentStatusRequest,
+} from "../../api/PatientQueueApi";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
 // import { io, Socket } from "socket.io-client"
 import { useSocket } from "../../context/SocketContext";
 import { IoCall } from "react-icons/io5";
+import { toast } from "react-toastify";
+import { AppointmentStatus } from "../../context/constant/enum";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 // Wrap Alert to satisfy TS
 // const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
@@ -22,11 +38,8 @@ interface Appointment {
   status: string;
 }
 
-
-
 const StaffDashboard: React.FC = () => {
-
-   const { socket, isConnected } = useSocket();
+  const { socket, isConnected } = useSocket();
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
@@ -41,12 +54,13 @@ const StaffDashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
-  const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(null);
+  const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
+    null
+  );
 
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   // const clinicId = 1;
-  
 
   // useEffect(() => {
   //   const socket: Socket = io("http://localhost:8989", {
@@ -75,13 +89,12 @@ const StaffDashboard: React.FC = () => {
   //   };
   // }, [clinicId]);
 
-
-    useEffect(() => {
+  useEffect(() => {
     if (!socket) return;
 
     const handleUpdate = (data: Appointment) => {
       console.log("Realtime update:", data);
-           setPatients((prev) =>
+      setPatients((prev) =>
         prev.map((p) =>
           p?.raw.appointment_id === data.appointment_id
             ? { ...p, status: data.status }
@@ -96,8 +109,6 @@ const StaffDashboard: React.FC = () => {
       socket.off("appointmentUpdate", handleUpdate);
     };
   }, [socket]);
-
-
 
   // add near top of StaffDashboard (below useState declarations)
   const resetModalState = () => {
@@ -114,7 +125,6 @@ const StaffDashboard: React.FC = () => {
     setShowRegistrationForm(false);
   };
 
-
   const fetchQueue = () => {
     setLoadingQueue(true);
     setErrorQueue(null);
@@ -122,7 +132,10 @@ const StaffDashboard: React.FC = () => {
       .then((appointments) => {
         const mapped: Patient[] = appointments.map((a) => ({
           appointment_id: a.appointment_id,
-          time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
+          time:
+            a.start_time && a.end_time
+              ? `${a.start_time} - ${a.end_time}`
+              : undefined,
           name: a.patient_name,
           gender: a.gender,
           status: a.status,
@@ -130,7 +143,6 @@ const StaffDashboard: React.FC = () => {
           source: a.source,
           raw: a,
           // age: a.age,
-
         }));
         setPatients(mapped);
       })
@@ -147,8 +159,7 @@ const StaffDashboard: React.FC = () => {
   const handleAddWalkIn = () => {
     resetModalState();
     setOpen(true);
-
-  }
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -199,11 +210,13 @@ const StaffDashboard: React.FC = () => {
     if (val && index < otp.length - 1) otpRefs.current[index + 1]?.focus();
   };
 
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
+  const handleOtpKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0)
+      otpRefs.current[index - 1]?.focus();
   };
-
-
 
   const handleConfirm = async () => {
     const finalOtp = otp.join("");
@@ -233,18 +246,19 @@ const StaffDashboard: React.FC = () => {
         return;
       }
       // OTP is valid
-      else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
+      else if (
+        res.found &&
+        Array.isArray(res.patients) &&
+        res.patients.length > 0
+      ) {
         // Existing patient(s) found — show list
         setVerifiedPatients(res.patients);
         setShowRegistrationForm(false);
         // toast.success("OTP verified. Select an existing patient.");
       } else {
         // OTP valid but no existing patient found — go straight to registration
-        setShowRegistrationForm(true)
+        setShowRegistrationForm(true);
       }
-      
-      
-
     } catch (err) {
       console.error("OTP verification error:", err);
       setError("Something went wrong while verifying OTP. Please try again.");
@@ -252,18 +266,74 @@ const StaffDashboard: React.FC = () => {
       setLoadingVerify(false);
     }
   };
-  console.log("hsdgf",verifiedPatients);
+  console.log("hsdgf", verifiedPatients);
   const cardItems = [
-    { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: " text-blue-800 border border-violet-600" },
-    { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: " text-yellow-800 border border-yellow-400" },
-    { title: "Available Doctors", value: 12, icon: <FaUserMd />, color: " text-green-800 border border-green-400" },
-    { title: "Pending Messages", value: 3, icon: <FaEnvelopeOpenText />, color: " text-red-800 border border-red-400" },
+    {
+      title: "Patients in Queue",
+      value: patients.length,
+      icon: <FaPeopleGroup />,
+      color: " text-blue-800 border border-violet-600",
+    },
+    {
+      title: "Tasks Due Today",
+      value: 5,
+      icon: <FaClipboardList />,
+      color: " text-yellow-800 border border-yellow-400",
+    },
+    {
+      title: "Available Doctors",
+      value: 12,
+      icon: <FaUserMd />,
+      color: " text-green-800 border border-green-400",
+    },
+    {
+      title: "Pending Messages",
+      value: 3,
+      icon: <FaEnvelopeOpenText />,
+      color: " text-red-800 border border-red-400",
+    },
   ];
+  const uId = getSessionItem("user", "user_id");
 
+  const handleUpdatePatientStatus = useCallback(
+    async (patient: Patient, newStatus: string) => {
+      if (!patient?.raw?.appointment_id) {
+        toast.error("Invalid appointment ID.");
+        return;
+      }
+
+      const payload: UpdateAppointmentStatusRequest = {
+        appointment_id: patient.raw.appointment_id,
+        user_id: uId,
+        status: newStatus,
+      };
+
+      try {
+        const res = await updatePatientStatus(payload);
+
+        if (res.success) {
+          setPatients((prev) =>
+            prev.map((p) =>
+              p?.raw.appointment_id === patient.appointment_id
+                ? { ...p, status: newStatus }
+                : p
+            )
+          );
+        } else {
+          toast.error(res.message || "Failed to update appointment status.");
+          console.error("❌", res.message);
+        }
+      } catch (err: any) {
+        toast.error("Error updating patient status.");
+        console.error("🔥 Error:", err.message || err);
+      }
+    },
+    [userId]
+  );
 
   return (
     <div className="p-4 sm:p-6 space-y-6 ">
-       <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
+      <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
       <Cards
         items={cardItems}
         gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
@@ -273,14 +343,13 @@ const StaffDashboard: React.FC = () => {
         patientsData={patients}
         loading={loadingQueue}
         error={errorQueue}
-        // classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
         onAddWalkIn={handleAddWalkIn}
+        handleUpdatePatientStatus={handleUpdatePatientStatus}
       />
 
       {open && !showRegistrationForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4">
           <div className="bg-gray-100 border-gray-500 rounded-2xl shadow-lg w-full max-w-md sm:max-w-lg p-4 sm:p-6 mx-auto">
-
             {/*  Show header only when patient not yet verified */}
             {!verifiedPatients && (
               <>
@@ -300,11 +369,7 @@ const StaffDashboard: React.FC = () => {
                     Contact Number :
                   </label>
                   <div className="flex-1 flex flex-col relative">
-
-
                     <div className="flex flex-col sm:flex-row items-center w-full gap-2">
-
-
                       <input
                         type="tel"
                         value={contact}
@@ -325,10 +390,11 @@ const StaffDashboard: React.FC = () => {
                         maxLength={10}
                         placeholder="Enter 10-digit number"
                         className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-    ${error
-                            ? "border-red-400 focus:ring-red-300"
-                            : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
-                          }`}
+    ${
+      error
+        ? "border-red-400 focus:ring-red-300"
+        : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+    }`}
                       />
 
                       {loadingGenerate && (
@@ -337,7 +403,6 @@ const StaffDashboard: React.FC = () => {
                         </div>
                       )}
                     </div>
-
 
                     {error && (
                       <p className="text-sm text-red-500 font-medium mt-1">
@@ -361,14 +426,18 @@ const StaffDashboard: React.FC = () => {
                 {/* Show OTP Input until verified */}
                 {showOtp && !verifiedPatients && (
                   <div className="flex flex-col items-center space-y-2 mt-4 w-full">
-                    <p className="text-gray-700 font-medium">Enter 6-digit OTP</p>
+                    <p className="text-gray-700 font-medium">
+                      Enter 6-digit OTP
+                    </p>
                     <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
                       {otp.map((digit, index) => (
                         <input
                           key={index}
                           type="text"
                           value={digit}
-                          onChange={(e) => handleOtpChange(e.target.value, index)}
+                          onChange={(e) =>
+                            handleOtpChange(e.target.value, index)
+                          }
                           onKeyDown={(e) => handleOtpKeyDown(e, index)}
                           maxLength={1}
                           ref={(el) => {
@@ -420,14 +489,20 @@ const StaffDashboard: React.FC = () => {
                             {p.patient_name}
                           </h4>
                           <p className="text-sm text-gray-600">
-                      {p.gender.toLowerCase() === "male" ? "(M)" : p.gender.toLowerCase() === "female" ? "(F)" : "(O)"}
+                            {p.gender.toLowerCase() === "male"
+                              ? "(M)"
+                              : p.gender.toLowerCase() === "female"
+                              ? "(F)"
+                              : "(O)"}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-6 ml-12 text-sm text-gray-700">
                           <div className="flex items-center gap-2">
                             <FaCalendarAlt className="text-blue-500" />
-                            <span>{new Date(p.date_of_birth).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(p.date_of_birth).toLocaleDateString()}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-1">
@@ -443,7 +518,6 @@ const StaffDashboard: React.FC = () => {
                     </div>
                   ))}
                 </div>
-
               </div>
             )}
 
@@ -469,7 +543,6 @@ const StaffDashboard: React.FC = () => {
         </div>
       )}
 
-
       {showRegistrationForm && (
         <WalkInRegisterForm
           onClose={() => {
@@ -478,16 +551,10 @@ const StaffDashboard: React.FC = () => {
           patientData={selectedPatient}
           onSuccess={fetchQueue}
           contact={contact}
-
         />
       )}
-
-
     </div>
   );
-
 };
 
 export default StaffDashboard;
-
-

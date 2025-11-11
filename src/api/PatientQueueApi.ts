@@ -8,6 +8,7 @@ export interface AppointmentDto {
   doctor_id: number;
   patient_name: string;
   appointment_id:number;
+  gender:string;
   appointment_date: string; 
   start_time: string;       
   end_time: string;         
@@ -21,7 +22,7 @@ export interface TodayAppointmentsResponse {
 }
 
 // Define the request body type
-interface UpdateAppointmentStatusRequest {
+export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
   user_id: number;
   status: string;

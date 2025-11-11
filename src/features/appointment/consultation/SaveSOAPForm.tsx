@@ -46,14 +46,15 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-[var(--color-white)]  rounded-2xl shadow-lg border border-gray-200">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+    <div className="mt-4">
+      {/* className="w-full m-4 p-6 bg-[var(--color-white)]  rounded-2xl shadow-lg border border-gray-200"> */}
+      {/* <h2 className="text-xl font-semibold mb-4 text-gray-800">
         Consultation & Diagnosis (SOAP)
-      </h2>
+      </h2> */}
 
-      <hr className="mb-6 border-gray-300" />
+      {/* <hr className="mb-6 border-gray-300" /> */}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-2 ">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white  ">
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">
             Subjective (HPI, ROS, Complaints)
@@ -110,7 +111,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
             l
           />
         </div>
-
+{/* 
         <button
           type="submit"
           disabled={loading}
@@ -121,9 +122,9 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
           }`}
         >
           {loading ? "Saving..." : "Save SOAP"}
-        </button>
+        </button> */}
       </form>
-
+{/* 
       {responseMsg && (
         <div
           className={`mt-4 text-center font-semibold ${
@@ -132,7 +133,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
         >
           {responseMsg}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

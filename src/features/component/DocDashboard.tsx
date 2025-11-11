@@ -16,7 +16,7 @@ import {
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { SwipeableDrawer } from "@mui/material";
-import ConsultationView from "../appointment/components/ConsultationView";
+import ConsultationView from "../appointment/consultation/ConsultationView";
 import { useSocket } from "../../context/SocketContext";
 
 interface UpdateStatusPayload {

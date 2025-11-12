@@ -10,10 +10,7 @@ import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
- import ManageAvailabilityPage from "../features/clinic/components/ManageAvalibility";
 import Staffdashboard from "../features/component/StaffDashboard";
-import WalkInRegisterForm from "../features/component/WalkInRegisterForm";
-import VitalsComponent from "../features/component/VitalsComponents";
 
 const Router = [
   {
@@ -50,9 +47,8 @@ const Router = [
 
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
-    ]
-  }
-
-]
+    ],
+  },
+];
 
 export default Router;

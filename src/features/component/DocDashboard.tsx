@@ -152,33 +152,6 @@ const DocDashboard: React.FC = () => {
     [userId]
   );
 
-  // ---------------- Card Items ----------------
-  const cardItems = useMemo(
-    () => [
-      {
-        title: "Patients Records",
-        icon: <HiClipboardList className="text-3xl mb-2" />,
-        onClick: () => console.log("Patients Records clicked"),
-      },
-      {
-        title: "Add Diagnosis Notes",
-        icon: <FaNotesMedical className="text-3xl mb-2" />,
-        onClick: () => console.log("Add diagnosis notes clicked"),
-      },
-      {
-        title: "Manage Medication",
-        icon: <GiMedicines className="text-3xl mb-2" />,
-        onClick: () => console.log("Manage medication clicked"),
-      },
-      {
-        title: "Refer Patient",
-        icon: <RiUserSharedLine className="text-3xl mb-2" />,
-        onClick: () => console.log("Refer Patient clicked"),
-      },
-    ],
-    []
-  );
-
   const toggleDrawer = (val: boolean) => {
     setDrawreOpen(val);
   };
@@ -201,13 +174,7 @@ const DocDashboard: React.FC = () => {
           error={error}
           onStartConsultation={handleUpdatePatientStatus}
         />
-
-        {/* ========== Action Cards ========== */}
-        <Cards
-          gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          items={cardItems}
-        />
-
+        
         {/* ========== Progress Card ========== */}
         <PatientProgressCard />
 

@@ -35,9 +35,12 @@ const Router = [
       { path: "/clinic-settings", element: <Profile /> },
 
       { path: "/doc-dashboard", element: <DocDashboard /> },
+      { path: "/patients-records", element: <DocDashboard /> },
+      { path: "/add-diagnosis", element: <DocDashboard /> },
+      { path: "/manage-medication", element: <DocDashboard /> },
+      { path: "/refer-patient", element: <DocDashboard /> },
       { path: "/profile", element: <DoctorProfile /> },
 
-      { path: '/patient-vitals', element: <VitalsComponent/> },
       { path: "/staff-dashboard", element: <Staffdashboard /> },
       { path: "/task-and-reminder", element: <Staffdashboard /> },
       { path: "/assign-patient", element: <Staffdashboard /> },

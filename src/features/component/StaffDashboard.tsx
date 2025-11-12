@@ -18,6 +18,7 @@ import {
   fetchTodayAppointments,
   updatePatientStatus,
   type UpdateAppointmentStatusRequest,
+  getMedicalDispensingAsync,
 } from "../../api/PatientQueueApi";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
@@ -25,8 +26,8 @@ import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
 import { useSocket } from "../../context/SocketContext";
 import { IoCall } from "react-icons/io5";
 import { toast } from "react-toastify";
-import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
+import MedicalDispensing from "./MedicalDispensing";
 
 // Wrap Alert to satisfy TS
 // const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
@@ -40,6 +41,7 @@ interface Appointment {
 
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
+  const [activeTab, setActiveTab] = useState<"queue" | "dispensing">("queue");
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
@@ -57,37 +59,29 @@ const StaffDashboard: React.FC = () => {
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
     null
   );
-
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [dispensingData, setDispensingData] = useState([]);
+  const [loadingDispense, setLoadingDispense] = useState(false);
+  const uId = getSessionItem("user", "user_id");
 
-  // const clinicId = 1;
-
-  // useEffect(() => {
-  //   const socket: Socket = io("http://localhost:8989", {
-  //     transports: ["websocket"],
-  //   });
-
-  //   socket.emit("joinClinic", clinicId);
-
-  //   socket.on("appointmentUpdate", (data: { appointment_id: number; status: string }) => {
-  //     console.log("Real-time appointment update:", data);
-
-  //     // Optional: update your patient list UI instantly
-  //     setPatients((prev) =>
-  //       prev.map((p) =>
-  //         p?.raw.appointment_id === data.appointment_id
-  //           ? { ...p, status: data.status }
-  //           : p
-  //       )
-  //     );
-
-  //     // toast.info(`Appointment ${data.appointment_id} status updated to ${data.status}`);
-  //   });
-
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, [clinicId]);
+  const fetchMedicalDispensing = async () => {
+    setLoadingDispense(true);
+    try {
+      const doctorId = 4; // example doctor id
+      const response = await getMedicalDispensingAsync(doctorId);
+      console.log(response);
+      setDispensingData(response || []);
+    } catch (err) {
+      console.error("Error fetching dispensing:", err);
+    } finally {
+      setLoadingDispense(false);
+    }
+  };
+  // ✅ Automatically fetch data based on tab
+  useEffect(() => {
+    if (activeTab === "queue") fetchQueue();
+    else fetchMedicalDispensing();
+  }, [activeTab]);
 
   useEffect(() => {
     if (!socket) return;
@@ -293,7 +287,6 @@ const StaffDashboard: React.FC = () => {
       color: " text-red-800 border border-red-400",
     },
   ];
-  const uId = getSessionItem("user", "user_id");
 
   const handleUpdatePatientStatus = useCallback(
     async (patient: Patient, newStatus: string) => {
@@ -338,14 +331,49 @@ const StaffDashboard: React.FC = () => {
         items={cardItems}
         gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
       />
-      <PatientQueue
-        mode="staff"
-        patientsData={patients}
-        loading={loadingQueue}
-        error={errorQueue}
-        onAddWalkIn={handleAddWalkIn}
-        handleUpdatePatientStatus={handleUpdatePatientStatus}
-      />
+    
+      {/* Tabs */}
+      <div className="flex gap-3 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => setActiveTab("queue")}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+            activeTab === "queue"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Patient Queue
+        </button>
+
+        <button
+          onClick={() => setActiveTab("dispensing")}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+            activeTab === "dispensing"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Medical Dispensing
+        </button>
+      </div>
+      <div className="mt-4">
+        {activeTab === "queue" ? (
+          <PatientQueue
+            mode="staff"
+            patientsData={patients}
+            loading={loadingQueue}
+            error={errorQueue}
+            onAddWalkIn={handleAddWalkIn}
+            handleUpdatePatientStatus={handleUpdatePatientStatus}
+          />
+        ) : (
+          <MedicalDispensing
+            mode="staff"
+            data={dispensingData}
+            loading={loadingDispense}
+          />
+        )}
+      </div>
 
       {open && !showRegistrationForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4">

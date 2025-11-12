@@ -182,9 +182,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-        <h2 className="text-xl font-semibold text-[var(--color-text)]">
-          Patient Queue
-        </h2>
+        <h2 className="text-xl font-semibold text-[var(--color-text)]"></h2>
         {mode === "staff" && onAddWalkIn && (
           <button
             onClick={onAddWalkIn}

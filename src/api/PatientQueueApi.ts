@@ -34,7 +34,36 @@ interface UpdateAppointmentStatusResponse {
   message: string;
 }
 
+export interface MedicalDispensingDto{
+  type:string,
+  appointment_id:number,
+  prescribe_id:number,
+  patient_id:number,
+  patient_name:string,
+  doctor_id:number,
+  doctor_name:string,
+  clinic_id:number,
+  appointment_date:string,
+  appointment_status:string,
+  reason:string,
+  consultation_notes:string,
+  diagnosis:string,
+  prescription:string,
+  is_active:string,
+  created_by:string,
+  created_date:string,
+  modified_by:string,
+  modified_date:string,
+  gender:string,
+  source:string,
+  start_time:string,
+  end_time:string
+}
 
+export interface MedicalDispensingResponse{
+   success: boolean;
+  data: MedicalDispensingDto[];
+}
 /**
  * Fetch today's appointments for a specific doctor.
  *
@@ -66,4 +95,16 @@ export async function updatePatientStatus(
     console.error("Error updating appointment status:", error.message || error);
     throw new Error(error.response?.data?.message || "Failed to update appointment status");
   }
+}
+
+export async function getMedicalDispensingAsync(doctorId: number | null): Promise<MedicalDispensingDto[]> {
+  const response = await emrAPI.post<MedicalDispensingResponse>(
+    "/doctors/getMedicalDispensing",
+    { doctor_id: doctorId } 
+  );
+console.log('response', response)
+  if (!response || !response.success) {
+    throw new Error("Failed to Medical Dispensing");
+  }
+  return response?.body?.data?? [];
 }

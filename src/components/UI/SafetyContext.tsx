@@ -12,9 +12,12 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
   allergies,
   current_medications,
 }) => {
+    console.log(" SafetyContext props:", { allergies, current_medications }); 
+
   const allergyList = allergies?.split(",").map(a => a.trim());
   const medicationList = current_medications?.split(",").map(m => m.trim());
-
+console.log(" Parsed allergyList:", allergyList);
+console.log(" Parsed medicationList:", medicationList);
   return (
     <div className="w-full h-full flex flex-col gap-6">
       <style>
@@ -40,10 +43,10 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
       </div>
 
       {/* Allergies */}
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
+      <div className="bg-red-50  rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
         <div className="flex items-center gap-2 mb-3">
           <BiSolidHand className="text-red-600 text-xl" />
-          <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+          <h3 className="text-sm font-semibold text-red-800 ">
             Allergies
           </h3>
         </div>
@@ -52,7 +55,7 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
           {allergyList?.map((item, i) => (
             <span
               key={i}
-              className="text-xs bg-red-200 text-red-800 px-2.5 py-1 rounded-md dark:bg-red-800/40 dark:text-red-200"
+              className="text-xs bg-red-200 text-red-800 px-2.5 py-1 rounded-md "
             >
               {item}
             </span>
@@ -61,10 +64,10 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
       </div>
 
       {/* Medications */}
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
+      <div className="bg-red-50  rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
         <div className="flex items-center gap-2 mb-3">
           <BsCapsulePill className="text-red-600 text-xl" />
-          <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+          <h3 className="text-sm font-semibold text-red-800 ">
             Current Medications
           </h3>
         </div>
@@ -73,7 +76,7 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
           {medicationList?.map((item, i) => (
             <li
               key={i}
-              className="text-sm text-red-900 dark:text-red-200 leading-snug"
+              className="text-sm text-red-900  leading-snug"
             >
               {item}
             </li>

@@ -68,7 +68,7 @@ const DocDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchAppointments();
-  }, [fetchAppointments]);
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -128,18 +128,9 @@ const DocDashboard: React.FC = () => {
 
       try {
         const res = await updatePatientStatus(payload);
-        setPatientInfo(patient);
-        toggleDrawer(true);
         if (res.success) {
-          // toast.success("Consultation started successfully!");
-          // // Optimistic update
-          // setPatients((prev) =>
-          //   prev.map((p) =>
-          //     p.raw.appointment_id === patient.raw.appointment_id
-          //       ? { ...p, status: "started" }
-          //       : p
-          //   )
-          // );
+          setPatientInfo(patient);
+          toggleDrawer(true);
         } else {
           toast.error(res.message || "Failed to update appointment status.");
           console.error("❌", res.message);
@@ -174,7 +165,7 @@ const DocDashboard: React.FC = () => {
           error={error}
           onStartConsultation={handleUpdatePatientStatus}
         />
-        
+
         {/* ========== Progress Card ========== */}
         <PatientProgressCard />
 

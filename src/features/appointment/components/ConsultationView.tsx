@@ -141,10 +141,10 @@ interface ConsultationProps {
 
 
 
-const ConsultationView: React.FC<ConsultationProps> = ({patientInfo, onCloseDrawer}) => {
+const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDrawer }) => {
 
   const [patientData, setPatientData] = useState<ConsultationSummaryResponse>();
-
+  const patientId = patientInfo?.raw?.patient_id;
   // const patientInfo = {
   //   patientId: 1,
   //   name: "John M. Davis",
@@ -153,25 +153,25 @@ const ConsultationView: React.FC<ConsultationProps> = ({patientInfo, onCloseDraw
   //   status: "In Consultation",
   // }
   const { data } = useQuery<ConsultationSummaryResponse>({
-    queryKey: ["patientInfo", 1],//patientInfo?.raw?.patient_id],
-    queryFn: () => fetchPatientInfo(1),//patientInfo?.raw?.patient_id),
-    enabled: !!patientInfo?.raw?.patient_id, // Only run if clinicId is available
+    queryKey: ["patientInfo", patientId],//patientInfo?.raw?.patient_id],
+    queryFn: () => fetchPatientInfo(patientId),//patientInfo?.raw?.patient_id),
+    enabled: !!patientId, // Only run if clinicId is available
     staleTime: Infinity, // Treat the data as fresh after fetch
   });
 
-  useEffect(() => { 
+  useEffect(() => {
     if (data) {
       setPatientData(data);
     }
   }, [data]);
 
-  console.log({patientInfo})
-  console.log({data})
+  console.log({ patientInfo })
+  console.log({ data })
 
-  const appDockItems: DockItem[] = [    
-    { key: "summary", icon: Info, label: "Summary", component: <ConsultationSummary data = {patientData?.PatientvitalsDetails} info = {patientInfo} />},
+  const appDockItems: DockItem[] = [
+    { key: "summary", icon: Info, label: "Summary", component: <ConsultationSummary data={patientData?.PatientvitalsDetails} info={patientInfo} /> },
     { key: "documentation", icon: FileText, label: "Documentation", component: <DocumentationView /> },
-    { key: "history", icon: ClipboardList, label: "History", component: <PatientHistory  patientAppointmentHistory={patientData?.patientAppointmentHistory} /> },
+    { key: "history", icon: ClipboardList, label: "History", component: <PatientHistory patientAppointmentHistory={patientData?.patientAppointmentHistory} /> },
     { key: "results", icon: FlaskConical, label: "Results & Labs", component: <ResultsView /> },
     { key: "vitals", icon: HeartPulse, label: "Vitals Log", component: <VitalsView /> },
   ];
@@ -191,7 +191,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({patientInfo, onCloseDraw
       </div>
     </div>
   )
-  
+
   // <Dock items={appDockItems} initialKey="summary" />;
 };
 

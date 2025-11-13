@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from "react";
 import {
   Button,
@@ -8,11 +9,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Drawer,
 } from "@mui/material";
 import { RiHeartAdd2Line } from "react-icons/ri";
 import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
 import { AppointmentStatus } from "../../context/constant/enum";
+import PatientVitals from "../component/VitalsComponents";
 
 export interface Patient {
   patient_id: number;
@@ -43,7 +46,6 @@ interface PatientQueueProps {
 }
 
 /* ---------- PURE HELPERS (do not depend on React state) ---------- */
-
 const badgeClasses = (status: string): string => {
   const colors: Record<string, string> = {
     waiting: "bg-yellow-100 text-yellow-800",
@@ -52,7 +54,7 @@ const badgeClasses = (status: string): string => {
     cancelled: "bg-red-100 text-red-800",
     scheduled: "bg-blue-100 text-blue-800",
     pending_vitals: "bg-violet-100 text-violet-800",
-    checked_in: "bg-green-300 text-green-900",
+    checked_in: "bg-green-200 text-green-900",
     in_progress: "bg-green-300 text-green-900",
     started: "bg-lime-100 text-lime-900",
     on_hold: "bg-indigo-100 text-indigo-800",
@@ -85,7 +87,6 @@ const getActionsForStatus = (status: string): string[] => {
 };
 
 /* ---------------------- MAIN COMPONENT ---------------------- */
-
 const PAGE_SIZE = 5;
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
@@ -99,20 +100,48 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   handleUpdatePatientStatus,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>(
-    {}
-  );
-
+  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>({});
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [patientToCancel, setPatientToCancel] = useState<Patient | null>(null);
 
+  const shouldShowSelectButton = (status: string): boolean => {
+    const allowedStatuses = ["scheduled", "checked_in", "on_hold"];
+    return allowedStatuses.includes(status.toLowerCase());
+  };
+
+
+  //  Drawer States
+  const [vitalsDrawerOpen, setVitalsDrawerOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+  console.log(selectedPatient, "selectedPatient");
+  // show all patients even if status not checked - in
   const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
 
   const currentPatients = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return patientsData.slice(start, start + PAGE_SIZE);
   }, [patientsData, currentPage]);
+
+  //Step 1: Filter patients if mode is 'doctor'
+  // const filteredPatients = useMemo(() => {
+  //   if (mode === "doctor") {
+  //     return patientsData.filter(
+  //       (p) => p.status?.toLowerCase() === AppointmentStatus.CheckedIn.toLowerCase()
+  //     );
+  //   }
+  //   return patientsData;
+  // }, [patientsData, mode]);
+
+  //  //Step 2: Pagination
+  // const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
+
+  // const currentPatients = useMemo(() => {
+  //   const start = (currentPage - 1) * PAGE_SIZE;
+  //   return filteredPatients.slice(start, start + PAGE_SIZE);
+  // }, [filteredPatients, currentPage]);
+
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -136,28 +165,20 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const handleAction = useCallback(
     async (action: string, patient: Patient) => {
-      console.log("Action triggered:", action, patient);
-
-      // Close menu first
       handleMenuClose(patient.patient_id);
 
-      // Then handle the action
       if (action === "Cancel Appointment") {
         setPatientToCancel(patient);
         setCancelDialogOpen(true);
       } else if (action === "Add Vitals") {
-        console.log("ADD VITALS", patient);
-        // add vitals logic
+        setSelectedPatient(patient);
+        setVitalsDrawerOpen(true);
       } else if (action === "Hold Appointment") {
-        console.log("HOLD APPOINTMENT", patient);
-        handleMenuClose(patient.patient_id);
-        // Trigger update
         await handleUpdatePatientStatus(patient, AppointmentStatus.OnHold);
-        // 🔽 Forcefully reset all anchors (so no menu stays open)
         setAnchorEl({});
       }
     },
-    [handleMenuClose]
+    [handleMenuClose, handleUpdatePatientStatus]
   );
 
   const handleConfirmCancel = useCallback(() => {
@@ -169,16 +190,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setCancelDialogOpen(false);
     setCancelReason("");
     setPatientToCancel(null);
-    // Call cancel API here
   }, [cancelReason, patientToCancel]);
 
-  /* ---------------------- RENDER ---------------------- */
+  console.log({ selectedPatient })
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative ${
-        classProp || ""
-      }`}
+      className={`bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative ${classProp || ""
+        }`}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
@@ -229,21 +248,19 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           {currentPatients.map((p) => (
             <div
               key={p.patient_id}
-              className={`grid grid-cols-6 items-center border-l-4 rounded-2xl p-4 shadow-sm ${
-                p.status === AppointmentStatus.OnHold
-                  ? "bg-[var(--color-border)]"
-                  : "bg-[var(--color-bg)] border-[var(--color-primary)]"
-              }`}
+              className={`grid grid-cols-6 items-center border-l-4 rounded-2xl p-4 shadow-sm ${p.status === AppointmentStatus.OnHold
+                ? "bg-[var(--color-border)]"
+                : "bg-[var(--color-bg)] border-[var(--color-primary)]"
+                }`}
             >
-              {/* Common */}
               <div className="font-bold text-gray-800 truncate">
                 {p.name}
                 <span className="ml-2 text-gray-500 text-sm">
                   {p.gender?.toLowerCase() === "male"
                     ? "(M)"
                     : p.gender?.toLowerCase() === "female"
-                    ? "(F)"
-                    : "(O)"}
+                      ? "(F)"
+                      : "(O)"}
                 </span>
               </div>
               <div className="font-bold text-gray-700 truncate">
@@ -259,12 +276,21 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                     {p.source ?? "—"}
                   </div>
                   <div className="flex justify-center">
+
+
                     <button
-                      onClick={() => onStartConsultation?.(p)}
+                      onClick={() => {
+                        // update status to in_progress first
+                        handleUpdatePatientStatus?.(p, AppointmentStatus.InProgress);
+                        // then open consultation view
+                        onStartConsultation?.(p);
+                      }}
                       className="bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-xl font-medium hover:opacity-90"
                     >
-                      Start Consultation
+                      Ready For Consultation
                     </button>
+
+
                   </div>
                 </>
               ) : (
@@ -284,41 +310,46 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   </div>
 
                   <div className="flex justify-center">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        borderRadius: "12px",
-                        textTransform: "none",
-                        fontWeight: 600,
-                      }}
-                      onClick={(e) => handleMenuOpen(e, p?.raw.patient_id)}
-                    >
-                      Select
-                    </Button>
-                    <Menu
-                      anchorEl={anchorEl[p?.raw.patient_id]}
-                      open={Boolean(anchorEl[p?.raw.patient_id])}
-                      onClose={() => handleMenuClose(p?.raw.patient_id)}
-                    >
-                      {getActionsForStatus(p.status).map((a) => (
-                        <MenuItem key={a} onClick={() => handleAction(a, p)}>
-                          <div className="flex items-center gap-2">
-                            {a === "Add Vitals" && (
-                              <RiHeartAdd2Line className="text-blue-600 text-lg" />
-                            )}
-                            {a === "Cancel Appointment" && (
-                              <AiOutlineUserDelete className="text-red-600 text-lg" />
-                            )}
-                            {a === "Hold Appointment" && (
-                              <IoClose className="text-orange-600 text-lg" />
-                            )}
-                            {a}
-                          </div>
-                        </MenuItem>
-                      ))}
-                    </Menu>
+                    {shouldShowSelectButton(p.status) && (
+                      <>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            borderRadius: "12px",
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
+                          onClick={(e) => handleMenuOpen(e, p?.raw.patient_id)}
+                        >
+                          Select
+                        </Button>
+                        <Menu
+                          anchorEl={anchorEl[p?.raw.patient_id]}
+                          open={Boolean(anchorEl[p?.raw.patient_id])}
+                          onClose={() => handleMenuClose(p?.raw.patient_id)}
+                        >
+                          {getActionsForStatus(p.status).map((a) => (
+                            <MenuItem key={a} onClick={() => handleAction(a, p)}>
+                              <div className="flex items-center gap-2">
+                                {a === "Add Vitals" && (
+                                  <RiHeartAdd2Line className="text-blue-600 text-lg" />
+                                )}
+                                {a === "Cancel Appointment" && (
+                                  <AiOutlineUserDelete className="text-red-600 text-lg" />
+                                )}
+                                {a === "Hold Appointment" && (
+                                  <IoClose className="text-orange-600 text-lg" />
+                                )}
+                                {a}
+                              </div>
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </>
+                    )}
                   </div>
+
                 </>
               )}
             </div>
@@ -332,11 +363,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-lg ${
-              currentPage === 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:opacity-90"
-            }`}
+            className={`px-3 py-1 rounded-lg ${currentPage === 1
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-[var(--color-primary)] text-white hover:opacity-90"
+              }`}
           >
             Prev
           </button>
@@ -346,11 +376,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-lg ${
-              currentPage === totalPages
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:opacity-90"
-            }`}
+            className={`px-3 py-1 rounded-lg ${currentPage === totalPages
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-[var(--color-primary)] text-white hover:opacity-90"
+              }`}
           >
             Next
           </button>
@@ -358,10 +387,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       )}
 
       {/* Cancel Dialog */}
-      <Dialog
-        open={cancelDialogOpen}
-        onClose={() => setCancelDialogOpen(false)}
-      >
+      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
         <DialogTitle className="font-semibold">Cancel Appointment</DialogTitle>
         <DialogContent>
           <TextField
@@ -385,6 +411,41 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/*  Vitals Drawer */}
+      <Drawer
+        anchor="right"
+        open={vitalsDrawerOpen}
+        onClose={() => setVitalsDrawerOpen(false)}
+        transitionDuration={350}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "500px", md: "70%" },
+            backgroundColor: "#fff",
+            borderLeft: "4px solid #fff",
+            boxShadow: "0px 0px 30px rgba(0,0,0,0.15)",
+            borderTopLeftRadius: "2rem",
+            borderBottomLeftRadius: "1rem",
+            overflow: "hidden",
+          },
+        }}
+      >
+        {selectedPatient && (
+          <PatientVitals
+            isOpen={vitalsDrawerOpen}
+            onClose={() => setVitalsDrawerOpen(false)}
+            // patientInfo = {selectedPatient}
+            patientId={selectedPatient?.raw.patient_id}
+            doctorId={selectedPatient.raw?.doctor_id}
+            // clinicId={selectedPatient.raw?.clinic_id}
+            appointmentId={selectedPatient.appointment_id}
+            patientName={selectedPatient.name}
+            createdBy="SystemUser"
+            onStatusUpdate={() =>
+              handleUpdatePatientStatus(selectedPatient, AppointmentStatus.CheckedIn)}
+          />
+        )}
+      </Drawer>
     </div>
   );
 };

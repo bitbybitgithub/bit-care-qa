@@ -2,7 +2,7 @@ import { emrAPI } from "./EmrApi";
 import type { AxiosResponse } from "axios";
 
 export interface Doctor {
-  clinic_id: number;  
+  clinic_id: number;
   id: number;
   name: string;
   qualification: string;
@@ -21,11 +21,11 @@ const specializationMap: Record<number, string> = {
   5: "Homeopathy",
 };
 
-export const getDoctorList = async (): Promise<Doctor[]> => {
+export const getDoctorList = async (clinic_id: number): Promise<Doctor[]> => {
   try {
-    const response: AxiosResponse<any> = await emrAPI.post("/doctors/getdoctorlist", { clinic_id: 1 });
+    const response: AxiosResponse<any> = await emrAPI.post("/doctors/getdoctorlist", { clinic_id: clinic_id });
 
-    console.log("Full API response:", response); 
+    console.log("Full API response:", response);
 
     if (!response || !response?.doctorList) {
       throw new Error("doctorList is missing in API response");

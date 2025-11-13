@@ -12,7 +12,7 @@ import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { toast } from "react-toastify";
-import { IoCallOutline, IoCalendarOutline, IoMailOutline,IoPerson } from "react-icons/io5";
+import { IoCallOutline, IoCalendarOutline, IoMailOutline, IoPerson } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
@@ -58,7 +58,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const [doctorLoading, setDoctorLoading] = useState(false);
   // Get current time
   const now = new Date();
-  const user_id=getSessionItem("user","user_id")
+  const user_id = getSessionItem("user", "user_id")
+  const clinic_id = getSessionItem("user", "clinic_id")
   // Format function for HH:mm
   const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
 
@@ -70,7 +71,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     const fetchDoctors = async () => {
       try {
         setDoctorLoading(true);
-        const list = await getDoctorList();
+        const list = await getDoctorList(clinic_id);
         setDoctors(list);
       } catch (err) {
         console.error("Error fetching doctor list:", err);
@@ -105,7 +106,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         phone: contact,
         doctor: "",
         reason: "",
-        gender:"",
+        gender: "",
       });
     }
   }, [patientData]);
@@ -198,7 +199,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const appointmentRes = await saveAppointment(appointmentData);
       console.log("Appointment API Response:", appointmentRes);
 
-      alert("Patient and Appointment saved successfully!");
+      toast.success("Patient and Appointment saved successfully!");
 
       setFormData({
         name: "",
@@ -207,7 +208,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         phone: "",
         doctor: "",
         reason: "",
-        gender:"",
+        gender: "",
       });
       onSuccess();
       setErrors({});
@@ -220,53 +221,52 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     }
   };
 
- 
 
-return (
-  <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
-    <form
-      onClick={(e) => e.stopPropagation()}
-      onSubmit={handleSubmit}
-      className="relative bg-white shadow-2xl rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto z-[10000]"
-    >
-      {/* Back Button */}
-      {/* <button
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="relative bg-white shadow-2xl rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto z-[10000]"
+      >
+        {/* Back Button */}
+        {/* <button
         type="button"
         // onClick={onBack}
         className="absolute top-0 left-0 flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium text-sm"
       >
         ← Back
       </button> */}
-      
-      <div className="flex justify-center">
-  <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-800 mb-6">
-    <FaUsers className="text-blue-600 text-3xl" />
-    Walk-In Patient Registration
-  </h2>
-</div>
+
+        <div className="flex justify-center">
+          <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-800 mb-6">
+            <FaUsers className="text-blue-600 text-3xl" />
+            Walk-In Patient Registration
+          </h2>
+        </div>
 
 
-      {/* Row 1: Full Name */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-1">Full Name</label>
-        <div
-          className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-            errors.name
+        {/* Row 1: Full Name */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+          <div
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.name
               ? "border-red-500 ring-1 ring-red-400"
               : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-          }`}
-        >
-          <IoPerson className="text-gray-500 mr-2" />
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter full name"
-            className="w-full outline-none text-gray-800"
-          />
+              }`}
+          >
+            <IoPerson className="text-gray-500 mr-2" />
+            <input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter full name"
+              className="w-full outline-none text-gray-800"
+            />
+          </div>
+          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
         </div>
-        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-      </div>
 
         {/* DOB + Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
@@ -276,11 +276,10 @@ return (
             </label>
             <div
               className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.dob
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+    ${errors.dob
+                  ? "border-red-500 ring-1 ring-red-400"
+                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+                }`}
             >
               <FaCalendarAlt className="text-gray-500 mr-2" />
 
@@ -294,71 +293,69 @@ return (
             </div>
           </div>
 
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Age</label>
-          <div className="flex items-center rounded-lg px-3 py-2 border border-gray-300 bg-gray-50">
-            <span className="text-gray-800">
-              {formData.dob
-                ? Math.floor(
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Age</label>
+            <div className="flex items-center rounded-lg px-3 py-2 border border-gray-300 bg-gray-50">
+              <span className="text-gray-800">
+                {formData.dob
+                  ? Math.floor(
                     (new Date().getTime() - new Date(formData.dob).getTime()) /
-                      (365.25 * 24 * 60 * 60 * 1000)
+                    (365.25 * 24 * 60 * 60 * 1000)
                   )
-                : "--"}
-            </span>
-            <span className="ml-1 text-gray-500">years</span>
+                  : "--"}
+              </span>
+              <span className="ml-1 text-gray-500">years</span>
+            </div>
           </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Gender</label>
+            <div className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.gender
+              ? "border-red-500 ring-1 ring-red-400"
+              : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
+              }`}>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full outline-none bg-transparent"
+              >
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+          </div>
+
         </div>
 
-        <div>
-  <label className="block text-gray-700 font-medium mb-1">Gender</label>
-  <div className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-    errors.gender
-      ? "border-red-500 ring-1 ring-red-400"
-      : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-  }`}>
-    <select
-      name="gender"
-      value={formData.gender}
-      onChange={handleChange}
-      className="w-full outline-none bg-transparent"
-    >
-      <option value="">-- Select Gender --</option>
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
-  {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
-</div>
-
-      </div>
-
-      {/* Row 3: Contact + Email */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Contact Number</label>
-          <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.phone
+        {/* Row 3: Contact + Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Contact Number</label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.phone
                 ? "border-red-500 ring-1 ring-red-400"
                 : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
-          >
-            <IoCallOutline
-              className="mr-2"
-            />
-            <input
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="10-digit mobile number"
-              maxLength={10}
-              inputMode="numeric"
-              className="w-full outline-none"
-            />
+                }`}
+            >
+              <IoCallOutline
+                className="mr-2"
+              />
+              <input
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="10-digit mobile number"
+                maxLength={10}
+                inputMode="numeric"
+                className="w-full outline-none"
+              />
+            </div>
+            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
           </div>
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-        </div>
         </div>
 
         {/* Email */}
@@ -368,16 +365,14 @@ return (
           </label>
           <div
             className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.email
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+    ${errors.email
+                ? "border-red-500 ring-1 ring-red-400"
+                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+              }`}
           >
             <FaEnvelope
-              className={`mr-2 ${
-                errors.email ? "text-red-500" : "text-gray-500"
-              }`}
+              className={`mr-2 ${errors.email ? "text-red-500" : "text-gray-500"
+                }`}
             />
             <input
               name="email"
@@ -428,11 +423,10 @@ return (
           </label>
           <div
             className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.email
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+    ${errors.email
+                ? "border-red-500 ring-1 ring-red-400"
+                : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+              }`}
           >
             {" "}
             <FaClipboardList className="text-gray-500 mr-2" />

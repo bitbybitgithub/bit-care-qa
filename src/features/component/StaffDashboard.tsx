@@ -63,7 +63,7 @@ const StaffDashboard: React.FC = () => {
   const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
   const uId = getSessionItem("user", "user_id");
-
+  console.log("select---StaffDashboard", selectedPatient);  
   const fetchMedicalDispensing = async () => {
     setLoadingDispense(true);
     try {
@@ -331,27 +331,25 @@ const StaffDashboard: React.FC = () => {
         items={cardItems}
         gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
       />
-    
+
       {/* Tabs */}
       <div className="flex gap-3 border-b border-gray-200 pb-2">
         <button
           onClick={() => setActiveTab("queue")}
-          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
-            activeTab === "queue"
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === "queue"
+            ? "bg-blue-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
         >
           Patient Queue
         </button>
 
         <button
           onClick={() => setActiveTab("dispensing")}
-          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
-            activeTab === "dispensing"
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === "dispensing"
+            ? "bg-blue-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
         >
           Medical Dispensing
         </button>
@@ -418,11 +416,10 @@ const StaffDashboard: React.FC = () => {
                         maxLength={10}
                         placeholder="Enter 10-digit number"
                         className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-    ${
-      error
-        ? "border-red-400 focus:ring-red-300"
-        : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
-    }`}
+    ${error
+                            ? "border-red-400 focus:ring-red-300"
+                            : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+                          }`}
                       />
 
                       {loadingGenerate && (
@@ -520,8 +517,8 @@ const StaffDashboard: React.FC = () => {
                             {p.gender.toLowerCase() === "male"
                               ? "(M)"
                               : p.gender.toLowerCase() === "female"
-                              ? "(F)"
-                              : "(O)"}
+                                ? "(F)"
+                                : "(O)"}
                           </p>
                         </div>
 

@@ -9,5 +9,10 @@ export enum AppointmentStatus {
   CheckedIn = "checked_in",
   InProgress = "in_progress",
   OnHold = "on_hold"
+}
 
+export enum Roles { 
+ Admin="Admin",
+ Doctor="Doctor",
+ Staff="Staff"
 }

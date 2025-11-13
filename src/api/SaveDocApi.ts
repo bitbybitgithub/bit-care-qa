@@ -9,10 +9,11 @@ export const saveDocAPI = async (doctorData: {
   phone: string;
   username: string;
   password: string;
+  created_by:string;
 }) => {
   try {
     // POST request using your emrAPI utility
-    const response = await emrAPI.post("/doctors/add-doctor", doctorData);
+    const response = await emrAPI.post("/clinics/add-user", doctorData);
     return response; // your backend already returns { success, message }
   } catch (error: any) {
     console.error("Error adding doctor:", error);

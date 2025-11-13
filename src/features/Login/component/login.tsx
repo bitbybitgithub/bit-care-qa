@@ -19,6 +19,7 @@ import Regex from "../../../Helper/Regex";
 import useClientIp from "../../../hooks/useClientIp";
 import { setSession } from "../../../context/sessions/userSession";
 import { TokenManager } from "../../../api/auth/tokenManager";
+import { Roles } from "../../../context/constant/enum";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -125,7 +126,13 @@ const Login = () => {
               toast.success("Please reset your temporary password");
             }, 1000);
           } else {
-            navigate("/staff-dashboard");
+            if (data.user.role == Roles.Doctor) {
+              navigate("/doc-dashboard");
+            } else if (data.user.role === Roles.Staff) {
+              navigate("/staff-dashboard");
+            } else {
+              navigate("/dashboard");
+            }
             toast.success("Login successful");
           }
           dispatch(loginSuccess());

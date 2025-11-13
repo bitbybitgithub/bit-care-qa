@@ -13,6 +13,7 @@ import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 import { GrSchedules } from "react-icons/gr";
 import { MdOutlineManageAccounts } from "react-icons/md";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 interface MenuItem {
   icon: ReactNode;
@@ -20,53 +21,72 @@ interface MenuItem {
   link: string;
 }
 
+const role = getSessionItem("user", "role");
+
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
   // ---------Clinic admin----------------
-  // const Menus: MenuItem[] = [
-  //   { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
-  //   { title: "Users", link: "/users", icon: <FaUsers /> },
-  //   { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
-  //   {title: "Clinic Operations",link: "/clinic-operations",icon: <FaHospital />,},
-  // ];
+  const ClinicMenus: MenuItem[] = [
+    { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+    { title: "Users", link: "/users", icon: <FaUsers /> },
+    { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
+    {
+      title: "Clinic Operations",
+      link: "/clinic-operations",
+      icon: <FaHospital />,
+    },
+  ];
 
   //----------- Doctor------------------
-  const Menus: MenuItem[] = [
-   { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
-    { title: "Profile", link: "/profile", icon: <FaUsers /> }, 
-    { title: "Patients Records", link: "/patients-records", icon: <FaUsers /> }, 
-    { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: <FaUsers /> }, 
-    { title: "Manage Medication", link: "/manage-medication", icon: <FaUsers /> }, 
-    { title: "Refer Patient", link: "/refer-patient", icon: <FaUsers /> }, 
+  const DoctorMenus: MenuItem[] = [
+    { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
+    { title: "Profile", link: "/profile", icon: <FaUsers /> },
+    { title: "Patients Records", link: "/patients-records", icon: <FaUsers /> },
+    { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: <FaUsers /> },
+    {
+      title: "Manage Medication",
+      link: "/manage-medication",
+      icon: <FaUsers />,
+    },
+    { title: "Refer Patient", link: "/refer-patient", icon: <FaUsers /> },
     // { title: "Manage availability", link: "/clinic-manage", icon: <MdOutlineManageAccounts/> },
   ];
 
   // // -------------Staff--------------
-  // const Menus: MenuItem[] = [
-  //   { title: "Dotor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
-  //   { title: "Profile", link: "/profile", icon: <FaUsers /> },
-  //   {
-  //     title: "Manage availability",
-  //     link: "/clinic-manage",
-  //     icon: <MdOutlineManageAccounts />,
-  //   },
-  // ];
+  const StaffMenus: MenuItem[] = [
+    { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
+    {
+      title: "Tasks & Reminder",
+      link: "/task-and-reminder",
+      icon: <FaTasks />,
+    },
+    {
+      title: "Assigned Patients",
+      link: "/assign-patient",
+      icon: <FaPeopleGroup />,
+    },
+    { title: "Internal Messaging", link: "/message", icon: <TiMessages /> },
+    {
+      title: "Clinic Protocol",
+      link: "/cln-protocol",
+      icon: <HiOutlineDocumentReport />,
+    },
+    { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
+  ];
 
-  // // -------------Staff--------------
-  // const Menus: MenuItem[] = [
-  //   { title: "Staff Dashboard", link: "/staff-dashboard", icon: <FaHome /> },
-  //   { title: "Tasks & Reminder", link: "/task-and-reminder", icon: <FaTasks /> },
-  //   { title: "Assigned Patients", link: "/assign-patient", icon: <FaPeopleGroup /> },
-  //   { title: "Internal Messaging", link: "/message", icon: <TiMessages  /> },
-  //   { title: "Clinic Protocol", link: "/cln-protocol", icon: <HiOutlineDocumentReport /> },
-  //   { title: "Shift Schedule", link: "/shift-schedule", icon: <GrSchedules /> },
-  // ];
+  const menuMap = {
+    Doctor: DoctorMenus,
+    Staff: StaffMenus,
+    Clinic: ClinicMenus,
+  };
 
+  const Menus = menuMap[role] || ClinicMenus;
   return (
-    <div className="h-full bg-[var(--color-primary)] text-[var(--color-white)] rounded-r-3xl p-4 flex flex-col transition-all duration-300"
+    <div
+      className="h-full bg-[var(--color-primary)] text-[var(--color-white)] rounded-r-3xl p-4 flex flex-col transition-all duration-300"
       // style={localStorage.getItem("theme") === "dark" ? { backgroundColor: "var(--color-bg)" } : {}}
-      >
+    >
       {/* Logo */}
       <div className="mb-8 mt-2 flex items-center justify-center md:justify-start">
         {/* Icon on small screens */}

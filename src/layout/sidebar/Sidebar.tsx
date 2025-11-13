@@ -13,6 +13,7 @@ import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 import { GrSchedules } from "react-icons/gr";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { BiTimer } from "react-icons/bi";
 
 interface MenuItem {
   icon: ReactNode;
@@ -38,6 +39,8 @@ const Sidebar: React.FC = () => {
     { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: <FaUsers /> },
     { title: "Manage Medication", link: "/manage-medication", icon: <FaUsers /> },
     { title: "Refer Patient", link: "/refer-patient", icon: <FaUsers /> },
+    {title: "Consultation in Progress", link: "/consultation-in-progress", icon: <BiTimer />},
+
   ];
 
   const StaffMenus: MenuItem[] = [

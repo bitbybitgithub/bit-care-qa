@@ -11,6 +11,7 @@ import DocDashboard from "../features/component/DocDashboard";
 import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
+import ConsultationInProgress from "../features/appointment/consultation/in-progress/ConsultationInProgress";
 
 const Router = [
   {
@@ -44,6 +45,7 @@ const Router = [
       { path: "/message", element: <Staffdashboard /> },
       { path: "/cln-protocol", element: <Staffdashboard /> },
       { path: "/shift-schedule", element: <Staffdashboard /> },
+      { path: "/consultation-in-progress", element: <ConsultationInProgress /> },
 
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }

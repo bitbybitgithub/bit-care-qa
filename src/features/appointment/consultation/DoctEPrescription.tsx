@@ -1,58 +1,15 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React from "react";
 
-import type { PrescriptionForm } from "../../../types/appointmentTypes";
+interface props {
+  form: any;
+  handlePrescriptionChange: (val : any) => void;
+}
 
-const DoctEPrescription: React.FC = () => {
-  const [form, setForm] = useState<PrescriptionForm>({
-    patientId: "23",
-    patientName: "John Doe",
-    patientDob: "1990-05-15",
-    patientGender: "Male",
-    notes: "",
-  });
-
-
+const DoctEPrescription: React.FC<props> = ({form,handlePrescriptionChange}) => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    handlePrescriptionChange(value)
   };
-
-  const getPayload = () => ({
-    patient_id: Number(form.patientId),
-    doctor_id: 5,
-    clinic_id: 3,
-    appointment_date: "2025-10-20",
-    appointment_status: "Complete",
-    consultation_notes: "dfdsf",
-    diagnosis: "dfds",
-    prescription: form.notes,
-    appointment_id: 1,
-    created_by: "doctor",
-  });
-
-  const sendRequest = async (
-    actionType: "prescribe" | "followup" | "refer"
-  ) => {
-
-    try {
-      const payload = { ...getPayload(), action_type: actionType };
-
-      if (!payload.prescription || payload.prescription.trim() === "") {
-        return;
-      }
-
-      const response = await axios.post(
-        "http://localhost:8989/api/doctors/ePrescription/addEPrescription",
-        payload
-      );
-      setForm((prev) => ({ ...prev, notes: "" }));
-    } catch (error) {
-      console.error(error);
-    } finally {
-    }
-  };
-
   return (
 
       <div className="mt-4">
@@ -62,7 +19,7 @@ const DoctEPrescription: React.FC = () => {
             </label>
             <textarea
               name="notes"
-              value={form.notes}
+              value={form?.prescription}
               onChange={handleChange}
               placeholder="e.g., Atorvastatin 20mg, 1 tablet PO nightly. Take for 30 days."
               rows={4}
@@ -78,41 +35,6 @@ const DoctEPrescription: React.FC = () => {
                 Print Prescription
               </button>
             </div>
-
-            {/* Bottom Action Buttons */}
-       
-            {/* <div className="flex flex-wrap gap-3 justify-between">
-              <button
-                onClick={() => sendRequest("prescribe")}
-                disabled={loading.prescribe}
-                className="bg-blue-500 text-white rounded-md px-4 py-2 font-semibold hover:bg-blue-600 transition disabled:opacity-50"
-              >
-                {loading.prescribe ? "Saving..." : "Dispense Medication"}
-              </button>
-
-              <button
-                onClick={() => sendRequest("refer")}
-                disabled={loading.refer}
-                className="bg-green-600 text-white rounded-md px-4 py-2 font-semibold hover:bg-green-700 transition disabled:opacity-50"
-              >
-                {loading.refer ? "Saving..." : "Refer To"}
-              </button>
-
-              <button
-                onClick={() => sendRequest("followup")}
-                disabled={loading.followup}
-                className="bg-orange-500 text-white rounded-md px-4 py-2 font-semibold hover:bg-orange-600 transition disabled:opacity-50"
-              >
-                {loading.followup ? "Saving..." : "Set Follow-up"}
-              </button>
-
-              <button
-                type="button"
-                className="bg-gray-400 text-white rounded-md px-4 py-2 font-semibold hover:bg-gray-500 transition"
-              >
-                Complete
-              </button>
-            </div> */}
       </div>
   );
 };

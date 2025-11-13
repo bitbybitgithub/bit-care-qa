@@ -59,7 +59,7 @@ const PatientHistory: React.FC<Props> = ({
       >
         <Tab
           value="history"
-          label={`Consultations & Prescriptions (${patientAppointmentHistory.length})`}
+          label={`Consultations & Prescriptions (${patientAppointmentHistory?.length})`}
         />
         <Tab value="vitals" label="Vitals Logs" />
         <Tab value="reports" label={`Reports (${reports.length})`} />
@@ -69,8 +69,8 @@ const PatientHistory: React.FC<Props> = ({
         {/* Consultations & Prescriptions */}
         {tab === "history" && (
           <div className="space-y-4">
-            {patientAppointmentHistory.length > 0 ? (
-              patientAppointmentHistory.map((item, index) => (
+            {patientAppointmentHistory?.length > 0 ? (
+              patientAppointmentHistory?.map((item, index) => (
                 <div
                   key={index}
                   className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition"

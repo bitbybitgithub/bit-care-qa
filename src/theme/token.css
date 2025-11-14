@@ -143,9 +143,10 @@
   --color-surface-alt: #d1fae5;
   --color-border: #bbf7d0;
 
-  --color-text: #064e3b;
+  --color-text: #000000;
   --color-text-secondary: #065f46;
-  --color-disabled: #86efac;
+  /* --color-disabled: #86efac; */
+  --color-disabled: #000000;
 
   --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
   --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);

@@ -1,6 +1,7 @@
 import { emrAPI } from "./EmrApi";
 
 export interface GenerateOtpRequest {
+  email:string,
   mobile_number: string;
   otp_type: number;
 }

@@ -24,9 +24,13 @@ import type {
   LocationItem,
   ValidationErrors,
 } from "../../types/types";
+import { generateOtpApi } from "../../api/GenerateOtpApi";
+import { verifyOtpApi } from "../../api/VerifyOtpApi";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({
+    userId: 0,
+    otp: 0,
     name: "",
     email: "",
     phone: "",
@@ -37,16 +41,8 @@ const RegistrationForm = () => {
     state: "",
   });
 
-  const [otpData, setOtpData] = useState({
-    mobileOtp: "",
-    emailOtp: "",
-  });
-
-  const [verified, setVerified] = useState({
-    mobile: false,
-    email: false,
-  });
-
+  const [otpData, setOtpData] = useState({ mobileOtp: "", emailOtp: "" });
+  const [verified, setVerified] = useState({ mobile: false, email: false });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
@@ -56,6 +52,170 @@ const RegistrationForm = () => {
   const [areaList, setAreaList] = useState<string[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const navigate = useNavigate();
+  const RESEND_COOLDOWN = 30000;
+  const [lastSentAt, setLastSentAt] = useState<{
+    mobile?: number;
+    email?: number;
+  }>({});
+
+
+  // --- common send OTP (improved for email payload fallbacks + logging) ---
+  type SendOtpArgs = { mobileNumber?: string; email?: string; otpType: 1 | 2 };
+
+  const handleSendOtp = async ({
+    mobileNumber,
+    email,
+    otpType,
+  }: SendOtpArgs) => {
+    try {
+      if (otpType === 2 && !mobileNumber) {
+        toast.error("Mobile number not available.");
+        return;
+      }
+      if (otpType === 1 && !email) {
+        toast.error("Email not available.");
+        return;
+      }
+
+      // build primary payload for each type
+      const primaryPayload =
+        otpType === 2
+          ? { mobile_number: mobileNumber, otp_type: otpType }
+          : { email: email, otp_type: otpType };
+
+      console.log("Sending OTP payload (primary):", primaryPayload);
+      let res = await generateOtpApi(primaryPayload);
+
+      // If email OTP and primary failed, try common alternative key(s)
+      if (otpType === 1 && (!res || !res.success)) {
+        // try alternate payload keys which some backends expect
+        const alternates = [
+          { email_address: email, otp_type: otpType },
+          { user_email: email, otp_type: otpType },
+        ];
+        for (const alt of alternates) {
+          console.log("Trying alternate OTP payload:", alt);
+          // call API again with the alt payload
+          // eslint-disable-next-line no-await-in-loop
+          const altRes = await generateOtpApi(alt);
+          if (altRes && altRes.success) {
+            res = altRes;
+            break;
+          } else {
+            // keep last response for logging
+            res = altRes || res;
+          }
+        }
+      }
+      console.log("generateOtpApi response:", res);
+      if (!res) {
+        toast.error("No response from OTP API.");
+        return;
+      }
+
+      if (res.success) {
+        toast.success(
+          otpType === 2 ? "OTP sent to mobile." : "OTP sent to email."
+        );
+
+        // persist returned userId if provided
+        if (res.userId) {
+          setFormData((prev) => ({
+            ...prev,
+            userId: Number(res.userId) || prev.userId,
+          }));
+        }
+
+        // show OTP input & record timestamp (if you use lastSentAt)
+        if (otpType === 2) {
+          setShowOtp(true);
+          setLastSentAt((s) => ({ ...s, mobile: Date.now() }));
+        } else {
+          setShowEmailOtp(true);
+          setLastSentAt((s) => ({ ...s, email: Date.now() }));
+        }
+      } else {
+        // helpful error message for debugging
+        const serverMsg = res.message || res.error || JSON.stringify(res);
+        toast.error(serverMsg || "Failed to send OTP. Check console/network.");
+        console.error("OTP send failed response:", res);
+      }
+    } catch (err: any) {
+      console.error("generateOtpApi error:", err);
+      toast.error("Error sending OTP. See console for details.");
+    }
+  };
+
+  type VerifyArgs = {
+    otpValue: string;
+    otpType: 1 | 2;
+    channel: "email" | "mobile";
+  };
+
+  const handleVerifyOtp = async ({
+    otpValue,
+    otpType,
+    channel,
+  }: VerifyArgs) => {
+    try {
+      const payload = {
+        userId: formData.userId,
+        otp: Number(otpValue),
+        otp_type: otpType,
+      };
+      console.log("payload is : ", payload);
+      const res = await verifyOtpApi(payload);
+
+      if (res.success) {
+        toast.success("OTP verified");
+
+        if (channel === "mobile") {
+          setVerified((p) => ({ ...p, mobile: true }));
+          setShowOtp(false);
+          setOtpData((p) => ({ ...p, mobileOtp: "" }));
+        } else {
+          setVerified((p) => ({ ...p, email: true }));
+          setShowEmailOtp(false);
+          setOtpData((p) => ({ ...p, emailOtp: "" }));
+        }
+      } else {
+        toast.error(res.message || "Invalid OTP");
+      }
+    } catch {
+      toast.error("OTP verification failed");
+    }
+  };
+
+  const handleMobileOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 6) setOtpData((p) => ({ ...p, mobileOtp: value }));
+    if (value.length === 6) {
+      handleVerifyOtp({ otpValue: value, otpType: 2, channel: "mobile" });
+    }
+  };
+
+  const handleEmailOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 6) setOtpData((p) => ({ ...p, emailOtp: value }));
+    if (value.length === 6) {
+      handleVerifyOtp({ otpValue: value, otpType: 1, channel: "email" });
+    }
+  };
+
+  useEffect(() => {
+    if (formData.phone.length === 10 && !verified.mobile) {
+      if (!Regex.MOBILEREGEX.test(formData.phone)) {
+        setErrors({ phone: "Number should start with 6,7,8,9" });
+        return;
+      }
+
+      if (Date.now() - (lastSentAt.mobile || 0) >= RESEND_COOLDOWN) {
+        handleSendOtp({ mobileNumber: formData.phone, otpType: 2 });
+      } else {
+        setShowOtp(true);
+      }
+    }
+  }, [formData.phone]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -103,40 +263,6 @@ const RegistrationForm = () => {
     }
   }, [formData.state, formData.district]);
 
-  // 🔹 Handle mobile OTP
-  useEffect(() => {
-    if (formData.phone.length === 10 && !verified.mobile) {
-      if (!Regex.MOBILEREGEX.test(formData.phone)) {
-        setErrors({ phone: "Number should start with 6,7,8,9" });
-        return;
-      }
-      setShowOtp(true);
-      toast.info("OTP sent to your mobile");
-      console.log("Send OTP to:", formData.phone);
-      setErrors({});
-    } else if (formData.phone.length < 10) {
-      setShowOtp(false);
-      setOtpData((prev) => ({ ...prev, mobileOtp: "" }));
-    }
-  }, [formData.phone]);
-
-  const handleMobileOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 6)
-      setOtpData((prev) => ({ ...prev, mobileOtp: value }));
-    if (value.length === 6) {
-      if (value === "123456") {
-        toast.success("Mobile OTP verified successfully!");
-        setVerified((prev) => ({ ...prev, mobile: true }));
-        setShowOtp(false);
-      } else {
-        toast.error("Invalid mobile OTP!");
-        setOtpData((prev) => ({ ...prev, mobileOtp: "" }));
-        setVerified((prev) => ({ ...prev, mobile: false }));
-      }
-    }
-  };
-
   const handleEmailKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -175,28 +301,9 @@ const RegistrationForm = () => {
       return;
     }
 
-    // ✅ Valid email format — proceed
-    if (!verified.email) {
-      toast.info("OTP sent to your email");
-      console.log("Send email OTP to:", cleanedValue);
-      setShowEmailOtp(true);
-    }
-  };
-
-  const handleEmailOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 6) setOtpData((prev) => ({ ...prev, emailOtp: value }));
-    if (value.length === 6) {
-      if (value === "123456") {
-        toast.success("Email OTP verified successfully!");
-        setVerified((prev) => ({ ...prev, email: true }));
-        setShowEmailOtp(false);
-      } else {
-        toast.error("Invalid email OTP!");
-        setOtpData((prev) => ({ ...prev, emailOtp: "" }));
-        setVerified((prev) => ({ ...prev, email: false }));
-      }
-    }
+    // ✅ Valid email — actually call handleSendOtp (email otp_type = 1)
+    // this will attempt primary and fallback payloads and log responses
+    handleSendOtp({ email: cleanedValue, otpType: 1 });
   };
 
   const fetchLocationList = (responseData: LocationItem[]) => {
@@ -284,30 +391,69 @@ const RegistrationForm = () => {
       }
     }
   };
+  
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validateRegistration(formData as FormDataBase);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length === 0) {
-      setLoading(true);
-      try {
-        const response = await registerApi(formData);
-        console.log("Registration API Response:", response);
-        if (response.success === true) {
-          setOpenPopup(true);
-          //   setTimeout(() => navigate("/login"), 10000);
-        } else {
-          toast.error("Something went wrong. Please try again.");
-        }
-      } catch {
-        setErrors({ general: "Registration failed" });
-        toast.error("Registration failed");
-      } finally {
-        setLoading(false);
-      }
+  const validationErrors = validateRegistration(formData as FormDataBase);
+  setErrors(validationErrors);
+
+  if (Object.keys(validationErrors).length !== 0) return;
+
+  setLoading(true);
+
+  try {
+    let response = await registerApi(formData);
+    console.log("Original Axios Response:", response);
+
+    // ⭐ IMPORTANT: Normalize axios response to your expected shape
+    // so that response.success === data.success
+    response = {
+      success: response?.success,
+      message: response?.message,
+      data: response?.data,
+      error: response?.error,
+      errors: response?.errors,
+    };
+
+    console.log("Normalized Response:", response);
+
+    // ⭐ SUCCESS CASE → open popup ONLY (no toast)
+    if (response.success === true) {
+      setOpenPopup(true);
+      return;
     }
-  };
+
+    // ⭐ FAILURE CASE → Map server error(s)
+    const errMsg =
+      response.message ||
+      response.data?.message ||
+      response.error ||
+      (response.errors && Object.values(response.errors).join("\n")) ||
+      "Something went wrong. Please try again.";
+
+    toast.error(errMsg);
+
+  } catch (error: any) {
+    console.error("Registration API Error:", error);
+
+    const errResp = error?.response?.data;
+
+    const errMsg =
+      errResp?.message ||
+      errResp?.data?.message ||
+      errResp?.error ||
+      (errResp?.errors && Object.values(errResp.errors).join("\n")) ||
+      error.message ||
+      "Registration failed.";
+
+    toast.error(errMsg);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
   const handlePopupClose = () => {
     setOpenPopup(false);
     navigate("/login");
@@ -644,7 +790,8 @@ const RegistrationForm = () => {
       >
         <DialogTitle>Welcome {formData.name}!</DialogTitle>
         <DialogContent>
-          Your registration request has been submitted successfully. Your credentials have been sent to your registered email.
+          Your registration request has been submitted successfully. Your
+          credentials have been sent to your registered email.
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center" }}>
           <Button

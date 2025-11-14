@@ -369,6 +369,7 @@ const ResetPasswordPage: React.FC = () => {
               onChange={handleChange}
               disabled={!isOtpVerified}
               error={!!errors.newPassword}
+              inputProps={{ maxLength: 25 }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -441,6 +442,7 @@ const ResetPasswordPage: React.FC = () => {
               onChange={handleChange}
               disabled={!canConfirmPassword}
               // disabled={!isOtpVerified}
+              inputProps={{ maxLength: 25 }}
               error={!!errors.confirmPassword}
               InputProps={{
                 endAdornment: (

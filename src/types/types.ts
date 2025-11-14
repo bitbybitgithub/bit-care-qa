@@ -2,6 +2,8 @@ import { Dayjs } from "dayjs";
 // ==========================
 // Core Form Data Interface
 export interface FormDataBase {
+  userId:number;
+  otp:number;
   name: string;
   email: string;
   phone: string;

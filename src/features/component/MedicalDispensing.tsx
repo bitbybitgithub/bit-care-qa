@@ -6,7 +6,7 @@ interface MedicalDispensingProps {
   doctorId?: number;
   classProp?: string;
   error?: string;
-  data: any[]; // 👈 Add data prop
+  data: any[];
 }
 
 const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
@@ -18,6 +18,15 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   data = [],
 }) => {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
+  // Pagination logic
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const paginatedData = data.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   if (loading)
     return (
@@ -42,61 +51,95 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
 
   return (
     <div className={`space-y-4 ${classProp}`}>
-      {data.map((item, index) => (
-        <div
-          key={index}
-          className="bg-white shadow-md border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300"
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {item.patient_name || "Unknown Patient"}
-              </h3>
-              <p className="text-sm text-gray-600">
-                Appointment ID: {item.appointment_id}
-              </p>
-              <p className="text-sm text-gray-600">
-                Doctor: {item.doctor_name}
-              </p>
-              <p className="text-sm text-gray-600">
-                Date:{" "}
-                {item.appointment_date
-                  ? new Date(item.appointment_date).toLocaleDateString()
-                  : "-"}
-              </p>
-            </div>
-
-            <div className="text-right">
-              <div className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-semibold inline-block mb-2">
-                {mode === "staff" ? "Staff View" : "Doctor View"}
-              </div>
-              {/* ✅ View Prescription Button */}
-              <button
-                onClick={() => setSelectedItem(item)}
-                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+      {/* ✅ Table Layout */}
+      <div className="overflow-x-auto bg-white shadow-md border border-gray-200 rounded-xl">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-blue-50">
+            <tr>
+             
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Patient Name
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Appointment ID
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Doctor
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Date
+              </th>
+              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {paginatedData.map((item, index) => (
+              <tr
+                key={index}
+                className="hover:bg-blue-50 transition-all duration-200"
               >
-                View Prescription
-              </button>
-            </div>
-          </div>
+              
+                <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                  {item.patient_name || "Unknown"}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {item.appointment_id}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {item.doctor_name}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {item.appointment_date
+                    ? new Date(item.appointment_date).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => setSelectedItem(item)}
+                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+                  >
+                    View Prescription
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-          {/* Medicine details */}
-          {item.medicines && item.medicines.length > 0 && (
-            <div className="mt-3 border-t pt-3">
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">
-                Dispensed Medicines:
-              </h4>
-              <ul className="list-disc ml-6 text-gray-700 text-sm space-y-1">
-                {item.medicines.map((med: any, idx: number) => (
-                  <li key={idx}>
-                    {med.medicine_name} — {med.quantity} pcs
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        {/* ✅ Pagination Controls */}
+        <div className="flex justify-between items-center p-3 bg-gray-50 border-t rounded-b-xl">
+          <p className="text-sm text-gray-600">
+            Showing {(currentPage - 1) * rowsPerPage + 1}–
+            {Math.min(currentPage * rowsPerPage, data.length)} of {data.length}
+          </p>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === 1
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === totalPages
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
-      ))}
+      </div>
 
       {/* ✅ Modal View */}
       {selectedItem && (
@@ -121,7 +164,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
                 <strong>Doctor:</strong> {selectedItem.doctor_name}
               </p>
               <p>
-                <strong>Appointment Date:</strong>{" "}
+                <strong>Date:</strong>{" "}
                 {selectedItem.appointment_date
                   ? new Date(selectedItem.appointment_date).toLocaleDateString()
                   : "-"}

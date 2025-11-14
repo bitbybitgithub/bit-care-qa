@@ -19,6 +19,7 @@ import {
   updatePatientStatus,
   type UpdateAppointmentStatusRequest,
   getMedicalDispensingAsync,
+  getfollowUpAsync,
 } from "../../api/PatientQueueApi";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
@@ -28,11 +29,9 @@ import { IoCall } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
+import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
 
-// Wrap Alert to satisfy TS
-// const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
-//   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-// });
+
 
 interface Appointment {
   appointment_id: number;
@@ -62,12 +61,14 @@ const StaffDashboard: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
+
+  const [followUpData, setfollowUpData] = useState([]);
   const uId = getSessionItem("user", "user_id");
   console.log("select---StaffDashboard", selectedPatient);  
   const fetchMedicalDispensing = async () => {
     setLoadingDispense(true);
     try {
-      const doctorId = 4; // example doctor id
+      const doctorId = 4; 
       const response = await getMedicalDispensingAsync(doctorId);
       console.log(response);
       setDispensingData(response || []);
@@ -77,9 +78,23 @@ const StaffDashboard: React.FC = () => {
       setLoadingDispense(false);
     }
   };
-  // ✅ Automatically fetch data based on tab
+
+  const followUp = async () => {
+    setLoadingDispense(true);
+    try {
+      const doctorId = 4; 
+      const response = await getfollowUpAsync(doctorId);
+      console.log(response);
+      setfollowUpData(response);
+    } catch (err) {
+      console.error("Error fetching dispensing:", err);
+    } finally {
+      setLoadingDispense(false);
+    }
+  };
   useEffect(() => {
     if (activeTab === "queue") fetchQueue();
+     else   if (activeTab === "followUp") followUp();
     else fetchMedicalDispensing();
   }, [activeTab]);
 
@@ -260,7 +275,6 @@ const StaffDashboard: React.FC = () => {
       setLoadingVerify(false);
     }
   };
-  console.log("hsdgf", verifiedPatients);
   const cardItems = [
     {
       title: "Patients in Queue",
@@ -353,25 +367,43 @@ const StaffDashboard: React.FC = () => {
         >
           Medical Dispensing
         </button>
+
+         <button
+          onClick={() => setActiveTab("followUp")}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+            activeTab === "followUp"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+        Set Follow up
+        </button>
       </div>
-      <div className="mt-4">
-        {activeTab === "queue" ? (
-          <PatientQueue
-            mode="staff"
-            patientsData={patients}
-            loading={loadingQueue}
-            error={errorQueue}
-            onAddWalkIn={handleAddWalkIn}
-            handleUpdatePatientStatus={handleUpdatePatientStatus}
-          />
-        ) : (
-          <MedicalDispensing
-            mode="staff"
-            data={dispensingData}
-            loading={loadingDispense}
-          />
-        )}
-      </div>
+    <div className="mt-4">
+  {activeTab === "queue" ? (
+    <PatientQueue
+      mode="staff"
+      patientsData={patients}
+      loading={loadingQueue}
+      error={errorQueue}
+      onAddWalkIn={handleAddWalkIn}
+      handleUpdatePatientStatus={handleUpdatePatientStatus}
+    />
+  ) : activeTab === "followUp" ? (
+    <FollowUpAppointment
+      mode="staff"
+      data={followUpData}
+      loading={loadingDispense}
+    />
+  ) : (
+    <MedicalDispensing
+      mode="staff"
+      data={dispensingData}
+      loading={loadingDispense}
+    />
+  )}
+</div>
+
 
       {open && !showRegistrationForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4">

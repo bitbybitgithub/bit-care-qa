@@ -64,6 +64,36 @@ export interface MedicalDispensingResponse{
    success: boolean;
   data: MedicalDispensingDto[];
 }
+
+export interface FollowUpDto {
+  appointment_id: string;
+  patient_id: number;
+  patient_name: string;
+    contact: string;
+  dob: string;
+  doctor_id: number;
+  doctor_name: string;
+  appointment_date: string; // ISO date string
+  reason: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  source: string;
+  created_by: string;
+  created_date: string; // ISO date string
+  modified_by: string;
+  modified_date: string; // ISO date string
+  gender: string | null;
+  cancellation_reason: string | null;
+  followup: boolean;
+  duration: string | null;
+}
+
+
+export interface followUpResponse{
+  success: boolean;
+  data: FollowUpDto[];
+}
 /**
  * Fetch today's appointments for a specific doctor.
  *
@@ -108,3 +138,17 @@ console.log('response', response)
   }
   return response?.body?.data?? [];
 }
+
+export async function getfollowUpAsync(doctorId: number | null):Promise<followUpDto[]> {
+  const response = await emrAPI.post<followUpResponse>(
+    "/doctors/get-patient-followup",
+    { doctor_id: doctorId } 
+  );
+console.log('response', response)
+  if (!response || !response.success) {
+    throw new Error("Failed to follow up");
+  }
+  return response.body || [];
+}
+
+

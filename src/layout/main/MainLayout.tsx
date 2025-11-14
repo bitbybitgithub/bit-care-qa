@@ -33,6 +33,7 @@ const MainLayout = () => {
   }, [token]);
 
   const clinicId = getSessionItem("user", "clinic_id");
+  const doctorId = getSessionItem("user", "doctor_id");
 
   // convert path into readable title
   function formatTitleHeader(path: string) {
@@ -113,7 +114,11 @@ const MainLayout = () => {
             </div>
 
             {/* Page content */}
-            <SocketProvider token={token} clinicId={clinicId}>
+            <SocketProvider
+              token={token}
+              clinicId={clinicId}
+              doctorId={doctorId}
+            >
               <Outlet />
             </SocketProvider>
           </div>

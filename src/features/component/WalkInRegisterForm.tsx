@@ -12,12 +12,15 @@ import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { toast } from "react-toastify";
-import { IoCallOutline, IoCalendarOutline, IoMailOutline, IoPerson } from "react-icons/io5";
+import {
+  IoCallOutline,
+  IoCalendarOutline,
+  IoMailOutline,
+  IoPerson,
+} from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
-
-
 
 type WalkinFormData = {
   name: string;
@@ -58,8 +61,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const [doctorLoading, setDoctorLoading] = useState(false);
   // Get current time
   const now = new Date();
-  const user_id = getSessionItem("user", "user_id")
-  const clinic_id = getSessionItem("user", "clinic_id")
+  const user_id = getSessionItem("user", "user_id");
+  const clinic_id = getSessionItem("user", "clinic_id");
   // Format function for HH:mm
   const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
 
@@ -96,7 +99,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         doctor: "",
         reason: "",
         gender: patientData?.gender?.toString() || "",
-
       });
     } else {
       setFormData({
@@ -185,7 +187,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         patient_name: formData.name,
         doctor_name: formData.doctor,
         gender: formData.gender,
-
         appointment_date: new Date().toISOString().split("T")[0],
         start_time: formatTime(now),
         end_time: formatTime(endTime),
@@ -221,8 +222,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     }
   };
 
-
-
   return (
     <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
       <form
@@ -246,15 +245,17 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </h2>
         </div>
 
-
         {/* Row 1: Full Name */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+          <label className="block text-gray-700 font-medium mb-1">
+            Full Name
+          </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.name
-              ? "border-red-500 ring-1 ring-red-400"
-              : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-              }`}
+            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
+              errors.name
+                ? "border-red-500 ring-1 ring-red-400"
+                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
+            }`}
           >
             <IoPerson className="text-gray-500 mr-2" />
             <input
@@ -265,7 +266,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               className="w-full outline-none text-gray-800"
             />
           </div>
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+          )}
         </div>
 
         {/* DOB + Phone */}
@@ -276,10 +279,11 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             </label>
             <div
               className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${errors.dob
-                  ? "border-red-500 ring-1 ring-red-400"
-                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-                }`}
+    ${
+      errors.dob
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
             >
               <FaCalendarAlt className="text-gray-500 mr-2" />
 
@@ -299,9 +303,10 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               <span className="text-gray-800">
                 {formData.dob
                   ? Math.floor(
-                    (new Date().getTime() - new Date(formData.dob).getTime()) /
-                    (365.25 * 24 * 60 * 60 * 1000)
-                  )
+                      (new Date().getTime() -
+                        new Date(formData.dob).getTime()) /
+                        (365.25 * 24 * 60 * 60 * 1000)
+                    )
                   : "--"}
               </span>
               <span className="ml-1 text-gray-500">years</span>
@@ -309,11 +314,16 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Gender</label>
-            <div className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.gender
-              ? "border-red-500 ring-1 ring-red-400"
-              : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-              }`}>
+            <label className="block text-gray-700 font-medium mb-1">
+              Gender
+            </label>
+            <div
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
+                errors.gender
+                  ? "border-red-500 ring-1 ring-red-400"
+                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
+              }`}
+            >
               <select
                 name="gender"
                 value={formData.gender}
@@ -326,24 +336,26 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <option value="Other">Other</option>
               </select>
             </div>
-            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+            {errors.gender && (
+              <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+            )}
           </div>
-
         </div>
 
         {/* Row 3: Contact + Email */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Contact Number</label>
+            <label className="block text-gray-700 font-medium mb-1">
+              Contact Number
+            </label>
             <div
-              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${errors.phone
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-                }`}
+              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
+                errors.phone
+                  ? "border-red-500 ring-1 ring-red-400"
+                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
+              }`}
             >
-              <IoCallOutline
-                className="mr-2"
-              />
+              <IoCallOutline className="mr-2" />
               <input
                 name="phone"
                 value={formData.phone}
@@ -354,7 +366,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 className="w-full outline-none"
               />
             </div>
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            )}
           </div>
         </div>
 
@@ -365,14 +379,16 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </label>
           <div
             className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${errors.email
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-              }`}
+    ${
+      errors.email
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
           >
             <FaEnvelope
-              className={`mr-2 ${errors.email ? "text-red-500" : "text-gray-500"
-                }`}
+              className={`mr-2 ${
+                errors.email ? "text-red-500" : "text-gray-500"
+              }`}
             />
             <input
               name="email"
@@ -423,10 +439,11 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </label>
           <div
             className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${errors.email
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-              }`}
+    ${
+      errors.email
+        ? "border-red-500 ring-1 ring-red-400"
+        : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
+    }`}
           >
             {" "}
             <FaClipboardList className="text-gray-500 mr-2" />

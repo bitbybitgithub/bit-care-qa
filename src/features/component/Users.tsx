@@ -1,117 +1,82 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { FaPlus, FaSearch, FaTrash } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
 import DeactivateUser from "./DeactivateUser";
-import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { deleteDoctorApi } from "../../api/DeleteDocApi";
 import { useQuery } from "@tanstack/react-query";
+import { getUsersList, type User } from "../../api/UserManagementAPI";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { FaBullseye } from "react-icons/fa6";
 
 const Users: React.FC = () => {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const clinic_id = getSessionItem("user", "clinic_id");
+  // const [isLoading, setIsLoading] = useState(true);
+  // // FETCH USERS
+  const { data, isLoading } = useQuery<User[]>({
+    queryKey: ["getUsersList"],
+    queryFn: getUsersList,
+    enabled: !!clinic_id,
+    staleTime: Infinity,
+  });
 
-  // Fetch doctors
-
-  const clinic_id = getSessionItem("user", "clinic_id") || 0;
-  // const { data } = useQuery<Doctor>({
-  //   queryKey: ["doctorList"],
-  //   queryFn: () => getDoctorList(clinic_id),
-  //   enabled: !!clinic_id, // Only run if clinicId is available
-  //   staleTime: Infinity, // Treat the data as fresh after fetch,
-  // });
-
-  // useEffect(() => {
-
-  //   if (data) {
-  //     setDoctors(data);
-  //     setLoading(false);
-  //   } else {
-  //     setLoading(true);
-  //   }
-  // }, [data]);
-
+  // Sync query -> local state
   useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        setLoading(true);
-        const response = await getDoctorList(clinic_id);
-        setDoctors(response);
-      } catch (error) {
-        console.error("Failed to fetch doctor list", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDoctors();
-  }, [clinic_id]);
+    if (data) setUsers(data);
+  }, [data]);
 
-  // console.log({ data });
-
-  // Random avatar colors
-  const doctorColors = useMemo(() => {
+  // Avatar color memo
+  const userColors = useMemo(() => {
     const map: Record<number, string> = {};
-    doctors.forEach((d) => {
+    users.forEach((u) => {
       const hue = Math.floor(Math.random() * 360);
-      map[d.id] = `hsl(${hue}, 50%, 70%)`;
+      map[u.id] = `hsl(${hue}, 50%, 70%)`;
     });
     return map;
-  }, [doctors]);
+  }, [users]);
 
-  // Filtered search
-  const filteredDoctors = doctors.filter(
-    (doc) =>
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (doc.specialist?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  // Search filter
+  const filteredUsers = users.filter((u) =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Toggle status
-  const handleToggleStatus = (id: number, newStatus: "Active" | "Inactive", phone?: string) => {
-    setDoctors((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? {
-            ...d,
-            status: newStatus,
-            phone,
-          }
-          : d
-      )
+  const handleToggleStatus = (
+    id: number,
+    newStatus: "Active" | "Inactive",
+    phone?: string
+  ) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, status: newStatus, phone } : u))
     );
-    setSelectedDoctor(null);
+    setSelectedUser(null);
   };
 
-  // Delete doctor
-  const handleDeleteDoctor = async (doctor: Doctor) => {
-    if (!window.confirm(`Are you sure you want to delete ${doctor.name}?`)) return;
-    if (!doctor.clinic_id || !doctor.id) {
-      alert("Invalid doctor data: missing clinic_id or id");
-
-      return;
-
-    }
+  // DELETE USER
+  const handleDeleteUser = async (user: User) => {
+    if (!window.confirm(`Delete ${user.name}?`)) return;
 
     try {
-      setDeletingId(doctor.id);
+      setDeletingId(user.id);
+
       const response = await deleteDoctorApi({
-        clinic_id: doctor.clinic_id,
-        doctor_id: doctor.id,
+        clinic_id: clinic_id,
+        doctor_id: user.id,
       });
 
       if (response.success) {
-        setDoctors((prev) => prev.filter((d) => d.id !== doctor.id));
+        setUsers((prev) => prev.filter((d) => d.id !== user.id));
         alert(response.message);
       } else {
-        alert(response.message || "Failed to delete doctor");
+        alert(response.message || "Delete failed");
       }
-    } catch (error: any) {
-      console.error("❌ Delete doctor failed:", error);
-      alert(error.message || "Delete failed");
+    } catch (err: any) {
+      console.error("Delete failed:", err);
+      alert(err.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }
@@ -119,7 +84,7 @@ const Users: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen mt-4 rounded-2xl">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 w-full">
         <button
           onClick={() => setShowAddUser(true)}
@@ -132,7 +97,7 @@ const Users: React.FC = () => {
           <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search doctor or specialist..."
+            placeholder="Search user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-3 py-2 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -140,82 +105,85 @@ const Users: React.FC = () => {
         </div>
       </div>
 
-      {/* Doctor Grid */}
-      {loading ? (
-        <p className="text-center text-gray-500 py-10">Loading doctors...</p>
-      ) : filteredDoctors.length === 0 ? (
-        <p className="text-gray-500 text-center py-6">No doctors found.</p>
+      {/* GRID */}
+      {isLoading ? (
+        <p className="text-center text-gray-500 py-10">Loading users...</p>
+      ) : filteredUsers.length === 0 ? (
+        <p className="text-gray-500 text-center py-6">No users found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredDoctors.map((doc) => (
+          {filteredUsers.map((u) => (
             <div
-              key={doc.id}
-              className="relative bg-white border-b-4 border rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:-translate-y-1 hover:shadow-xl w-full"
+              key={u.id}
+              className="relative bg-white border-b-4 border rounded-3xl mt-6 shadow-lg p-6 flex flex-col items-center text-center transition-transform hover:-translate-y-1 hover:shadow-xl"
             >
-              {/* Status dot */}
+              {/* STATUS DOT */}
               <span
-                className={`absolute top-4 right-4 w-3 h-3 rounded-full shadow-md ${doc.status === "Active" ? "bg-green-500" : "bg-red-500"
-                  }`}
+                className={`absolute top-4 right-4 w-3 h-3 rounded-full ${
+                  u.status === "Active" ? "bg-green-500" : "bg-red-500"
+                }`}
               />
 
-              {/* Delete Button */}
+              {/* DELETE BUTTON */}
               <button
-                onClick={() => handleDeleteDoctor(doc)}
-                disabled={deletingId === doc.id}
-                title="Delete Doctor"
-                className={`absolute top-3 left-3 text-gray-400 hover:text-red-500 transition ${deletingId === doc.id ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
+                onClick={() => handleDeleteUser(u)}
+                disabled={deletingId === u.id}
+                className={`absolute top-3 left-3 text-gray-400 hover:text-red-500 ${
+                  deletingId === u.id ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                {deletingId === doc.id ? (
-                  <span className="text-xs animate-pulse">...</span>
+                {deletingId === u.id ? (
+                  <span className="animate-pulse text-xs">...</span>
                 ) : (
                   <FaTrash size={16} />
                 )}
               </button>
 
-              {/* Avatar */}
+              {/* AVATAR */}
               <div
-                className="absolute -top-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
-                style={{ backgroundColor: doctorColors[doc.id] }}
+                className="absolute -top-10 w-20 h-20 rounded-full shadow-md flex items-center justify-center border-4 border-white"
+                style={{ backgroundColor: userColors[u.id] }}
               >
-                <span className="text-xl sm:text-2xl font-bold text-white">
-                  {doc.name
+                <span className="text-2xl font-bold text-white">
+                  {u.name
                     .replace(/^Dr\.\s*/i, "")
                     .split(" ")
-                    .filter((w) => w.length > 0)
                     .map((w) => w[0])
                     .join("")
                     .toUpperCase()}
                 </span>
               </div>
 
-              {/* Info */}
+              {/* INFO */}
               <div className="mt-12">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-800">{doc.name}</h2>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1">{doc.specialist}</p>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {u.name}
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">{u.email}</p>
+                <p className="text-gray-500 text-sm mt-1">{u.phone}</p>
               </div>
 
-              {/* Toggle button */}
+              {/* TOGGLE BUTTON */}
               <button
-                onClick={() => setSelectedDoctor(doc)}
-                className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow-md transition-all ${doc.status === "Active"
-                  ? "bg-orange-400 hover:opacity-90"
-                  : "bg-green-400 hover:opacity-90"
-                  }`}
+                onClick={() => setSelectedUser(u)}
+                className={`mt-5 w-full sm:w-28 py-2.5 text-white rounded-2xl font-medium shadow ${
+                  u.status === "Active" ? "bg-orange-400" : "bg-green-500"
+                }`}
               >
-                {doc.status === "Active" ? "Deactivate" : "Activate"}
+                {u.status === "Active" ? "Deactivate" : "Activate"}
               </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modals */}
-      {showAddUser && <AddUser onClose={() => setShowAddUser(false)} clinicId={0} />}
-      {selectedDoctor && (
+      {/* MODALS */}
+      {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
+
+      {selectedUser && (
         <DeactivateUser
-          doctor={selectedDoctor}
-          onClose={() => setSelectedDoctor(null)}
+          doctor={selectedUser}
+          onClose={() => setSelectedUser(null)}
           onToggleStatus={handleToggleStatus}
         />
       )}
@@ -224,5 +192,3 @@ const Users: React.FC = () => {
 };
 
 export default Users;
-
-

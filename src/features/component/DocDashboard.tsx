@@ -30,7 +30,7 @@ const DocDashboard: React.FC = () => {
   const [patientInfo, setPatientInfo] = useState<Patient>();
 
   const userId = getSessionItem("user", "user_id");
-  const doctorId = 4; // required; should ideally come from auth context or route param
+  const doctorId = 20; // required; should ideally come from auth context or route param
 
   // ---------------- Fetch Appointments ----------------
   const fetchAppointments = useCallback(async () => {
@@ -105,10 +105,10 @@ const DocDashboard: React.FC = () => {
       });
     };
 
-    socket.on("newAppointment", handleUpdate);
+    socket.on("patient_assigned", handleUpdate);
 
     return () => {
-      socket.off("newAppointment", handleUpdate);
+      socket.off("patient_assigned", handleUpdate);
     };
   }, [socket]);
 

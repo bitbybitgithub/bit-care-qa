@@ -23,6 +23,7 @@ import {
   type UpdateDoctorProfileResponse,
 } from "../../api/UpdateDocProfileApi";
 import { FaGraduationCap } from "react-icons/fa6";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 type Doctor = {
   doctor_name: string;
@@ -46,6 +47,8 @@ const DoctorProfile = () => {
     phone: "",
     experience: "" as any,
   });
+
+  const doctorId = getSessionItem("user", "doctor_id");
 
   const [saving, setSaving] = useState(false);
 
@@ -126,7 +129,7 @@ const DoctorProfile = () => {
   useEffect(() => {
     const run = async () => {
       try {
-        const data = await getDoctorProfile(2);
+        const data = await getDoctorProfile(doctorId);
         setFormData(data);
         setDoctor(data);
       } catch (e) {

@@ -30,7 +30,7 @@ const DocDashboard: React.FC = () => {
   const [patientInfo, setPatientInfo] = useState<Patient>();
 
   const userId = getSessionItem("user", "user_id");
-  const doctorId = 20; // required; should ideally come from auth context or route param
+  const doctorId = getSessionItem("user", "doctor_id");
 
   // ---------------- Fetch Appointments ----------------
   const fetchAppointments = useCallback(async () => {

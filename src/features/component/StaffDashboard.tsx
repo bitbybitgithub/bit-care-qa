@@ -653,8 +653,6 @@ import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
-import { PiPhoneCallFill } from "react-icons/pi";
-
 
 interface Appointment {
   appointment_id: number;
@@ -757,6 +755,16 @@ const StaffDashboard: React.FC = () => {
 
   const handleClose = () => resetModalState();
 
+  // ---------- Clear OTP if contact is emptied ----------
+  useEffect(() => {
+    if (contact.trim() === "") {
+      if (otp.some((d) => d !== "")) setOtp(["", "", "", "", "", ""]);
+      setShowOtp(false);
+      setEditedAfterOtp(false);
+      setUserId(null);
+    }
+  }, [contact]);
+
   // ---------- OTP Handlers ----------
   const handleSendOtp = async () => {
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
@@ -775,14 +783,17 @@ const StaffDashboard: React.FC = () => {
 
       if (res.success) {
         setUserId(res.userId ?? null);
+        setOtp(["", "", "", "", "", ""]);
         setShowOtp(true);
         setEditedAfterOtp(false);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
         setError(res.message || "Failed to send OTP");
+        setShowOtp(false);
       }
     } catch {
       setError("Something went wrong. Please try again later.");
+      setShowOtp(false);
     } finally {
       setLoadingGenerate(false);
     }
@@ -798,6 +809,7 @@ const StaffDashboard: React.FC = () => {
     setLoadingGenerate(true);
 
     try {
+      setShowOtp(false);
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
@@ -805,15 +817,19 @@ const StaffDashboard: React.FC = () => {
 
       if (res.success) {
         setUserId(res.userId ?? null);
-        setShowOtp(true);
-        setEditedAfterOtp(false);
         setOtp(["", "", "", "", "", ""]);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+        setTimeout(() => {
+          setShowOtp(true);
+          setEditedAfterOtp(false);
+          otpRefs.current[0]?.focus();
+        }, 120);
       } else {
         setError(res.message || "Failed to resend OTP");
+        setShowOtp(false);
       }
     } catch {
       setError("Something went wrong while resending OTP. Please try again.");
+      setShowOtp(false);
     } finally {
       setLoadingGenerate(false);
     }
@@ -856,6 +872,7 @@ const StaffDashboard: React.FC = () => {
 
       if (!res.isOtpValid) {
         setError("Please enter valid OTP");
+        setEditedAfterOtp(true);
         return;
       } else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
         setVerifiedPatients(res.patients);
@@ -866,6 +883,7 @@ const StaffDashboard: React.FC = () => {
       setEditedAfterOtp(false);
     } catch {
       setError("Something went wrong while verifying OTP. Please try again.");
+      setEditedAfterOtp(true);
     } finally {
       setLoadingVerify(false);
     }
@@ -899,7 +917,7 @@ const StaffDashboard: React.FC = () => {
             )
           );
         } else toast.error(res.message || "Failed to update appointment status.");
-      } catch (err: any) {
+      } catch {
         toast.error("Error updating patient status.");
       }
     },
@@ -907,7 +925,7 @@ const StaffDashboard: React.FC = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 ">
+    <div className="p-4 sm:p-6 space-y-6">
       <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
       <Cards
         items={cardItems}
@@ -953,142 +971,131 @@ const StaffDashboard: React.FC = () => {
       </div>
 
       {open && !showRegistrationForm && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn">
-      <h2 className="flex items-center justify-center gap-2 text-2xl font-semibold text-gray-900">
-    <FaPeopleLine className="text-blue-600 w-7 h-7" />
-    Add Walk-In Patient
-  </h2>
-      <p className="text-center text-gray-500 text-sm mt-1">
-        We'll verify your contact to find existing records
-      </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn">
+            <h2 className="flex items-center justify-center gap-2 text-2xl font-semibold text-gray-900">
+              <FaPeopleLine className="text-blue-600 w-7 h-7" />
+              Add Walk-In Patient
+            </h2>
+            <p className="text-center text-gray-500 text-sm mt-1">
+              We'll verify your contact to find existing records
+            </p>
 
-      
-     {/* Contact Section */}
-<div className="mt-4">
-  <div className="flex items-center gap-3">
-    <label className="text-gray-700 font-medium min-w-[130px]">
-      Contact Number :
-    </label>
+            {/* Contact Section */}
+            <div className="mt-4">
+              <div className="flex items-center gap-3">
+                <label className="text-gray-700 font-medium min-w-[130px]">
+                  Contact Number :
+                </label>
+                <div className="flex-1 relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-700 font-semibold">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    value={contact}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length === 1 && /[0-5]/.test(val)) return;
+                      if (showOtp && val !== contact) {
+                        setOtp(["", "", "", "", "", ""]);
+                        setEditedAfterOtp(true);
+                      }
+                      if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
+                        setContact(val);
+                        setError("");
+                      } else if (val.length === 1) {
+                        setError("Contact number should start from 6");
+                      } else {
+                        setContact(val);
+                      }
+                    }}
+                    maxLength={10}
+                    placeholder="Enter 10-digit number"
+                    className={`w-full rounded-lg border pl-10 pr-3 py-1.5 text-gray-800 text-base outline-none transition-all duration-200 ${
+                      error
+                        ? "border-red-400 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
+                    }`}
+                  />
+                </div>
+              </div>
 
-    <div className="flex-1 relative">
-      
+              {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
 
-      {/* +91 prefix */}
-      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-700 font-semibold">
-        +91
-      </span>
+              {!showOtp && Regex.MOBILEREGEX.test(contact.trim()) && !loadingGenerate && (
+                <button
+                  onClick={handleSendOtp}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-all mt-1"
+                >
+                  Send OTP
+                </button>
+              )}
+            </div>
 
-      {/* Input field */}
-      <input
-        type="tel"
-        value={contact}
-        onChange={(e) => {
-          const val = e.target.value.replace(/\D/g, "");
-          if (val.length === 1 && /[0-5]/.test(val)) return;
-          if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
-            if (showOtp) {
-              setOtp(["", "", "", "", "", ""]);
-              setEditedAfterOtp(true);
-            }
-            setContact(val);
-            setError("");
-          } else if (val.length === 1) {
-            setError("Contact number should start from 6");
-          }
-        }}
-        maxLength={10}
-        placeholder="Enter 10-digit number"
-        className={`w-full rounded-lg border pl-10 pr-3 py-1.5 text-gray-800 text-base outline-none transition-all duration-200 ${
-          error
-            ? "border-red-400 focus:ring-red-200"
-            : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
-        }`}
-      />
-    </div>
-  </div>
+            {/* OTP Section */}
+            {showOtp && !verifiedPatients && (
+              <div className="mt-4 text-center">
+                <p className="text-gray-700 font-medium mb-2 text-sm">Enter 6-digit OTP</p>
+                <div className="flex justify-center gap-2 sm:gap-2.5">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e.target.value, index)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                      maxLength={1}
+                      ref={(el) => {
+                        otpRefs.current[index] = el;
+                      }}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg border border-gray-300 text-center text-base font-semibold text-gray-800 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all transform focus:scale-105"
+                    />
+                  ))}
+                  {loadingVerify && (
+                    <div className="relative w-5 h-5 mt-1">
+                      <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-green-500"></div>
+                    </div>
+                  )}
+                </div>
 
-  {/* Error message */}
-  {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
+                {showOtp && editedAfterOtp && !loadingGenerate && (
+                  <button
+                    onClick={handleResendOtp}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-all mt-1"
+                  >
+                    Resend OTP
+                  </button>
+                )}
+              </div>
+            )}
 
-  {/* Send/Resend OTP links */}
-  {!showOtp && Regex.MOBILEREGEX.test(contact.trim()) && !loadingGenerate && (
-    <button
-      onClick={handleSendOtp}
-      className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-all mt-1"
-    >
-      Send OTP
-    </button>
-  )}
+            {/* Buttons */}
+            <div className="flex justify-end items-center mt-8 space-x-3">
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 rounded-lg border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-all"
+              >
+                Cancel
+              </button>
 
-</div>
-
-
-      {/* OTP Section */}
-      
-{showOtp && !verifiedPatients && (
-  <div className="mt-4 text-center">
-    <p className="text-gray-700 font-medium mb-2 text-sm">Enter 6-digit OTP</p>
-    <div className="flex justify-center gap-2 sm:gap-2.5">
-      {otp.map((digit, index) => (
-        <input
-          key={index}
-          type="text"
-          value={digit}
-          onChange={(e) => handleOtpChange(e.target.value, index)}
-          onKeyDown={(e) => handleOtpKeyDown(e, index)}
-          maxLength={1}
-          ref={(el) => {
-            otpRefs.current[index] = el;
-          }}
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg border border-gray-300 text-center text-base font-semibold text-gray-800 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all transform focus:scale-105"
-        />
-      ))}
-      {loadingVerify && (
-        <div className="relative w-5 h-5 mt-1">
-          <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-green-500"></div>
+              {showOtp && (
+                <button
+                  onClick={handleConfirm}
+                  disabled={loadingVerify}
+                  className={`px-5 py-2 rounded-lg font-semibold text-white transition-all ${
+                    loadingVerify
+                      ? "bg-green-400 cursor-not-allowed"
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
+                >
+                  {loadingVerify ? "Verifying..." : "Confirm"}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
-     
-    </div>
-     {showOtp && editedAfterOtp && !loadingGenerate && (
-    <button
-      onClick={handleResendOtp}
-      className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-all mt-1"
-    >
-      Resend OTP
-    </button>
-  )}
-  </div>
-)}
-
-
-      {/* Buttons */}
-      <div className="flex justify-end items-center mt-8 space-x-3">
-        <button
-          onClick={handleClose}
-          className="px-4 py-2 rounded-lg border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-all"
-        >
-          Cancel
-        </button>
-
-        {showOtp && (
-          <button
-            onClick={handleConfirm}
-            disabled={loadingVerify}
-            className={`px-5 py-2 rounded-lg font-semibold text-white transition-all ${
-              loadingVerify
-                ? "bg-green-400 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600"
-            }`}
-          >
-            {loadingVerify ? "Verifying..." : "Confirm"}
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)}
 
       {showRegistrationForm && (
         <WalkInRegisterForm

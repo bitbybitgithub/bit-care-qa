@@ -11,8 +11,6 @@ import { getSessionItem } from "../../context/sessions/userSession";
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const clinicId = Number(sessionStorage.getItem("clinic_id"));
-
   const clinicId = getSessionItem("user", "clinic_id");
 
   const [stats, setStats] = useState({
@@ -29,17 +27,17 @@ const Dashboard = () => {
   const { data } = useQuery<Stats>({
     queryKey: ["clinicProfile", clinicId],
     queryFn: () => fetchDashboardStats(Number(clinicId)),
-    enabled: !!clinicId, // Only run if clinicId is available
-    staleTime: Infinity, // Treat the data as fresh after fetch
+    enabled: !!clinicId,
+    staleTime: Infinity,
   });
 
+  // ✅ Fix: re-run when data changes
   useEffect(() => {
-    setLoading(true);
     if (data) {
       setStats(data);
       setLoading(false);
     }
-  }, []);
+  }, [data]);
 
   const cardItems = [
     { title: "Total Appointments Today", value: stats.appointmentsToday },
@@ -60,15 +58,15 @@ const Dashboard = () => {
         </h2>
         <div className="flex flex-wrap gap-4">
           <button
-            className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition"
+            className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition cursor-pointer"
             onClick={() => setShowAddUser(true)}
           >
             <FaUserPlus className="text-lg" /> Add New User
           </button>
-          <button className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition">
+          <button className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition cursor-pointer">
             <FaClipboardList className="text-lg" /> View Audit Log
           </button>
-          <button className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition">
+          <button className="flex-1 min-w-[150px] flex items-center justify-center gap-2 bg-[var(--color-primary)] text-[var(--color-white)] px-4 py-3 rounded-2xl hover:opacity-80 transition cursor-pointer">
             <FaIdCard className="text-lg" /> View KYC Details
           </button>
         </div>

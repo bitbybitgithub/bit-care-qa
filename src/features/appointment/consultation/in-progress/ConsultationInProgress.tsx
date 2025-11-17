@@ -4,13 +4,14 @@ import ConsultationView from "../ConsultationView";
 import { toast } from "react-toastify";
 import type { Patient } from "../../../../types/appointmentTypes";
 import { fetchTodayAppointments, type AppointmentDto } from "../../../../api/PatientQueueApi";
+import { getSessionItem } from "../../../../context/sessions/userSession";
 
 const ConsultationInProgress: React.FC = () => {
   const [patientList, setPatientList] = useState<Patient[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  const doctorId = 4;
+  const doctorId = getSessionItem("user","doctor_id");
 
   const fetchAppointments = useCallback(async () => {
     if (!doctorId) {

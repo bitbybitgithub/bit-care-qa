@@ -12,6 +12,7 @@ import ResetPasswordPage from "../components/common/ResetPasswordPage";
 import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
 import ConsultationInProgress from "../features/appointment/consultation/in-progress/ConsultationInProgress";
+import ComingSoon from "../components/common/ComingSoon";
 
 const Router = [
   {
@@ -33,18 +34,18 @@ const Router = [
       { path: "/clinic-settings", element: <Profile /> },
 
       { path: "/doc-dashboard", element: <DocDashboard /> },
-      { path: "/patients-records", element: <DocDashboard /> },
-      { path: "/add-diagnosis", element: <DocDashboard /> },
-      { path: "/manage-medication", element: <DocDashboard /> },
-      { path: "/refer-patient", element: <DocDashboard /> },
+      { path: "/patients-records", element: <ComingSoon/> },
+      { path: "/add-diagnosis", element: <ComingSoon/>},
+      { path: "/manage-medication", element: <ComingSoon/>},
+      { path: "/refer-patient", element: <ComingSoon/>},
       { path: "/profile", element: <DoctorProfile /> },
 
       { path: "/staff-dashboard", element: <Staffdashboard /> },
-      { path: "/task-and-reminder", element: <Staffdashboard /> },
-      { path: "/assign-patient", element: <Staffdashboard /> },
-      { path: "/message", element: <Staffdashboard /> },
-      { path: "/cln-protocol", element: <Staffdashboard /> },
-      { path: "/shift-schedule", element: <Staffdashboard /> },
+      { path: "/task-and-reminder", element: <ComingSoon/>},
+      { path: "/assign-patient", element: <ComingSoon/>},
+      { path: "/message", element: <ComingSoon/>},
+      { path: "/cln-protocol", element: <ComingSoon/>},
+      { path: "/shift-schedule", element: <ComingSoon/>},
       { path: "/consultation-in-progress", element: <ConsultationInProgress /> },
 
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },

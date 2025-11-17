@@ -64,10 +64,10 @@ const StaffDashboard: React.FC = () => {
   const [followUpData, setfollowUpData] = useState([]);
   const uId = getSessionItem("user", "user_id");
   console.log("select---StaffDashboard", selectedPatient);
+  const doctorId= getSessionItem("user", "doctor_id");
   const fetchMedicalDispensing = async () => {
     setLoadingDispense(true);
     try {
-      const doctorId = 4;
       const response = await getMedicalDispensingAsync(doctorId);
       console.log(response);
       setDispensingData(response || []);
@@ -81,7 +81,6 @@ const StaffDashboard: React.FC = () => {
   const followUp = async () => {
     setLoadingDispense(true);
     try {
-      const doctorId = 4;
       const response = await getfollowUpAsync(doctorId);
       console.log(response);
       setfollowUpData(response);

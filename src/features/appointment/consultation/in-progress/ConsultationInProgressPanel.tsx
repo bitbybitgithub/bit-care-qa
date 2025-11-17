@@ -3,22 +3,29 @@ import { ChevronDown, ChevronUp, Phone, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConsultationItem from "./ConsultationItem";
 import type { Patient } from "../../../../types/appointmentTypes";
+import { AppointmentStatus } from "../../../../context/constant/enum";
 
 interface Props {
   consultationList: Patient[];
   onPatientSelect: (patient: Patient) => void;
 }
 
-const ConsultationInProgressPanel: React.FC<Props> = ({ consultationList, onPatientSelect }) => {
+const ConsultationInProgressPanel: React.FC<Props> = ({
+  consultationList,
+  onPatientSelect,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const activePatients = useMemo(
-    () => consultationList.filter((p) => p.status?.toLowerCase() === "in_consultation"),
+    () =>
+      consultationList.filter(
+        (p) => p.status?.toLowerCase() === AppointmentStatus.InConsultation
+      ),
     [consultationList]
   );
 
   return (
-     <motion.div
+    <motion.div
       className="fixed bottom-0 right-16 z-50 w-80"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -34,20 +41,26 @@ const ConsultationInProgressPanel: React.FC<Props> = ({ consultationList, onPati
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-5"
           animate={{ x: ["-100%", "100%"] }}
-          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+          transition={{
+            duration: 3,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
         />
 
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
             <motion.div
-              animate={{ scale: [1, 1.20, 1] }}
+              animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
               className="bg-white/20 backdrop-blur-sm p-2 rounded-lg"
             >
               <Phone className="text-white" size={18} />
             </motion.div>
             <div>
-              <p className="font-semibold text-white text-sm">Active Consultations</p>
+              <p className="font-semibold text-white text-sm">
+                Active Consultations
+              </p>
               <p className="text-blue-100 text-xs">Ongoing sessions</p>
             </div>
           </div>
@@ -60,7 +73,11 @@ const ConsultationInProgressPanel: React.FC<Props> = ({ consultationList, onPati
             <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
               {activePatients.length}
             </span>
-            { isOpen ? <ChevronDown className="text-white" size={20} /> : <ChevronUp className="text-white" size={20} /> }
+            {isOpen ? (
+              <ChevronDown className="text-white" size={20} />
+            ) : (
+              <ChevronUp className="text-white" size={20} />
+            )}
           </motion.div>
         </div>
       </motion.div>
@@ -117,7 +134,9 @@ const ConsultationInProgressPanel: React.FC<Props> = ({ consultationList, onPati
                 >
                   <Users className="text-slate-300" size={32} />
                 </motion.div>
-                <p className="text-slate-400 text-sm font-medium">No active consultations</p>
+                <p className="text-slate-400 text-sm font-medium">
+                  No active consultations
+                </p>
               </motion.div>
             )}
           </motion.div>

@@ -15,6 +15,7 @@ import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
 import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
+import { getAge } from "../../utils/CalculateAge";
 
 export interface Patient {
   patient_id: number;
@@ -62,31 +63,6 @@ const badgeClasses = (status: string): string => {
   return colors[status.toLowerCase()] || "bg-gray-100 text-gray-800";
 };
 
-const getAge = (dob?: string | number | Date): number | string => {
-  if (!dob) return "--";
-  const d = new Date(dob);
-  if (isNaN(d.getTime())) return "--";
-  const today = new Date();
-  let age = today.getFullYear() - d.getFullYear();
-  const m = today.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
-  return age;
-};
-
-const calculateAge = (dob: string | Date | null): string => {
-  if (!dob) return "--";
-  const birthDate = new Date(dob);
-  if (isNaN(birthDate.getTime())) return "--";
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return `${age}`;
-};
-
-
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
     case "scheduled":
@@ -131,6 +107,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   console.log(selectedPatient, "selectedPatient");
+  console.log(patientsData, "patientsData");
   // show all patients even if status not checked - in
   // const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
 
@@ -141,14 +118,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   //Step 1: Filter patients if mode is 'doctor'
   const filteredPatients = useMemo(() => {
-    if (mode === "doctor") {
-      return patientsData.filter(
-        (p) => p.status?.toLowerCase() === AppointmentStatus.CheckedIn.toLowerCase()
-      );
-    }
     return patientsData;
-  }, [patientsData, mode]);
-
+  }, [patientsData]);
   //Step 2: Pagination
   const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
 
@@ -195,24 +166,22 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     [handleMenuClose, handleUpdatePatientStatus]
   );
 
-  
-
   const handleConfirmCancel = useCallback(() => {
-  if (!patientToCancel) return;
+    if (!patientToCancel) return;
 
-  console.log("CANCEL APPOINTMENT", {
-    patient_id: patientToCancel.patient_id,
-    reason: cancelReason.trim(),
-  });
+    console.log("CANCEL APPOINTMENT", {
+      patient_id: patientToCancel.patient_id,
+      reason: cancelReason.trim(),
+    });
 
-  // Step 1: Update appointment status to cancelled
-  handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
+    // Step 1: Update appointment status to cancelled
+    handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
 
-  // Step 2: Close dialog and reset fields
-  setCancelDialogOpen(false);
-  setCancelReason("");
-  setPatientToCancel(null);
-}, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
+    // Step 2: Close dialog and reset fields
+    setCancelDialogOpen(false);
+    setCancelReason("");
+    setPatientToCancel(null);
+  }, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
 
   return (
     <div

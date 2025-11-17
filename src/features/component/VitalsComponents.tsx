@@ -14,7 +14,6 @@ import { SavePatientVital } from "../../api/VitalsApi";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 
-
 interface PatientVitalsData {
   height_cm: number;
   weight_kg: number;
@@ -27,6 +26,8 @@ interface PatientVitalsData {
   bmi: number;
   notes: string;
   chief_complaint: string;
+  allergies: string;
+  current_medications: string;
 }
 
 interface PatientVitalsProps {
@@ -65,6 +66,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       bmi: 0,
       notes: "",
       chief_complaint: "",
+      allergies: "",
+      current_medications: "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -72,8 +75,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     useEffect(() => {
       const { height_cm, weight_kg } = formData;
       if (height_cm > 0 && weight_kg > 0) {
-        const bmi =
-          Math.round((weight_kg / ((height_cm / 100) ** 2)) * 10) / 10;
+        const bmi = Math.round((weight_kg / (height_cm / 100) ** 2) * 10) / 10;
         setFormData((prev) => ({ ...prev, bmi }));
       }
     }, [formData.height_cm, formData.weight_kg]);
@@ -132,6 +134,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
         bmi: 0,
         notes: "",
         chief_complaint: "",
+        allergies: "",
+        current_medications: "",
       });
     };
 
@@ -147,14 +151,49 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
 
     const fields = [
       { field: "height_cm", label: "Height (cm)", placeholder: "170" },
-      { field: "weight_kg", label: "Weight (kg)", placeholder: "70", icon: <FaWeightScale /> },
+      {
+        field: "weight_kg",
+        label: "Weight (kg)",
+        placeholder: "70",
+        icon: <FaWeightScale />,
+      },
       { field: "bmi", label: "BMI", placeholder: "Auto" },
-      { field: "temperature_c", label: "Temp (°C)", icon: <FaTemperatureLow />, placeholder: "36.5" },
-      { field: "blood_pressure_systolic", label: "BP Sys", icon: <FaHeart />, placeholder: "120" },
-      { field: "blood_pressure_diastolic", label: "BP Dia", icon: <FaHeart />, placeholder: "80" },
-      { field: "pulse_rate", label: "Pulse", icon: <FaHeartPulse />, placeholder: "72" },
-      { field: "respiration_rate", label: "Resp", icon: <FaWind />, placeholder: "16" },
-      { field: "oxygen_saturation", label: "O₂ Sat (%)", icon: <FaWater />, placeholder: "98" },
+      {
+        field: "temperature_c",
+        label: "Temp (°C)",
+        icon: <FaTemperatureLow />,
+        placeholder: "36.5",
+      },
+      {
+        field: "blood_pressure_systolic",
+        label: "BP Sys",
+        icon: <FaHeart />,
+        placeholder: "120",
+      },
+      {
+        field: "blood_pressure_diastolic",
+        label: "BP Dia",
+        icon: <FaHeart />,
+        placeholder: "80",
+      },
+      {
+        field: "pulse_rate",
+        label: "Pulse",
+        icon: <FaHeartPulse />,
+        placeholder: "72",
+      },
+      {
+        field: "respiration_rate",
+        label: "Resp",
+        icon: <FaWind />,
+        placeholder: "16",
+      },
+      {
+        field: "oxygen_saturation",
+        label: "O₂ Sat (%)",
+        icon: <FaWater />,
+        placeholder: "98",
+      },
     ];
 
     return (
@@ -188,7 +227,12 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   type="number"
                   placeholder={placeholder}
                   value={formData[field] || ""}
-                  onChange={(e) => handleInputChange(field as keyof PatientVitalsData, e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      field as keyof PatientVitalsData,
+                      e.target.value
+                    )
+                  }
                   size="small"
                   fullWidth
                 />
@@ -199,7 +243,9 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           {renderDivider("Additional Info")}
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">Chief Complaint</label>
+            <label className="text-xs font-semibold text-gray-700 uppercase">
+              Chief Complaint
+            </label>
             <TextField
               fullWidth
               multiline
@@ -207,13 +253,18 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               placeholder="e.g., Headache, Fever..."
               value={formData.chief_complaint}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, chief_complaint: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev,
+                  chief_complaint: e.target.value,
+                }))
               }
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">Additional Notes</label>
+            <label className="text-xs font-semibold text-gray-700 uppercase">
+              Additional Notes
+            </label>
             <TextField
               fullWidth
               multiline
@@ -222,6 +273,39 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               value={formData.notes}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, notes: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-700 uppercase">
+              Allergies
+            </label>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              placeholder="e.g., Penicillin,Peanuts,Latex,"
+              value={formData.allergies}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, allergies: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-700 uppercase">
+              Current Medications
+            </label>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              placeholder="e.g., Folic Acid(Daily), Lisinopril (Daily),"
+              value={formData.current_medications}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  current_medications: e.target.value,
+                }))
               }
             />
           </div>

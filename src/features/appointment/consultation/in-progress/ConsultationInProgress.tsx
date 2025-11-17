@@ -26,7 +26,7 @@ const ConsultationInProgress: React.FC = () => {
         doctorId
       );
       const mapped: Patient[] = appointments
-        .filter((item) => item.status === "in_consultation")
+        // .filter((item) => item.status === "in_consultation")
         .map((a) => ({
           appointment_id: a.appointment_id,
           gender: a.gender,

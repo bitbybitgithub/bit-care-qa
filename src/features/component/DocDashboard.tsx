@@ -56,9 +56,9 @@ const DocDashboard: React.FC = () => {
         name: a.patient_name,
         reason: a.reason,
         status: a.status,
+        source: a.source,
         date_of_birth: a.date_of_birth,
         mobile_number: a.mobile_number,
-        source: a.source,
         raw: a,
       }));
 
@@ -126,7 +126,13 @@ const DocDashboard: React.FC = () => {
         toast.error("Invalid appointment ID.");
         return;
       }
-
+      // if (
+      //   patient.status === AppointmentStatus.InConsultation ||
+      //   patient.status === AppointmentStatus.InProgress
+      // ) {
+      //   toggleDrawer(true);
+      //   return;
+      // }
       const payload: UpdateAppointmentStatusRequest = {
         appointment_id: patient.raw.appointment_id,
         user_id: userId,

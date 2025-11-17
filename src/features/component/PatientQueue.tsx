@@ -73,6 +73,20 @@ const getAge = (dob?: string | number | Date): number | string => {
   return age;
 };
 
+const calculateAge = (dob: string | Date | null): string => {
+  if (!dob) return "--";
+  const birthDate = new Date(dob);
+  if (isNaN(birthDate.getTime())) return "--";
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return `${age}`;
+};
+
+
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
     case "scheduled":
@@ -117,30 +131,30 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   console.log(selectedPatient, "selectedPatient");
   // show all patients even if status not checked - in
-  const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
-
-  const currentPatients = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return patientsData.slice(start, start + PAGE_SIZE);
-  }, [patientsData, currentPage]);
-
-  //Step 1: Filter patients if mode is 'doctor'
-  // const filteredPatients = useMemo(() => {
-  //   if (mode === "doctor") {
-  //     return patientsData.filter(
-  //       (p) => p.status?.toLowerCase() === AppointmentStatus.CheckedIn.toLowerCase()
-  //     );
-  //   }
-  //   return patientsData;
-  // }, [patientsData, mode]);
-
-  //  //Step 2: Pagination
-  // const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
+  // const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
 
   // const currentPatients = useMemo(() => {
   //   const start = (currentPage - 1) * PAGE_SIZE;
-  //   return filteredPatients.slice(start, start + PAGE_SIZE);
-  // }, [filteredPatients, currentPage]);
+  //   return patientsData.slice(start, start + PAGE_SIZE);
+  // }, [patientsData, currentPage]);
+
+  //Step 1: Filter patients if mode is 'doctor'
+  const filteredPatients = useMemo(() => {
+    if (mode === "doctor") {
+      return patientsData.filter(
+        (p) => p.status?.toLowerCase() === AppointmentStatus.CheckedIn.toLowerCase()
+      );
+    }
+    return patientsData;
+  }, [patientsData, mode]);
+
+  //Step 2: Pagination
+  const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
+
+  const currentPatients = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredPatients.slice(start, start + PAGE_SIZE);
+  }, [filteredPatients, currentPage]);
 
 
   const handlePageChange = useCallback(
@@ -181,16 +195,24 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     [handleMenuClose, handleUpdatePatientStatus]
   );
 
+  
+
   const handleConfirmCancel = useCallback(() => {
-    if (!patientToCancel) return;
-    console.log("CANCEL APPOINTMENT", {
-      patient_id: patientToCancel.patient_id,
-      reason: cancelReason.trim(),
-    });
-    setCancelDialogOpen(false);
-    setCancelReason("");
-    setPatientToCancel(null);
-  }, [cancelReason, patientToCancel]);
+  if (!patientToCancel) return;
+
+  console.log("CANCEL APPOINTMENT", {
+    patient_id: patientToCancel.patient_id,
+    reason: cancelReason.trim(),
+  });
+
+  // Step 1: Update appointment status to cancelled
+  handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
+
+  // Step 2: Close dialog and reset fields
+  setCancelDialogOpen(false);
+  setCancelReason("");
+  setPatientToCancel(null);
+}, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
 
   console.log({ selectedPatient })
 

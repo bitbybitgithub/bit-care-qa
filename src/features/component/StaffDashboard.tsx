@@ -45,10 +45,11 @@ const StaffDashboard: React.FC = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState<string>("");
   const [userId, setUserId] = useState<number | null>(null);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [editedAfterOtp, setEditedAfterOtp] = useState(false);
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
@@ -123,7 +124,7 @@ const StaffDashboard: React.FC = () => {
     setContact("");
     setError("");
     setShowOtp(false);
-    setOtp(["", "", "", "", "", ""]);
+    setOtp("");
     setUserId(null);
     setLoadingGenerate(false);
     setLoadingVerify(false);
@@ -174,11 +175,12 @@ const StaffDashboard: React.FC = () => {
     setError("");
     setShowOtp(false);
     resetModalState();
-    setOtp(["", "", "", "", "", ""]);
+    setOtp("");
     setUserId(null);
     setLoadingGenerate(false);
     setLoadingVerify(false);
   };
+
 
   const handleSendOtp = async () => {
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
@@ -198,6 +200,8 @@ const StaffDashboard: React.FC = () => {
       if (res.success) {
         setUserId(res.userId ?? null);
         setShowOtp(true);
+        setEditedAfterOtp(false); // reset edit flag
+        setOtp(""); // ensure clean input
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
         setError(res.message || "Failed to send OTP");
@@ -209,24 +213,39 @@ const StaffDashboard: React.FC = () => {
     }
   };
 
-  const handleOtpChange = (value: string, index: number) => {
-    const val = value.replace(/\D/g, "");
-    const updatedOtp = [...otp];
-    updatedOtp[index] = val;
-    setOtp(updatedOtp);
-    if (val && index < otp.length - 1) otpRefs.current[index + 1]?.focus();
-  };
+  const handleResendOtp = async () => {
+    if (!Regex.MOBILEREGEX.test(contact.trim())) {
+      setError("Enter a valid 10-digit mobile number before resending OTP");
+      return;
+    }
 
-  const handleOtpKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0)
-      otpRefs.current[index - 1]?.focus();
+    setError("");
+    setLoadingGenerate(true);
+
+    try {
+      const res = await generateOtpApi({
+        mobile_number: contact.trim(),
+        otp_type: 2,
+      });
+
+      if (res.success) {
+        setUserId(res.userId ?? null);
+        setEditedAfterOtp(false);
+        setOtp(""); // clear old inputs
+        setShowOtp(true);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+      } else {
+        setError(res.message || "Failed to resend OTP");
+      }
+    } catch {
+      setError("Something went wrong. Please try again later.");
+    } finally {
+      setLoadingGenerate(false);
+    }
   };
 
   const handleConfirm = async () => {
-    const finalOtp = otp.join("");
+    const finalOtp = otp.trim();
     if (finalOtp.length !== 6) {
       setError("Please enter all 6 digits of the OTP");
       return;
@@ -348,33 +367,30 @@ const StaffDashboard: React.FC = () => {
       <div className="flex gap-3 border-b border-gray-200 pb-2">
         <button
           onClick={() => setActiveTab("queue")}
-          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
-            activeTab === "queue"
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === "queue"
               ? "bg-blue-600 text-white shadow-md"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+            }`}
         >
           Patient Queue
         </button>
 
         <button
           onClick={() => setActiveTab("dispensing")}
-          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
-            activeTab === "dispensing"
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === "dispensing"
               ? "bg-blue-600 text-white shadow-md"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+            }`}
         >
           Medical Dispensing
         </button>
 
         <button
           onClick={() => setActiveTab("followUp")}
-          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
-            activeTab === "followUp"
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === "followUp"
+            ? "bg-blue-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
         >
           Set Follow up
         </button>
@@ -404,9 +420,10 @@ const StaffDashboard: React.FC = () => {
         )}
       </div>
 
+
       {open && !showRegistrationForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4">
-          <div className="bg-gray-100 border-gray-500 rounded-2xl shadow-lg w-full max-w-md sm:max-w-lg p-4 sm:p-6 mx-auto">
+          <div className="bg-white  border-gray-500 rounded-2xl shadow-lg w-full max-w-md sm:max-w-lg p-4 sm:p-6 mx-auto">
             {/*  Show header only when patient not yet verified */}
             {!verifiedPatients && (
               <>
@@ -422,36 +439,40 @@ const StaffDashboard: React.FC = () => {
             {!verifiedPatients && (
               <div className="mt-4 w-full ">
                 <div className="flex items-center justify-between w-full space-x-4">
-                  <label className="text-gray-700 font-semibold min-w-[120px]">
+                  <label className="text-gray-700 font-semibold ml-12 min-w-[120px]">
                     Contact Number :
                   </label>
                   <div className="flex-1 flex flex-col relative">
-                    <div className="flex flex-col sm:flex-row items-center w-full gap-2">
+                    <div className="flex flex-col sm:flex-row items-center w-52 gap-2">
                       <input
                         type="tel"
                         value={contact}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, ""); // allow only digits
+                          const val = e.target.value.replace(/\D/g, ""); // only digits
 
-                          //  Block if first digit is 0–5
+                          // Block if first digit is 0–5
                           if (val.length === 1 && /[0-5]/.test(val)) return;
 
-                          //  Allow only digits and limit to 10
                           if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
+                            // if OTP was shown, clear and mark edited
+                            if (showOtp) {
+                              setOtp("");
+                              setEditedAfterOtp(true);
+                            }
                             setContact(val);
                             setError("");
                           } else if (val.length === 1) {
                             setError("Contact number should start from 6");
                           }
                         }}
+
                         maxLength={10}
                         placeholder="Enter 10-digit number"
                         className={`w-full sm:flex-1 rounded-2xl border px-4 py-2 text-gray-800 outline-none transition-all duration-300 
-    ${
-      error
-        ? "border-red-400 focus:ring-red-300"
-        : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
-    }`}
+                          ${error
+                            ? "border-red-400 focus:ring-red-300"
+                            : "border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+                          }`}
                       />
 
                       {loadingGenerate && (
@@ -467,51 +488,63 @@ const StaffDashboard: React.FC = () => {
                       </p>
                     )}
 
-                    {!showOtp &&
-                      Regex.MOBILEREGEX.test(contact.trim()) &&
-                      !loadingGenerate && (
-                        <p
-                          onClick={handleSendOtp}
-                          className="text-blue-500 font-medium text-sm cursor-pointer hover:underline mt-1"
-                        >
-                          Send OTP
-                        </p>
-                      )}
                   </div>
-                </div>
 
-                {/* Show OTP Input until verified */}
-                {showOtp && !verifiedPatients && (
-                  <div className="flex flex-col items-center space-y-2 mt-4 w-full">
-                    <p className="text-gray-700 font-medium">
-                      Enter 6-digit OTP
+                </div>
+                {/*  Resend OTP logic */}
+                {!showOtp &&
+                  Regex.MOBILEREGEX.test(contact.trim()) &&
+                  !loadingGenerate && (
+                    <p
+                      onClick={handleSendOtp}
+                      className="text-blue-500 text-center font-medium text-sm cursor-pointer hover:underline mt-2 "
+                    >
+                      Send OTP
                     </p>
-                    <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
-                      {otp.map((digit, index) => (
+                  )}
+
+
+                {showOtp && !verifiedPatients && (
+                  <div className="flex flex-col mt-4 w-full">
+                    <div className="flex items-center justify-between gap-4 w-full sm:w-96 mx-auto">
+                      {/* Label on the left */}
+                      <label className="text-gray-700 font-semibold ml-1 whitespace-nowrap">
+                        Enter 6-digit OTP:
+                      </label>
+
+                      {/* Input on the right */}
+                      <div className="relative flex-1">
                         <input
-                          key={index}
                           type="text"
-                          value={digit}
-                          onChange={(e) =>
-                            handleOtpChange(e.target.value, index)
-                          }
-                          onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                          maxLength={1}
-                          ref={(el) => {
-                            otpRefs.current[index] = el;
+                          value={otp}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            if (val.length <= 6) setOtp(val);
                           }}
-                          className="w-10 h-10 text-center text-xl rounded-2xl border border-gray-300 bg-white 
-                          focus:border-blue-500 focus:ring-2 focus:ring-blue-300 outline-none transition-transform duration-200 focus:scale-105"
+                          maxLength={6}
+                          placeholder="000000"
+                          className="w-full text-center text-lg tracking-[0.3em] font-semibold rounded-2xl border border-gray-300 bg-white py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition"
                         />
-                      ))}
-                      {loadingVerify && (
-                        <div className="relative w-5 h-5 mt-1">
-                          <div className="absolute inset-0 border-4 border-gray-300 rounded-full animate-spin border-t-green-500"></div>
-                        </div>
-                      )}
+
+                        {loadingVerify && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5">
+                            <div className="w-5 h-5 border-4 border-gray-300 rounded-full animate-spin border-t-green-500"></div>
+                          </div>
+                        )}
+                        {showOtp && editedAfterOtp && !loadingGenerate && (
+                          <p
+                            onClick={handleResendOtp}
+                            className="text-blue-500 font-medium text-sm cursor-pointer hover:underline mt-1"
+                          >
+                            Resend OTP
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
+
+
               </div>
             )}
 
@@ -549,8 +582,8 @@ const StaffDashboard: React.FC = () => {
                             {p.gender.toLowerCase() === "male"
                               ? "(M)"
                               : p.gender.toLowerCase() === "female"
-                              ? "(F)"
-                              : "(O)"}
+                                ? "(F)"
+                                : "(O)"}
                           </p>
                         </div>
 
@@ -575,6 +608,24 @@ const StaffDashboard: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
+                <div className="flex flex-col items-center justify-center mt-6 space-y-2">
+                  <p className="text-gray-600 font-medium text-center">
+                    No patient found in existing contact.
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setSelectedPatient(null);
+                      setShowRegistrationForm(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                  >
+                    + Register New Patient
+                  </button>
+                </div>
+
+
               </div>
             )}
 

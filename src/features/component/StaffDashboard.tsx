@@ -148,6 +148,8 @@ const StaffDashboard: React.FC = () => {
           status: a.status,
           doctor: a.doctor_name,
           source: a.source,
+          date_of_birth: a.date_of_birth,
+          mobile_number: a.mobile_number,
           raw: a,
           // age: a.age,
         }));

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from "react";
 import {
   Button,
@@ -22,6 +21,7 @@ export interface Patient {
   appointment_id: number;
   patient_name: string;
   date_of_birth: string | number | Date;
+  mobile_number: string;
   gender: string;
   age?: number;
   time?: string;
@@ -114,7 +114,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   handleUpdatePatientStatus,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>({});
+  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>(
+    {}
+  );
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [patientToCancel, setPatientToCancel] = useState<Patient | null>(null);
@@ -123,7 +125,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     const allowedStatuses = ["scheduled", "checked_in", "on_hold"];
     return allowedStatuses.includes(status.toLowerCase());
   };
-
 
   //  Drawer States
   const [vitalsDrawerOpen, setVitalsDrawerOpen] = useState(false);
@@ -155,7 +156,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredPatients.slice(start, start + PAGE_SIZE);
   }, [filteredPatients, currentPage]);
-
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -214,12 +214,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   setPatientToCancel(null);
 }, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
 
-  console.log({ selectedPatient })
-
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative ${classProp || ""
-        }`}
+      className={`bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative ${
+        classProp || ""
+      }`}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
@@ -240,6 +239,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <>
             <span>Name</span>
             <span>Age</span>
+            <span>Contact</span>
             <span>Service</span>
             <span>Source</span>
             <span>Action</span>
@@ -248,6 +248,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <>
             <span>Name</span>
             <span>Age</span>
+            <span>Contact</span>
             <span>Doctor</span>
             <span>Source</span>
             <span>Status</span>
@@ -270,10 +271,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           {currentPatients.map((p) => (
             <div
               key={p.patient_id}
-              className={`grid grid-cols-6 items-center border-l-4 rounded-2xl p-4 shadow-sm ${p.status === AppointmentStatus.OnHold
-                ? "bg-[var(--color-border)]"
-                : "bg-[var(--color-bg)] border-[var(--color-primary)]"
-                }`}
+              className={`grid grid-cols-6 items-center border-l-4 rounded-2xl p-4 shadow-sm ${
+                p.status === AppointmentStatus.OnHold
+                  ? "bg-[var(--color-border)]"
+                  : "bg-[var(--color-bg)] border-[var(--color-primary)]"
+              }`}
             >
               <div className="font-bold text-gray-800 truncate">
                 {p.name}
@@ -281,12 +283,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   {p.gender?.toLowerCase() === "male"
                     ? "(M)"
                     : p.gender?.toLowerCase() === "female"
-                      ? "(F)"
-                      : "(O)"}
+                    ? "(F)"
+                    : "(O)"}
                 </span>
               </div>
               <div className="font-bold text-gray-700 truncate">
-                {getAge(p.date_of_birth)}
+                {p.date_of_birth ? `${getAge(p.date_of_birth)} yrs ` : "—"}
+              </div>
+
+              <div className="font-bold text-gray-700 truncate">
+                {p.mobile_number ? `${p.mobile_number}` : "—"}
               </div>
 
               {mode === "doctor" ? (
@@ -298,12 +304,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                     {p.source ?? "—"}
                   </div>
                   <div className="flex justify-center">
-
-
                     <button
                       onClick={() => {
                         // update status to in_progress first
-                        handleUpdatePatientStatus?.(p, AppointmentStatus.InProgress);
+                        handleUpdatePatientStatus?.(
+                          p,
+                          AppointmentStatus.InProgress
+                        );
                         // then open consultation view
                         onStartConsultation?.(p);
                       }}
@@ -311,8 +318,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                     >
                       Ready For Consultation
                     </button>
-
-
                   </div>
                 </>
               ) : (
@@ -352,7 +357,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                           onClose={() => handleMenuClose(p?.raw.patient_id)}
                         >
                           {getActionsForStatus(p.status).map((a) => (
-                            <MenuItem key={a} onClick={() => handleAction(a, p)}>
+                            <MenuItem
+                              key={a}
+                              onClick={() => handleAction(a, p)}
+                            >
                               <div className="flex items-center gap-2">
                                 {a === "Add Vitals" && (
                                   <RiHeartAdd2Line className="text-blue-600 text-lg" />
@@ -371,7 +379,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                       </>
                     )}
                   </div>
-
                 </>
               )}
             </div>
@@ -385,10 +392,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-lg ${currentPage === 1
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-[var(--color-primary)] text-white hover:opacity-90"
-              }`}
+            className={`px-3 py-1 rounded-lg ${
+              currentPage === 1
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:opacity-90"
+            }`}
           >
             Prev
           </button>
@@ -398,10 +406,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-lg ${currentPage === totalPages
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-[var(--color-primary)] text-white hover:opacity-90"
-              }`}
+            className={`px-3 py-1 rounded-lg ${
+              currentPage === totalPages
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:opacity-90"
+            }`}
           >
             Next
           </button>
@@ -409,7 +418,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       )}
 
       {/* Cancel Dialog */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+      >
         <DialogTitle className="font-semibold">Cancel Appointment</DialogTitle>
         <DialogContent>
           <TextField
@@ -464,7 +476,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             patientName={selectedPatient.name}
             createdBy="SystemUser"
             onStatusUpdate={() =>
-              handleUpdatePatientStatus(selectedPatient, AppointmentStatus.CheckedIn)}
+              handleUpdatePatientStatus(
+                selectedPatient,
+                AppointmentStatus.CheckedIn
+              )
+            }
           />
         )}
       </Drawer>

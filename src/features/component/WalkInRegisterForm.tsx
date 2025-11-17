@@ -193,6 +193,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         status: AppointmentStatus.Scheduled,
         source: "walk_in",
         reason: formData.reason || "Regular checkup",
+        date_of_birth: formData.dob,
+        mobile_number: formData.phone || contact,
         user_id: Number(user_id),
       };
 

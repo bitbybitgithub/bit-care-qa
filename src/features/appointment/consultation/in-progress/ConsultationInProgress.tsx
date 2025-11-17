@@ -3,7 +3,10 @@ import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
 import ConsultationView from "../ConsultationView";
 import { toast } from "react-toastify";
 import type { Patient } from "../../../../types/appointmentTypes";
-import { fetchTodayAppointments, type AppointmentDto } from "../../../../api/PatientQueueApi";
+import {
+  fetchTodayAppointments,
+  type AppointmentDto,
+} from "../../../../api/PatientQueueApi";
 import { getSessionItem } from "../../../../context/sessions/userSession";
 
 const ConsultationInProgress: React.FC = () => {
@@ -11,7 +14,7 @@ const ConsultationInProgress: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  const doctorId = getSessionItem("user","doctor_id");
+  const doctorId = getSessionItem("user", "doctor_id");
 
   const fetchAppointments = useCallback(async () => {
     if (!doctorId) {
@@ -19,12 +22,14 @@ const ConsultationInProgress: React.FC = () => {
       return;
     }
     try {
-      const appointments: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+      const appointments: AppointmentDto[] = await fetchTodayAppointments(
+        doctorId
+      );
       const mapped: Patient[] = appointments
         .filter((item) => item.status === "in_consultation")
         .map((a) => ({
           appointment_id: a.appointment_id,
-          gender: a.gender, 
+          gender: a.gender,
           time: `${a.start_time} - ${a.end_time}`,
           name: a.patient_name,
           reason: a.reason,

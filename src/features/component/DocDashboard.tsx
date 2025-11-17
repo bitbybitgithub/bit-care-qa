@@ -31,6 +31,7 @@ const DocDashboard: React.FC = () => {
 
   const userId = getSessionItem("user", "user_id");
   const doctorId = getSessionItem("user", "doctor_id");
+  const clinicId = getSessionItem("user", "clinic_id");
 
   // ---------------- Fetch Appointments ----------------
   const fetchAppointments = useCallback(async () => {
@@ -55,6 +56,9 @@ const DocDashboard: React.FC = () => {
         name: a.patient_name,
         reason: a.reason,
         status: a.status,
+        date_of_birth: a.date_of_birth,
+        mobile_number: a.mobile_number,
+        source: a.source,
         raw: a,
       }));
 
@@ -84,6 +88,9 @@ const DocDashboard: React.FC = () => {
         gender: newAppointment.gender,
         reason: newAppointment.reason,
         status: newAppointment.status,
+        date_of_birth: newAppointment.date_of_birth,
+        mobile_number: newAppointment.mobile_number,
+        source: newAppointment.source,
         raw: newAppointment,
       };
 
@@ -124,6 +131,7 @@ const DocDashboard: React.FC = () => {
         appointment_id: patient.raw.appointment_id,
         user_id: userId,
         status: AppointmentStatus.InConsultation,
+        clinic_id: clinicId,
       };
 
       try {

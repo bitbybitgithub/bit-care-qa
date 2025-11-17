@@ -14,6 +14,8 @@ export interface AppointmentDto {
   end_time: string;         
   status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
   reason?: string;
+  date_of_birth:string;
+  mobile_number:string;
 }
 
 export interface TodayAppointmentsResponse {
@@ -26,6 +28,7 @@ export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
   user_id: number;
   status: string;
+  clinic_id:string;
 }
 
 // Define the response type
@@ -69,7 +72,7 @@ export interface FollowUpDto {
   appointment_id: string;
   patient_id: number;
   patient_name: string;
-    contact: string;
+  contact: string;
   dob: string;
   doctor_id: number;
   doctor_name: string;

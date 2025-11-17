@@ -13,7 +13,7 @@ import {
   FaKey,
 } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { getRoles, type Role } from "../../api/masterApi";
+import { getRoles } from "../../api/MasterApi";
 
 interface AddUserProps {
   onClose: () => void;
@@ -30,12 +30,12 @@ interface Form {
 
 const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
   const [formData, setFormData] = useState<Form>({
-    name: "",
-    email: "",
-    phone: "",
-    role: "",
-    username: "",
-    password: "",
+  name: "",
+  email: "",
+  role: "",
+  phone: "",
+  username: "",
+  password: "",
   });
 
   const clinicId = getSessionItem("user", "clinic_id");

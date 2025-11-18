@@ -25,7 +25,7 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
       {items.map((item, index) => (
         <div
           key={index}
-          className={`rounded-xl shadow-md transition-all duration-300 border-l-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center ${
+          className={`rounded-xl shadow-md transition-all bg-[var(--color-bg)] text-[--color-text] duration-300 border-l-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center ${
             item.color ?? "bg-[var(--color-bg)] text-[--color-text]"
           } ${item.onClick ? "cursor-pointer hover:scale-[1.02]" : "cursor-default"}`}
           onClick={item.onClick}

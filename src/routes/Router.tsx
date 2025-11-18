@@ -32,6 +32,7 @@ const Router = [
       { path: "/clinic-dashboard", element: <Dashboard /> },
       { path: "/users", element: <Users /> },
       { path: "/clinic-settings", element: <Profile /> },
+      { path: "/clinic-operations", element: <ComingSoon /> },
 
       { path: "/doctor-dashboard", element: <DocDashboard /> },
       { path: "/patients-records", element: <ComingSoon/> },

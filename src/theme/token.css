@@ -137,15 +137,12 @@
   --color-accent: #22c55e;
 
   --color-bg: #f0fdf4; 
-  /* --color-bg: #d3f5dd;  */
-  /* --color-surface: #ecfdf5; */
   --color-surface: #c9e7d9;
   --color-surface-alt: #d1fae5;
   --color-border: #bbf7d0;
 
   --color-text: #000000;
   --color-text-secondary: #065f46;
-  /* --color-disabled: #86efac; */
   --color-disabled: #000000;
 
   --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);

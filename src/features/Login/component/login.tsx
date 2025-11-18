@@ -127,11 +127,11 @@ const Login = () => {
             }, 1000);
           } else {
             if (data.user.role == Roles.Doctor) {
-              navigate("/doc-dashboard");
+              navigate("/doctor-dashboard");
             } else if (data.user.role === Roles.Staff) {
               navigate("/staff-dashboard");
             } else {
-              navigate("/dashboard");
+              navigate("/clinic-dashboard");
             }
             toast.success("Login successful");
           }

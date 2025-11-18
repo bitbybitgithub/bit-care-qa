@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import { MdDeleteForever } from "react-icons/md";
 
 interface ShiftSlot {
   start: string;
@@ -100,8 +101,7 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
             validated[curr.idx].error =
               "Shift must start after previous shift ends.";
           } else if (currEnd <= currStart) {
-            validated[curr.idx].error =
-              "End time must be after start time.";
+            validated[curr.idx].error = "End time must be after start time.";
           }
         }
       }
@@ -154,9 +154,7 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
 
   // Push valid shifts to parent when changed
   useEffect(() => {
-    const validShifts = shifts.filter(
-      (s) => s.start && s.end && !s.error
-    );
+    const validShifts = shifts.filter((s) => s.start && s.end && !s.error);
     const formatted: ShiftPayload[] = validShifts.map((s, i) => ({
       clinic_id: opShift.clinic_id,
       co_id: opShift.co_id,
@@ -171,10 +169,10 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
   }, [shifts, opShift.is_active]);
 
   return (
-    <div className="bg-white shadow rounded-2xl p-4 mb-4 border-2 border-gray-200">
+    <div className=" rounded-[var(--radius-lg)] p-4 mb-4 border-2 border-[var(--color-primary)] shadow-[var(--shadow-md)]">
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
-        <Typography variant="h6" className="font-semibold text-gray-700">
+        <Typography variant="h6" className="font-[var(--font-weight-medium)] text-[var(--color-text)]">
           {day}
         </Typography>
         <div className="flex items-center gap-2">
@@ -208,29 +206,32 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
                     type="time"
                     value={shift.start}
                     disabled={isDisabled}
-                    onChange={(e) =>
-                      updateShift(idx, "start", e.target.value)
-                    }
+                    onChange={(e) => updateShift(idx, "start", e.target.value)}
                     fullWidth
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
                     error={!!shift.error}
                   />
+
                   <TextField
                     label="Shift End"
                     type="time"
                     value={shift.end}
                     disabled={isDisabled}
-                    onChange={(e) =>
-                      updateShift(idx, "end", e.target.value)
-                    }
+                    onChange={(e) => updateShift(idx, "end", e.target.value)}
+                    InputLabelProps={{
+                      shrink: true, 
+                    }}
                     fullWidth
                     error={!!shift.error}
                     helperText={shift.error || ""}
                   />
                   <IconButton
-                    color="error"
                     onClick={() => handleRemoveShift(idx)}
+                    className="w-10 h-10 p-5"
                   >
-                    <Remove />
+                    <MdDeleteForever className="text-[var(--color-error)] " />
                   </IconButton>
                 </div>
               );

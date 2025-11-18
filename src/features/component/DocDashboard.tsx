@@ -169,28 +169,18 @@ const DocDashboard: React.FC = () => {
       </h1>
       <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
 
-      <div className="flex flex-col gap-6 w-full max-w-5xl">
-        {/* ========== Patient Queue ========== */}
-        <PatientQueue
-          mode="doctor"
-          doctorId={doctorId}
-          classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
-          patientsData={patients}
-          error={error}
-          onStartConsultation={handleUpdatePatientStatus}
-        />
-
-        {/* ========== Progress Card ========== */}
-        <PatientProgressCard />
-
-        {/* ========== Loading / Error ========== */}
-        {loading && (
-          <div className="py-8 text-center text-[var(--color-text)]">
-            Loading appointments...
-          </div>
-        )}
-        {error && <div className="py-4 text-center text-red-600">{error}</div>}
-      </div>
+      {loading ? (
+  <div className="py-8 text-center text-gray-600">Loading appointments...</div>
+) : (
+  <PatientQueue
+    mode="doctor"
+    doctorId={doctorId}
+    classProp="bg-white rounded-xl shadow-md p-4 sm:p-6"
+    patientsData={patients}
+    error={error}
+    onStartConsultation={handleUpdatePatientStatus}
+  />
+)}
       <SwipeableDrawer
         anchor={"bottom"}
         open={drawerOpen}

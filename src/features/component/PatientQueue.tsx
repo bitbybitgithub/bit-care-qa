@@ -16,7 +16,7 @@ import { IoClose } from "react-icons/io5";
 import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
-
+import {formatEnumText} from "../../utils/FormatText";
 export interface Patient {
   patient_id: number;
   appointment_id: number;
@@ -174,13 +174,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       patient_id: patientToCancel.patient_id,
       reason: cancelReason.trim(),
     });
-    console.log("CANCEL APPOINTMENT", {
-      patient_id: patientToCancel.patient_id,
-      reason: cancelReason.trim(),
-    });
+    
 
-    // Step 1: Update appointment status to cancelled
-    handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
     // Step 1: Update appointment status to cancelled
     handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
 
@@ -318,13 +313,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   <div className="font-bold text-gray-700 truncate">
                     {p.source ?? "—"}
                   </div>
-                  <div
-                    className={`text-center font-semibold rounded-full px-3 py-1 truncate ${badgeClasses(
-                      p.status
-                    )}`}
-                  >
-                    {p.status}
-                  </div>
+                 <div
+  className={`text-center font-semibold rounded-full px-3 py-1 truncate ${badgeClasses(
+    p.status
+  )}`}
+>
+  {formatEnumText(p.status)}
+</div>
+
 
                   <div className="flex justify-center">
                     {shouldShowSelectButton(p.status) && (

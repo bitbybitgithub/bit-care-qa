@@ -744,9 +744,9 @@ const StaffDashboard: React.FC = () => {
     else getMedicalDispensingAsync(4).then(setDispensingData);
   }, [activeTab]);
 
-  useEffect(() => {
-    fetchQueue();
-  }, []);
+  // useEffect(() => {
+  //   fetchQueue();
+  // }, []);
 
   const handleAddWalkIn = () => {
     resetModalState();

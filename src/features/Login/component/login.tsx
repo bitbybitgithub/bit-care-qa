@@ -24,7 +24,7 @@ import { Roles } from "../../../context/constant/enum";
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { ip } = useClientIp();
+  // const { ip } = useClientIp();
   const [isClinic, setIsClinic] = useState(true);
   const [patientNumber, setPatientNumber] = useState("");
   const [patientPassword, setPatientPassword] = useState<string>("");
@@ -109,7 +109,7 @@ const Login = () => {
         const requestBody = {
           userId: number,
           password: password,
-          ip_address: ip,
+          ip_address: "192.168.1.9",
           platform: "web",
         };
 

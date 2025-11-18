@@ -29,11 +29,11 @@ const Router = [
     path: "/",
     element: <MainLayout />,
     children: [
-      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/clinic-dashboard", element: <Dashboard /> },
       { path: "/users", element: <Users /> },
       { path: "/clinic-settings", element: <Profile /> },
 
-      { path: "/doc-dashboard", element: <DocDashboard /> },
+      { path: "/doctor-dashboard", element: <DocDashboard /> },
       { path: "/patients-records", element: <ComingSoon/> },
       { path: "/add-diagnosis", element: <ComingSoon/>},
       { path: "/manage-medication", element: <ComingSoon/>},

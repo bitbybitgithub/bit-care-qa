@@ -26,14 +26,14 @@ const Sidebar: React.FC = () => {
   const role = getSessionItem("user", "role");
 
   const ClinicMenus: MenuItem[] = [
-    { title: "Dashboard", link: "/dashboard", icon: <FaHome /> },
+    { title: "Clinic Dashboard", link: "/clinic-dashboard", icon: <FaHome /> },
     { title: "Users", link: "/users", icon: <FaUsers /> },
     { title: "Clinic App Settings", link: "/clinic-settings", icon: <FaCog /> },
     { title: "Clinic Operations", link: "/clinic-operations", icon: <FaHospital /> },
   ];
 
   const DoctorMenus: MenuItem[] = [
-    { title: "Doctor Dashboard", link: "/doc-dashboard", icon: <FaHome /> },
+    { title: "Doctor Dashboard", link: "/doctor-dashboard", icon: <FaHome /> },
     { title: "Profile", link: "/profile", icon: <FaUsers /> },
     { title: "Patients Records", link: "/patients-records", icon: <FaUsers /> },
     { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: <FaUsers /> },

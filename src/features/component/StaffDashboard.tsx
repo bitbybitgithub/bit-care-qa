@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
+import { Button } from "@mui/material";
 
 interface Appointment {
   appointment_id: number;
@@ -510,15 +511,16 @@ const StaffDashboard: React.FC = () => {
 
             {/* ================= Verified Patients Section ================= */}
             {verifiedPatients && (
-              <div className="space-y-2 mt-4">
-                <h2 className="text-xl font-semibold text-gray-800 text-center">
+              <div className=" mt-1">
+                <h2 className="text-xl font-bold text-gray-800 text-center">
                   Select Patient
                 </h2>
-                <h3 className="text-lg font-semibold text-gray-700 text-center">
+                <h3 className="text-md font-semibold text-gray-700 text-center">
                   Found {verifiedPatients.length} patient(s) registered with +91 {contact}
                 </h3>
+                {/* --- Register New Button --- */}
 
-                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                <div className="max-h-[300px] overflow-y-auto space-y-1  custom-scrollbar">
                   {verifiedPatients.map((p, i) => (
                     <div
                       key={i}
@@ -526,17 +528,35 @@ const StaffDashboard: React.FC = () => {
                         setSelectedPatient(p);
                         setShowRegistrationForm(true);
                       }}
-                      className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl sm:p-6 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
+                      className="flex items-center justify-between bg-white border-2 border-gray-200 rounded-2xl sm:p-6 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
                     >
                       <div className="flex flex-col gap-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center">
+                        {/* TOP ROW: PHOTO + NAME + GENDER */}
+                        <div className="flex items-center px-2 gap-3">
+                          <div
+                            className="w-10 h-10 flex items-center justify-center rounded-full"
+                            style={{
+                              background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-light))`,
+                            }}
+                          >
                             <FaUser className="text-white text-xl" />
                           </div>
-                          <h4 className="font-semibold text-xl text-gray-900 group-hover:text-blue-700 transition-colors">
+
+                          <h4
+                            className="font-semibold text-md  transition-colors"
+                            style={{
+                              color: "var(--color-text)",
+                            }}
+                          >
                             {p.patient_name}
                           </h4>
-                          <p className="text-sm text-gray-600">
+
+                          <p
+                            className="text-sm"
+                            style={{
+                              color: "var(--color-text-secondary)",
+                            }}
+                          >
                             {p.gender.toLowerCase() === "male"
                               ? "(M)"
                               : p.gender.toLowerCase() === "female"
@@ -545,44 +565,95 @@ const StaffDashboard: React.FC = () => {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-6 ml-12 text-sm text-gray-700">
+                        {/* SECOND ROW: DOB + CONTACT */}
+                        <div
+                          className="flex items-center gap-6 ml-12 text-sm"
+                          style={{
+                            color: "var(--color-text-secondary)",
+                          }}
+                        >
                           <div className="flex items-center gap-2">
-                            <FaCalendarAlt className="text-blue-500" />
-                            <span>
-                              {new Date(p.date_of_birth).toLocaleDateString()}
-                            </span>
+                            <FaCalendarAlt
+                              style={{ color: "var(--color-primary)" }}
+                              className="text-base"
+                            />
+                            <span>{new Date(p.date_of_birth).toLocaleDateString()}</span>
                           </div>
+
                           <div className="flex items-center gap-1">
-                            <IoCall className="text-blue-500" />
+                            <IoCall
+                              style={{ color: "var(--color-primary)" }}
+                              className="text-base"
+                            />
                             <span>+91 {contact}</span>
                           </div>
                         </div>
                       </div>
+
 
                       <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold shadow-sm self-start">
                         {p.age} yrs
                       </div>
                     </div>
                   ))}
+                  <div className="w-full flex flex-col items-center ">
+                    <h2 className="text-sm font-semibold text-gray-800 text-center">
+                      No patient found for this contact ?
+                    </h2>
+
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        setSelectedPatient(null);
+                        setShowRegistrationForm(true);
+                      }}
+                      sx={{
+                        px: 3,
+                        py: 1.5,
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        borderRadius: "14px",
+                        boxShadow: 2,
+                        textTransform: "none",
+                        backgroundColor: "primary.main",
+                        "&:hover": {
+                          backgroundColor: "primary.dark",
+                        },
+                      }}
+                    >
+                      Register Patient
+                    </Button>
+                  </div>
+
                 </div>
               </div>
+
+
             )}
 
             {/* ================= Buttons ================= */}
-            <div className="flex justify-end items-center mt-8 space-x-3">
-              <button
+            <div className="flex justify-end items-center mt-1 ">
+              <Button
                 onClick={handleClose}
-                className="px-4 py-2 font-medium transition-all"
-                style={{
-                  backgroundColor: "#dc2626",
-                  color: "var(--color-white)",
-                  border: "1px solid #dc2626",
+                variant="contained"
+                sx={{
+                  px: 3,
+                  py: 1.2,
+                  fontWeight: 400,
+                  fontSize: "0.9rem",
                   borderRadius: "var(--radius-lg)",
-                  transition: "all var(--transition-normal)",
+                  textTransform: "none",
+                  backgroundColor: "#dc2626",          // fixed error red
+                  border: "1px solid #dc2626",
+                  transition: "var(--transition-normal)",
+                  "&:hover": {
+                    backgroundColor: "#b91c1c",        // darker red
+                    borderColor: "#b91c1c",
+                  },
                 }}
               >
                 Cancel
-              </button>
+              </Button>
 
               {showOtp && !verifiedPatients && (
                 <button

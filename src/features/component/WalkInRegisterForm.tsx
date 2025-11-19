@@ -1,5 +1,3 @@
-//-----------------------------------------------------------------------------------------
-
 import React, { useEffect, useState } from "react";
 import {
   FaCalendarAlt,
@@ -225,112 +223,168 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-center p-4">
+    <div
+      className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+    >
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="relative bg-white shadow-2xl rounded-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto z-[10000]"
+        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] transition-all"
+        style={{
+          backgroundColor: "var(--color-surface)",
+          color: "var(--color-text)",
+        }}
       >
-        {/* Back Button */}
-        {/* <button
-        type="button"
-        // onClick={onBack}
-        className="absolute top-0 left-0 flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium text-sm"
-      >
-        ← Back
-      </button> */}
-
+        {/* Header */}
         <div className="flex justify-center">
-          <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-800 mb-6">
-            <FaUsers className="text-blue-600 text-3xl" />
+          <h2
+            className="flex items-center gap-2 mb-6 font-semibold"
+            style={{
+              fontSize: "var(--font-h2)",
+              color: "var(--color-primary-dark)",
+            }}
+          >
+            <FaUsers
+              className="text-3xl"
+              style={{ color: "var(--color-primary)" }}
+            />
             Walk-In Patient Registration
           </h2>
         </div>
 
-        {/* Row 1: Full Name */}
+        {/* Full Name */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">
+          <label
+            className="block font-medium mb-1"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Full Name
           </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-              errors.name
-                ? "border-red-500 ring-1 ring-red-400"
-                : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-            }`}
+            className={`flex items-center px-3 py-2 rounded-[var(--radius-md)] transition-all border`}
+            style={{
+              borderColor: errors.name
+                ? "var(--color-error)"
+                : "var(--color-border)",
+              boxShadow: errors.name
+                ? "0 0 0 2px var(--color-error)"
+                : "none",
+            }}
           >
-            <IoPerson className="text-gray-500 mr-2" />
+            <IoPerson
+              className="mr-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            />
             <input
               name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter full name"
-              className="w-full outline-none text-gray-800"
+              className="w-full outline-none bg-transparent"
+              style={{ color: "var(--color-text)" }}
             />
           </div>
           {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            <p
+              className="mt-1 text-sm"
+              style={{ color: "var(--color-error)" }}
+            >
+              {errors.name}
+            </p>
           )}
         </div>
 
-        {/* DOB + Phone */}
+        {/* DOB + Age + Gender */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
+          {/* DOB */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
+            <label
+              className="block font-medium mb-1"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
               Date of Birth
             </label>
             <div
-              className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.dob
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+              style={{
+                borderColor: errors.dob
+                  ? "var(--color-error)"
+                  : "var(--color-border)",
+              }}
             >
-              <FaCalendarAlt className="text-gray-500 mr-2" />
-
+              <FaCalendarAlt
+                className="mr-2"
+                style={{ color: "var(--color-text-secondary)" }}
+              />
               <input
                 type="date"
                 name="dob"
                 value={formData.dob}
                 onChange={handleChange}
-                className="w-full outline-none"
+                className="w-full outline-none bg-transparent"
+                style={{ color: "var(--color-text)" }}
               />
             </div>
           </div>
 
+          {/* Age */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Age</label>
-            <div className="flex items-center rounded-lg px-3 py-2 border border-gray-300 bg-gray-50">
-              <span className="text-gray-800">
+            <label
+              className="block font-medium mb-1"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Age
+            </label>
+            <div
+              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border"
+              style={{
+                borderColor: "var(--color-border)",
+                backgroundColor: "var(--color-surface-alt)",
+              }}
+            >
+              <span style={{ color: "var(--color-text)" }}>
                 {formData.dob
                   ? Math.floor(
-                      (new Date().getTime() -
-                        new Date(formData.dob).getTime()) /
-                        (365.25 * 24 * 60 * 60 * 1000)
-                    )
+                    (new Date().getTime() -
+                      new Date(formData.dob).getTime()) /
+                    (365.25 * 24 * 60 * 60 * 1000)
+                  )
                   : "--"}
               </span>
-              <span className="ml-1 text-gray-500">years</span>
+              <span
+                className="ml-1"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                years
+              </span>
             </div>
           </div>
 
+          {/* Gender */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
+            <label
+              className="block font-medium mb-1"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
               Gender
             </label>
             <div
-              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-                errors.gender
-                  ? "border-red-500 ring-1 ring-red-400"
-                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-              }`}
+              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+              style={{
+                borderColor: errors.gender
+                  ? "var(--color-error)"
+                  : "var(--color-border)",
+              }}
             >
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
                 className="w-full outline-none bg-transparent"
+                style={{
+                  color: "var(--color-text)",
+                }}
               >
                 <option value="">-- Select Gender --</option>
                 <option value="Male">Male</option>
@@ -338,92 +392,104 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <option value="Other">Other</option>
               </select>
             </div>
-            {errors.gender && (
-              <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
-            )}
           </div>
         </div>
 
-        {/* Row 3: Contact + Email */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Contact Number
-            </label>
-            <div
-              className={`flex items-center rounded-lg px-3 py-2 transition-all border ${
-                errors.phone
-                  ? "border-red-500 ring-1 ring-red-400"
-                  : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-400"
-              }`}
-            >
-              <IoCallOutline className="mr-2" />
-              <input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="10-digit mobile number"
-                maxLength={10}
-                inputMode="numeric"
-                className="w-full outline-none"
-              />
-            </div>
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-            )}
+        {/* Contact */}
+        <div className="mb-4">
+          <label
+            className="block font-medium mb-1"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Contact Number
+          </label>
+          <div
+            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            style={{
+              borderColor: errors.phone
+                ? "var(--color-error)"
+                : "var(--color-border)",
+            }}
+          >
+            <IoCallOutline
+              className="mr-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            />
+            <input
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="10-digit mobile number"
+              className="w-full outline-none bg-transparent"
+              maxLength={10}
+              inputMode="numeric"
+            />
           </div>
         </div>
 
         {/* Email */}
-        <div className="mb-2">
-          <label className="block text-gray-700 font-medium mb-1">
+        <div className="mb-4">
+          <label
+            className="block font-medium mb-1"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Email Address
           </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.email
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 hover:shadow-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            style={{
+              borderColor: errors.email
+                ? "var(--color-error)"
+                : "var(--color-border)",
+            }}
           >
             <FaEnvelope
-              className={`mr-2 ${
-                errors.email ? "text-red-500" : "text-gray-500"
-              }`}
+              className="mr-2"
+              style={{
+                color: errors.email
+                  ? "var(--color-error)"
+                  : "var(--color-text-secondary)",
+              }}
             />
             <input
-              name="email"
               type="email"
+              name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="example@domain.com"
-              className="w-full outline-none"
+              className="w-full outline-none bg-transparent"
             />
           </div>
         </div>
 
         {/* Doctor */}
-        <div className="mb-2">
-          <label className="block text-gray-700 font-medium mb-1">
+        <div className="mb-4">
+          <label
+            className="block font-medium mb-1"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Select Doctor
           </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 border border-gray-300 
-    transition-all hover:border-blue-400 hover:shadow-md 
-    focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400 focus-within:shadow-lg`}
+            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            style={{
+              borderColor: "var(--color-border)",
+            }}
           >
-            {" "}
-            <FaUserMd className="text-gray-500 mr-2" />
+            <FaUserMd
+              className="mr-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            />
             <select
               name="doctor"
               value={formData.doctor}
               onChange={handleChange}
               className="w-full outline-none bg-transparent"
               disabled={doctorLoading}
+              style={{ color: "var(--color-text)" }}
             >
               <option value="">
-                {doctorLoading ? "Loading doctors..." : "-- Select Doctor --"}
+                {doctorLoading ? "Loading..." : "-- Select Doctor --"}
               </option>
               {doctors.map((d) => (
                 <option key={d.id} value={d.name}>
@@ -436,50 +502,64 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
         {/* Reason */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">
+          <label
+            className="block font-medium mb-1"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Reason for Visit
           </label>
           <div
-            className={`flex items-center rounded-lg px-3 py-2 transition-all border 
-    ${
-      errors.email
-        ? "border-red-500 ring-1 ring-red-400"
-        : "border-gray-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-400"
-    }`}
+            className="flex items-start px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            style={{
+              borderColor: errors.reason
+                ? "var(--color-error)"
+                : "var(--color-border)",
+            }}
           >
-            {" "}
-            <FaClipboardList className="text-gray-500 mr-2" />
+            <FaClipboardList
+              className="mr-2 mt-1"
+              style={{ color: "var(--color-text-secondary)" }}
+            />
             <textarea
               name="reason"
               value={formData.reason}
               onChange={handleChange}
               placeholder="Describe reason for visit"
               rows={3}
-              className="w-full outline-none resize-none"
+              className="w-full outline-none bg-transparent resize-none"
             />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-6">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-full transition disabled:opacity-60"
+            className="flex-1 font-semibold py-2 rounded-[var(--radius-full)] transition disabled:opacity-[var(--opacity-disabled)]"
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-white)",
+              boxShadow: "var(--shadow-md)",
+            }}
           >
             {loading ? "Saving..." : "Submit"}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-gray-300 hover:bg-gray-100 rounded-full py-2 font-medium transition"
+            className="flex-1 font-medium py-2 rounded-[var(--radius-full)] border transition"
+            style={{
+              borderColor: "var(--color-border)",
+              color: "var(--color-text)",
+              backgroundColor: "var(--color-surface-alt)",
+            }}
           >
             Close
           </button>
         </div>
       </form>
-    </div>
-  );
+    </div>);
 };
 
 export default WalkInRegisterForm;

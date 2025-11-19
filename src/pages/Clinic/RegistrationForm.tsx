@@ -792,6 +792,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         <DialogContent>
           Your registration request has been submitted successfully. Your
           credentials have been sent to your registered email.
+          You are one step away from activating this clinic app to raise any questions contact (98989898989)
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center" }}>
           <Button

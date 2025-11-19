@@ -36,7 +36,7 @@ const MainLayout = () => {
           hidden md:block fixed top-0 left-0 h-full 
           bg-[var(--color-primary)]
           transition-all duration-300 
-          ${collapsed ? "w-20" : "w-80"}
+          ${collapsed ? "w-20" : "w-56"}
         `}
       >
         <Sidebar
@@ -68,13 +68,13 @@ const MainLayout = () => {
       {/* -------- Main Layout Wrapper -------- */}
       <div
         className={`
-          flex flex-col h-full transition-all duration-300
-          ${collapsed ? "md:ml-20" : "md:ml-80"} 
+          flex flex-col h-full transition-all duration-300 w-auto
+          ${collapsed ? "md:ml-20" : "md:ml-56"} 
           ml-0
         `}
       >
         {/* -------- Header -------- */}
-        <div className="sticky top-0 z-40 shadow bg-white">
+        <div className="sticky top-0 z-40 shadow ">
           <Navbar
             onMenuClick={() => {
               if (window.innerWidth < 768) setMobileOpen(true);

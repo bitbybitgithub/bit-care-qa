@@ -9,6 +9,8 @@ import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 import { GrSchedules } from "react-icons/gr";
 import { BiTimer } from "react-icons/bi";
+import Logo1 from "../../assets/BitCareLogo.png";
+import Logo2 from "../../assets/BitCareLogo2.png";
 
 import { getSessionItem } from "../../context/sessions/userSession";
 
@@ -99,18 +101,33 @@ const Sidebar: React.FC<SidebarProps> = ({
   const SidebarContent = (
     <div
       className={`flex flex-col h-full bg-[var(--color-primary)] transition-all duration-300
-      ${isCollapsed ? "w-20" : "w-72"}`}
+      ${isCollapsed ? "w-20" : "w-56"}`}
     >
       {/* Header */}
-      <div className="p-4 flex items-center justify-between text-white">
-        {!isCollapsed && <h2 className="text-lg font-semibold">MENU</h2>}
-        <IconButton onClick={isMobile ? toggleMobileDrawer : toggleCollapse}>
+      <div className="p-2 flex items-center justify-center w-full">
+        {!isCollapsed ? (
+          <img
+            src={Logo1}
+            alt="Menu"
+            className="w-[80%] h-[70px] object-contain bg-[var(--color-white)] shadow-2xl border-y-2 border-black rounded-[var(--radius-none)]"
+          />
+        ) : (
+          <div className="flex items-center justify-center">
+            <img
+              src={Logo2}
+              alt="Menu"
+              className="w-full h-auto bg-white rounded-[var(--radius-full)] p-1"
+            />
+          </div>
+        )}
+
+        {/* <IconButton onClick={isMobile ? toggleMobileDrawer : toggleCollapse}>
           {isCollapsed ? (
             <MenuIcon className="text-white" />
           ) : (
             <Close className="text-white" />
           )}
-        </IconButton>
+        </IconButton> */}
       </div>
 
       {/* Menu List */}

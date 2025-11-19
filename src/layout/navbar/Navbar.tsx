@@ -13,8 +13,8 @@ interface HeaderProps {
 }
 
 const AppBarStyled = styled(AppBar)(() => ({
-  background: "var(--color-surface)",
-  borderBottom: "1px solid var(--color-border)",
+  background: "var(--color-bg)",
+  borderBottom: "2px solid var(--color-primary)",
 }));
 
 const ToolbarStyled = styled(Toolbar)(() => ({
@@ -72,7 +72,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <AppBarStyled position="sticky" elevation={0}>
-      <ToolbarStyled>
+      <ToolbarStyled className="!pl-2">
         {/* -------- LEFT: Mobile Menu Icon -------- */}
         <IconButton
           color="inherit"

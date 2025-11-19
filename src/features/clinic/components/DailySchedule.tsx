@@ -6,7 +6,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { Add, Remove } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { MdDeleteForever } from "react-icons/md";
 

@@ -198,7 +198,6 @@
 
 // export default DocDashboard;
 
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { HiClipboardList } from "react-icons/hi";
 import { FaNotesMedical } from "react-icons/fa";
@@ -229,7 +228,7 @@ const DocDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawreOpen] = useState(false);
   const [patientInfo, setPatientInfo] = useState<Patient>();
-
+  const [status, setStatus] = useState<string>("");
   const userId = getSessionItem("user", "user_id");
   const doctorId = getSessionItem("user", "doctor_id");
   const clinicId = getSessionItem("user", "clinic_id");
@@ -345,6 +344,7 @@ const DocDashboard: React.FC = () => {
         const res = await updatePatientStatus(payload);
         if (res.success) {
           setPatientInfo(patient);
+          setStatus(AppointmentStatus.InConsultation);
           toggleDrawer(true);
         } else {
           toast.error(res.message || "Failed to update appointment status.");
@@ -368,7 +368,9 @@ const DocDashboard: React.FC = () => {
       <h1 className="text-3xl font-bold text-[var(--color-primary)] mb-8 self-start">
         Today's Clinic Workflow
       </h1>
-      <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
+      <h2 className="w-full text-start">
+        {isConnected ? "🟢 Live" : "🔴 Offline"}
+      </h2>
 
       <div className="flex flex-col gap-6 w-full max-w-5xl">
         {/* ========== Patient Queue ========== */}
@@ -401,6 +403,7 @@ const DocDashboard: React.FC = () => {
         <ConsultationView
           patientInfo={patientInfo}
           onCloseDrawer={() => toggleDrawer(false)}
+          status={status}
         />
       </SwipeableDrawer>
     </div>

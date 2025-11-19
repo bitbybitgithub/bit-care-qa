@@ -19,17 +19,20 @@ import {
   fetchPatientInfo,
   saveSOAPDetails,
 } from "../../../api/patientAPi";
+import { formatEnumText } from "../../../utils/FormatText";
 
 interface ConsultationProps {
   patientInfo: Patient;
   onCloseDrawer: () => void;
   isDrawer: boolean;
+  status: string;
 }
 
 const ConsultationView: React.FC<ConsultationProps> = ({
   patientInfo,
   onCloseDrawer,
   isDrawer = true,
+  status,
 }) => {
   const [tab, setTab] = useState("prescription");
   const patientId = patientInfo?.raw?.patient_id;
@@ -102,14 +105,11 @@ const ConsultationView: React.FC<ConsultationProps> = ({
       source: patientInfo.raw.source,
     };
   }, [patientInfo]);
-  const [status, setStatus] = useState<string | undefined>(
-    patientInfo?.raw?.status ?? mappedPatient?.status
-  );
 
   // keep status in sync when prop/derived mappedPatient changes
-  useEffect(() => {
-    setStatus(patientInfo?.raw?.status ?? mappedPatient?.status);
-  }, [patientInfo?.raw?.status, mappedPatient?.status]);
+  // useEffect(() => {
+  //   setStatus(patientInfo?.raw?.status ?? mappedPatient?.status);
+  // }, [patientInfo?.raw?.status, mappedPatient?.status]);
 
   const calculateAge = (dob: string | number | Date) => {
     const birthDate = new Date(dob);
@@ -137,7 +137,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
       );
     } else if (tab == "consultation") {
       saveSOAPDetails(soapForm).then((res) =>
-        toast.success("Prescription saved successfully")
+        toast.success("SOAP saved successfully")
       );
     }
   };
@@ -159,13 +159,13 @@ const ConsultationView: React.FC<ConsultationProps> = ({
                 <span
                   className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide
         ${
-          status === AppointmentStatus.InProgress
+          status === AppointmentStatus.InConsultation
             ? "bg-green-100 text-green-800"
             : "bg-gray-100 text-gray-700"
         }`}
                 >
-                  {status === AppointmentStatus.InProgress
-                    ? "In Progress"
+                  {status === AppointmentStatus.InConsultation
+                    ? formatEnumText(AppointmentStatus.InProgress)
                     : status}
                 </span>
               )}
@@ -271,7 +271,15 @@ const ConsultationView: React.FC<ConsultationProps> = ({
                 >
                   Set Follow-up
                 </Button>
-                <Button variant="contained" color="success">
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() =>
+                    toast.info(
+                      "Complete Button is Not Working at the moment!!!"
+                    )
+                  }
+                >
                   Complete
                 </Button>
               </div>

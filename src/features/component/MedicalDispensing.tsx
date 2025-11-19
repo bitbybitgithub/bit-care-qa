@@ -52,24 +52,24 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   return (
     <div className={`space-y-4 ${classProp}`}>
       {/* ✅ Table Layout */}
-      <div className="overflow-x-auto bg-white shadow-md border border-gray-200 rounded-xl">
+      <div className="overflow-x-auto bg-[var(--color-bg)]  shadow-md border p-4 border-[var(--color-border)] rounded-xl">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-blue-50">
+          <thead className="bg-[var(--color-primary)]">
             <tr>
              
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left text-sm font-[var(--font-weight-semibold)] text-[var(--color-white)]">
                 Patient Name
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left text-sm font-[var( --font-weight-semibold)] text-[var(--color-white)]">
                 Appointment ID
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left text-sm font-[var(--font-weight-semibold)] text-[var(--color-white)]">
                 Doctor
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left text-sm font-[var(--font-weight-semibold)] text-[var(--color-white)]">
                 Date
               </th>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+              <th className="px-4 py-3 text-center text-sm font-[var(--font-weight-semibold)] text-[var(--color-white)]">
                 Actions
               </th>
             </tr>
@@ -81,16 +81,16 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
                 className="hover:bg-blue-50 transition-all duration-200"
               >
               
-                <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                <td className="px-4 py-3 text-sm font-medium text-[var(--color-text)]">
                   {item.patient_name || "Unknown"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-[var(--color-text)]">
                   {item.appointment_id}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-[var(--color-text)]">
                   {item.doctor_name}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
+                <td className="px-4 py-3 text-sm text-[var(--color-text)]">
                   {item.appointment_date
                     ? new Date(item.appointment_date).toLocaleDateString()
                     : "-"}
@@ -98,7 +98,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => setSelectedItem(item)}
-                    className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+                    className="text-sm bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-[var(--color-white)] px-4 py-2 rounded-lg font-semibold"
                   >
                     View Prescription
                   </button>
@@ -121,7 +121,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
               className={`px-3 py-1 rounded-md text-sm font-medium ${
                 currentPage === 1
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-[var(--color-primary)] text-[var(--color-white)] hover:bg-[var(--color-primary-light)]"
               }`}
             >
               Prev
@@ -132,7 +132,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
               className={`px-3 py-1 rounded-md text-sm font-medium ${
                 currentPage === totalPages
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-[var(--color-primary)] text-[var(--color-white)] hover:bg-[var(--color-primary-light)]"
               }`}
             >
               Next
@@ -143,8 +143,8 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
 
       {/* ✅ Modal View */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-md relative">
+        <div className="fixed inset-0 bg-[var(--color-bg)] bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-[var(--color-bg)] rounded-2xl shadow-xl p-6 w-[90%] max-w-md relative">
             <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-3 right-3 text-gray-600 hover:text-black text-lg"

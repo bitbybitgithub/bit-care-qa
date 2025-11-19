@@ -61,7 +61,7 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
       className={`overflow-x-auto rounded-2xl shadow-sm border border-gray-200 ${classProp}`}
     >
       <table className="min-w-full">
-        <thead className="bg-blue-600 text-white">
+        <thead className="bg-[var(--color-primary)] text-[var(--color-white)]">
           <tr>
             <th className="px-6 py-3 text-left rounded-tl-2xl">Patient Name</th>
             <th className="px-6 py-3 text-left">Patient Contact No</th>
@@ -90,12 +90,12 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
                   </span>
                 )}
               </td>
-              <td className="px-6 py-3 text-gray-700">{item.contact}</td>
-              <td className="px-6 py-3 text-gray-700">
+              <td className="px-6 py-3 text-[var(--color-text)]">{item.contact}</td>
+              <td className="px-6 py-3 text-[var(--color-text)]">
                 {calculateAge(item.dob)} years
               </td>
 
-              <td className="px-6 py-3 text-gray-700">{item.doctor_name}</td>
+              <td className="px-6 py-3 text-[var(--color-text)]">{item.doctor_name}</td>
               <td className="px-4 py-2">
                 {new Date(item.appointment_date).toLocaleDateString()}
               </td>
@@ -108,10 +108,10 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
                   {item.status}
                 </span>
               </td>
-              <td className="px-6 py-3 text-gray-700">{item.source}</td>
+              <td className="px-6 py-3 text-[var(--color-text)]">{item.source}</td>
 
-              <td className="px-6 py-3 text-gray-700">{item.reason}</td>
-              <td className="px-6 py-3 text-gray-700">
+              <td className="px-6 py-3 text-[var(--color-text)]">{item.reason}</td>
+              <td className="px-6 py-3 text-[var(--color-text)]">
                 {item.followup ? "yes" : "no"}
               </td>
 

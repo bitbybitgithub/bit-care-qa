@@ -9,7 +9,9 @@ import {
 } from "react-icons/fa";
 import { FaPeopleGroup, FaPeopleLine } from "react-icons/fa6";
 import Cards from "../../components/common/Cards";
-import PatientQueue, { type Patient } from "../../features/component/PatientQueue";
+import PatientQueue, {
+  type Patient,
+} from "../../features/component/PatientQueue";
 import Regex from "../../Helper/Regex";
 import { generateOtpApi } from "../../api/GenerateOtpApi";
 import {
@@ -36,7 +38,9 @@ interface Appointment {
 
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
-  const [activeTab, setActiveTab] = useState<"queue" | "dispensing" | "followUp">("queue");
+  const [activeTab, setActiveTab] = useState<
+    "queue" | "dispensing" | "followUp"
+  >("queue");
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
@@ -52,7 +56,9 @@ const StaffDashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
-  const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(null);
+  const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
+    null
+  );
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
@@ -66,7 +72,9 @@ const StaffDashboard: React.FC = () => {
     const handleUpdate = (data: Appointment) => {
       setPatients((prev) =>
         prev.map((p) =>
-          p?.raw.appointment_id === data.appointment_id ? { ...p, status: data.status } : p
+          p?.raw.appointment_id === data.appointment_id
+            ? { ...p, status: data.status }
+            : p
         )
       );
     };
@@ -99,7 +107,10 @@ const StaffDashboard: React.FC = () => {
       .then((appointments) => {
         const mapped: Patient[] = appointments.map((a) => ({
           appointment_id: a.appointment_id,
-          time: a.start_time && a.end_time ? `${a.start_time} - ${a.end_time}` : undefined,
+          time:
+            a.start_time && a.end_time
+              ? `${a.start_time} - ${a.end_time}`
+              : undefined,
           name: a.patient_name,
           gender: a.gender,
           status: a.status,
@@ -117,7 +128,8 @@ const StaffDashboard: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === "queue") fetchQueue();
-    else if (activeTab === "followUp") getfollowUpAsync(4).then(setfollowUpData);
+    else if (activeTab === "followUp")
+      getfollowUpAsync(4).then(setfollowUpData);
     else getMedicalDispensingAsync(4).then(setDispensingData);
   }, [activeTab]);
 
@@ -155,7 +167,6 @@ const StaffDashboard: React.FC = () => {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-
 
       if (res.success) {
         setUserId(res.userId ?? null);
@@ -211,7 +222,10 @@ const StaffDashboard: React.FC = () => {
     if (val && index < otp.length - 1) otpRefs.current[index + 1]?.focus();
   };
 
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleOtpKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0)
       otpRefs.current[index - 1]?.focus();
   };
@@ -243,7 +257,11 @@ const StaffDashboard: React.FC = () => {
         setError("Please enter valid OTP");
         setEditedAfterOtp(true);
         return;
-      } else if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
+      } else if (
+        res.found &&
+        Array.isArray(res.patients) &&
+        res.patients.length > 0
+      ) {
         setVerifiedPatients(res.patients);
         setShowRegistrationForm(false);
       } else {
@@ -259,10 +277,30 @@ const StaffDashboard: React.FC = () => {
   };
 
   const cardItems = [
-    { title: "Patients in Queue", value: patients.length, icon: <FaPeopleGroup />, color: "text-blue-800 border border-violet-600" },
-    { title: "Tasks Due Today", value: 5, icon: <FaClipboardList />, color: "text-yellow-800 border border-yellow-400" },
-    { title: "Available Doctors", value: 12, icon: <FaUserMd />, color: "text-green-800 border border-green-400" },
-    { title: "Pending Messages", value: 3, icon: <FaEnvelopeOpenText />, color: "text-red-800 border border-red-400" },
+    {
+      title: "Patients in Queue",
+      value: patients.length,
+      icon: <FaPeopleGroup />,
+      color: "text-blue-800 border border-violet-600",
+    },
+    {
+      title: "Tasks Due Today",
+      value: 5,
+      icon: <FaClipboardList />,
+      color: "text-yellow-800 border border-yellow-400",
+    },
+    {
+      title: "Available Doctors",
+      value: 12,
+      icon: <FaUserMd />,
+      color: "text-green-800 border border-green-400",
+    },
+    {
+      title: "Pending Messages",
+      value: 3,
+      icon: <FaEnvelopeOpenText />,
+      color: "text-red-800 border border-red-400",
+    },
   ];
 
   const handleUpdatePatientStatus = useCallback(
@@ -282,10 +320,13 @@ const StaffDashboard: React.FC = () => {
         if (res.success) {
           setPatients((prev) =>
             prev.map((p) =>
-              p?.raw.appointment_id === patient.appointment_id ? { ...p, status: newStatus } : p
+              p?.raw.appointment_id === patient.appointment_id
+                ? { ...p, status: newStatus }
+                : p
             )
           );
-        } else toast.error(res.message || "Failed to update appointment status.");
+        } else
+          toast.error(res.message || "Failed to update appointment status.");
       } catch {
         toast.error("Error updating patient status.");
       }
@@ -295,8 +336,11 @@ const StaffDashboard: React.FC = () => {
 
   return (
     <div className="p-2 sm:p-6 ">
-      <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2>
-      <Cards items={cardItems} gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4" />
+      {/* <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2> */}
+      <Cards
+        items={cardItems}
+        gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
+      />
 
       {/* Tabs */}
       <div className="flex gap-3 border-b border-gray-200 pb-2">
@@ -304,16 +348,17 @@ const StaffDashboard: React.FC = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${activeTab === tab
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+              activeTab === tab
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             {tab === "queue"
               ? "Patient Queue"
               : tab === "dispensing"
-                ? "Medical Dispensing"
-                : "Set Follow up"}
+              ? "Medical Dispensing"
+              : "Set Follow up"}
           </button>
         ))}
       </div>
@@ -329,12 +374,19 @@ const StaffDashboard: React.FC = () => {
             handleUpdatePatientStatus={handleUpdatePatientStatus}
           />
         ) : activeTab === "followUp" ? (
-          <FollowUpAppointment mode="staff" data={followUpData} loading={loadingDispense} />
+          <FollowUpAppointment
+            mode="staff"
+            data={followUpData}
+            loading={loadingDispense}
+          />
         ) : (
-          <MedicalDispensing mode="staff" data={dispensingData} loading={loadingDispense} />
+          <MedicalDispensing
+            mode="staff"
+            data={dispensingData}
+            loading={loadingDispense}
+          />
         )}
       </div>
-
 
       {/* Modal */}
       {open && !showRegistrationForm && (
@@ -356,20 +408,28 @@ const StaffDashboard: React.FC = () => {
               <>
                 <h2
                   className="flex items-center justify-center gap-2 font-semibold"
-                  style={{ fontSize: "var(--font-h2)", color: "var(--color-text)" }}
+                  style={{
+                    fontSize: "var(--font-h2)",
+                    color: "var(--color-text)",
+                  }}
                 >
-                  <FaPeopleLine className="w-7 h-7" style={{ color: "var(--color-primary)" }} />
+                  <FaPeopleLine
+                    className="w-7 h-7"
+                    style={{ color: "var(--color-primary)" }}
+                  />
                   Add Walk-In Patient
                 </h2>
                 <p
                   className="text-center mt-1"
-                  style={{ fontSize: "var(--font-small)", color: "var(--color-text-secondary)" }}
+                  style={{
+                    fontSize: "var(--font-small)",
+                    color: "var(--color-text-secondary)",
+                  }}
                 >
                   We'll verify your contact to find existing records
                 </p>
               </>
             )}
-
 
             {/* ================= Contact / OTP Section ================= */}
             {!verifiedPatients && (
@@ -379,7 +439,10 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <label
                       className="font-small"
-                      style={{ color: "var(--color-text-secondary)", minWidth: "130px" }}
+                      style={{
+                        color: "var(--color-text-secondary)",
+                        minWidth: "130px",
+                      }}
                     >
                       Contact Number :
                     </label>
@@ -415,7 +478,9 @@ const StaffDashboard: React.FC = () => {
                         placeholder="Enter 10-digit number"
                         className="w-full pl-10 pr-3 py-1.5 text-base outline-none transition-all duration-200"
                         style={{
-                          border: `1px solid ${error ? "var(--color-error)" : "var(--color-border)"}`,
+                          border: `1px solid ${
+                            error ? "var(--color-error)" : "var(--color-border)"
+                          }`,
                           color: "var(--color-text)",
                           borderRadius: "var(--radius-lg)",
                           backgroundColor: "var(--color-surface-alt)",
@@ -428,7 +493,10 @@ const StaffDashboard: React.FC = () => {
                   {error && (
                     <p
                       className="mt-1 font-small"
-                      style={{ fontSize: "var(--font-xs)", color: "var(--color-error)" }}
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-error)",
+                      }}
                     >
                       {error}
                     </p>
@@ -438,7 +506,10 @@ const StaffDashboard: React.FC = () => {
                     <button
                       onClick={handleSendOtp}
                       className="mt-1 font-semibold transition-all"
-                      style={{ fontSize: "var(--font-small)", color: "var(--color-primary)" }}
+                      style={{
+                        fontSize: "var(--font-small)",
+                        color: "var(--color-primary)",
+                      }}
                     >
                       Send OTP
                     </button>
@@ -463,7 +534,9 @@ const StaffDashboard: React.FC = () => {
                           key={index}
                           type="text"
                           value={digit}
-                          onChange={(e) => handleOtpChange(e.target.value, index)}
+                          onChange={(e) =>
+                            handleOtpChange(e.target.value, index)
+                          }
                           onKeyDown={(e) => handleOtpKeyDown(e, index)}
                           maxLength={1}
                           ref={(el) => (otpRefs.current[index] = el)}
@@ -499,7 +572,10 @@ const StaffDashboard: React.FC = () => {
                           handleResendOtp();
                         }}
                         className="mt-2 font-semibold transition-all"
-                        style={{ fontSize: "var(--font-small)", color: "var(--color-primary)" }}
+                        style={{
+                          fontSize: "var(--font-small)",
+                          color: "var(--color-primary)",
+                        }}
                       >
                         Resend OTP
                       </button>
@@ -516,7 +592,8 @@ const StaffDashboard: React.FC = () => {
                   Select Patient
                 </h2>
                 <h3 className="text-md font-semibold text-gray-700 text-center">
-                  Found {verifiedPatients.length} patient(s) registered with +91 {contact}
+                  Found {verifiedPatients.length} patient(s) registered with +91{" "}
+                  {contact}
                 </h3>
                 {/* --- Register New Button --- */}
 
@@ -560,8 +637,8 @@ const StaffDashboard: React.FC = () => {
                             {p.gender.toLowerCase() === "male"
                               ? "(M)"
                               : p.gender.toLowerCase() === "female"
-                                ? "(F)"
-                                : "(O)"}
+                              ? "(F)"
+                              : "(O)"}
                           </p>
                         </div>
 
@@ -577,7 +654,9 @@ const StaffDashboard: React.FC = () => {
                               style={{ color: "var(--color-primary)" }}
                               className="text-base"
                             />
-                            <span>{new Date(p.date_of_birth).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(p.date_of_birth).toLocaleDateString()}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-1">
@@ -589,7 +668,6 @@ const StaffDashboard: React.FC = () => {
                           </div>
                         </div>
                       </div>
-
 
                       <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold shadow-sm self-start">
                         {p.age} yrs
@@ -624,11 +702,8 @@ const StaffDashboard: React.FC = () => {
                       Register Patient
                     </Button>
                   </div>
-
                 </div>
               </div>
-
-
             )}
 
             {/* ================= Buttons ================= */}
@@ -643,11 +718,11 @@ const StaffDashboard: React.FC = () => {
                   fontSize: "0.9rem",
                   borderRadius: "var(--radius-lg)",
                   textTransform: "none",
-                  backgroundColor: "#dc2626",          // fixed error red
+                  backgroundColor: "#dc2626", // fixed error red
                   border: "1px solid #dc2626",
                   transition: "var(--transition-normal)",
                   "&:hover": {
-                    backgroundColor: "#b91c1c",        // darker red
+                    backgroundColor: "#b91c1c", // darker red
                     borderColor: "#b91c1c",
                   },
                 }}
@@ -677,7 +752,6 @@ const StaffDashboard: React.FC = () => {
           </div>
         </div>
       )}
-
 
       {showRegistrationForm && (
         <WalkInRegisterForm

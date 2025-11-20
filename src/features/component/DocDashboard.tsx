@@ -369,10 +369,10 @@ const DocDashboard: React.FC = () => {
         Today's Clinic Workflow
       </h1>
       <h2 className="w-full text-start">
-        {isConnected ? "🟢 Live" : "🔴 Offline"}
+        {/* {isConnected ? "🟢 Live" : "🔴 Offline"} */}
       </h2>
 
-      <div className="flex flex-col gap-6 w-full max-w-5xl">
+      <div className="flex flex-col gap-6 w-full">
         {/* ========== Patient Queue ========== */}
         <PatientQueue
           mode="doctor"

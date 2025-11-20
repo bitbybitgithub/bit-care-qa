@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FaPlus, FaSearch, FaUserMd } from "react-icons/fa";
+import { FaPlus, FaSearch, FaUserMd, FaUserCheck } from "react-icons/fa";
 import { FiMail, FiPhone } from "react-icons/fi";
 import AddUser from "../../features/component/AddUser";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +17,6 @@ const Users: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const clinic_id = getSessionItem("user", "clinic_id");
-
 
   // fetch users
   const { data, isLoading } = useQuery<User[]>({
@@ -49,43 +48,44 @@ const Users: React.FC = () => {
     userid: number,
     status: "Active" | "Inactive"
   ) => {
-    setUsers((prev) => prev.map((u) => (u.userid === userid ? { ...u, status } : u)));
+    setUsers((prev) =>
+      prev.map((u) => (u.userid === userid ? { ...u, status } : u))
+    );
   };
 
-const handleActiveDeactiveUser = async (u: User) => {
-  const newStatusBoolean = u.status === "Active" ? false : true;
-  const ok = window.confirm(
-    `Are you sure you want to ${newStatusBoolean ? "activate" : "deactivate"} ${
-      u.name
-    }?`
-  );
-  if (!ok) return;
-  setUpdatingId(u.userid);
-  const prevStatus = u.status;
-  updateUserStatusLocally(u.userid, newStatusBoolean ? "Active" : "Inactive");
-  try {
-    const payload = {
-      user_id: u.userid,
-      status: newStatusBoolean,
-      phone: u.phone,
-    };
+  const handleActiveDeactiveUser = async (u: User) => {
+    const newStatusBoolean = u.status === "Active" ? false : true;
+    const ok = window.confirm(
+      `Are you sure you want to ${
+        newStatusBoolean ? "activate" : "deactivate"
+      } ${u.name}?`
+    );
+    if (!ok) return;
+    setUpdatingId(u.userid);
+    const prevStatus = u.status;
+    updateUserStatusLocally(u.userid, newStatusBoolean ? "Active" : "Inactive");
+    try {
+      const payload = {
+        user_id: u.userid,
+        status: newStatusBoolean,
+        phone: u.phone,
+      };
 
-    const res = await updateUsers(payload);
+      const res = await updateUsers(payload);
       if (res.success == true) {
-      alert(res.message);
-      window.location.reload();
-    } else {
+        alert(res.message);
+        window.location.reload();
+      } else {
+        updateUserStatusLocally(u.userid, prevStatus);
+        alert(res.message || "Failed to update user status.");
+      }
+    } catch (err) {
       updateUserStatusLocally(u.userid, prevStatus);
-      alert(res.message || "Failed to update user status.");
+      alert("Failed to update status.");
+    } finally {
+      setUpdatingId(null);
     }
-  } catch (err) {
-    updateUserStatusLocally(u.userid, prevStatus);
-    alert("Failed to update status.");
-  } finally {
-    setUpdatingId(null);
-  }
-};
-
+  };
 
   return (
     <div className="p-4 sm:p-6 bg-[var(--color-bg)] mx-7 mt-4 rounded-2xl">
@@ -131,34 +131,33 @@ const handleActiveDeactiveUser = async (u: User) => {
               <article
                 key={u.userid}
                 className={`relative bg-[var(--color-surface)] text-[var(--color-text)] rounded-2xl overflow-hidden shadow-lg transform transition hover:-translate-y-2 hover:shadow-2xl border-t-4
-                   ${isDoctor
-              ? "border-t-[var(--color-info)]"
-              : "border-t-[var(--color-success)]"}`}
+                   ${
+                     isDoctor
+                       ? "border-t-[var(--color-info)]"
+                       : "border-t-[var(--color-success)]"
+                   }`}
                 // aria-labelledby={`user-${u.userid}-name`}
-                >
-
+              >
                 {/* Card body */}
                 <div className="p-5 flex flex-col items-center text-center">
-                       <div className="w-full flex items-center justify-between mb-4">
-                      {/* ROLE (Left) */}
-                      <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/30 backdrop-blur-sm">
-                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20">
-                          {isDoctor ? <FaUserMd /> : <LiaUserNurseSolid />}
-                        </div>
-                        {u.role}
+                  <div className="w-full flex items-center justify-between mb-4">
+                    {/* ROLE (Left) */}
+                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/30 backdrop-blur-sm">
+                      <div className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20">
+                        {isDoctor ? <FaUserMd /> : <LiaUserNurseSolid />}
                       </div>
-                      {/* STATUS (Right) */}
-                      <div className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full bg-white/30 backdrop-blur-sm">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            u.status === "Active"
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                          }`}
-                        />
-                        {u.status}
-                      </div>
+                      {u.role}
                     </div>
+                    {/* STATUS (Right) */}
+                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full bg-white/30 backdrop-blur-sm">
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          u.status === "Active" ? "bg-green-500" : "bg-red-500"
+                        }`}
+                      />
+                      {u.status}
+                    </div>
+                  </div>
                   {/* avatar / role */}
                   <div
                     className="relative w-24 h-24 rounded-full shadow-md border-4 border-white overflow-hidden bg-gradient-to-br"
@@ -169,7 +168,11 @@ const handleActiveDeactiveUser = async (u: User) => {
                   >
                     <div
                       className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br
-                        ${u.role==="Doctor"?"bg-[var(--color-info)]":"bg-[var(--color-success)]"}
+                        ${
+                          u.role === "Doctor"
+                            ? "bg-[var(--color-info)]"
+                            : "bg-[var(--color-success)]"
+                        }
                         `}
                     >
                       {isDoctor ? (
@@ -185,8 +188,6 @@ const handleActiveDeactiveUser = async (u: User) => {
 
                   {/* name & contact */}
                   <div className="mt-4 w-full">
-               
-
                     <div className="flex items-center justify-start gap-2">
                       <h3
                         id={`user-${u.userid}-name`}
@@ -195,13 +196,16 @@ const handleActiveDeactiveUser = async (u: User) => {
                         {u.name}
                       </h3>
                     </div>
+                    <p
+                      className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate"
+                      title={u.email} 
+                    >
+                      <FiMail />
+                      {u.email.length > 20 ? `${u.email.slice(0, 19)}...` : u.email}
+                    </p>
 
                     <p className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate">
-                      <FiMail />
-                      {u.email}
-                    </p>
-                      <p className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate">
-                      <FiMail />
+                      <FaUserCheck />
                       {u.username}
                     </p>
                     <p className="text-sm mt-1 text-slate-500 flex items-center justify-start gap-2 truncate">
@@ -237,7 +241,6 @@ const handleActiveDeactiveUser = async (u: User) => {
                     </div>
                   </div>
                 </div>
-
               </article>
             );
           })}
@@ -246,7 +249,6 @@ const handleActiveDeactiveUser = async (u: User) => {
 
       {/* MODALS */}
       {showAddUser && <AddUser onClose={() => setShowAddUser(false)} />}
-
     </div>
   );
 };

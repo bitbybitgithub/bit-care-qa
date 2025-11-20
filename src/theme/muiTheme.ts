@@ -104,6 +104,7 @@ export const muiTheme = () =>
         styleOverrides: {
           root: {
             backgroundColor: "var(--color-surface)",
+            boxShadow: "var(--shadow-md)",
             color: "var(--color-text)",
             borderRadius: "var(--radius-md)",
             "& .MuiOutlinedInput-notchedOutline": {
@@ -113,8 +114,7 @@ export const muiTheme = () =>
               borderColor: "var(--color-primary)",
             },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "var(--color-primary)",
-              boxShadow: "0 0 0 2px var(--color-primary-light)",
+              borderColor: "var(--color-primary)"
             },
             transition: "all var(--transition-normal)",
           },

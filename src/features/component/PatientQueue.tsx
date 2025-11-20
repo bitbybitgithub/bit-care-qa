@@ -526,12 +526,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         transitionDuration={350}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: "500px", md: "70%" },
-            backgroundColor: "#fff",
-            borderLeft: "4px solid #fff",
-            boxShadow: "0px 0px 30px rgba(0,0,0,0.15)",
-            borderTopLeftRadius: "2rem",
-            borderBottomLeftRadius: "1rem",
+            width: { xs: "100%", sm: "500px", md: "30%" },
+            backgroundColor: "var(--color-bg)",
             overflow: "hidden",
           },
         }}

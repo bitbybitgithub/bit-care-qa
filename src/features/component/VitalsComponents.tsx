@@ -13,6 +13,8 @@ import {
 import { SavePatientVital } from "../../api/VitalsApi";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { GiBodyHeight } from "react-icons/gi";
+import { IoBody } from "react-icons/io5";
 
 interface PatientVitalsData {
   height_cm: number;
@@ -141,23 +143,23 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
 
     const renderDivider = (label: string) => (
       <div className="flex items-center gap-3 pt-2">
-        <div className="flex-1 h-px bg-blue-100" />
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="flex-1 h-px bg-[var(--color-primary)]" />
+        <span className="text-xs font-semibold text-[var(--color-text)]uppercase tracking-wide">
           {label}
         </span>
-        <div className="flex-1 h-px bg-blue-100" />
+        <div className="flex-1 h-px bg-[var(--color-primary)]" />
       </div>
     );
 
     const fields = [
-      { field: "height_cm", label: "Height (cm)", placeholder: "170" },
+      { field: "height_cm", label: "Height (cm)", placeholder: "170", icon: <GiBodyHeight />,},
       {
         field: "weight_kg",
         label: "Weight (kg)",
         placeholder: "70",
         icon: <FaWeightScale />,
       },
-      { field: "bmi", label: "BMI", placeholder: "Auto" },
+      { field: "bmi", label: "BMI", placeholder: "Auto",icon: <IoBody />, },
       {
         field: "temperature_c",
         label: "Temp (°C)",
@@ -197,30 +199,30 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     ];
 
     return (
-      <div className="flex flex-col h-full rounded-lg bg-white">
+      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-bg)]  ">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 rounded-xl border-b-6 border-b-blue-950 bg-gradient-to-r from-blue-600 to-blue-700 sticky top-1 z-10">
+        <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
           <div>
-            <h2 className="text-white text-lg font-bold flex items-center gap-2">
-              <FaStethoscope className="text-white" /> Patient Vitals
+            <h2 className="text-[var(--color-white)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
+              <FaStethoscope /> Patient Vitals
             </h2>
             <p className="text-blue-100 text-sm">{patientName}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-blue-100 hover:text-white p-2 rounded-md hover:bg-blue-600"
+            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-bg)] hover:bg-[var(--color-primary-light)]"
           >
             <MdClose size={22} />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 ">
           {renderDivider("Vitals Info")}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {fields.map(({ field, label, icon, placeholder }) => (
               <div key={field} className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 flex items-center gap-1 uppercase">
+                <label className="text-xs font-semibold text-[var(--color-text)] flex items-center gap-1 uppercase">
                   {icon} {label}
                 </label>
                 <TextField
@@ -243,7 +245,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           {renderDivider("Additional Info")}
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">
+            <label className="text-xs font-semibold uppercase">
               Chief Complaint
             </label>
             <TextField
@@ -262,7 +264,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">
+            <label className="text-xs font-semibold  uppercase">
               Additional Notes
             </label>
             <TextField
@@ -277,7 +279,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">
+            <label className="text-xs font-semibold uppercase">
               Allergies
             </label>
             <TextField
@@ -292,7 +294,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase">
+            <label className="text-xs font-semibold uppercase">
               Current Medications
             </label>
             <TextField
@@ -312,11 +314,12 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-5 border-t border-gray-200 bg-gray-50 sticky bottom-0 z-10">
+        <div className="flex gap-3 p-5 border-t border-[var(--color-primary)] bg-[var(--color-surface)] sticky bottom-0 z-10">
           <Button
             variant="outlined"
             color="inherit"
             fullWidth
+            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-bg)] hover:bg-[var(--color-primary-light)]"
             onClick={onClose || (() => resetForm())}
           >
             Cancel

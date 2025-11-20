@@ -43,7 +43,7 @@ export const ThemeProviderWrapper: React.FC<Props> = ({ children }) => {
       <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors relative">
         {children}
 
-        {/* <div
+        <div
           className="fixed bottom-5 right-5 z-[var(--z-tooltip)]"
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
@@ -84,7 +84,7 @@ export const ThemeProviderWrapper: React.FC<Props> = ({ children }) => {
           >
             {icons[mode]}
           </button>
-        </div> */}
+        </div>
       </div>
     </ThemeProvider>
   );

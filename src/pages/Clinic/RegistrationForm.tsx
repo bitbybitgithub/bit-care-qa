@@ -505,7 +505,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   inputProps: { maxLength: 30 },
                 },
               }}
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" } }}
             />
             <FieldErrorText error={errors.name} />
           </FormControl>
@@ -520,7 +520,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleNumberChange}
                 error={!!errors.phone}
                 disabled={verified.mobile}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" } }}
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -544,7 +544,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 inputProps={{ maxLength: 6 }}
                 sx={{
                   width: "65%",
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                  "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" },
                 }}
               />
             )}
@@ -578,7 +578,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     ),
                   },
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" } }}
               />
               <FieldErrorText error={errors.email} />
             </FormControl>
@@ -592,7 +592,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 inputProps={{ maxLength: 6 }}
                 sx={{
                   width: "65%",
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                  "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" },
                 }}
               />
             )}
@@ -615,7 +615,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   ),
                 },
               }}
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" } }}
             />
             <FieldErrorText error={errors.PINCode} />
           </FormControl>
@@ -635,7 +635,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   error={!!errors.state}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
+                      borderRadius: "var(--radius-md)",
                       ...(errors.state && {
                         "& fieldset": { borderColor: "#d32f2f !important" },
                       }),
@@ -662,7 +662,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   error={!!errors.district}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
+                      borderRadius: "var(--radius-md)",
                       ...(errors.district && {
                         "& fieldset": { borderColor: "#d32f2f !important" },
                       }),
@@ -691,7 +691,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     error={!!errors.area}
                     sx={{
                       "& .MuiOutlinedInput-root": {
-                        borderRadius: 2,
+                        borderRadius: "var(--radius-md)",
                         ...(errors.area && {
                           "& fieldset": { borderColor: "#d32f2f !important" },
                         }),
@@ -720,7 +720,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 },
               }}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                "& .MuiOutlinedInput-root": { borderRadius: "var(--radius-md)" },
               }}
             />
 
@@ -801,7 +801,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               backgroundColor: "var(--color-primary)",
               color: "#fff",
               px: 4,
-              borderRadius: 2,
+              borderRadius: "var(--radius-md)",
               "&:hover": { backgroundColor: "var(--color-primary-dark)" },
             }}
           >

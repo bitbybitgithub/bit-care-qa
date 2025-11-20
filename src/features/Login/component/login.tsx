@@ -155,8 +155,8 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] font-montserrat p-7">
-      <div className="relative bg-[var(--color-bg)] rounded-3xl shadow-2xl overflow-hidden w-full max-w-2xl md:min-h-[450px]">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] p-7">
+      <div className="relative bg-[var(--color-bg)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
         {/* MOBILE TABS */}
         <div className="block md:hidden">
           <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">
@@ -462,7 +462,7 @@ const Login = () => {
                 color="primary"
                 sx={{
                   width: "65%",
-                  borderRadius: "12px",
+                  // borderRadius: "12px",
                   py: 1,
                   fontWeight: 600,
                 }}

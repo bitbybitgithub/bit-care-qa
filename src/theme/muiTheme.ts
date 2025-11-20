@@ -108,7 +108,7 @@ export const muiTheme = () =>
             color: "var(--color-text)",
             borderRadius: "var(--radius-md)",
             "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "var(--color-border)",
+              borderColor: "var(--color-bg)",
             },
             "&:hover .MuiOutlinedInput-notchedOutline": {
               borderColor: "var(--color-primary)",
@@ -140,7 +140,7 @@ export const muiTheme = () =>
           root: {
             backgroundColor: "var(--color-surface)",
             boxShadow: "var(--shadow-md)",
-            borderRadius: "var(--radius-lg)",
+            borderRadius: "var(--radius-md)",
             color: "var(--color-text)",
             transition: "background var(--transition-normal)",
           },

@@ -218,7 +218,7 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="mx-6 m-4 px-6 py-6 bg-[var(--color-bg)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] transition-all">
+    <div className="mx-6 m-4 px-6 py-6 bg-[var(--color-bg)] shadow-[var(--shadow-md)] rounded-[var(--radius-md)] transition-all">
     {/* Branding */}
     <section className="mb-6">
       <h3 className="font-[var(--font-weight-medium)] mb-3">
@@ -228,7 +228,7 @@ const Profile: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
         {/* Logo Preview */}
         <div
-          className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
+          className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
           aria-hidden={!!(preview || logoImg) ? "false" : "true"}
         >
           {preview || logoImg ? (

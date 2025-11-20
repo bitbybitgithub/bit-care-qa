@@ -51,7 +51,7 @@ const Registration = () => {
             {features.map(({ icon: Icon, title, description }, index) => (
               <div
                 key={index}
-                className="bg-[var(--color-bg)] p-4 rounded-[var(--radius-lg)] shadow-md border-b-2 border-[var(--color-primary)]"
+                className="bg-[var(--color-bg)] p-4 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] border-t-2 border-[var(--color-primary)]"
               >
                 <Icon className="text-xl" />
                 <h3 className="mt-2 font-semibold text-[var(--color-primary)]">

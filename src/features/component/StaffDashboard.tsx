@@ -482,7 +482,7 @@ const StaffDashboard: React.FC = () => {
                             error ? "var(--color-error)" : "var(--color-border)"
                           }`,
                           color: "var(--color-text)",
-                          borderRadius: "var(--radius-lg)",
+                          borderRadius: "var(--radius-md)",
                           backgroundColor: "var(--color-surface-alt)",
                           boxShadow: "var(--shadow-xs)",
                         }}
@@ -545,7 +545,7 @@ const StaffDashboard: React.FC = () => {
                             width: "2.5rem",
                             height: "2.5rem",
                             border: `1px solid var(--color-border)`,
-                            borderRadius: "var(--radius-lg)",
+                            borderRadius: "var(--radius-md)",
                             backgroundColor: "var(--color-surface-alt)",
                             color: "var(--color-text)",
                             fontWeight: "var(--font-weight-semibold)",
@@ -716,7 +716,7 @@ const StaffDashboard: React.FC = () => {
                   py: 1.2,
                   fontWeight: 400,
                   fontSize: "0.9rem",
-                  borderRadius: "var(--radius-lg)",
+                  borderRadius: "var(--radius-md)",
                   textTransform: "none",
                   backgroundColor: "#dc2626", // fixed error red
                   border: "1px solid #dc2626",
@@ -742,7 +742,7 @@ const StaffDashboard: React.FC = () => {
                     opacity: loadingVerify
                       ? "var(--opacity-disabled)"
                       : "var(--opacity-focus)",
-                    borderRadius: "var(--radius-lg)",
+                    borderRadius: "var(--radius-md)",
                   }}
                 >
                   {loadingVerify ? "Verifying..." : "Confirm"}

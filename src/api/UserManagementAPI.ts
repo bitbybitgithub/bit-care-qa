@@ -2,12 +2,13 @@ import { emrAPI } from "./EmrApi";
 import type { AxiosResponse } from "axios";
 
 export interface User {
-  id: number;
+  userid: number;
   name: string;
   email: string;
   phone?: string;
   role: string;
   status: "Active" | "Inactive";
+  username?:string;
 }
 
 export const getUsersList = async (): Promise<User[]> => {
@@ -18,12 +19,13 @@ export const getUsersList = async (): Promise<User[]> => {
       throw new Error("Invalid API response: missing data array");
     }
     const mappedUsers: User[] = response.data.map((d: any) => ({
-      id: d.user_id,
+      userid: d.user_id,
       name: d.name,
       role: d.role,
       email: d.email,
       phone: d.mobile,
       status: d.isActive ? "Active" : "Inactive",
+      username: d.username,
     }));
 
     return mappedUsers;

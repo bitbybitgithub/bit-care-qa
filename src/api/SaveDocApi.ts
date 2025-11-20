@@ -20,3 +20,17 @@ export const saveDocAPI = async (doctorData: {
     throw error;
   }
 };
+
+export const updateUsers=async (userData:{
+  user_id:number, 
+  status:boolean,
+  phone:string
+})=> {
+  try {
+    const response = await emrAPI.post("/clinics/active-deactivate-user", userData);
+    return response; 
+  } catch (error: any) {
+    console.error("Error:", error);
+    throw error;
+  }
+};

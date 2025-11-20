@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getUsersList, type User } from "../../api/UserManagementAPI";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { LiaUserNurseSolid } from "react-icons/lia";
+import { updateUsers } from "../../api/SaveDocApi";
 
 // Full Users component with modernized card UI and optimistic toggle behaviour
 const Users: React.FC = () => {
@@ -16,6 +17,7 @@ const Users: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const clinic_id = getSessionItem("user", "clinic_id");
+
 
   // fetch users
   const { data, isLoading } = useQuery<User[]>({
@@ -34,7 +36,7 @@ const Users: React.FC = () => {
     const map: Record<number, string> = {};
     users.forEach((u) => {
       const hue = Math.floor(Math.random() * 360);
-      map[u.id] = `hsl(${hue}, 60%, 55%)`;
+      map[u.userid] = `hsl(${hue}, 60%, 55%)`;
     });
     return map;
   }, [users]);
@@ -43,66 +45,47 @@ const Users: React.FC = () => {
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Local updater used by optimistic update & revert
   const updateUserStatusLocally = (
-    id: number,
+    userid: number,
     status: "Active" | "Inactive"
   ) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
+    setUsers((prev) => prev.map((u) => (u.userid === userid ? { ...u, status } : u)));
   };
 
-  const activeDeactiveUserApi = async (payload: {
-    clinic_id: string | number | null;
-    doctor_id: number;
-    status: "Active" | "Inactive";
-  }) => {
-    // Placeholder: simulate network call
-    return new Promise<{ success: boolean; message?: string }>((resolve) =>
-      setTimeout(() => resolve({ success: true }), 700)
-    );
-  };
+const handleActiveDeactiveUser = async (u: User) => {
+  const newStatusBoolean = u.status === "Active" ? false : true;
+  const ok = window.confirm(
+    `Are you sure you want to ${newStatusBoolean ? "activate" : "deactivate"} ${
+      u.name
+    }?`
+  );
+  if (!ok) return;
+  setUpdatingId(u.userid);
+  const prevStatus = u.status;
+  updateUserStatusLocally(u.userid, newStatusBoolean ? "Active" : "Inactive");
+  try {
+    const payload = {
+      user_id: u.userid,
+      status: newStatusBoolean,
+      phone: u.phone,
+    };
 
-  // Toggle handler (optimistic)
-  const handleActiveDeactiveUser = async (u: User) => {
-    const newStatus: "Active" | "Inactive" =
-      u.status === "Active" ? "Inactive" : "Active";
-
-    const ok = window.confirm(
-      `Are you sure you want to ${
-        newStatus === "Active" ? "activate" : "deactivate"
-      } ${u.name}?`
-    );
-    if (!ok) return;
-
-    setUpdatingId(u.id);
-    const prevStatus = u.status;
-
-    // optimistic update
-    updateUserStatusLocally(u.id, newStatus);
-
-    try {
-      const res = await activeDeactiveUserApi({
-        clinic_id,
-        doctor_id: u.id,
-        status: newStatus,
-      });
-
-      if (!res || !res.success) {
-        updateUserStatusLocally(u.id, prevStatus);
-        alert(res?.message || "Failed to update status on server.");
-      } else {
-        // success - optionally show a success toast
-      }
-    } catch (err: any) {
-      updateUserStatusLocally(u.id, prevStatus);
-      console.error("Toggle failed:", err);
-      alert(err?.message || "Failed to update status.");
-    } finally {
-      setUpdatingId(null);
-      setSelectedUser(null);
+    const res = await updateUsers(payload);
+      if (res.success == true) {
+      alert(res.message);
+      window.location.reload();
+    } else {
+      updateUserStatusLocally(u.userid, prevStatus);
+      alert(res.message || "Failed to update user status.");
     }
-  };
+  } catch (err) {
+    updateUserStatusLocally(u.userid, prevStatus);
+    alert("Failed to update status.");
+  } finally {
+    setUpdatingId(null);
+  }
+};
+
 
   return (
     <div className="p-4 sm:p-6 bg-[var(--color-bg)] mx-7 mt-4 rounded-2xl">
@@ -146,12 +129,12 @@ const Users: React.FC = () => {
 
             return (
               <article
-                key={u.id}
+                key={u.userid}
                 className={`relative bg-[var(--color-surface)] text-[var(--color-text)] rounded-2xl overflow-hidden shadow-lg transform transition hover:-translate-y-2 hover:shadow-2xl border-t-4
                    ${isDoctor
               ? "border-t-[var(--color-info)]"
               : "border-t-[var(--color-success)]"}`}
-                // aria-labelledby={`user-${u.id}-name`}
+                // aria-labelledby={`user-${u.userid}-name`}
                 >
 
                 {/* Card body */}
@@ -164,7 +147,6 @@ const Users: React.FC = () => {
                         </div>
                         {u.role}
                       </div>
-
                       {/* STATUS (Right) */}
                       <div className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full bg-white/30 backdrop-blur-sm">
                         <div
@@ -207,7 +189,7 @@ const Users: React.FC = () => {
 
                     <div className="flex items-center justify-start gap-2">
                       <h3
-                        id={`user-${u.id}-name`}
+                        id={`user-${u.userid}-name`}
                         className="text-lg font-semibold truncate"
                       >
                         {u.name}
@@ -217,6 +199,10 @@ const Users: React.FC = () => {
                     <p className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate">
                       <FiMail />
                       {u.email}
+                    </p>
+                      <p className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate">
+                      <FiMail />
+                      {u.username}
                     </p>
                     <p className="text-sm mt-1 text-slate-500 flex items-center justify-start gap-2 truncate">
                       <FiPhone />
@@ -229,7 +215,7 @@ const Users: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleActiveDeactiveUser(u)}
-                        disabled={updatingId === u.id}
+                        disabled={updatingId === u.userid}
                         className={`text-sm font-medium text-[var(--color-white)] py-2 px-3 rounded-xl shadow disabled:opacity-60 disabled:cursor-not-allowed transition-transform active:scale-95 cursor-pointer ${
                           u.status === "Active"
                             ? "bg-[var(--color-error)]  hover:opacity-80"
@@ -242,7 +228,7 @@ const Users: React.FC = () => {
                             : "Activate user"
                         }
                       >
-                        {updatingId === u.id
+                        {updatingId === u.userid
                           ? "Updating..."
                           : u.status === "Active"
                           ? "Deactivate"

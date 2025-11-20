@@ -140,9 +140,11 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
           username: "",
           password: "",
         });
+        window.location.reload();
         handleClose();
       } else {
         toast.error(data?.message || "Failed to add user");
+        window.location.reload();
       }
     } catch (err) {
       console.error("Save error:", err);

@@ -168,7 +168,7 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] p-7">
-      <div className="relative bg-[var(--color-bg)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
+      <div className="relative bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
         {/* MOBILE TABS */}
         <div className="block md:hidden">
           <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">

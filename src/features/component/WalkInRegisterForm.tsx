@@ -262,7 +262,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             Full Name
           </label>
           <div
-            className={`flex items-center px-3 py-2 rounded-[var(--radius-md)] transition-all border`}
+            className={`flex items-center px-3 py-2 rounded-[var(--radius-lg)] transition-all border`}
             style={{
               borderColor: errors.name
                 ? "var(--color-error)"
@@ -306,7 +306,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               Date of Birth
             </label>
             <div
-              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+              className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
               style={{
                 borderColor: errors.dob
                   ? "var(--color-error)"
@@ -337,7 +337,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               Age
             </label>
             <div
-              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border"
+              className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border"
               style={{
                 borderColor: "var(--color-border)",
                 backgroundColor: "var(--color-surface-alt)",
@@ -370,7 +370,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               Gender
             </label>
             <div
-              className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+              className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
               style={{
                 borderColor: errors.gender
                   ? "var(--color-error)"
@@ -404,7 +404,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             Contact Number
           </label>
           <div
-            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
             style={{
               borderColor: errors.phone
                 ? "var(--color-error)"
@@ -436,7 +436,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             Email Address
           </label>
           <div
-            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
             style={{
               borderColor: errors.email
                 ? "var(--color-error)"
@@ -471,7 +471,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             Select Doctor
           </label>
           <div
-            className="flex items-center px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            className="flex items-center px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
             style={{
               borderColor: "var(--color-border)",
             }}
@@ -509,7 +509,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             Reason for Visit
           </label>
           <div
-            className="flex items-start px-3 py-2 rounded-[var(--radius-md)] border transition-all"
+            className="flex items-start px-3 py-2 rounded-[var(--radius-lg)] border transition-all"
             style={{
               borderColor: errors.reason
                 ? "var(--color-error)"

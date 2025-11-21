@@ -281,25 +281,21 @@ const StaffDashboard: React.FC = () => {
       title: "Patients in Queue",
       value: patients.length,
       icon: <FaPeopleGroup />,
-      color: "text-blue-800 border border-violet-600",
     },
     {
       title: "Tasks Due Today",
       value: 5,
       icon: <FaClipboardList />,
-      color: "text-yellow-800 border border-yellow-400",
     },
     {
       title: "Available Doctors",
       value: 12,
       icon: <FaUserMd />,
-      color: "text-green-800 border border-green-400",
     },
     {
       title: "Pending Messages",
       value: 3,
       icon: <FaEnvelopeOpenText />,
-      color: "text-red-800 border border-red-400",
     },
   ];
 
@@ -335,7 +331,7 @@ const StaffDashboard: React.FC = () => {
   );
 
   return (
-    <div className="p-2 sm:p-6 ">
+    <div className="p-2 sm:p-6">
       {/* <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2> */}
       <Cards
         items={cardItems}
@@ -482,7 +478,7 @@ const StaffDashboard: React.FC = () => {
                             error ? "var(--color-error)" : "var(--color-border)"
                           }`,
                           color: "var(--color-text)",
-                          borderRadius: "var(--radius-md)",
+                          borderRadius: "var(--radius-lg)",
                           backgroundColor: "var(--color-surface-alt)",
                           boxShadow: "var(--shadow-xs)",
                         }}
@@ -545,7 +541,7 @@ const StaffDashboard: React.FC = () => {
                             width: "2.5rem",
                             height: "2.5rem",
                             border: `1px solid var(--color-border)`,
-                            borderRadius: "var(--radius-md)",
+                            borderRadius: "var(--radius-lg)",
                             backgroundColor: "var(--color-surface-alt)",
                             color: "var(--color-text)",
                             fontWeight: "var(--font-weight-semibold)",
@@ -716,7 +712,7 @@ const StaffDashboard: React.FC = () => {
                   py: 1.2,
                   fontWeight: 400,
                   fontSize: "0.9rem",
-                  borderRadius: "var(--radius-md)",
+                  borderRadius: "var(--radius-lg)",
                   textTransform: "none",
                   backgroundColor: "#dc2626", // fixed error red
                   border: "1px solid #dc2626",
@@ -742,7 +738,7 @@ const StaffDashboard: React.FC = () => {
                     opacity: loadingVerify
                       ? "var(--opacity-disabled)"
                       : "var(--opacity-focus)",
-                    borderRadius: "var(--radius-md)",
+                    borderRadius: "var(--radius-lg)",
                   }}
                 >
                   {loadingVerify ? "Verifying..." : "Confirm"}

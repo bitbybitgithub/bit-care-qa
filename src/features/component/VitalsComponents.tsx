@@ -199,9 +199,9 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     ];
 
     return (
-      <div className="flex flex-col h-full rounded-[var(--radius-md)] bg-[var(--color-bg)]  ">
+      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-bg)]  ">
         {/* Header */}
-        <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-md)] bg-[var(--color-primary)] sticky z-10 m-2">
+        <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
           <div>
             <h2 className="text-[var(--color-white)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
               <FaStethoscope /> Patient Vitals

@@ -8,12 +8,19 @@ import {
   FaTimes,
   FaUser,
   FaEnvelope,
-  FaPhone,
+  FaPhoneAlt,
   FaUserMd,
   FaKey,
 } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { getRoles } from "../../api/MasterApi";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 
 interface AddUserProps {
   onClose: () => void;
@@ -30,12 +37,12 @@ interface Form {
 
 const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
   const [formData, setFormData] = useState<Form>({
-  name: "",
-  email: "",
-  role: "",
-  phone: "",
-  username: "",
-  password: "",
+    name: "",
+    email: "",
+    role: "",
+    phone: "",
+    username: "",
+    password: "",
   });
 
   const clinicId = getSessionItem("user", "clinic_id");
@@ -105,7 +112,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length) {
-      toast.error("Please fill all required fields correctly");
+      // toast.error("Please fill all required fields correctly");
       return false;
     }
     return true;
@@ -155,66 +162,194 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center items-center bg-white/40 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex justify-center items-center bg-[var(--color-white)]/40 backdrop-blur-md">
       <div
-        className={`bg-white/90 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-3xl w-full max-w-md mx-4 p-6 transform transition-all ${
+        className={`bg-[var(--color-bg)]  border border-[var(--color-primary)] shadow-[var(shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-md mx-4 p-6 transform transition-all ${
           isClosing ? "animate-slide-out" : "animate-slide-in"
         }`}
       >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <VscPersonAdd className="text-blue-600 text-2xl" />
-            <h2 className="text-xl font-semibold text-gray-800">
+            <VscPersonAdd
+              className="text-[var(--color-primary)]"
+              style={{ fontSize: "var(--font-h2)" }}
+            />
+            <h2 className="text-xl font-semibold text-[var(--color-primary)]">
               Add New User
             </h2>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex justify-center items-center rounded-full bg-gray-200 hover:bg-red-500 hover:text-white transition"
+            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
           >
             <FaTimes />
           </button>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {["name", "email", "phone", "username", "password"].map((field) => (
-            <div key={field} className="flex items-center">
-              <div className="flex-shrink-0 w-10 h-10 flex justify-center items-center bg-gray-200 text-blue-400 rounded-full shadow-md mr-3">
-                {field === "name" && <FaUser />}
-                {field === "email" && <FaEnvelope />}
-                {field === "phone" && <FaPhone />}
-                {field === "username" && <FaUser />}
-                {field === "password" && <FaKey />}
-              </div>
-              <input
-                type={field === "password" ? "password" : "text"}
-                name={field}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                value={(formData as any)[field]}
-                onChange={handleChange}
-                className={`flex-1 border rounded-lg px-4 py-2 bg-white/70 focus:outline-none transition ${
-                  errors[field]
-                    ? "border-red-500 focus:ring-red-300"
-                    : "border-gray-300 focus:ring-blue-400"
-                }`}
-              />
-            </div>
-          ))}
+        <div className="flex flex-col gap-y-1">
+          {/* NAME */}
+          <FormControl fullWidth>
+            <TextField
+              name="name"
+              placeholder="Name"
+              value={formData.name}
+              onChange={handleChange}
+              size="small"
+              error={!!errors.name}
+              helperText={errors.name || " "}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUser className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
 
-          {/* Role dropdown */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 flex justify-center items-center bg-gray-200 text-blue-400 rounded-full shadow-md mr-3">
-              <FaUserMd />
-            </div>
-            <select
+          {/* EMAIL */}
+          <FormControl fullWidth>
+            <TextField
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              size="small"
+              error={!!errors.email}
+              helperText={errors.email || " "}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaEnvelope className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+
+          {/* PHONE */}
+          <FormControl fullWidth>
+            <TextField
+              name="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              size="small"
+              error={!!errors.phone}
+              helperText={errors.phone || " "}
+              inputProps={{ maxLength: 10, inputMode: "tel" }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaPhoneAlt className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+
+          {/* USERNAME */}
+          <FormControl fullWidth>
+            <TextField
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+              size="small"
+              error={!!errors.username}
+              helperText={errors.username || " "}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUser className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+
+          {/* PASSWORD */}
+          <FormControl fullWidth>
+            <TextField
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              size="small"
+              error={!!errors.password}
+              helperText={errors.password || " "}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaKey className="text-[var(--color-text)]" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+
+          {/* ROLE SELECT */}
+          <FormControl fullWidth error={!!errors.role}>
+            <TextField
+              select
               name="role"
+              error={!!errors.role} 
+              label="" // optional: remove if you don't want a floating label
+              value={formData.role}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)} 
+              className="text-[var(--color-text)]"
+              size="small"
+              fullWidth
+              helperText={errors.role || " "}
+              // variant="outlined"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUserMd className="text-[var(--color-text)]"/>
+                  </InputAdornment>
+                ),
+              }}
+              SelectProps={{
+                displayEmpty: true,
+                renderValue: (selected: any) =>
+                  !selected ? (
+                    <span style={{ color: "rgba(0,0,0,0.6)" }}>
+                      Select Role
+                    </span>
+                  ) : (
+                    selected
+                  ),
+              }}
+            >
+              <MenuItem value="">
+                <em>Select Role</em>
+              </MenuItem>
+
+              {roles.map((r) => (
+                <MenuItem key={r.role_id} value={r.role_name}>
+                  {r.role_name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormControl>
+          {/* <FormControl fullWidth error={!!errors.role}>
+            <TextField
+              name="role"
+              select
+              size="small"
               value={formData.role}
               onChange={handleChange}
-              className={`flex-1 border rounded-lg px-4 py-2 bg-white/70 focus:outline-none transition ${
-                errors.role
-                  ? "border-red-500 focus:ring-red-300"
-                  : "border-gray-300 focus:ring-blue-400"
-              }`}
+              placeholder="Select Role"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUserMd />
+                  </InputAdornment>
+                ),
+               
+              }}
+              helperText={errors.role || " "}
             >
               <option value="">Select Role</option>
               {roles.map((r) => (
@@ -222,25 +357,20 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
                   {r.role_name}
                 </option>
               ))}
-            </select>
-          </div>
+            </TextField>
+          </FormControl> */}
         </div>
 
-        <div className="flex justify-end gap-4 mt-8">
-          <button
-            onClick={handleClose}
-            disabled={isSaving}
-            className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition"
-          >
-            Cancel
-          </button>
-          <button
+        <div className="flex justify-center gap-4 mt-8">
+       
+          <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="contained"
+            className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
           >
             {isSaving ? "Saving..." : "Save"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

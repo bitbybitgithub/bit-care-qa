@@ -58,7 +58,7 @@ export const muiTheme = () =>
     },
 
     shape: {
-      borderRadius: parseInt(getCssVar("--radius-md", "8")) || 8,
+      borderRadius: parseInt(getCssVar("--radius-lg", "8")) || 16,
     },
 
    shadows: [
@@ -86,7 +86,7 @@ export const muiTheme = () =>
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-lg)",
             textTransform: "none",
             transition: "all var(--transition-fast)",
             "&:hover": {
@@ -106,7 +106,7 @@ export const muiTheme = () =>
             backgroundColor: "var(--color-surface)",
             boxShadow: "var(--shadow-md)",
             color: "var(--color-text)",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-lg)",
             "& .MuiOutlinedInput-notchedOutline": {
               borderColor: "var(--color-bg)",
             },
@@ -140,7 +140,7 @@ export const muiTheme = () =>
           root: {
             backgroundColor: "var(--color-surface)",
             boxShadow: "var(--shadow-md)",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-lg)",
             color: "var(--color-text)",
             transition: "background var(--transition-normal)",
           },

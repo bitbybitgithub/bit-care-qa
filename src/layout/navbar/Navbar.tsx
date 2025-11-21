@@ -13,8 +13,9 @@ interface HeaderProps {
 }
 
 const AppBarStyled = styled(AppBar)(() => ({
-  background: "var(--color-bg)",
+  background: "var(--color-white)",
   borderBottom: "2px solid var(--color-primary)",
+  boxShadow:"var(--shadow-lg)"
 }));
 
 const ToolbarStyled = styled(Toolbar)(() => ({
@@ -77,20 +78,20 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
         <IconButton
           color="inherit"
           onClick={onMenuClick}
-          className="md:hidden "
+          className="md:hidden"
         >
           <MenuIcon className="text-[var(--color-text)]" size={22} />
         </IconButton>
 
         {/* -------- CENTER: Title (flex-grow pushes logout to right) -------- */}
-        <h1 className="text-xl font-bold text-[var(--color-primary)] ml-2 md:ml-0 flex-grow">
+        <h1 className="font-bold text-[var(--color-primary)] ml-2 md:ml-0 flex-grow" style={{fontSize:"var(--font-h3)"}}>
           {title}
         </h1>
 
         {/* -------- RIGHT: Logout Button -------- */}
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex items-center gap-2 bg-[var(--color-error)] text-[var(--color-white)] px-4 py-2 rounded-xl hover:bg-red-600 transition"
+          className="flex cursor-pointer items-center bg-[var(--color-white)] gap-2 border-2 border-[var(--color-error)] text-[var(--color-error)] hover:text-[var(--color-white)] px-4 py-2 rounded-xl hover:bg-[var(--color-error)] transition"
         >
           <FaSignOutAlt />
           Logout

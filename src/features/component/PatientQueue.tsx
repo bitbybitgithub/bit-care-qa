@@ -372,7 +372,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     color: "var(--color-white)",
     fontFamily: "var(--font-family)",
     fontWeight: "var(--font-weight-medium)",
-    borderRadius: "var(--radius-md)",
+    borderRadius: "var(--radius-lg)",
     padding: "4px 12px",
     fontSize: "var(--font-small)",
     textTransform: "none",

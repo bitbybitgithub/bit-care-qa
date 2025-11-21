@@ -88,7 +88,7 @@ const Users: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-[var(--color-bg)] mx-7 mt-4 rounded-2xl">
+    <div className="p-4 sm:p-6 bg-[var(--color-bg)] mx-7 mt-4 rounded-[var(--radius-lg)]">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 w-full">
         <button

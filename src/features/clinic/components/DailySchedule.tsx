@@ -169,7 +169,7 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
   }, [shifts, opShift.is_active]);
 
   return (
-    <div className=" rounded-[var(--radius-md)] p-4 mb-4 border-2 border-[var(--color-primary)] shadow-[var(--shadow-md)]">
+    <div className="rounded-[var(--radius-lg)] p-4 mb-4 border-2 border-[var(--color-primary)] shadow-[var(--shadow-md)]">
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
         <Typography variant="h6" className="font-[var(--font-weight-medium)] text-[var(--color-text)]">

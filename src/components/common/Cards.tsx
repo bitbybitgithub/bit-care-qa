@@ -17,29 +17,25 @@ interface CardsProps {
 
 const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
   return (
-    <div
-      className={`grid gap-4 mb-6 ${
-        gridCols || "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"
-      }`}
-    >
+    <div className="grid grid-cols-4 gap-4 mb-7">
       {items.map((item, index) => (
         <div
           key={index}
-          className={`rounded-xl shadow-md transition-all bg-[var(--color-bg)] text-[--color-text] duration-300 border-l-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center ${
-            item.color ?? "bg-[var(--color-bg)] text-[--color-text]"
-          } ${item.onClick ? "cursor-pointer hover:scale-[1.02]" : "cursor-default"}`}
-          onClick={item.onClick}
+          className="rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-white)] text-[var(--color-text)] border-t-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center"
         >
           {loading ? (
-            <div className="loader border-t-4 border-gray-700 border-solid rounded-full w-10 h-10 animate-spin"></div>
+            <div className="loader border-t-4 border-gray-700  rounded-full w-10 h-10 animate-spin"></div>
           ) : error ? (
             <p className="text-sm text-red-500 text-center">{error}</p>
           ) : (
-            <>
-              {item.icon && <div className="text-3xl mb-2">{item.icon}</div>}
-              <p className="text-3xl font-bold">{item.value}</p>
-              <p className="mt-2 font-medium text-center">{item.title}</p>
-            </>
+            <div className="font-[var(--font-weight-semibold)] opacity-90 ">
+              <div className="flex justify-center items-center gap-x-3 " style={{fontSize:"var(--font-h2)"}}>
+                <h1>{item.icon}</h1>
+                <h1>{item.value}</h1>
+              </div>
+
+              <h2 className="mt-2 text-center opacity-60 ">{item.title}</h2>
+            </div>
           )}
         </div>
       ))}

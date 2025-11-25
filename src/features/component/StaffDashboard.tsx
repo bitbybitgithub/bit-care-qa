@@ -30,6 +30,7 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
 import { Button } from "@mui/material";
+import { VscPersonAdd } from "react-icons/vsc";
 
 interface Appointment {
   appointment_id: number;
@@ -331,23 +332,23 @@ const StaffDashboard: React.FC = () => {
   );
 
   return (
-    <div className="p-2 sm:p-6">
-      {/* <h2>{isConnected ? "🟢 Live" : "🔴 Offline"}</h2> */}
+    <div>
       <Cards
         items={cardItems}
         gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
       />
 
       {/* Tabs */}
-      <div className="flex gap-3 border-b border-gray-200 pb-2">
+      <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]">
+      <div className="flex gap-3">
         {["queue", "dispensing", "followUp"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+            className={`px-4 py-1 rounded-t-[var(--radius-lg)] font-[var(--font-weight-semibold)] transition-all cursor-pointer ${
               activeTab === tab
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]"
+                : " text-gray-700 bg-white border-2 border-[var(--color-primary)]"
             }`}
           >
             {tab === "queue"
@@ -383,7 +384,7 @@ const StaffDashboard: React.FC = () => {
           />
         )}
       </div>
-
+</div>
       {/* Modal */}
       {open && !showRegistrationForm && (
         <div
@@ -393,8 +394,8 @@ const StaffDashboard: React.FC = () => {
           <div
             className="w-full max-w-md p-6 animate-fadeIn overflow-y-auto max-h-[90vh]"
             style={{
-              backgroundColor: "var(--color-surface)",
-              borderRadius: "var(--radius-xl)",
+              backgroundColor: "var(--color-bg)",
+              borderRadius: "var(--radius-lg)",
               boxShadow: "var(--shadow-xl)",
               color: "var(--color-text)",
               transition: "all var(--transition-normal)",
@@ -402,7 +403,16 @@ const StaffDashboard: React.FC = () => {
           >
             {!verifiedPatients && (
               <>
-                <h2
+                <div className="flex items-center gap-2">
+                          <VscPersonAdd
+                            className="text-[var(--color-primary)]"
+                            style={{ fontSize: "var(--font-h2)" }}
+                          />
+                          <h3 className="font-semibold text-[var(--color-primary)]" style={{fontSize:"var(--font-h3)"}}>
+                            Add New User
+                          </h3>
+                        </div>
+                {/* <h2
                   className="flex items-center justify-center gap-2 font-semibold"
                   style={{
                     fontSize: "var(--font-h2)",
@@ -414,7 +424,7 @@ const StaffDashboard: React.FC = () => {
                     style={{ color: "var(--color-primary)" }}
                   />
                   Add Walk-In Patient
-                </h2>
+                </h2> */}
                 <p
                   className="text-center mt-1"
                   style={{

@@ -40,11 +40,7 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2); */
 
-  /* OPACITY */
-  --opacity-disabled: 0.5;
-  --opacity-hover: 0.85;
-  --opacity-focus: 0.95;
-
+  
   /* TRANSITIONS */
   --transition-fast: 150ms ease;
   --transition-normal: 300ms ease;

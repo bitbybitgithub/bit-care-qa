@@ -174,9 +174,9 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               className="text-[var(--color-primary)]"
               style={{ fontSize: "var(--font-h2)" }}
             />
-            <h2 className="text-xl font-semibold text-[var(--color-primary)]">
+            <h3 className="font-semibold text-[var(--color-primary)]" style={{fontSize:"var(--font-h3)"}}>
               Add New User
-            </h2>
+            </h3>
           </div>
           <button
             onClick={handleClose}

@@ -84,7 +84,7 @@ const MainLayout = () => {
         </div>
 
         {/* -------- Main Content (Scrollable) -------- */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-7">
           <SocketProvider token={token} clinicId={clinicId} doctorId={doctorId}>
             <Outlet />
           </SocketProvider>

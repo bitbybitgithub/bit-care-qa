@@ -193,13 +193,13 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
       {/* Shift inputs */}
       {opShift.is_active && (
         <>
-          <div className="space-y-3 mb-3">
+          <div className="space-y-4 my-4">
             {shifts.map((shift, idx) => {
               const isDisabled = idx < initialShifts.length;
               return (
                 <div
                   key={idx}
-                  className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-center"
+                  className="flex flex-2 sm:flex-3 gap-6 items-center"
                 >
                   <TextField
                     label="Shift Start"

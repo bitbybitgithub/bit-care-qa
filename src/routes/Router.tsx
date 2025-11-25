@@ -30,7 +30,7 @@ const Router = [
       { path: "/clinic-dashboard", element: <Dashboard /> },
       { path: "/users", element: <Users /> },
       { path: "/clinic-settings", element: <Profile /> },
-      { path: "/clinic-operations", element: <ComingSoon /> },
+      // { path: "/clinic-operations", element: <ComingSoon /> },
 
       { path: "/doctor-dashboard", element: <DocDashboard /> },
       { path: "/patients-records", element: <ComingSoon /> },
@@ -40,11 +40,11 @@ const Router = [
       { path: "/profile", element: <DoctorProfile /> },
 
       { path: "/staff-dashboard", element: <Staffdashboard /> },
-      { path: "/task-and-reminder", element: <ComingSoon /> },
-      { path: "/assign-patient", element: <ComingSoon /> },
-      { path: "/message", element: <ComingSoon /> },
-      { path: "/cln-protocol", element: <ComingSoon /> },
-      { path: "/shift-schedule", element: <ComingSoon /> },
+      // { path: "/task-and-reminder", element: <ComingSoon /> },
+      // { path: "/assign-patient", element: <ComingSoon /> },
+      // { path: "/message", element: <ComingSoon /> },
+      // { path: "/cln-protocol", element: <ComingSoon /> },
+      // { path: "/shift-schedule", element: <ComingSoon /> },
       {
         path: "/consultation-in-progress",
         element: <ConsultationInProgress />,

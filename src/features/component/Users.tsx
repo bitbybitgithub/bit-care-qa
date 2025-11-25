@@ -7,6 +7,7 @@ import { getUsersList, type User } from "../../api/UserManagementAPI";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { LiaUserNurseSolid } from "react-icons/lia";
 import { updateUsers } from "../../api/SaveDocApi";
+import SidebarBg from "../../assets/SidebarBg.png";
 
 // Full Users component with modernized card UI and optimistic toggle behaviour
 const Users: React.FC = () => {
@@ -88,24 +89,24 @@ const Users: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-[var(--color-bg)] mx-7 mt-4 rounded-[var(--radius-lg)]">
+    <div>
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 w-full">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 ">
         <button
           onClick={() => setShowAddUser(true)}
-          className="flex items-center gap-2 bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-white)] px-4 py-2 rounded-2xl shadow transition w-full sm:w-auto justify-center cursor-pointer"
+          className="flex items-center gap-2 bg-[var(--color-primary)] shadow-[var(--shadow-md)] hover:opacity-90 text-[var(--color-white)] px-4 py-2 rounded-[var(--radius-lg)] transition w-full sm:w-auto justify-center cursor-pointer "
         >
           <FaPlus /> Add New User
         </button>
 
         <div className="relative w-full sm:w-64 mt-2 sm:mt-0">
-          <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
+          <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
           <input
             type="text"
             placeholder="Search user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full pl-10 pr-3 py-2 rounded-[var(--radius-lg)] border border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
       </div>
@@ -128,28 +129,58 @@ const Users: React.FC = () => {
             const isDoctor = u.role === "Doctor";
 
             return (
+              // <article
+              //   key={u.userid}
+              //   className={`relative bg-[var(--color-white)] text-[var(--color-text)] rounded-[var(--radius-lg)] overflow-hidden transform transition hover:-translate-y-2 border-t-4 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]
+              //      ${
+              //        isDoctor
+              //          ? "border-t-[var(--color-info)]"
+              //          : "border-t-[var(--color-success)]"
+              //      }`}
+              //   // aria-labelledby={`user-${u.userid}-name`}
+              // >
+              // rgba(255,255,255,1) 0%,
+              // rgba(255,255,255,1) 50%,
+              // rgba(255,255,255,0) 80%
               <article
                 key={u.userid}
-                className={`relative bg-[var(--color-surface)] text-[var(--color-text)] rounded-2xl overflow-hidden shadow-lg transform transition hover:-translate-y-2 hover:shadow-2xl border-t-4
-                   ${
-                     isDoctor
-                       ? "border-t-[var(--color-info)]"
-                       : "border-t-[var(--color-success)]"
-                   }`}
-                // aria-labelledby={`user-${u.userid}-name`}
+                className={`
+    relative bg-[var(--color-white)] text-[var(--color-text)] 
+    rounded-[var(--radius-lg)] overflow-hidden 
+    transform transition hover:-translate-y-2 
+    border-t-4 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]
+    ${
+      isDoctor
+        ? "border-t-[var(--color-info)]"
+        : "border-t-[var(--color-success)]"
+    }
+  `}
+                style={{
+                  backgroundImage: `
+      linear-gradient(to top,
+       
+          rgba(255,255,255,1) 0%,
+        rgba(255,255,255,0.85) 70%,
+        rgba(255,255,255,0.85) 100%
+      ),
+      url(${SidebarBg})
+    `,
+                  backgroundSize: "cover",
+                  backgroundPosition: "bottom center",
+                }}
               >
                 {/* Card body */}
                 <div className="p-5 flex flex-col items-center text-center">
                   <div className="w-full flex items-center justify-between mb-4">
                     {/* ROLE (Left) */}
-                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full border border-[var(--color-primary)] shadow-[var(--shadow-md)]  bg-[var(--color-bg)]">
                       <div className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20">
                         {isDoctor ? <FaUserMd /> : <LiaUserNurseSolid />}
                       </div>
                       {u.role}
                     </div>
                     {/* STATUS (Right) */}
-                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full bg-white/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 text-xs border border-[var(--color-primary)] shadow-[var(--shadow-md)] font-semibold px-3 py-2 rounded-full  backdrop-blur-sm bg-[var(--color-bg)]">
                       <div
                         className={`w-3 h-3 rounded-full ${
                           u.status === "Active" ? "bg-green-500" : "bg-red-500"
@@ -160,29 +191,34 @@ const Users: React.FC = () => {
                   </div>
                   {/* avatar / role */}
                   <div
-                    className="relative w-24 h-24 rounded-full shadow-md border-4 border-white overflow-hidden bg-gradient-to-br"
-                    // style={{
-                    //   backgroundImage:
-                    //     "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02))",
-                    // }}
+                    className={`bg-[var(--color-primary)] p-1 rounded-[var(--radius-full)] shadow-[var(--shadow-md)] ${
+                      u.role === "Doctor"
+                        ? "bg-[var(--color-info)]"
+                        : "bg-[var(--color-success)]"
+                    }`}
                   >
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br
+                    <div className="relative w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gradient-to-br">
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br
                         ${
                           u.role === "Doctor"
                             ? "bg-[var(--color-info)]"
                             : "bg-[var(--color-success)]"
                         }
                         `}
-                    >
-                      {isDoctor ? (
-                        <FaUserMd className="text-white text-4xl" aria-hidden />
-                      ) : (
-                        <LiaUserNurseSolid
-                          className="text-white text-4xl"
-                          aria-hidden
-                        />
-                      )}
+                      >
+                        {isDoctor ? (
+                          <FaUserMd
+                            className="text-white text-4xl"
+                            aria-hidden
+                          />
+                        ) : (
+                          <LiaUserNurseSolid
+                            className="text-white text-4xl"
+                            aria-hidden
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -198,10 +234,12 @@ const Users: React.FC = () => {
                     </div>
                     <p
                       className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate"
-                      title={u.email} 
+                      title={u.email}
                     >
                       <FiMail />
-                      {u.email.length > 20 ? `${u.email.slice(0, 19)}...` : u.email}
+                      {u.email.length > 20
+                        ? `${u.email.slice(0, 19)}...`
+                        : u.email}
                     </p>
 
                     <p className="text-sm mt-2 text-slate-500 flex items-center justify-start gap-2 truncate">
@@ -220,7 +258,7 @@ const Users: React.FC = () => {
                       <button
                         onClick={() => handleActiveDeactiveUser(u)}
                         disabled={updatingId === u.userid}
-                        className={`text-sm font-medium text-[var(--color-white)] py-2 px-3 rounded-xl shadow disabled:opacity-60 disabled:cursor-not-allowed transition-transform active:scale-95 cursor-pointer ${
+                        className={`text-sm font-medium text-[var(--color-white)] shadow-[var(--shadow-md)] py-2 px-3 rounded-xl  disabled:opacity-60 disabled:cursor-not-allowed transition-transform active:scale-95 cursor-pointer ${
                           u.status === "Active"
                             ? "bg-[var(--color-error)]  hover:opacity-80"
                             : "bg-[var(--color-warning)] hover:opacity-80"

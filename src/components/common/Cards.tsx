@@ -17,11 +17,11 @@ interface CardsProps {
 
 const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
   return (
-    <div className="grid grid-cols-4 gap-4 mb-7">
+    <div className="grid md:grid-cols-4 gap-4 mb-7">
       {items.map((item, index) => (
         <div
           key={index}
-          className="rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-white)] text-[var(--color-text)] border-t-4 border-[var(--color-primary)] p-6 flex flex-col items-center justify-center"
+          className="rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-white)] text-[var(--color-text)] border-t-4 border-[var(--color-primary)] p-1 md:p-6 flex flex-col items-center justify-center"
         >
           {loading ? (
             <div className="loader border-t-4 border-gray-700  rounded-full w-10 h-10 animate-spin"></div>
@@ -34,7 +34,7 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
                 <h1>{item.value}</h1>
               </div>
 
-              <h2 className="mt-2 text-center opacity-60 ">{item.title}</h2>
+              <h2 className="mt-2 text-center opacity-60" style={{fontSize:"var(--font-body)"}}>{item.title}</h2>
             </div>
           )}
         </div>

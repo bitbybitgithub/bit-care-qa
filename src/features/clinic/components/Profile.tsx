@@ -218,10 +218,11 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="mx-6 m-4 px-6 py-6 bg-[var(--color-bg)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] transition-all">
+    <div className="p-5 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all overflow-y-scroll h-[82vh]">
     {/* Branding */}
     <section className="mb-6">
-      <h3 className="font-[var(--font-weight-medium)] mb-3">
+      <h3 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-3 "
+      style={{fontSize:"var(--font-h3)"}}>
         Clinic Branding
       </h3>
 
@@ -292,7 +293,7 @@ const Profile: React.FC = () => {
 
     {/* Communication */}
     <section className="mb-6">
-      <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-xl)] px-4 py-3 border border-[var(--color-border)]">
+      <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
         <span className="font-medium text-[var(--color-text)]">Send follow-ups and reminders?</span>
         <Switch checked={sendReminders} onChange={(e) => setSendReminders(e.target.checked)} />
       </div>
@@ -300,7 +301,7 @@ const Profile: React.FC = () => {
 
     <section className="mb-6">
       <h3 className="font-semibold text-[var(--color-text)] mb-3">Daily Schedule</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {operationalDays?.map((day) => (
           <ScheduleDayWrapper
             key={day.co_id}

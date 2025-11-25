@@ -19,6 +19,7 @@ import {
 import { FaUsers } from "react-icons/fa";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { FaPeopleLine } from "react-icons/fa6";
 
 type WalkinFormData = {
   name: string;
@@ -237,20 +238,17 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         }}
       >
         {/* Header */}
-        <div className="flex justify-center">
-          <h2
-            className="flex items-center gap-2 mb-6 font-semibold"
-            style={{
-              fontSize: "var(--font-h2)",
-              color: "var(--color-primary-dark)",
-            }}
+        <div className="flex items-center gap-2">
+          <FaUsers
+            className="text-[var(--color-primary)]"
+            style={{ fontSize: "var(--font-h2)" }}
+          />
+          <h3
+            className="font-semibold text-[var(--color-primary)]"
+            style={{ fontSize: "var(--font-h3)" }}
           >
-            <FaUsers
-              className="text-3xl"
-              style={{ color: "var(--color-primary)" }}
-            />
             Walk-In Patient Registration
-          </h2>
+          </h3>
         </div>
 
         {/* Full Name */}
@@ -267,9 +265,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               borderColor: errors.name
                 ? "var(--color-error)"
                 : "var(--color-border)",
-              boxShadow: errors.name
-                ? "0 0 0 2px var(--color-error)"
-                : "none",
+              boxShadow: errors.name ? "0 0 0 2px var(--color-error)" : "none",
             }}
           >
             <IoPerson
@@ -286,10 +282,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             />
           </div>
           {errors.name && (
-            <p
-              className="mt-1 text-sm"
-              style={{ color: "var(--color-error)" }}
-            >
+            <p className="mt-1 text-sm" style={{ color: "var(--color-error)" }}>
               {errors.name}
             </p>
           )}
@@ -346,10 +339,10 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               <span style={{ color: "var(--color-text)" }}>
                 {formData.dob
                   ? Math.floor(
-                    (new Date().getTime() -
-                      new Date(formData.dob).getTime()) /
-                    (365.25 * 24 * 60 * 60 * 1000)
-                  )
+                      (new Date().getTime() -
+                        new Date(formData.dob).getTime()) /
+                        (365.25 * 24 * 60 * 60 * 1000)
+                    )
                   : "--"}
               </span>
               <span
@@ -559,7 +552,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </button>
         </div>
       </form>
-    </div>);
+    </div>
+  );
 };
 
 export default WalkInRegisterForm;

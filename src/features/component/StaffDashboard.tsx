@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaUser,
   FaPhone,
+  FaTimes,
 } from "react-icons/fa";
 import { FaPeopleGroup, FaPeopleLine } from "react-icons/fa6";
 import Cards from "../../components/common/Cards";
@@ -29,7 +30,7 @@ import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
-import { Button } from "@mui/material";
+import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
 import { VscPersonAdd } from "react-icons/vsc";
 
 interface Appointment {
@@ -44,7 +45,12 @@ const StaffDashboard: React.FC = () => {
   >("queue");
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
+  const [error, setError] = useState({
+    mobile: "",
+    otp: "",
+  });
+
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false); // <-- track if OTP was sent
   const [editedAfterOtp, setEditedAfterOtp] = useState(false);
@@ -156,11 +162,17 @@ const StaffDashboard: React.FC = () => {
   const handleSendOtp = async () => {
     debugger;
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
-      setError("Enter a valid 10-digit mobile number starting with 6–9");
+      setError((prev) => ({
+        ...prev,
+        mobile: "Enter a valid 10-digit mobile number starting with 6–9",
+      }));
+
+      // setError("");
       return;
     }
 
-    setError("");
+    // setError("");
+    setError((prev) => ({ ...prev, otp: "" }));
     setLoadingGenerate(true);
 
     try {
@@ -175,10 +187,17 @@ const StaffDashboard: React.FC = () => {
         setEditedAfterOtp(false);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
-        setError(res.message || "Failed to send OTP");
+        setError((prev) => ({
+          ...prev,
+          otp: res.message || "Failed to send OTP",
+        }));
+        // setError();
       }
     } catch {
-      setError("Something went wrong. Please try again later.");
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong. Please try again later.",
+      }));
     } finally {
       setLoadingGenerate(false);
     }
@@ -186,11 +205,14 @@ const StaffDashboard: React.FC = () => {
 
   const handleResendOtp = async () => {
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
-      setError("Enter a valid 10-digit mobile number before resending OTP");
+      setError((prev) => ({
+        ...prev,
+        mobile: "Enter a valid 10-digit mobile number before resending OTP",
+      }));
       return;
     }
 
-    setError("");
+    setError((prev) => ({ ...prev, mobile: "" }));
     setLoadingGenerate(true);
 
     try {
@@ -206,10 +228,18 @@ const StaffDashboard: React.FC = () => {
         setOtp(["", "", "", "", "", ""]);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
-        setError(res.message || "Failed to resend OTP");
+        setError((prev) => ({
+          ...prev,
+          otp: res.message || "Failed to resend OTP",
+        }));
+        // setError();
       }
     } catch {
-      setError("Something went wrong while resending OTP. Please try again.");
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong while resending OTP. Please try again.",
+      }));
+      // setError();
     } finally {
       setLoadingGenerate(false);
     }
@@ -235,16 +265,24 @@ const StaffDashboard: React.FC = () => {
     debugger;
     const finalOtp = otp.join("");
     if (finalOtp.length !== 6) {
-      setError("Please enter all 6 digits of the OTP");
+      setError((prev) => ({
+        ...prev,
+        otp: "Please enter all 6 digits of the OTP",
+      }));
+      // setError();
       return;
     }
     if (!userId) {
-      setError("User ID not found. Please resend OTP.");
+      setError((prev) => ({
+        ...prev,
+        otp: "User ID not found. Please resend OTP.",
+      }));
+      // setError();
       return;
     }
 
     setLoadingVerify(true);
-    setError("");
+    setError((prev) => ({ ...prev, otp: "" }));
 
     try {
       const res = await verifyPatientpApi({
@@ -255,7 +293,8 @@ const StaffDashboard: React.FC = () => {
       });
 
       if (!res.isOtpValid) {
-        setError("Please enter valid OTP");
+        setError((prev) => ({ ...prev, otp: "Please enter valid OTP" }));
+        // setError();
         setEditedAfterOtp(true);
         return;
       } else if (
@@ -270,7 +309,11 @@ const StaffDashboard: React.FC = () => {
       }
       setEditedAfterOtp(false);
     } catch {
-      setError("Something went wrong while verifying OTP. Please try again.");
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong while verifying OTP. Please try again.",
+      }));
+      // setError("Something went wrong while verifying OTP. Please try again.");
       setEditedAfterOtp(true);
     } finally {
       setLoadingVerify(false);
@@ -340,51 +383,51 @@ const StaffDashboard: React.FC = () => {
 
       {/* Tabs */}
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]">
-      <div className="flex gap-3">
-        {["queue", "dispensing", "followUp"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-1 rounded-t-[var(--radius-lg)] font-[var(--font-weight-semibold)] transition-all cursor-pointer ${
-              activeTab === tab
-                ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]"
-                : " text-gray-700 bg-white border-2 border-[var(--color-primary)]"
-            }`}
-          >
-            {tab === "queue"
-              ? "Patient Queue"
-              : tab === "dispensing"
-              ? "Medical Dispensing"
-              : "Set Follow up"}
-          </button>
-        ))}
-      </div>
+        <div className="flex gap-3">
+          {["queue", "dispensing", "followUp"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-1 rounded-t-[var(--radius-lg)] font-[var(--font-weight-semibold)] transition-all cursor-pointer ${
+                activeTab === tab
+                  ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]"
+                  : " text-gray-700 bg-white border-2 border-[var(--color-primary)]"
+              }`}
+            >
+              {tab === "queue"
+                ? "Patient Queue"
+                : tab === "dispensing"
+                ? "Medical Dispensing"
+                : "Set Follow up"}
+            </button>
+          ))}
+        </div>
 
-      <div className="mt-4">
-        {activeTab === "queue" ? (
-          <PatientQueue
-            mode="staff"
-            patientsData={patients}
-            loading={loadingQueue}
-            error={errorQueue}
-            onAddWalkIn={handleAddWalkIn}
-            handleUpdatePatientStatus={handleUpdatePatientStatus}
-          />
-        ) : activeTab === "followUp" ? (
-          <FollowUpAppointment
-            mode="staff"
-            data={followUpData}
-            loading={loadingDispense}
-          />
-        ) : (
-          <MedicalDispensing
-            mode="staff"
-            data={dispensingData}
-            loading={loadingDispense}
-          />
-        )}
+        <div className="mt-4">
+          {activeTab === "queue" ? (
+            <PatientQueue
+              mode="staff"
+              patientsData={patients}
+              loading={loadingQueue}
+              error={errorQueue}
+              onAddWalkIn={handleAddWalkIn}
+              handleUpdatePatientStatus={handleUpdatePatientStatus}
+            />
+          ) : activeTab === "followUp" ? (
+            <FollowUpAppointment
+              mode="staff"
+              data={followUpData}
+              loading={loadingDispense}
+            />
+          ) : (
+            <MedicalDispensing
+              mode="staff"
+              data={dispensingData}
+              loading={loadingDispense}
+            />
+          )}
+        </div>
       </div>
-</div>
       {/* Modal */}
       {open && !showRegistrationForm && (
         <div
@@ -403,33 +446,30 @@ const StaffDashboard: React.FC = () => {
           >
             {!verifiedPatients && (
               <>
-                <div className="flex items-center gap-2">
-                          <VscPersonAdd
-                            className="text-[var(--color-primary)]"
-                            style={{ fontSize: "var(--font-h2)" }}
-                          />
-                          <h3 className="font-semibold text-[var(--color-primary)]" style={{fontSize:"var(--font-h3)"}}>
-                            Add New User
-                          </h3>
-                        </div>
-                {/* <h2
-                  className="flex items-center justify-center gap-2 font-semibold"
-                  style={{
-                    fontSize: "var(--font-h2)",
-                    color: "var(--color-text)",
-                  }}
-                >
-                  <FaPeopleLine
-                    className="w-7 h-7"
-                    style={{ color: "var(--color-primary)" }}
-                  />
-                  Add Walk-In Patient
-                </h2> */}
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-2">
+                    <FaPeopleLine
+                      className="text-[var(--color-primary)]"
+                      style={{ fontSize: "var(--font-h2)" }}
+                    />
+                    <h3
+                      className="font-semibold text-[var(--color-primary)]"
+                      style={{ fontSize: "var(--font-h3)" }}
+                    >
+                      Add Walk-In Patient
+                    </h3>
+                  </div>
+                  <button
+                    onClick={handleClose}
+                    className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
                 <p
-                  className="text-center mt-1"
+                  className=" mt-1"
                   style={{
                     fontSize: "var(--font-small)",
-                    color: "var(--color-text-secondary)",
                   }}
                 >
                   We'll verify your contact to find existing records
@@ -443,34 +483,24 @@ const StaffDashboard: React.FC = () => {
                 {/* Contact Input */}
                 <div className="mt-4">
                   <div className="flex items-center gap-3">
-                    <label
-                      className="font-small"
-                      style={{
-                        color: "var(--color-text-secondary)",
-                        minWidth: "130px",
-                      }}
-                    >
-                      Contact Number :
-                    </label>
-                    <div className="flex-1 relative">
-                      <span
-                        className="absolute left-2 top-1/2 -translate-y-1/2 font-semibold"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        +91
-                      </span>
-                      <input
-                        type="tel"
+                    <FormControl>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Enter 10-digit number"
                         value={contact}
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, "");
+
                           if (val.length === 1 && /[0-5]/.test(val)) return;
+
                           if (showOtp && val !== contact) {
                             setOtp(["", "", "", "", "", ""]);
                             setShowOtp(false);
                             setOtpSent(false);
                             setEditedAfterOtp(false);
                           }
+
                           if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
                             setContact(val);
                             setError("");
@@ -480,23 +510,64 @@ const StaffDashboard: React.FC = () => {
                             setContact(val);
                           }
                         }}
-                        maxLength={10}
-                        placeholder="Enter 10-digit number"
-                        className="w-full pl-10 pr-3 py-1.5 text-base outline-none transition-all duration-200"
-                        style={{
-                          border: `1px solid ${
-                            error ? "var(--color-error)" : "var(--color-border)"
-                          }`,
-                          color: "var(--color-text)",
-                          borderRadius: "var(--radius-lg)",
-                          backgroundColor: "var(--color-surface-alt)",
-                          boxShadow: "var(--shadow-xs)",
+                        error={!!error.mobile}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    color: "var(--color-text-secondary)",
+                                  }}
+                                >
+                                  +91
+                                </span>
+                              </InputAdornment>
+                            ),
+                            inputProps: { maxLength: 10 },
+                          },
                         }}
                       />
-                    </div>
+                    </FormControl>
+                    {/* {contact.length === 10 && !showOtp && !loadingGenerate && ( */}
+                    <Button
+                      onClick={handleSendOtp}
+                      // fullWidth
+                      variant="text"
+                      disabled={
+                        contact.length !== 10 || showOtp || loadingGenerate
+                      }
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "var(--font-small)",
+                        color: "var(--color-white)",
+                        boxShadow:"var(--shadow-md)",
+                        textTransform: "none",
+                        transition: "all .2s",
+                        paddingX: "10px",
+                        cursor: "pointer",
+                        backgroundColor: "var(--color-info)",
+                        "&:hover": {
+                          backgroundColor: "var(--color-info)",
+                          opacity: 0.8,
+                        },
+                        "&.Mui-disabled": {
+                          backgroundColor: "var(--color-info)",
+                          opacity: 0.6,
+                          cursor: "not-allowed",
+                          color: "var(--color-white)",
+                        },
+                      }}
+                    >
+                      Send OTP
+                    </Button>
+
+                    {/* ) */}
+                    {/* } */}
                   </div>
 
-                  {error && (
+                  {error.mobile && (
                     <p
                       className="mt-1 font-small"
                       style={{
@@ -504,21 +575,8 @@ const StaffDashboard: React.FC = () => {
                         color: "var(--color-error)",
                       }}
                     >
-                      {error}
+                      {error.mobile}
                     </p>
-                  )}
-
-                  {contact.length === 10 && !showOtp && !loadingGenerate && (
-                    <button
-                      onClick={handleSendOtp}
-                      className="mt-1 font-semibold transition-all"
-                      style={{
-                        fontSize: "var(--font-small)",
-                        color: "var(--color-primary)",
-                      }}
-                    >
-                      Send OTP
-                    </button>
                   )}
                 </div>
 
@@ -550,14 +608,20 @@ const StaffDashboard: React.FC = () => {
                           style={{
                             width: "2.5rem",
                             height: "2.5rem",
-                            border: `1px solid var(--color-border)`,
+                            boxShadow:"var(--shadow-md)",
+                            border: `1px solid ${
+                              error.otp
+                                ? "var(--color-error)"
+                                : "var(--color-none)"
+                            }`,
                             borderRadius: "var(--radius-lg)",
-                            backgroundColor: "var(--color-surface-alt)",
+                            backgroundColor: "var(--color-surface)",
                             color: "var(--color-text)",
                             fontWeight: "var(--font-weight-semibold)",
                           }}
                         />
                       ))}
+
                       {loadingVerify && (
                         <div className="relative w-5 h-5 mt-1">
                           <div
@@ -585,6 +649,17 @@ const StaffDashboard: React.FC = () => {
                       >
                         Resend OTP
                       </button>
+                    )}
+                    {error.otp && (
+                      <p
+                        className="mt-1 font-small"
+                        style={{
+                          fontSize: "var(--font-xs)",
+                          color: "var(--color-error)",
+                        }}
+                      >
+                        {error.otp}
+                      </p>
                     )}
                   </div>
                 )}
@@ -713,46 +788,34 @@ const StaffDashboard: React.FC = () => {
             )}
 
             {/* ================= Buttons ================= */}
-            <div className="flex justify-end items-center mt-1 ">
-              <Button
-                onClick={handleClose}
-                variant="contained"
-                sx={{
-                  px: 3,
-                  py: 1.2,
-                  fontWeight: 400,
-                  fontSize: "0.9rem",
-                  borderRadius: "var(--radius-lg)",
-                  textTransform: "none",
-                  backgroundColor: "#dc2626", // fixed error red
-                  border: "1px solid #dc2626",
-                  transition: "var(--transition-normal)",
-                  "&:hover": {
-                    backgroundColor: "#b91c1c", // darker red
-                    borderColor: "#b91c1c",
-                  },
-                }}
-              >
-                Cancel
-              </Button>
-
+            <div className="flex justify-center items-center mt-4">
               {showOtp && !verifiedPatients && (
-                <button
+                <Button
                   onClick={handleConfirm}
                   disabled={loadingVerify}
-                  className="px-5 py-2 font-semibold text-white transition-all"
-                  style={{
+                  variant="contained"
+                  fullWidth={false}
+                  sx={{
+                    px: 5,
+                    py: 1.2,
+                    fontWeight: 600,
+                    borderRadius: "var(--radius-lg)",
                     backgroundColor: loadingVerify
                       ? "var(--color-secondary)"
                       : "var(--color-success)",
                     opacity: loadingVerify
                       ? "var(--opacity-disabled)"
                       : "var(--opacity-focus)",
-                    borderRadius: "var(--radius-lg)",
+                    color: "white",
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      backgroundColor: "var(--color-success)",
+                      opacity: "var(--opacity-focus)",
+                    },
                   }}
                 >
                   {loadingVerify ? "Verifying..." : "Confirm"}
-                </button>
+                </Button>
               )}
             </div>
           </div>

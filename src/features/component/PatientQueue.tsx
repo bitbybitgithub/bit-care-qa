@@ -9,7 +9,13 @@ import {
   DialogActions,
   TextField,
   Drawer,
+  Box,
 } from "@mui/material";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderCellParams,
+} from "@mui/x-data-grid";
 import { RiHeartAdd2Line } from "react-icons/ri";
 import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
@@ -17,6 +23,7 @@ import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
 import { formatEnumText } from "../../utils/FormatText";
+
 export interface Patient {
   patient_id: number;
   appointment_id: number;
@@ -46,7 +53,7 @@ interface PatientQueueProps {
   handleUpdatePatientStatus: (patient: Patient, status: string) => void;
 }
 
-/* ---------- PURE HELPERS (do not depend on React state) ---------- */
+/* ---------- PURE HELPERS ---------- */
 const badgeClasses = (status: string): string => {
   const colors: Record<string, string> = {
     waiting: "bg-amber-200 text-amber-800",
@@ -76,7 +83,6 @@ const getActionsForStatus = (status: string): string[] => {
   }
 };
 
-/* ---------------------- MAIN COMPONENT ---------------------- */
 const PAGE_SIZE = 5;
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
@@ -102,25 +108,18 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     return allowedStatuses.includes(status.toLowerCase());
   };
 
-  //  Drawer States
+  // Drawer States
   const [vitalsDrawerOpen, setVitalsDrawerOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   console.log(selectedPatient, "selectedPatient");
   console.log(patientsData, "patientsData");
-  // show all patients even if status not checked - in
-  // const totalPages = Math.ceil(patientsData.length / PAGE_SIZE);
 
-  // const currentPatients = useMemo(() => {
-  //   const start = (currentPage - 1) * PAGE_SIZE;
-  //   return patientsData.slice(start, start + PAGE_SIZE);
-  // }, [patientsData, currentPage]);
-
-  //Step 1: Filter patients if mode is 'doctor'
+  // Filter (if needed later)
   const filteredPatients = useMemo(() => {
     return patientsData;
   }, [patientsData]);
-  //Step 2: Pagination
+
   const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
 
   const currentPatients = useMemo(() => {
@@ -168,57 +167,314 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const handleConfirmCancel = useCallback(() => {
     if (!patientToCancel) return;
-    if (!patientToCancel) return;
 
     console.log("CANCEL APPOINTMENT", {
       patient_id: patientToCancel.patient_id,
       reason: cancelReason.trim(),
     });
 
-
-    // Step 1: Update appointment status to cancelled
     handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
 
-    // Step 2: Close dialog and reset fields
     setCancelDialogOpen(false);
     setCancelReason("");
     setPatientToCancel(null);
   }, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
 
+  /* -------------------- DataGrid setup -------------------- */
+
+  const rows = useMemo(() => currentPatients, [currentPatients]);
+
+  const columns: GridColDef[] = useMemo(() => {
+    const common: GridColDef[] = [
+      {
+        field: "name",
+        headerName: "Name",
+        flex: 1.3,
+        minWidth: 180,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          if (!row) return "";
+          const gender = row.gender?.toLowerCase();
+          const suffix =
+            gender === "male" ? "(M)" : gender === "female" ? "(F)" : "(O)";
+          return (
+            <div
+              className="truncate"
+              style={{
+                fontWeight: "var(--font-weight-semibold)",
+                color: "var(--color-text)",
+              }}
+            >
+              {row.name}
+              <span
+                style={{
+                  marginLeft: "0.25rem",
+                  color: "var(--color-text)",
+                  fontSize: "var(--font-xs)",
+                }}
+              >
+                {suffix}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        field: "age",
+        headerName: "Age",
+        flex: 0.5,
+        minWidth: 80,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          if (!row || !row.date_of_birth) return "—";
+          return `${getAge(row.date_of_birth)} yrs`;
+        },
+      },
+      {
+        field: "mobile_number",
+        headerName: "Contact",
+        flex: 0.8,
+        minWidth: 140,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          return row?.mobile_number ?? "—";
+        },
+      },
+    ];
+
+    if (mode === "doctor") {
+      const doctorColumns: GridColDef[] = [
+        ...common,
+        {
+          field: "reason",
+          headerName: "Service",
+          flex: 1,
+          minWidth: 160,
+          renderCell: (params: GridRenderCellParams<any, Patient>) => {
+            const row = params?.row as Patient;
+            return row?.reason ?? "—";
+          },
+        },
+        {
+          field: "source",
+          headerName: "Source",
+          flex: 0.8,
+          minWidth: 120,
+          renderCell: (params: GridRenderCellParams<any, Patient>) => {
+            const row = params?.row as Patient;
+            return row?.source ? formatEnumText(row.source) : "—";
+          },
+        },
+        {
+          field: "action",
+          headerName: "Action",
+          flex: 0.9,
+          minWidth: 200,
+          sortable: false,
+          filterable: false,
+          renderCell: (params: GridRenderCellParams<any, Patient>) => {
+            const p = params?.row as Patient;
+            if (!p) return null;
+            return (
+              <div className="flex justify-center w-full">
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    handleUpdatePatientStatus?.(
+                      p,
+                      AppointmentStatus.InProgress
+                    );
+                    onStartConsultation?.(p);
+                  }}
+                  sx={{
+                    backgroundColor: "var(--color-primary)",
+                    color: "var(--color-white)",
+                    fontWeight: "var(--font-weight-medium)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: "4px 12px",
+                    fontSize: "var(--font-small)",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: "var(--color-primary)",
+                      opacity: 0.9,
+                    },
+                  }}
+                >
+                  Ready For Consultation
+                </Button>
+              </div>
+            );
+          },
+        },
+      ];
+      return doctorColumns;
+    }
+
+    // mode === "staff"
+    const staffColumns: GridColDef[] = [
+      ...common,
+      {
+        field: "doctor",
+        headerName: "Doctor",
+        flex: 1,
+        minWidth: 160,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          return row?.doctor ?? "—";
+        },
+      },
+      {
+        field: "source",
+        headerName: "Source",
+        flex: 0.8,
+        minWidth: 120,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          return row?.source ? formatEnumText(row.source) : "—";
+        },
+      },
+      {
+        field: "status",
+        headerName: "Status",
+        flex: 0.8,
+        minWidth: 140,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          if (!row) return "";
+          return (
+            <div
+              className={`flex justify-center items-center ${badgeClasses(
+                row.status
+              )}`}
+              style={{
+                fontSize: "var(--font-xs)",
+              }}
+            >
+              {formatEnumText(row.status)}
+            </div>
+          );
+        },
+      },
+      {
+        field: "action",
+        headerName: "Action",
+        flex: 0.8,
+        minWidth: 150,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const p = params?.row as Patient;
+          if (!p) return null;
+
+          const pid = p.raw?.patient_id ?? p.patient_id;
+          if (!shouldShowSelectButton(p.status)) return null;
+
+          return (
+            <div className="flex justify-center items-center h-full ">
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    borderRadius: "var(--radius-lg)",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    my: "auto",
+                  }}
+                  onClick={(e) => handleMenuOpen(e, pid)}
+                >
+                  Take action
+                </Button>
+                <Menu
+                  anchorEl={anchorEl[pid]}
+                  open={Boolean(anchorEl[pid])}
+                  onClose={() => handleMenuClose(pid)}
+                >
+                  {getActionsForStatus(p.status).map((a) => (
+                    <MenuItem key={a} onClick={() => handleAction(a, p)}>
+                      <div
+                        className="flex items-center gap-2"
+                        style={{
+                          fontSize: "var(--font-small)",
+                        }}
+                      >
+                        {a === "Add Vitals" && (
+                          <RiHeartAdd2Line className="text-blue-600 text-lg" />
+                        )}
+                        {a === "Cancel Appointment" && (
+                          <AiOutlineUserDelete className="text-red-600 text-lg" />
+                        )}
+                        {a === "Hold Appointment" && (
+                          <IoClose className="text-orange-600 text-lg" />
+                        )}
+                        {a}
+                      </div>
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
+            </div>
+          );
+        },
+      },
+    ];
+
+    return staffColumns;
+  }, [
+    mode,
+    anchorEl,
+    handleMenuOpen,
+    handleMenuClose,
+    handleAction,
+    handleUpdatePatientStatus,
+    onStartConsultation,
+  ]);
+
+  const CustomNoRowsOverlay: React.FC = () => (
+    <Box
+      sx={{
+        p: 2,
+        textAlign: "center",
+        fontSize: "var(--font-small)",
+        color: error ? "error.main" : "text.secondary",
+      }}
+    >
+      {loading
+        ? "Loading appointments..."
+        : error
+        ? error
+        : "No patients found."}
+    </Box>
+  );
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-2xl shadow-lg p-6 transition-all duration-300 relative ${classProp || ""
-        }`}
-      style={{
-        fontFamily: "var(--font-family)",
-        fontSize: "var(--font-body)",
-        color: "var(--color-text)",
-        fontWeight: "var(--font-weight-normal)",
-      }}
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6 ${
+        classProp || ""
+      }`}
     >
       {/* Header */}
-      <div
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-3"
-        style={{ fontFamily: "var(--font-family)" }}
-      >
-        <h2
-          className="truncate"
-          style={{
-            fontSize: "var(--font-h3)",
-            fontWeight: "var(--font-weight-semibold)",
-            color: "var(--color-text)",
-          }}
-        >
-          Patient Queue
-        </h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-3">
+        {mode !== "staff" ? (
+          <h2
+            className="truncate"
+            style={{
+              fontSize: "var(--font-h3)",
+              fontWeight: "var(--font-weight-semibold)",
+              color: "var(--color-text)",
+            }}
+          >
+            Patient Queue
+          </h2>
+        ) : (
+          <h1> </h1>
+        )}
         {mode === "staff" && onAddWalkIn && (
           <button
             onClick={onAddWalkIn}
-            className="flex items-center gap-2 text-white px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base"
+            className="flex items-center gap-2 text-white px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base shadow-[var(--shadow-md)]"
             style={{
               backgroundColor: "var(--color-primary)",
-              fontFamily: "var(--font-family)",
               fontWeight: "var(--font-weight-medium)",
             }}
           >
@@ -227,273 +483,71 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         )}
       </div>
 
-      {/* Table Wrapper */}
-      <div className="overflow-x-auto sm:overflow-x-auto md:overflow-x-auto lg:overflow-visible scrollbar-thin scrollbar-thumb-gray-400 rounded-lg">
-        {/* Table Header */}
-        <div
-          className={`min-w-[900px] grid ${mode === "doctor" ? "grid-cols-6" : "grid-cols-7"
-            } gap-10 sm:gap-8 md:gap-10 lg:gap-12 py-2 px-4
-        bg-gradient-to-r from-[var(--color-primary)] to-blue-500
-        rounded-lg shadow-md text-white uppercase tracking-wide`}
-          style={{
-            fontFamily: "var(--font-family)",
-            fontSize: "var(--font-small)",
-            fontWeight: "var(--font-weight-semibold)",
-            letterSpacing: "0.05em",
+      {/* DataGrid Wrapper */}
+      <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-auto lg:overflow-visible scrollbar-thin scrollbar-thumb-gray-400">
+        <DataGrid
+          rows={rows}
+          getRowId={(row) =>
+            row?.raw?.patient_id ?? row?.patient_id ?? row?.appointment_id
+          }
+          columns={columns}
+          loading={loading}
+          rowHeight={42}
+          disableRowSelectionOnClick
+          paginationMode="server"
+          rowCount={filteredPatients.length}
+          pageSizeOptions={[PAGE_SIZE]}
+          paginationModel={{
+            page: currentPage - 1,
+            pageSize: PAGE_SIZE,
           }}
-        >
-          {mode === "doctor" ? (
-            <>
-              <span className="truncate">Name</span>
-              <span className="truncate">Age</span>
-              <span className="truncate">Contact</span>
-              <span className="truncate">Service</span>
-              <span className="truncate">Source</span>
-              <span className="truncate">Action</span>
-            </>
-          ) : (
-            <>
-              <span className="truncate">Name</span>
-              <span className="truncate">Age</span>
-              <span className="truncate">Contact</span>
-              <span className="truncate">Doctor</span>
-              <span className="truncate">Source</span>
-              <span className="truncate">Status</span>
-              <span className="truncate">Action</span>
-            </>
-          )}
-        </div>
+          onPaginationModelChange={(model) => {
+            const newPage = model.page + 1;
+            if (newPage !== currentPage) {
+              handlePageChange(newPage);
+            }
+          }}
+          getRowClassName={(params) =>
+            params.row.status === AppointmentStatus.OnHold
+              ? "on-hold-row"
+              : "default-row"
+          }
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay,
+          }}
+          sx={{
+            minWidth: 900,
+            backgroundColor: "var(--color-white)",
+            boxShadow: "var(--shadow-md)",
+            
+            // Header row + each header cell
+            "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
+              backgroundColor: "var(--color-white)",
+              color: "var(--color-primary)",
+              textTransform: "uppercase",
+              fontSize: "var(--font-small)",
+              fontWeight: "var(--font-weight-semibold)",
+              letterSpacing: "0.05em",
+            },
 
-        {/* Table Body */}
-        {loading ? (
-          <div
-            className="py-8 text-center text-gray-500"
-            style={{ fontFamily: "var(--font-family)", fontSize: "var(--font-small)" }}
-          >
-            Loading appointments...
-          </div>
-        ) : error ? (
-          <div
-            className="py-4 text-center text-red-600"
-            style={{ fontFamily: "var(--font-family)", fontSize: "var(--font-small)" }}
-          >
-            {error}
-          </div>
-        ) : currentPatients.length === 0 ? (
-          <div
-            className="py-8 text-center text-gray-500"
-            style={{ fontFamily: "var(--font-family)", fontSize: "var(--font-small)" }}
-          >
-            No patients found.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 mt-3 min-w-[900px]">
-            {currentPatients.map((p) => (
-              <div
-                key={p.patient_id}
-                className={`grid ${mode === "doctor" ? "grid-cols-6" : "grid-cols-7"
-                  } items-center gap-6 border-l-4 rounded-2xl p-2.5 shadow-sm transition-colors duration-300 ${p.status === AppointmentStatus.OnHold
-                    ? "bg-[var(--color-surface-alt)]"
-                    : "bg-[var(--color-surface)] border-[var(--color-border)]"
-                  }`}
-                style={{
-                  fontFamily: "var(--font-family)",
-                  fontSize: "var(--font-body)",
-                  fontWeight: "var(--font-weight-medium)",
-                }}
-              >
-
-                {/* Name */}
-                <div
-                  className="truncate"
-                  style={{
-                    fontWeight: "var(--font-weight-semibold)",
-                    color: "var(--color-text-secondary)"
-                    ,
-                  }}
-                >
-                  {p.name}
-                  <span
-                    style={{
-                      marginLeft: "0.25rem",
-                      color: "var(--color-text-secondary)",
-                      fontSize: "var(--font-xs)",
-                    }}
-                  >
-                    {p.gender?.toLowerCase() === "male"
-                      ? "(M)"
-                      : p.gender?.toLowerCase() === "female"
-                        ? "(F)"
-                        : "(O)"}
-                  </span>
-                </div>
-
-                {/* Age */}
-                <div
-                  style={{
-                    fontWeight: "var(--font-weight-medium)",
-                    color: "var(--color-text)",
-
-                  }}
-                >
-                  {p.date_of_birth ? `${getAge(p.date_of_birth)} yrs` : "—"}
-                </div>
-
-                {/* Contact */}
-                <div
-                  style={{
-                    fontWeight: "var(--font-weight-medium)",
-                    color: "var(--color-text)",
-                  }}
-                >
-                  {p.mobile_number ?? "—"}
-                </div>
-
-                {/* Conditional columns */}
-                {mode === "doctor" ? (
-                  <>
-                    <div style={{ color: "var(--color-text-secondary)" }}>
-                      {p.reason ?? "—"}
-                    </div>
-
-                    <div style={{ color: "var(--color-text-secondary)" }}>
-                      {formatEnumText(p.source ?? "—")}
-                    </div>
-
-                    <div className="flex justify-center">
-                      <Button
-  variant="contained"
-  onClick={() => {
-    handleUpdatePatientStatus?.(p, AppointmentStatus.InProgress);
-    onStartConsultation?.(p);
-  }}
-  sx={{
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-white)",
-    fontFamily: "var(--font-family)",
-    fontWeight: "var(--font-weight-medium)",
-    borderRadius: "var(--radius-lg)",
-    padding: "4px 12px",
-    fontSize: "var(--font-small)",
-    textTransform: "none",
-    "&:hover": {
-      backgroundColor: "var(--color-primary)",
-      opacity: 0.9,
-    },
-  }}
->
-  Ready For Consultation
-</Button>
-
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ color: "var(--color-text-secondary)" }}>
-                      {p.doctor ?? "—"}
-                    </div>
-                    <div style={{ color: "var(--color-text-secondary)" }}>
-                      {formatEnumText(p.source ?? "—")}
-                    </div>
-                    <div
-                      className={`text-center font-semibold rounded-full px-3 py-1 truncate ${badgeClasses(
-                        p.status
-                      )}`}
-                      style={{
-                        fontFamily: "var(--font-family)",
-                        fontSize: "var(--font-xs)",
-                        fontWeight: "var(--font-weight-semibold)",
-                      }}
-                    >
-                      {formatEnumText(p.status)}
-                    </div>
-
-                    <div className="flex justify-center">
-                      {shouldShowSelectButton(p.status) && (
-                        <>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                              borderRadius: "12px",
-                              textTransform: "none",
-                              fontWeight: 600,
-                              fontFamily: "var(--font-family)",
-                            }}
-                            onClick={(e) => handleMenuOpen(e, p?.raw.patient_id)}
-                          >
-                            Select
-                          </Button>
-                          <Menu
-                            anchorEl={anchorEl[p?.raw.patient_id]}
-                            open={Boolean(anchorEl[p?.raw.patient_id])}
-                            onClose={() => handleMenuClose(p?.raw.patient_id)}
-                          >
-                            {getActionsForStatus(p.status).map((a) => (
-                              <MenuItem key={a} onClick={() => handleAction(a, p)}>
-                                <div
-                                  className="flex items-center gap-2"
-                                  style={{
-                                    fontFamily: "var(--font-family)",
-                                    fontSize: "var(--font-small)",
-                                  }}
-                                >
-                                  {a === "Add Vitals" && (
-                                    <RiHeartAdd2Line className="text-blue-600 text-lg" />
-                                  )}
-                                  {a === "Cancel Appointment" && (
-                                    <AiOutlineUserDelete className="text-red-600 text-lg" />
-                                  )}
-                                  {a === "Hold Appointment" && (
-                                    <IoClose className="text-orange-600 text-lg" />
-                                  )}
-                                  {a}
-                                </div>
-                              </MenuItem>
-                            ))}
-                          </Menu>
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {patientsData.length > PAGE_SIZE && (
-        <div className="flex justify-center items-center gap-3 mt-6">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-lg ${currentPage === 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:opacity-90"
-              }`}
-          >
-            Prev
-          </button>
-          <span className="text-gray-700 text-sm">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-lg ${currentPage === totalPages
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:opacity-90"
-              }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
+            "& .MuiDataGrid-row": {
+              fontSize: "var(--font-body)",
+            },
+            "& .MuiDataGrid-row.on-hold-row": {
+              backgroundColor: "var(--color-surface-alt)",
+            },
+            "& .MuiDataGrid-row.default-row": {
+              backgroundColor: "var(--color-surface)",
+            },
+          }}
+        />
+      </Box>
 
       {/* Cancel Dialog */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+      >
         <DialogTitle className="font-semibold">Cancel Appointment</DialogTitle>
         <DialogContent>
           <TextField
@@ -552,7 +606,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       </Drawer>
     </div>
   );
-
 };
 
 export default React.memo(PatientQueue);

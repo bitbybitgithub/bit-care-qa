@@ -5,39 +5,22 @@ import {
   FaUserMd,
   FaClipboardList,
 } from "react-icons/fa";
-import { MdPhoneInTalk } from "react-icons/md";
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { toast } from "react-toastify";
 import {
   IoCallOutline,
-  IoCalendarOutline,
-  IoMailOutline,
   IoPerson,
 } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { FaPeopleLine } from "react-icons/fa6";
+import type {
+  WalkinFormData,
+  WalkInRegisterFormProps,
+} from "../../types/staffdashboardtype/staffdashboardinterfaces";
 
-type WalkinFormData = {
-  name: string;
-  dob: string;
-  email: string;
-  phone: string;
-  doctor: string;
-  reason: string;
-  patient_id?: number;
-  gender: string;
-};
-
-type WalkInRegisterFormProps = {
-  onClose: () => void;
-  patientData?: any;
-  onSuccess: () => void;
-  contact: string;
-};
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,

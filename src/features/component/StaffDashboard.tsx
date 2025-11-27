@@ -5,7 +5,6 @@ import {
   FaEnvelopeOpenText,
   FaCalendarAlt,
   FaUser,
-  FaPhone,
   FaTimes,
 } from "react-icons/fa";
 import { FaPeopleGroup, FaPeopleLine } from "react-icons/fa6";
@@ -30,26 +29,27 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
 import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
-import { VscPersonAdd } from "react-icons/vsc";
 import { generateOtpApi } from "../../api/GenerateAndVerifyOtpApi";
+import type {
+  Appointment,
+  ErrorState,
+  ActiveTab,
+  DashboardCardItem,
+} from "../../types/staffdashboardtype/staffdashboardinterfaces";
 
-interface Appointment {
-  appointment_id: number;
-  status: string;
-}
 
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
-  const [activeTab, setActiveTab] = useState<
-    "queue" | "dispensing" | "followUp"
-  >("queue");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("queue");
+
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
   // const [error, setError] = useState("");
-  const [error, setError] = useState({
-    mobile: "",
-    otp: "",
-  });
+  const [error, setError] = useState<ErrorState>({
+  mobile: "",
+  otp: "",
+});
+
 
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false); // <-- track if OTP was sent
@@ -66,8 +66,8 @@ const StaffDashboard: React.FC = () => {
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
     null
   );
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [dispensingData, setDispensingData] = useState([]);
+const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+   const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
   const [followUpData, setfollowUpData] = useState([]);
   const uId = getSessionItem("user", "user_id");
@@ -93,7 +93,8 @@ const StaffDashboard: React.FC = () => {
   const resetModalState = () => {
     setOpen(false);
     setContact("");
-    setError("");
+    setError({ mobile: "", otp: "" });
+
     setShowOtp(false);
     setOtpSent(false);
     setOtp(["", "", "", "", "", ""]);
@@ -179,7 +180,7 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
-        email:""
+        // email:""
       });
 
       if (res.success) {
@@ -220,7 +221,7 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
-        email:""
+        // email:""
       });
 
       if (res.success) {
@@ -264,7 +265,7 @@ const StaffDashboard: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    debugger;
+    
     const finalOtp = otp.join("");
     if (finalOtp.length !== 6) {
       setError((prev) => ({
@@ -322,7 +323,7 @@ const StaffDashboard: React.FC = () => {
     }
   };
 
-  const cardItems = [
+  const cardItems: DashboardCardItem[] = [
     {
       title: "Patients in Queue",
       value: patients.length,
@@ -505,7 +506,8 @@ const StaffDashboard: React.FC = () => {
 
                           if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
                             setContact(val);
-                            setError("");
+                            setError({ mobile: "", otp: "" });
+
                           } else if (val.length === 1) {
                             setError("Contact number should start from 6");
                           } else {

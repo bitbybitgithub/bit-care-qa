@@ -23,35 +23,10 @@ import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
 import { formatEnumText } from "../../utils/FormatText";
-
-export interface Patient {
-  patient_id: number;
-  appointment_id: number;
-  patient_name: string;
-  date_of_birth: string | number | Date;
-  mobile_number: string;
-  gender: string;
-  age?: number;
-  time?: string;
-  name: string;
-  raw: any;
-  reason?: string;
-  status: string;
-  doctor?: string;
-  source?: string;
-}
-
-interface PatientQueueProps {
-  mode?: "doctor" | "staff";
-  loading: boolean;
-  doctorId?: number;
-  classProp?: string;
-  patientsData?: Patient[];
-  error: string | null;
-  onStartConsultation?: (patient: Patient) => void;
-  onAddWalkIn?: () => void;
-  handleUpdatePatientStatus: (patient: Patient, status: string) => void;
-}
+import type {
+  Patient,
+  PatientQueueProps,
+} from "../../types/staffdashboardtype/staffdashboardinterfaces";
 
 /* ---------- PURE HELPERS ---------- */
 const badgeClasses = (status: string): string => {
@@ -442,16 +417,15 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       {loading
         ? "Loading appointments..."
         : error
-        ? error
-        : "No patients found."}
+          ? error
+          : "No patients found."}
     </Box>
   );
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6 ${
-        classProp || ""
-      }`}
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6 ${classProp || ""
+        }`}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-3">
@@ -484,7 +458,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       </div>
 
       {/* DataGrid Wrapper */}
-      <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-auto lg:overflow-visible scrollbar-thin scrollbar-thumb-gray-400">
+      <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400">
         <DataGrid
           rows={rows}
           getRowId={(row) =>
@@ -519,7 +493,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             minWidth: 900,
             backgroundColor: "var(--color-white)",
             boxShadow: "var(--shadow-md)",
-            
+
             // Header row + each header cell
             "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
               backgroundColor: "var(--color-white)",

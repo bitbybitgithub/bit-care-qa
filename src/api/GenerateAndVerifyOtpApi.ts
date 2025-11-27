@@ -1,17 +1,6 @@
+import type { GenerateOtpRequest, GenerateOtpResponse, VerifyOtpRequest, VerifyOtpResponse } from "../types/otpType";
 import { emrAPI } from "./EmrApi";
 
-export interface GenerateOtpRequest {
-  email:string,
-  mobile_number: string;
-  otp_type: number;
-}
-
-export interface GenerateOtpResponse {
-  success: boolean;
-  message: string;
-  userId?: number;
-  errors?: { message: string }[];
-}
 
 export const generateOtpApi = async (
   payload: GenerateOtpRequest
@@ -34,5 +23,17 @@ export const generateOtpApi = async (
         "Failed to generate OTP",
       errors: error.response?.data?.errors || [],
     };
+  }
+};
+
+
+export const verifyOtpApi = async (payload: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+  try {
+    const response = await emrAPI.post("/common/verify-otp", payload);
+    console.log("verify-otp response",response)
+    return response;
+  } catch (err: any) {
+    console.error("Verify OTP API error:", err);
+    return { success: false, message: "Something went wrong while verifying OTP" };
   }
 };

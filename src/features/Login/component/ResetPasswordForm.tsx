@@ -19,8 +19,7 @@ import { getSessionItem } from "../../../context/sessions/userSession";
 import type { ResetPassErrors } from "../../../types/types";
 import { usePasswordStrength } from "../../../components/common/usePasswordStrength";
 import { checkUserExists, resetPasswordApi } from "../../../api";
-import { generateOtpApi } from "../../../api/GenerateOtpApi";
-import { verifyOtpApi } from "../../../api/VerifyOtpApi";
+import { generateOtpApi, verifyOtpApi } from "../../../api/GenerateAndVerifyOtpApi";
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";
@@ -156,6 +155,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       const res = await generateOtpApi({
         mobile_number: mobileNumber,
         otp_type: 2,
+        email:""
       });
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");

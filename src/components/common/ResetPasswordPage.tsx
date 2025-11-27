@@ -17,10 +17,9 @@ import { toast } from "react-toastify";
 import { usePasswordStrength } from "./usePasswordStrength";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { checkUserExists, resetPasswordApi } from "../../api";
-import { generateOtpApi } from "../../api/GenerateOtpApi";
-import { verifyOtpApi } from "../../api/VerifyOtpApi";
 import { FaUser } from "react-icons/fa";
 import type { ResetPassErrors } from "../../types/types";
+import { generateOtpApi, verifyOtpApi } from "../../api/GenerateAndVerifyOtpApi";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -144,13 +143,14 @@ const ResetPasswordPage: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: mobileNumber,
         otp_type: 2,
+        email:""
       });
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");
         if (res.userId) {
           setFormData((prev) => ({
             ...prev,
-            userId: res.userId ? Number(res.userId) : null, // ✅ convert + fallback
+            userId: res.userId ? Number(res.userId) : null,
           }));
         }
         setShowOtp(true);

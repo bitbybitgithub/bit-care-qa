@@ -1,7 +1,5 @@
 // src/api/dashboardApi.ts
-import axios from "axios";
 import { emrAPI } from "./EmrApi";
-
 export interface Stats {
   totalDoctors: number;
   totalStaff: number;

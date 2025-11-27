@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { fetchDashboardStats, type Stats } from "../../api/dashboardApi";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
 import { useQuery } from "@tanstack/react-query";
@@ -13,10 +12,9 @@ import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png"
+import { fetchDashboardStats, type Stats } from "../../api/DashboardApi";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const clinicId = getSessionItem("user", "clinic_id");
 
   const [stats, setStats] = useState({

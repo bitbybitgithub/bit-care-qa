@@ -14,7 +14,6 @@ import PatientQueue, {
   type Patient,
 } from "../../features/component/PatientQueue";
 import Regex from "../../Helper/Regex";
-import { generateOtpApi } from "../../api/GenerateOtpApi";
 import {
   fetchTodayAppointments,
   updatePatientStatus,
@@ -32,6 +31,7 @@ import MedicalDispensing from "./MedicalDispensing";
 import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
 import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
 import { VscPersonAdd } from "react-icons/vsc";
+import { generateOtpApi } from "../../api/GenerateAndVerifyOtpApi";
 
 interface Appointment {
   appointment_id: number;
@@ -179,6 +179,7 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
+        email:""
       });
 
       if (res.success) {
@@ -219,6 +220,7 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
+        email:""
       });
 
       if (res.success) {

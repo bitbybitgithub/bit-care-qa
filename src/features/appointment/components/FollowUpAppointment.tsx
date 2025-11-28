@@ -12,6 +12,10 @@ const FollowUpAppointment = ({
   data = [],
 }) => {
   const [search, setSearch] = useState("");
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 5,
+  });
 
   if (loading) return <div className="p-4 text-center">Loading...</div>;
   if (error) return <div className="p-4 text-center text-red-500">{error}</div>;
@@ -90,9 +94,7 @@ const FollowUpAppointment = ({
       width: 110,
       renderCell: (params) => {
         try {
-          return params.row.dob
-            ? `${calculateAge(params.row.dob)} years`
-            : "-";
+          return params.row.dob ? `${calculateAge(params.row.dob)} years` : "-";
         } catch {
           return "-";
         }
@@ -146,8 +148,7 @@ const FollowUpAppointment = ({
       width: 110,
       renderCell: (params) => {
         const val = params.row.followup;
-        const isFollowUp =
-          val === true || String(val).toLowerCase() === "true";
+        const isFollowUp = val === true || String(val).toLowerCase() === "true";
         return isFollowUp ? "Yes" : "No";
       },
     },
@@ -194,8 +195,13 @@ const FollowUpAppointment = ({
         rows={filteredRows}
         columns={columns}
         getRowId={getRowId}
-        pageSize={5}
-        rowsPerPageOptions={[5, 10, 25]}
+        paginationModel={paginationModel}
+        onPaginationModelChange={(model) => {
+          setPaginationModel((prev) => ({
+            page: model.page, // allow page change
+            pageSize: 5, // force 5 rows always
+          }));
+        }}
         pagination
         rowHeight={35}
         disableSelectionOnClick

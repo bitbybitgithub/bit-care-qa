@@ -73,6 +73,9 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
 
+
+
+
   // ---------- Socket updates ----------
   useEffect(() => {
     if (!socket) return;
@@ -385,7 +388,7 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
       />
 
       {/* Tabs */}
-      <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]">
+      <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
         <div className="flex gap-3">
           {["queue", "dispensing", "followUp"].map((tab) => (
             <button

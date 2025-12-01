@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
-  TextField,
   Button,
   Dialog,
   DialogTitle,
@@ -14,7 +13,6 @@ import {
   type GridColDef,
   type GridPaginationModel,
 } from "@mui/x-data-grid";
-
 interface MedicalDispensingProps {
   mode?: "doctor" | "staff";
   loading: boolean;
@@ -22,7 +20,18 @@ interface MedicalDispensingProps {
   classProp?: string;
   error?: string;
   data: any[];
+  searchQuery?: string;
+  onSearchChange?: (v: string) => void;
 }
+
+const formatDate = (iso?: string) => {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString();
+  } catch {
+    return iso;
+  }
+};
 
 const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   mode = "staff",
@@ -31,228 +40,290 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   classProp = "",
   error,
   data = [],
+  searchQuery,
+  onSearchChange,
 }) => {
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const search = typeof searchQuery === "string" ? searchQuery : localSearch;
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-
-  // controlled pagination model: start page 0, pageSize 5
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 5,
   });
 
-  if (loading)
-    return <div className="p-4 text-center text-gray-500">Loading...</div>;
-  if (error)
-    return <div className="p-4 text-center text-red-500">Error: {error}</div>;
+  if (loading) return <div className="p-4 text-center">Loading...</div>;
+  if (error) return <div className="p-4 text-center text-red-500">{error}</div>;
 
-  // Filter rows by appointment id or patient name
-  const filteredRows = useMemo(() => {
-    if (!search.trim()) return data;
-    const q = search.toLowerCase();
-    return data.filter((item) => {
-      const appt = String(item.appointment_id ?? "").toLowerCase();
-      const name = String(item.patient_name ?? "").toLowerCase();
-      return appt.includes(q) || name.includes(q);
-    });
-  }, [search, data]);
+  const newDispensingData = data.filter(
+    (item) => item.appointment_status === "Dispensing Pending"
+  );
 
+  const q = (search || "").toString().trim().toLowerCase();
+  const filteredData = q
+    ? newDispensingData.filter((item) => {
+        const name = (item.patient_name || "").toString().toLowerCase();
+        return name.includes(q);
+      })
+    : newDispensingData;
+
+  // reset to first page when search changes (optional, improves UX)
+  useEffect(() => {
+    setPaginationModel((m) => ({ ...m, page: 0 }));
+  }, [q]);
+
+  console.log("newDispensingData", newDispensingData);
   const columns: GridColDef[] = [
     {
-      field: "patient_name",
-      headerName: "Patient Name",
-      flex: 1,
-      minWidth: 160,
+      field: "appointment_id",
+      headerName: "Appt. No",
+      width: 80,
       renderCell: (params) => (
-        <Box>
-          {params.row.patient_name || "-"}
-          {params.row.gender && (
-            <Typography
-              component="span"
-              variant="caption"
-              sx={{ ml: 1, color: "text.secondary" }}
-            >
-              ({String(params.row.gender).charAt(0).toUpperCase()})
-            </Typography>
-          )}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography sx={{ fontSize: 13 }}>
+            {params.row.appointment_id || "—"}
+          </Typography>
         </Box>
       ),
     },
     {
-      field: "appointment_id",
-      headerName: "Appoinment ID",
-      width: 160,
-      renderCell: (params) => params.row?.appointment_id ?? "—",
+      field: "patient",
+      headerName: "Patient Name",
+      flex: 1.6,
+      minWidth: 200,
+      sortable: false,
+      renderCell: (params) => {
+        const row = params.row || {};
+        const name = row.patient_name || "--";
+        const id = row.appointment_id ?? row.patient_id ?? "—";
+        const gender = row.gender ? String(row.gender).charAt(0) : "-";
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
+            >
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                {name}{" "}
+                <span
+                  style={{ color: "var(--color-primary)", fontWeight: 500 }}
+                >
+                  ({gender})
+                </span>
+              </Typography>
+            </Box>
+          </Box>
+        );
+      },
+    },
+    {
+      field: "appointment_date",
+      headerName: "Appt. Date",
+      width: 180,
+      renderCell: (params) => {
+        const d = params.row.appointment_date;
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontSize: 13 }}>{formatDate(d)}</Typography>
+          </Box>
+        );
+      },
     },
     {
       field: "doctor_name",
       headerName: "Doctor",
-      width: 160,
-      renderCell: (params) => params.row.doctor_name ?? "—",
-    },
-    {
-      field: "appointment_date",
-      headerName: "Date",
-      width: 160,
-      renderCell: (params) => {
-        const d = params.row.appointment_date;
-        if (!d) return "-";
-        try {
-          return new Date(d).toLocaleDateString();
-        } catch {
-          return d;
-        }
-      },
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
       width: 170,
-      sortable: false,
-      filterable: false,
-      align: "center",
-      headerAlign: "center",
       renderCell: (params) => (
-        <Button
-          size="small"
-          variant="contained"
-          onClick={() => setSelectedItem(params.row)}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography sx={{ fontSize: 13 }}>
+            {params.row.doctor_name || "—"}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: "reason",
+      headerName: "Reason",
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params) => (
+        <Typography
           sx={{
-            textTransform: "none",
-            borderRadius: "8px",
-            fontWeight: 600,
-            px: 2,
+            fontSize: 13,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
-          View Prescription
-        </Button>
+          {params.row.reason ?? "—"}
+        </Typography>
       ),
+    },
+    {
+      field: "appointment_status",
+      headerName: "Status",
+      width: 200,
+      renderCell: (params) => {
+        const status = params.row.appointment_status;
+        const isPending = status === "Dispensing Pending";
+
+        return (
+          <Button
+            className="w-40"
+            size="small"
+            variant="contained"
+            disabled={!isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              // if (isPending) updatePatientStatusAPI(params.row);
+            }}
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              fontWeight: 600,
+              px: 2,
+              backgroundColor: isPending ? "#1976d2" : "#b0b0b0",
+            }}
+          >
+            {status}
+          </Button>
+        );
+      },
     },
   ];
 
   const getRowId = (row: any) =>
-    row.appointment_id ?? String(row.patient_id ?? Math.random());
+    String(row.appointment_id ?? row.patient_id ?? Math.random());
 
   return (
-    <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6 ${classProp}`}
-    >
-      {/* Search */}
-      <Box mb={2} display="flex" justifyContent="flex-end">
-        <TextField
-          size="small"
-          placeholder="Search by Patient Name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 320 }}
-        />
-      </Box>
-
+    <div>
       <DataGrid
-        rows={filteredRows}
+        rows={filteredData}
         columns={columns}
         getRowId={getRowId}
-        // Use controlled pagination model to force pageSize = 5
-        pagination
+        onRowClick={(params) => setSelectedItem(params.row)}
         paginationModel={paginationModel}
-        onPaginationModelChange={(model) => {
-          // keep pageSize locked to 5 — if user tries to change it, revert to 5
-          setPaginationModel((prev) => ({
-            page: model.page,
-            pageSize: 5,
-          }));
-        }}
-        // If you want the dropdown visible but only offer 5:
-        rowsPerPageOptions={[5]}
-        // visual & behavior
-        disableSelectionOnClick
-        autoHeight
-        density="comfortable"
-        rowHeight={40}
+        onPaginationModelChange={(model) => setPaginationModel(model)}
+        pageSizeOptions={[5, 10, 20]}
+        pagination
+        rowHeight={64}
+        // disableSelectionOnClick
+        density="compact"
         sx={{
           minWidth: 900,
           backgroundColor: "var(--color-white)",
-          boxShadow: "var(--shadow-md)",
-          border: "2px solid var(--color-primary)",
-
-          "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
-            backgroundColor: "var(--color-white)",
+          overflow: "hidden",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "transparent",
             color: "var(--color-primary)",
             textTransform: "uppercase",
-            fontSize: "var(--font-small)",
-            fontWeight: "var(--font-weight-semibold)",
-            letterSpacing: "0.05em",
+            fontSize: 12,
+            letterSpacing: "0.06em",
           },
-
-          "& .MuiDataGrid-row": {
-            fontSize: "var(--font-body)",
-            backgroundColor: "var(--color-surface)",
+          "& .MuiDataGrid-row": { fontSize: 13 },
+          "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(0,0,0,0.02)" },
+          "& .MuiDataGrid-cell": { alignItems: "center", display: "flex" },
+          "& .MuiDataGrid-virtualScrollerRenderZone": {
+            "& .MuiDataGrid-row:nth-of-type(odd)": {
+              backgroundColor: "rgba(15,23,42,0.02)",
+            },
+            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+              outline: "none !important",
+            },
+            "& .MuiDataGrid-row:focus, & .MuiDataGrid-row:focus-within": {
+              outline: "none !important",
+            },
           },
         }}
       />
-
-      {/* Prescription Dialog */}
       <Dialog
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Prescription Details</DialogTitle>
+        <DialogTitle>
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-sm font-semibold">
+                {selectedItem?.patient_name?.[0] ?? "P"}
+              </div>
+              <div className="text-sm font-semibold">
+                {selectedItem?.patient_name ?? "Patient"}
+              </div>
+            </div>
+
+            <span
+              className={`text-xs px-3 py-1 rounded-lg font-semibold ${
+                selectedItem?.appointment_status === "Dispensing Pending"
+                  ? "bg-[var(--color-primary)] text-white"
+                  : "bg-gray-100 text-[var(--color-primary)]"
+              }`}
+            >
+              {selectedItem?.appointment_status}
+            </span>
+          </div>
+        </DialogTitle>
+
         <DialogContent dividers>
-          {selectedItem ? (
-            <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {selectedItem.patient_name || "Unknown patient"}
-              </Typography>
-
-              <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-                {selectedItem.doctor_name ?? "-"} •{" "}
-                {selectedItem.appointment_date
-                  ? new Date(selectedItem.appointment_date).toLocaleDateString()
-                  : "-"}
-              </Typography>
-
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                  Appointment ID:
-                </Typography>{" "}
-                <Typography component="span">
+          {selectedItem && (
+            <div className="space-y-3 text-sm px-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="font-semibold text-xs">Appt No:</span>{" "}
                   {selectedItem.appointment_id}
-                </Typography>
-              </Box>
+                </div>
+                <div>
+                  <span className="font-semibold text-xs">Gender:</span>{" "}
+                  {selectedItem.gender?.[0] ?? "-"}
+                </div>
+                <div className="col-span-2">
+                  <span className="font-semibold text-xs">Reason:</span>{" "}
+                  {selectedItem.reason ?? "-"}
+                </div>
+              </div>
 
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Medicines:
-                </Typography>
-
-                {selectedItem.medicines && selectedItem.medicines.length > 0 ? (
-                  <ul style={{ marginTop: 8, marginLeft: 16 }}>
-                    {selectedItem.medicines.map((m: any, idx: number) => (
-                      <li key={idx}>
-                        {m.medicine_name} — {m.quantity ?? "1"} pcs{" "}
-                        {m.dosage ? `• ${m.dosage}` : ""}
+              <div>
+                <div className="font-semibold mb-1">Medicines</div>
+                {selectedItem.medicines?.length ? (
+                  <ul className="space-y-1">
+                    {selectedItem.medicines.map((m: any, i: number) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <div className="w-6 h-6 border rounded flex items-center justify-center text-[var(--color-primary)]">
+                          💊
+                        </div>
+                        <div>
+                          {m.medicine_name}{" "}
+                          <span className="text-xs text-gray-500">
+                            ({m.quantity})
+                          </span>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <Typography
-                    variant="body2"
-                    sx={{ fontStyle: "italic", color: "text.secondary" }}
-                  >
-                    No medicines available.
-                  </Typography>
+                  <div className="text-gray-500 italic text-xs">
+                    No medicines
+                  </div>
                 )}
-              </Box>
-            </Box>
-          ) : null}
+              </div>
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setSelectedItem(null)} sx={{ textTransform: "none" }}>
-            Close
-          </Button>
+          <div className="flex justify-end gap-2 px-3 py-2 w-full">
+            <button
+              onClick={() => setSelectedItem(null)}
+              className="text-sm px-3 py-1 rounded hover:bg-gray-100"
+            >
+              Close
+            </button>
+
+            {selectedItem?.appointment_status === "Dispensing Pending" && (
+              <button className="text-sm px-3 py-1 rounded bg-[var(--color-primary)] text-white hover:opacity-90">
+                Mark Dispensed
+              </button>
+            )}
+          </div>
         </DialogActions>
       </Dialog>
     </div>

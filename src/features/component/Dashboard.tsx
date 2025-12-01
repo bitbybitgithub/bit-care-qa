@@ -11,7 +11,7 @@ import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
 import { TfiAnnouncement } from "react-icons/tfi";
-import SidebarBg from "../../assets/SidebarBg.png"
+import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats, type Stats } from "../../api/DashboardApi";
 
 const Dashboard = () => {
@@ -106,7 +106,7 @@ const Dashboard = () => {
     <div className="flex flex-col relative">
       {/* ⭐ Welcome Banner */}
       <div
-  className="
+        className="
     h-[10vh] 
     relative 
     mb-5 
@@ -117,8 +117,8 @@ const Dashboard = () => {
     rounded-[var(--radius-md)]
     overflow-hidden
   "
-  style={{
-    backgroundImage: `
+        style={{
+          backgroundImage: `
       linear-gradient(to right, 
         rgba(255,255,255,1) 0%,
         rgba(255,255,255,0.85) 70%,
@@ -127,32 +127,30 @@ const Dashboard = () => {
       ),
       url(${SidebarBg})
     `,
-    backgroundSize: "cover",
-    backgroundPosition: "left center",
-  }}
->
-  <div>
-    <h1
-      className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
-      style={{ fontSize: "var(--font-h2)" }}
-    >
-      Welcome, <span className="text-[var(--color-primary)]">Admin</span>
-    </h1>
+          backgroundSize: "cover",
+          backgroundPosition: "left center",
+        }}
+      >
+        <div>
+          <h1
+            className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
+            style={{ fontSize: "var(--font-h2)" }}
+          >
+            Welcome, <span className="text-[var(--color-primary)]">Admin</span>
+          </h1>
 
-    <p
-      className="text-[var(--color-text)] opacity-70 -mt-1"
-      style={{ fontSize: "var(--font-h5)" }}
-    >
-      Your clinic is running smoothly today.<br />
-      <h3 className="opacity-60">
-        Check your daily stats and announcements below.
-      </h3>
-    </p>
-  </div>
-
-  {/* <img src={AdminImg} className="w-40 relative z-10" /> */}
-</div>
-
+          <p
+            className="text-[var(--color-text)] opacity-70 -mt-1"
+            style={{ fontSize: "var(--font-h5)" }}
+          >
+            Your clinic is running smoothly today.
+            <br />
+            <h3 className="opacity-60">
+              Check your daily stats and announcements below.
+            </h3>
+          </p>
+        </div>
+      </div>
 
       {/* ⭐ Stats Cards */}
       <Cards items={cardItems} loading={loading} error={error} />

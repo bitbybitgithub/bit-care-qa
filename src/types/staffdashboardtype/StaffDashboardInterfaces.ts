@@ -47,6 +47,8 @@ export interface PatientQueueProps {
   onStartConsultation?: (patient: Patient) => void;
   onAddWalkIn?: () => void;
   handleUpdatePatientStatus: (patient: Patient, status: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 // WallinRegisterForm

@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaUser,
   FaTimes,
+  FaSearch,
 } from "react-icons/fa";
 import { FaPeopleGroup, FaPeopleLine } from "react-icons/fa6";
 import Cards from "../../components/common/Cards";
@@ -37,7 +38,6 @@ import type {
   DashboardCardItem,
 } from "../../types/staffdashboardtype/staffdashboardinterfaces";
 
-
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
   const [activeTab, setActiveTab] = useState<ActiveTab>("queue");
@@ -46,10 +46,9 @@ const StaffDashboard: React.FC = () => {
   const [contact, setContact] = useState("");
   // const [error, setError] = useState("");
   const [error, setError] = useState<ErrorState>({
-  mobile: "",
-  otp: "",
-});
-
+    mobile: "",
+    otp: "",
+  });
 
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false); // <-- track if OTP was sent
@@ -66,15 +65,35 @@ const StaffDashboard: React.FC = () => {
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
     null
   );
-const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-   const [dispensingData, setDispensingData] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
   const [followUpData, setfollowUpData] = useState([]);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
-
-
-
+  // Parent-level queue search state
+  const [sharedSearch, setSharedSearch] = useState("");
+  const tabs = [
+    { key: "queue", label: "Patient Queue" },
+    { key: "dispensing", label: "Medical Dispensing" },
+    { key: "followUp", label: "Set Follow Up" },
+  ];
+  const searchConfigByTab = {
+    queue: {
+      placeholder: "Last 4 digits of contact",
+      inputProps: { maxLength: 4, inputMode: "numeric" as const },
+    },
+    dispensing: {
+      placeholder: "Search by patient name",
+      inputProps: { maxLength: 50 },
+    },
+    followUp: {
+      placeholder: "Search by appointment id",
+      inputProps: { maxLength: 50 },
+    },
+  };
+  const currentSearchConfig =
+    searchConfigByTab[activeTab] ?? searchConfigByTab.queue;
 
   // ---------- Socket updates ----------
   useEffect(() => {
@@ -143,6 +162,8 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
       getfollowUpAsync(4).then(setfollowUpData);
     else getMedicalDispensingAsync(4).then(setDispensingData);
   }, [activeTab]);
+
+  console.log("GetDispensingData", dispensingData);
 
   const handleAddWalkIn = () => {
     resetModalState();
@@ -268,7 +289,6 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   };
 
   const handleConfirm = async () => {
-    
     const finalOtp = otp.join("");
     if (finalOtp.length !== 6) {
       setError((prev) => ({
@@ -326,28 +346,51 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     }
   };
 
-  const cardItems: DashboardCardItem[] = [
+  const cardItems = [
     {
       title: "Patients in Queue",
       value: patients.length,
-      icon: <FaPeopleGroup />,
+      icon: <FaPeopleGroup className="text-blue-600" />,
     },
     {
       title: "Tasks Due Today",
       value: 5,
-      icon: <FaClipboardList />,
+      icon: <FaClipboardList className="text-amber-600" />,
     },
     {
       title: "Available Doctors",
       value: 12,
-      icon: <FaUserMd />,
+      icon: <FaUserMd className="text-emerald-600" />,
     },
     {
       title: "Pending Messages",
       value: 3,
-      icon: <FaEnvelopeOpenText />,
+      icon: <FaEnvelopeOpenText className="text-violet-600" />,
     },
   ];
+
+  // const cardItems: DashboardCardItem[] = [
+  //   {
+  //     title: "Patients in Queue",
+  //     value: patients.length,
+  //     icon: <FaPeopleGroup />,
+  //   },
+  //   {
+  //     title: "Tasks Due Today",
+  //     value: 5,
+  //     icon: <FaClipboardList />,
+  //   },
+  //   {
+  //     title: "Available Doctors",
+  //     value: 12,
+  //     icon: <FaUserMd />,
+  //   },
+  //   {
+  //     title: "Pending Messages",
+  //     value: 3,
+  //     icon: <FaEnvelopeOpenText />,
+  //   },
+  // ];
 
   const handleUpdatePatientStatus = useCallback(
     async (patient: Patient, newStatus: string) => {
@@ -388,25 +431,55 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
       />
 
       {/* Tabs */}
+      {/* Tabs + shared Search */}
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
-        <div className="flex gap-3">
-          {["queue", "dispensing", "followUp"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-1 rounded-t-[var(--radius-lg)] font-[var(--font-weight-semibold)] transition-all cursor-pointer ${
-                activeTab === tab
-                  ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]"
-                  : " text-gray-700 bg-white border-2 border-[var(--color-primary)]"
-              }`}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex">
+            <div
+              className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
+              style={{ background: "var(--color-primary)" }}
             >
-              {tab === "queue"
-                ? "Patient Queue"
-                : tab === "dispensing"
-                ? "Medical Dispensing"
-                : "Set Follow up"}
-            </button>
-          ))}
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={activeTab === t.key}
+                  onClick={() => {
+                    setActiveTab(t.key);
+                    // optionally clear or keep search when switching:
+                    // setSharedSearch("");
+                  }}
+                  className={`
+              px-4 py-2 text-sm font-semibold cursor-pointer rounded-[var(--radius-lg)] transition border-2  border-[var(--color-primary)]
+              ${
+                activeTab === t.key
+                  ? "bg-[var(--color-white)] text-[var(--color-primary)]"
+                  : "text-[var(--color-white)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-white)]"
+              }
+            `}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center">
+            <TextField
+              size="small"
+              placeholder={currentSearchConfig.placeholder}
+              value={sharedSearch}
+              onChange={(e) => setSharedSearch(e.target.value)}
+              sx={{ width: 280 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaSearch className="text-gray-500 text-[16px]" />
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={currentSearchConfig.inputProps}
+            />
+          </div>
         </div>
 
         <div className="mt-4">
@@ -418,22 +491,29 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
               error={errorQueue}
               onAddWalkIn={handleAddWalkIn}
               handleUpdatePatientStatus={handleUpdatePatientStatus}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           ) : activeTab === "followUp" ? (
             <FollowUpAppointment
               mode="staff"
               data={followUpData}
               loading={loadingDispense}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           ) : (
             <MedicalDispensing
               mode="staff"
               data={dispensingData}
               loading={loadingDispense}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           )}
         </div>
       </div>
+
       {/* Modal */}
       {open && !showRegistrationForm && (
         <div
@@ -510,7 +590,6 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
                           if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
                             setContact(val);
                             setError({ mobile: "", otp: "" });
-
                           } else if (val.length === 1) {
                             setError("Contact number should start from 6");
                           } else {
@@ -549,7 +628,7 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
                         fontWeight: 600,
                         fontSize: "var(--font-small)",
                         color: "var(--color-white)",
-                        boxShadow:"var(--shadow-md)",
+                        boxShadow: "var(--shadow-md)",
                         textTransform: "none",
                         transition: "all .2s",
                         paddingX: "10px",
@@ -615,7 +694,7 @@ const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
                           style={{
                             width: "2.5rem",
                             height: "2.5rem",
-                            boxShadow:"var(--shadow-md)",
+                            boxShadow: "var(--shadow-md)",
                             border: `1px solid ${
                               error.otp
                                 ? "var(--color-error)"

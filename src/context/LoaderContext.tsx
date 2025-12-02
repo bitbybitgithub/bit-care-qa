@@ -10,11 +10,14 @@ const LoaderContext = createContext<LoaderContextType | undefined>(undefined);
 
 export const useLoader = (): LoaderContextType => {
   const context = useContext(LoaderContext);
-  if (!context) throw new Error("useLoader must be used within a LoaderProvider");
+  if (!context)
+    throw new Error("useLoader must be used within a LoaderProvider");
   return context;
 };
 
-export const LoaderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const LoaderProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [loading, setLoading] = useState(true);
   const isFetching = useIsFetching(); // number of active queries
 

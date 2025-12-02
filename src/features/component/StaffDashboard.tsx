@@ -358,10 +358,12 @@ const StaffDashboard: React.FC = () => {
   useEffect(() => {
     fetchDashboardStats(Number(uId))
       .then((data) => {
-        const mapped: DashboardCard[] = data.map((item) => ({
-          ...item,
-          icon: cardIcon[item.card_id] || null,
-        }));
+        const mapped: DashboardCard[] = data
+          .map((item) => ({
+            ...item,
+            icon: cardIcon[item.card_id] || null,
+          }))
+          .sort((a, b) => a.card_id - b.card_id);
 
         setStats(mapped);
       })

@@ -14,6 +14,7 @@ import { FaUserDoctor } from "react-icons/fa6";
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats } from "../../api/DashboardApi";
+import { useLoader } from "../../context/LoaderContext";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -23,14 +24,18 @@ export interface DashboardCard {
 }
 
 const Dashboard = () => {
+  const { loading, setLoading } = useLoader();
+  useEffect(() => {
+    setLoading(true);
+  }, []);
   const userId = getSessionItem("user", "user_id");
 
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
 
-  const { data } = useQuery<DashboardCard[]>({
+  const { data, isFetched } = useQuery<DashboardCard[]>({
     queryKey: ["dashboardStats", userId],
     queryFn: () => fetchDashboardStats(Number(userId)),
     enabled: !!userId,
@@ -51,11 +56,13 @@ const Dashboard = () => {
   // MAP DATA + ICONS
   // -------------------------
   useEffect(() => {
-    if (data) {
-      const mapped = data.map((item) => ({
-        ...item,
-        icon: cardIcon[item.card_id] ?? null,
-      }));
+    if (data && isFetched) {
+      const mapped = data
+        .map((item) => ({
+          ...item,
+          icon: cardIcon[item.card_id] ?? null,
+        }))
+        .sort((a, b) => a.card_id - b.card_id);
 
       setStats(mapped);
       setLoading(false);

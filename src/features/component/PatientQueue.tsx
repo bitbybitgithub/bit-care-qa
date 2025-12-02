@@ -23,7 +23,6 @@ import {
 import { RiHeartAdd2Line } from "react-icons/ri";
 import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
-import { FaClock, FaStethoscope } from "react-icons/fa";
 import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
@@ -77,23 +76,6 @@ const getStatusChip = (status?: string) => {
       }}
     />
   );
-};
-
-/* ---------- existing helpers ---------- */
-const badgeClasses = (status: string): string => {
-  const colors: Record<string, string> = {
-    waiting: "bg-amber-200 text-amber-800",
-    pending_vitals: "bg-indigo-200 text-indigo-800",
-    checked_in: "bg-sky-200 text-sky-800",
-    in_progress: "bg-blue-200 text-blue-800",
-    in_consultation: "bg-violet-200 text-violet-800",
-    started: "bg-indigo-200 text-indigo-800",
-    on_hold: "bg-gray-200 text-gray-700",
-    completed: "bg-emerald-200 text-emerald-800",
-    scheduled: "bg-cyan-200 text-cyan-800",
-    cancelled: "bg-rose-200 text-rose-800",
-  };
-  return colors[status.toLowerCase()] || "bg-gray-100 text-gray-800";
 };
 
 const getActionsForStatus = (status: string): string[] => {
@@ -228,23 +210,30 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const columns: GridColDef[] = useMemo(() => {
     const common: GridColDef[] = [
       {
-        field: "name",
-        headerName: "Patient",
+        field: "appointment_id",
+        headerName: "Appt. No",
+        width: 80,
+        renderCell: (params) => (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontSize: 13 }}>
+              {params.row.appointment_id || "—"}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        field: "patient",
+        headerName: "Patient Name",
         flex: 1.6,
-        minWidth: 220,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          if (!row) return "";
-          const name = row.name ?? "--";
+        minWidth: 200,
+        sortable: false,
+        renderCell: (params) => {
+          const row = params.row || {};
+          const name = row.name || "--";
           const id = row.appointment_id ?? row.patient_id ?? "—";
           const gender = row.gender ? String(row.gender).charAt(0) : "-";
           return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Avatar
-                sx={{ width: 36, height: 36, fontSize: 14, opacity: 0.95 }}
-              >
-                {name ? String(name).charAt(0) : "?"}
-              </Avatar>
               <Box
                 sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
               >
@@ -255,12 +244,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   >
                     ({gender})
                   </span>
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "text.secondary", fontSize: 11 }}
-                >
-                  ID: {id}
                 </Typography>
               </Box>
             </Box>
@@ -509,10 +492,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]  ${
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${
         classProp || ""
       }`}
     >
+    
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         {mode !== "staff" ? (

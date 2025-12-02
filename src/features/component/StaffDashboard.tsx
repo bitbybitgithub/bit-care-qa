@@ -463,7 +463,20 @@ const StaffDashboard: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="flex items-center">
+
+          <div className="flex items-center gap-x-2">
+            {activeTab === "queue" && (
+              <button
+                onClick={handleAddWalkIn}
+                className="flex items-center gap-2 text-white px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base shadow-[var(--shadow-md)] cursor-pointer"
+                style={{
+                  backgroundColor: "var(--color-primary)",
+                  fontWeight: "var(--font-weight-medium)",
+                }}
+              >
+                + Add Walk-in Patient
+              </button>
+            )}
             <TextField
               size="small"
               placeholder={currentSearchConfig.placeholder}

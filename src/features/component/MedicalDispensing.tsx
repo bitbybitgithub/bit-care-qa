@@ -52,7 +52,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   });
 
   if (loading) return <div className="p-4 text-center">Loading...</div>;
-  if (error) return <div className="p-4 text-center text-red-500">{error}</div>;
+  if (error) return <div className="p-4 text-center text-[var(--color-error)]">{error}</div>;
 
   const newDispensingData = data.filter(
     (item) => item.appointment_status === "Dispensing Pending"
@@ -180,7 +180,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
               borderRadius: "8px",
               fontWeight: 600,
               px: 2,
-              backgroundColor: isPending ? "#1976d2" : "#b0b0b0",
+              backgroundColor: isPending ? "var(--color-primary)" : "#b0b0b0",
             }}
           >
             {status}
@@ -243,7 +243,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         <DialogTitle>
           <div className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-10 h-10 rounded-[var(--radius-full)] bg-[var(--color-primary)] text-[var(--color-white)] flex items-center justify-center font-[var(--font-weight-semibold)]">
                 {selectedItem?.patient_name?.[0] ?? "P"}
               </div>
               <div className="text-sm font-semibold">
@@ -252,11 +252,12 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
             </div>
 
             <span
-              className={`text-xs px-3 py-1 rounded-lg font-semibold ${
+              className={` px-3 py-1 rounded-[var(--radius-lg)] font-semibold ${
                 selectedItem?.appointment_status === "Dispensing Pending"
-                  ? "bg-[var(--color-primary)] text-white"
+                  ? "bg-[var(--color-primary)] text-[var(--color-white)] "
                   : "bg-gray-100 text-[var(--color-primary)]"
               }`}
+              style={{fontSize:"var(--font-body)"}}
             >
               {selectedItem?.appointment_status}
             </span>
@@ -313,13 +314,13 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
           <div className="flex justify-end gap-2 px-3 py-2 w-full">
             <button
               onClick={() => setSelectedItem(null)}
-              className="text-sm px-3 py-1 rounded hover:bg-gray-100"
+              className="text-sm px-3 py-1 rounded-[var(--radius-lg)] hover:bg-gray-100"
             >
               Close
             </button>
 
             {selectedItem?.appointment_status === "Dispensing Pending" && (
-              <button className="text-sm px-3 py-1 rounded bg-[var(--color-primary)] text-white hover:opacity-90">
+              <button className="text-sm px-3 py-1 rounded-[var(--radius-lg)] bg-[var(--color-primary)] text-[var(--color-white)] hover:opacity-90">
                 Mark Dispensed
               </button>
             )}

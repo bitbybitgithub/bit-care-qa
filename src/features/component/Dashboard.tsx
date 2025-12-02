@@ -47,22 +47,22 @@ const Dashboard = () => {
     {
       title: "Total Appointments Today",
       value: stats.appointmentsToday,
-      icon: <FaCalendarDays />,
+      icon: <FaCalendarDays className="text-amber-600" />,
     },
     {
       title: "New Patients This Week",
       value: stats.newPatientsThisWeek,
-      icon: <FaPeopleGroup />,
+      icon: <FaPeopleGroup className="text-blue-600" />,
     },
     {
       title: "Doctors on Staff",
       value: stats.totalDoctors,
-      icon: <FaUserDoctor />,
+      icon: <FaUserDoctor className="text-emerald-600" />,
     },
     {
       title: "Medical Staff",
       value: stats.totalStaff,
-      icon: <FaUserNurse />,
+      icon: <FaUserNurse className="text-violet-600" />,
     },
   ];
 

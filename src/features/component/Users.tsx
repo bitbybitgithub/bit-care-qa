@@ -91,7 +91,7 @@ const Users: React.FC = () => {
   return (
     <div>
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 ">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mb-8 ">
         <button
           onClick={() => setShowAddUser(true)}
           className="flex items-center gap-2 bg-[var(--color-primary)] shadow-[var(--shadow-md)] hover:opacity-90 text-[var(--color-white)] px-4 py-2 rounded-[var(--radius-lg)] transition w-full sm:w-auto justify-center cursor-pointer "
@@ -129,19 +129,6 @@ const Users: React.FC = () => {
             const isDoctor = u.role === "Doctor";
 
             return (
-              // <article
-              //   key={u.userid}
-              //   className={`relative bg-[var(--color-white)] text-[var(--color-text)] rounded-[var(--radius-lg)] overflow-hidden transform transition hover:-translate-y-2 border-t-4 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]
-              //      ${
-              //        isDoctor
-              //          ? "border-t-[var(--color-info)]"
-              //          : "border-t-[var(--color-success)]"
-              //      }`}
-              //   // aria-labelledby={`user-${u.userid}-name`}
-              // >
-              // rgba(255,255,255,1) 0%,
-              // rgba(255,255,255,1) 50%,
-              // rgba(255,255,255,0) 80%
               <article
                 key={u.userid}
                 className={`
@@ -173,17 +160,17 @@ const Users: React.FC = () => {
                 <div className="p-5 flex flex-col items-center text-center">
                   <div className="w-full flex items-center justify-between mb-4">
                     {/* ROLE (Left) */}
-                    <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full border border-[var(--color-primary)] shadow-[var(--shadow-md)]  bg-[var(--color-bg)]">
+                    <div className="flex items-center text-xs font-semibold px-4 py-1 rounded-full border border-[var(--color-primary)] shadow-[var(--shadow-md)]  bg-[var(--color-bg)]">
                       <div className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20">
                         {isDoctor ? <FaUserMd /> : <LiaUserNurseSolid />}
                       </div>
                       {u.role}
                     </div>
                     {/* STATUS (Right) */}
-                    <div className="flex items-center gap-2 text-xs border border-[var(--color-primary)] shadow-[var(--shadow-md)] font-semibold px-3 py-2 rounded-full  backdrop-blur-sm bg-[var(--color-bg)]">
+                    <div className="flex items-center gap-2 text-xs border border-[var(--color-primary)] shadow-[var(--shadow-md)] font-semibold px-3 py-2 rounded-full bg-[var(--color-bg)]">
                       <div
                         className={`w-3 h-3 rounded-full ${
-                          u.status === "Active" ? "bg-green-500" : "bg-red-500"
+                          u.status === "Active" ? "bg-[var(--color-success)]" : "bg-[var(--color-error)]"
                         }`}
                       />
                       {u.status}

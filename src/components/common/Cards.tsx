@@ -23,7 +23,7 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
           key={index}
           className="rounded-l-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-white)] text-[var(--color-text)]
                  border-l-4 border-[var(--color-primary)] p-2
-                 flex items-center gap-4 hover:shadow-[var(--shadow-lg)] transform hover:-translate-y-1 transition-all"
+                 flex items-center gap-4"
         >
           {loading ? (
             <div className="w-full flex justify-center">

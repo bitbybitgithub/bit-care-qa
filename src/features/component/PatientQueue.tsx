@@ -30,7 +30,7 @@ import { formatEnumText } from "../../utils/FormatText";
 import type {
   Patient,
   PatientQueueProps,
-} from "../../types/staffdashboardtype/staffdashboardinterfaces";
+} from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 
 /* ---------- small visual helpers (status chip) ---------- */
 const statusMap: Record<

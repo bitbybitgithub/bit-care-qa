@@ -37,6 +37,8 @@ import type {
   ActiveTab,
   DashboardCardItem,
 } from "../../types/staffdashboardtype/staffdashboardinterfaces";
+import { fetchDashboardStats } from "../../api/DashboardApi";
+import type { DashboardCard } from "../../types/commonTypes";
 
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
@@ -69,6 +71,7 @@ const StaffDashboard: React.FC = () => {
   const [dispensingData, setDispensingData] = useState([]);
   const [loadingDispense, setLoadingDispense] = useState(false);
   const [followUpData, setfollowUpData] = useState([]);
+  const [stats, setStats] = useState([]);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
   // Parent-level queue search state
@@ -185,7 +188,6 @@ const StaffDashboard: React.FC = () => {
 
   // ---------- OTP logic ----------
   const handleSendOtp = async () => {
-    debugger;
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
       setError((prev) => ({
         ...prev,
@@ -346,51 +348,27 @@ const StaffDashboard: React.FC = () => {
     }
   };
 
-  const cardItems = [
-    {
-      title: "Patients in Queue",
-      value: patients.length,
-      icon: <FaPeopleGroup className="text-blue-600" />,
-    },
-    {
-      title: "Tasks Due Today",
-      value: 5,
-      icon: <FaClipboardList className="text-amber-600" />,
-    },
-    {
-      title: "Available Doctors",
-      value: 12,
-      icon: <FaUserMd className="text-emerald-600" />,
-    },
-    {
-      title: "Pending Messages",
-      value: 3,
-      icon: <FaEnvelopeOpenText className="text-violet-600" />,
-    },
-  ];
+  const cardIcon: Record<number, JSX.Element> = {
+    3: <FaUserMd className="text-emerald-600" />,
+    6: <FaPeopleGroup className="text-blue-600" />,
+    7: <FaClipboardList className="text-amber-600" />,
+    8: <FaEnvelopeOpenText className="text-violet-600" />,
+  };
 
-  // const cardItems: DashboardCardItem[] = [
-  //   {
-  //     title: "Patients in Queue",
-  //     value: patients.length,
-  //     icon: <FaPeopleGroup />,
-  //   },
-  //   {
-  //     title: "Tasks Due Today",
-  //     value: 5,
-  //     icon: <FaClipboardList />,
-  //   },
-  //   {
-  //     title: "Available Doctors",
-  //     value: 12,
-  //     icon: <FaUserMd />,
-  //   },
-  //   {
-  //     title: "Pending Messages",
-  //     value: 3,
-  //     icon: <FaEnvelopeOpenText />,
-  //   },
-  // ];
+  useEffect(() => {
+    fetchDashboardStats(Number(uId))
+      .then((data) => {
+        const mapped: DashboardCard[] = data.map((item) => ({
+          ...item,
+          icon: cardIcon[item.card_id] || null,
+        }));
+
+        setStats(mapped);
+      })
+      .catch((err) => {
+        console.error("Dashboard fetch failed:", err);
+      });
+  }, []);
 
   const handleUpdatePatientStatus = useCallback(
     async (patient: Patient, newStatus: string) => {
@@ -426,8 +404,8 @@ const StaffDashboard: React.FC = () => {
   return (
     <div>
       <Cards
-        items={cardItems}
-        gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
+        items={stats}
+        // gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
       />
 
       {/* Tabs */}

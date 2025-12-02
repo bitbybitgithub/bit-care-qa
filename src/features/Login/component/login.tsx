@@ -258,6 +258,7 @@ const Login = () => {
                 />
                 <div className="text-left -mt-2 mb-3 w-full">
                   <button
+                    type="button"
                     onClick={() => setSource("forgottenPassword")}
                     className="text-sm text-[var(--color-info)] hover:underline font-medium"
                   >
@@ -515,6 +516,7 @@ const Login = () => {
                 </FormControl>
                 <div className="text-left -mt-2 mb-3 w-full">
                   <button
+                    type="button"
                     onClick={() => setSource("forgottenPassword")}
                     className="text-sm text-[var(--color-info)] hover:underline font-medium"
                   >

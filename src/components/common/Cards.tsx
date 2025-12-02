@@ -1,11 +1,10 @@
 import React from "react";
 
-interface CardItem {
-  title: string;
-  value?: string | number;
+export interface CardItem {
+  id: number;
+  card_title: string;
+  count: number;
   icon?: React.ReactNode;
-  color?: string;
-  onClick?: () => void;
 }
 
 interface CardsProps {
@@ -16,8 +15,12 @@ interface CardsProps {
 }
 
 const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
+  const columns = Math.min(items.length || 1, 4);
   return (
-    <div className="grid md:grid-cols-4 gap-4 mb-7">
+    <div
+      className="grid gap-4 mb-7"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {items.map((item, index) => (
         <div
           key={index}
@@ -46,14 +49,14 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
                   className="font-[var(--font-weight-semibold)] text-center leading-tight truncate"
                   style={{ fontSize: "var(--font-h2)" }}
                 >
-                  {item.value}
+                  {item.count}
                 </div>
 
                 <div
                   className="mt-1 text-sm truncate opacity-60"
                   style={{ fontSize: "var(--font-body)" }}
                 >
-                  {item.title}
+                  {item.card_title}
                 </div>
               </div>
             </div>

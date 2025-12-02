@@ -71,20 +71,20 @@ const Profile: React.FC = () => {
   const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
 
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clinicId = getSessionItem("user", "clinic_id"); 
+  const clinicId = getSessionItem("user", "clinic_id");
   const { setLoading } = useLoader();
- 
-  const { data, isLoading, isSuccess , isError, isFetched } = useQuery<ClinicProfileData>({
-    queryKey: ["clinicProfile", clinicId],
-    queryFn: () => fetchClinicProfile(clinicId),
-    enabled: !!clinicId, // Only run if clinicId is available
-    staleTime: Infinity, // Treat the data as fresh after fetch
-  });
 
-
+  const { data, isLoading, isSuccess, isError, isFetched } =
+    useQuery<ClinicProfileData>({
+      queryKey: ["clinicProfile", clinicId],
+      queryFn: () => fetchClinicProfile(clinicId),
+      enabled: !!clinicId, // Only run if clinicId is available
+      staleTime: Infinity, // Treat the data as fresh after fetch
+    });
 
   useEffect(() => {
     if (data && isFetched) {
+      debugger;
       setClinicType(data.operational_hrs);
       setPatientDemand(data.patient_demand);
       setSendReminders(data.patient_reminder === 1);
@@ -219,112 +219,145 @@ const Profile: React.FC = () => {
 
   return (
     <div className="p-5 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all overflow-y-scroll h-[82vh]">
-    {/* Branding */}
-    <section className="mb-6">
-      <h3 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-3 "
-      style={{fontSize:"var(--font-h3)"}}>
-        Clinic Branding
-      </h3>
-
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        {/* Logo Preview */}
-        <div
-          className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
-          aria-hidden={!!(preview || logoImg) ? "false" : "true"}
+      {/* Branding */}
+      <section className="mb-6">
+        <h3
+          className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-3 "
+          style={{ fontSize: "var(--font-h3)" }}
         >
-          {preview || logoImg ? (
-            <img
-              src={logoImg ?? preview}
-              alt="Clinic Logo"
-              className="w-full h-full object-cover rounded-[var(--radius-lg)]"
-            />
-          ) : (
-            <span className="font-medium text-[var(--color-text-secondary)]">
-              Logo
-            </span>
+          Clinic Branding
+        </h3>
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          {/* Logo Preview */}
+          <div
+            className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
+            aria-hidden={!!(preview || logoImg) ? "false" : "true"}
+          >
+            {preview || logoImg ? (
+              <img
+                src={logoImg ?? preview}
+                alt="Clinic Logo"
+                className="w-full h-full object-cover rounded-[var(--radius-lg)]"
+              />
+            ) : (
+              <span className="font-medium text-[var(--color-text-secondary)]">
+                Logo
+              </span>
+            )}
+          </div>
+
+          {/* Upload Control */}
+          {!logoImg && (
+            <div className="flex-1 w-full">
+              <label className="block font-medium text-[var(--color-text-secondary)] mb-2">
+                Upload Clinic Logo
+              </label>
+              <UploadControl
+                controlName="clinicLogo"
+                file={clinicLogo}
+                onFileChange={handleFileChange}
+                acceptedFileTypes=".jpg,.jpeg,.png,.svg"
+                height="50px"
+              />
+            </div>
           )}
         </div>
+      </section>
 
-        {/* Upload Control */}
-        {!logoImg && (
-          <div className="flex-1 w-full">
-            <label className="block font-medium text-[var(--color-text-secondary)] mb-2">
-              Upload Clinic Logo
-            </label>
-            <UploadControl
-              controlName="clinicLogo"
-              file={clinicLogo}
-              onFileChange={handleFileChange}
-              acceptedFileTypes=".jpg,.jpeg,.png,.svg"
-              height="50px"
-            />
-          </div>
-        )}
-      </div>
-    </section>
+      {/* Operational Hours */}
+      <section className="mb-6">
+        <h3 className="font-semibold text-[var(--color-text)] mb-3">
+          Operational Hours & Patient Demand
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-0">
+          <FormControl>
+            <FormLabel className="!text-[var(--color-text)] font-medium mb-1">
+              Is this a full-time or part-time clinic?
+            </FormLabel>
+            <RadioGroup
+              value={clinicType}
+              onChange={(e) => setClinicType(e.target.value)}
+              row
+            >
+              <FormControlLabel
+                value="Full-time"
+                control={<Radio />}
+                label="Full-time"
+              />
+              <FormControlLabel
+                value="Part-time"
+                control={<Radio />}
+                label="Part-time"
+              />
+            </RadioGroup>
+          </FormControl>
 
-    {/* Operational Hours */}
-    <section className="mb-6">
-      <h3 className="font-semibold text-[var(--color-text)] mb-3">
-        Operational Hours & Patient Demand
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-0">
-        <FormControl>
-          <FormLabel className="!text-[var(--color-text)] font-medium mb-1">
-            Is this a full-time or part-time clinic?
-          </FormLabel>
-          <RadioGroup value={clinicType} onChange={(e) => setClinicType(e.target.value)} row>
-            <FormControlLabel value="Full-time" control={<Radio />} label="Full-time" />
-            <FormControlLabel value="Part-time" control={<Radio />} label="Part-time" />
-          </RadioGroup>
-        </FormControl>
+          <FormControl>
+            <FormLabel className="!text-[var(--color-text)] font-medium mb-1">
+              Patient demand profile
+            </FormLabel>
+            <RadioGroup
+              value={patientDemand}
+              onChange={(e) => setPatientDemand(e.target.value)}
+              row
+            >
+              <FormControlLabel
+                value="Heavy"
+                control={<Radio />}
+                label="Heavy"
+              />
+              <FormControlLabel
+                value="Medium to Light"
+                control={<Radio />}
+                label="Medium to Light"
+              />
+            </RadioGroup>
+          </FormControl>
+        </div>
+      </section>
 
-        <FormControl>
-          <FormLabel className="!text-[var(--color-text)] font-medium mb-1">
-            Patient demand profile
-          </FormLabel>
-          <RadioGroup value={patientDemand} onChange={(e) => setPatientDemand(e.target.value)} row>
-            <FormControlLabel value="Heavy" control={<Radio />} label="Heavy" />
-            <FormControlLabel value="Medium to Light" control={<Radio />} label="Medium to Light" />
-          </RadioGroup>
-        </FormControl>
-      </div>
-    </section>
-
-    {/* Communication */}
-    <section className="mb-6">
-      <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
-        <span className="font-medium text-[var(--color-text)]">Send follow-ups and reminders?</span>
-        <Switch checked={sendReminders} onChange={(e) => setSendReminders(e.target.checked)} />
-      </div>
-    </section>
-
-    <section className="mb-6">
-      <h3 className="font-semibold text-[var(--color-text)] mb-3">Daily Schedule</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {operationalDays?.map((day) => (
-          <ScheduleDayWrapper
-            key={day.co_id}
-            day={day}
-            initialAllShifts={initialAllShifts}
-            handleOperationDay={handleOperationDay}
-            onShiftChange={handleShiftChange}
+      {/* Communication */}
+      <section className="mb-6">
+        <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
+          <span className="font-medium text-[var(--color-text)]">
+            Send follow-ups and reminders?
+          </span>
+          <Switch
+            checked={sendReminders}
+            onChange={(e) => setSendReminders(e.target.checked)}
           />
-        ))}
-      </div>
-    </section>
+        </div>
+      </section>
 
-    {/* Save */}
-    <Button
-      variant="contained"
-      color="primary"
-      fullWidth
-      onClick={handleSave}
-      className="rounded-[var(--radius-xl)] py-3 text-[var(--font-body)] font-semibold shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all"
-    >
-      Save & Complete
-    </Button>
-  </div>
+      <section className="mb-6">
+        <h3 className="font-semibold text-[var(--color-text)] mb-3">
+          Daily Schedule
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {operationalDays?.map((day) => (
+            <ScheduleDayWrapper
+              key={day.co_id}
+              day={day}
+              initialAllShifts={initialAllShifts}
+              handleOperationDay={handleOperationDay}
+              onShiftChange={handleShiftChange}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Save */}
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        onClick={handleSave}
+        className="rounded-[var(--radius-xl)] py-3 text-[var(--font-body)] font-semibold shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all"
+      >
+        Save & Complete
+      </Button>
+    </div>
   );
 };
 

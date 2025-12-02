@@ -10,61 +10,57 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
+
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
-import { fetchDashboardStats, type Stats } from "../../api/DashboardApi";
+import { fetchDashboardStats } from "../../api/DashboardApi";
+export interface DashboardCard {
+  id: number;
+  title: string;
+  key: string;
+  count: number;
+  icon?: JSX.Element;
+}
 
 const Dashboard = () => {
-  const clinicId = getSessionItem("user", "clinic_id");
+  const userId = getSessionItem("user", "user_id");
 
-  const [stats, setStats] = useState({
-    totalDoctors: 0,
-    totalStaff: 0,
-    totalPatients: 0,
-    appointmentsToday: 0,
-    newPatientsThisWeek: 0,
-  });
-
+  const [stats, setStats] = useState<DashboardCard[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
 
-  const { data } = useQuery<Stats>({
-    queryKey: ["clinicProfile", clinicId],
-    queryFn: () => fetchDashboardStats(Number(clinicId)),
-    enabled: !!clinicId,
+  const { data } = useQuery<DashboardCard[]>({
+    queryKey: ["dashboardStats", userId],
+    queryFn: () => fetchDashboardStats(Number(userId)),
+    enabled: !!userId,
     staleTime: Infinity,
   });
 
+  // -------------------------
+  // ICON MAP
+  // -------------------------
+  const cardIcon: Record<number, JSX.Element> = {
+    1: <FaCalendarDays className="text-amber-600" />,
+    2: <FaPeopleGroup className="text-blue-600" />,
+    3: <FaUserDoctor className="text-emerald-600" />,
+    4: <FaUserNurse className="text-violet-600" />,
+  };
+
+  // -------------------------
+  // MAP DATA + ICONS
+  // -------------------------
   useEffect(() => {
     if (data) {
-      setStats(data);
+      const mapped = data.map((item) => ({
+        ...item,
+        icon: cardIcon[item.card_id] ?? null,
+      }));
+
+      setStats(mapped);
       setLoading(false);
     }
   }, [data]);
-
-  const cardItems = [
-    {
-      title: "Total Appointments Today",
-      value: stats.appointmentsToday,
-      icon: <FaCalendarDays className="text-amber-600" />,
-    },
-    {
-      title: "New Patients This Week",
-      value: stats.newPatientsThisWeek,
-      icon: <FaPeopleGroup className="text-blue-600" />,
-    },
-    {
-      title: "Doctors on Staff",
-      value: stats.totalDoctors,
-      icon: <FaUserDoctor className="text-emerald-600" />,
-    },
-    {
-      title: "Medical Staff",
-      value: stats.totalStaff,
-      icon: <FaUserNurse className="text-violet-600" />,
-    },
-  ];
 
   // Reusable button
   const ActionButton = ({
@@ -153,7 +149,8 @@ const Dashboard = () => {
       </div>
 
       {/* ⭐ Stats Cards */}
-      <Cards items={cardItems} loading={loading} error={error} />
+
+      <Cards items={stats} loading={loading} error={error} />
 
       {/* ⭐ Quick Actions + Announcements */}
       <div className="md:flex gap-x-4">

@@ -8,11 +8,16 @@ export interface Stats {
   newPatientsThisWeek: number;
 }
 
-export const fetchDashboardStats = async (clinic_id: number): Promise<Stats> => {
+
+
+
+
+
+export const fetchDashboardStats = async (user_id: number): Promise<Stats> => {
   try {
     const response = await emrAPI.post<Stats>(
-      "/clinics/dashboard/overview",
-      { clinic_id }
+      "/clinics/dashboard/cards",
+      { user_id }
     );
 
     return response;

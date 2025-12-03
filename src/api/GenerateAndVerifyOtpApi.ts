@@ -1,5 +1,5 @@
 import type { GenerateOtpRequest, GenerateOtpResponse, VerifyOtpRequest, VerifyOtpResponse } from "../types/otpType";
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 
 export const generateOtpApi = async (

@@ -1,4 +1,4 @@
-import { emrAPI } from "../EmrApi";
+import { emrAPI } from "../../services/EmrApi";
 import type { DeleteDoctorAvailabilityResponse, DoctorAvailabilityResponse, SaveDoctorAvailabilityResponse } from "../../types/types";
 
 export const getDoctorAvailabilityApi = async (

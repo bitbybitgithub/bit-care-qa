@@ -1,5 +1,5 @@
 // src/api/api.ts
-import { TokenManager } from "./auth/tokenManager";
+import { TokenManager } from "../api/auth/tokenManager";
 import type { RefreshToken } from "../types/types";
 import { getSocket } from "../context/socket";
 

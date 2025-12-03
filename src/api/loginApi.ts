@@ -1,5 +1,5 @@
 // loginApi.ts
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 const BASE_URL = "/auth";
 

@@ -1,5 +1,5 @@
 // src/api/dashboardApi.ts
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 export interface Stats {
   totalDoctors: number;
   totalStaff: number;

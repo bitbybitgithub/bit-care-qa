@@ -1,4 +1,3 @@
-export * from "./EmrApi";
 export * from "./clinic/FormApi";
 export * from "./ServiceApi"; 
 export * from "./DocListApi";

@@ -1,4 +1,4 @@
-import { emrAPI } from "../api/EmrApi"; 
+import { emrAPI } from "../services/EmrApi";
 
 // Function to save a new patient
 export interface SavePatientResponse {

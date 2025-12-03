@@ -1,5 +1,4 @@
-// api/VerifyOtpApi.ts
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 export interface VerifyOtpRequest {
   userId: number;

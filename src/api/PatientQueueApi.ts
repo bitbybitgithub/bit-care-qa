@@ -1,5 +1,5 @@
 import type { Payload } from "recharts/types/component/DefaultTooltipContent";
-import { emrAPI } from "./EmrApi"; 
+import { emrAPI } from "../services/EmrApi";
 
 export interface AppointmentDto {
   doctor_name: string;

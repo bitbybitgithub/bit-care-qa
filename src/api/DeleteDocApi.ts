@@ -1,4 +1,4 @@
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 export interface DeleteDoctorRequest {
   clinic_id: number;

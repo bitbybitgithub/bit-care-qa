@@ -1,4 +1,4 @@
-import { emrAPI } from "../api/EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 export interface Role {
   role_id: number;

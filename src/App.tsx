@@ -3,7 +3,7 @@ import Router from "./routes/Router";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import { ToastContainer } from "react-toastify";
-import { ApiInterceptor } from "./api";
+import { ApiInterceptor } from "./services/EmrApi";
 import { logoutApi } from "./api/LogoutApi";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";

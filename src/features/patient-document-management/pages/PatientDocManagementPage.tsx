@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import UploadDocument from "../pages/UploadDocument";
+import ExistingDocumentList from "../pages/ExistingDocumentList";
 
 export default function PatientDocManagementPage() {
   const [resource, setResource] = useState([]);
@@ -30,7 +31,7 @@ export default function PatientDocManagementPage() {
         <UploadDocument />
       </div>
       <div className="w-full h-72 bg-[var(--color-white)] shadow-md rounded-md p-4">
-        Existing Documents
+        <ExistingDocumentList/>
       </div>
     </div>
   );

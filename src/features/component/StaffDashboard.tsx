@@ -39,6 +39,7 @@ import type {
 } from "../../types/staffdashboardtype/staffdashboardinterfaces";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import type { DashboardCard } from "../../types/commonTypes";
+import SidebarBg from "../../assets/SidebarBg.png"
 
 const StaffDashboard: React.FC = () => {
   const { socket, isConnected } = useSocket();
@@ -74,6 +75,7 @@ const StaffDashboard: React.FC = () => {
   const [stats, setStats] = useState([]);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
+
   // Parent-level queue search state
   const [sharedSearch, setSharedSearch] = useState("");
   const tabs = [
@@ -405,6 +407,43 @@ const StaffDashboard: React.FC = () => {
 
   return (
     <div>
+      <div
+        className="relative mb-3 shadow-[var(--shadow-lg)] px-5 py-4
+        flex items-center justify-between rounded-[var(--radius-md)] overflow-hidden"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, 
+              rgba(255,255,255,1) 0%,
+              rgba(255,255,255,0.85) 70%,
+              rgba(255,255,255,0.3) 80%,
+              rgba(255,255,255,0) 100%
+            ),
+            url(${SidebarBg})
+          `,
+          backgroundSize: "cover",
+          backgroundPosition: "left center",
+        }}
+      >
+        <div>
+          <h1
+            className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
+            style={{ fontSize: "var(--font-h3)" }}
+          >
+            Welcome, <span className="text-[var(--color-primary)]">Staff</span>
+          </h1>
+
+          <p
+            className="text-[var(--color-text)] opacity-70 -mt-1"
+            style={{ fontSize: "var(--font-h5)" }}
+          >
+            Your clinic is running smoothly today.
+            {/* <br />
+                  <h3 className="opacity-60">
+                    Check your daily stats and announcements below.
+                  </h3> */}
+          </p>
+        </div>
+      </div>
       <Cards
         items={stats}
         // gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
@@ -430,7 +469,7 @@ const StaffDashboard: React.FC = () => {
                     // setSharedSearch("");
                   }}
                   className={`
-              px-4 py-2 text-sm font-semibold cursor-pointer rounded-[var(--radius-lg)] transition border-2  border-[var(--color-primary)]
+              px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
               ${
                 activeTab === t.key
                   ? "bg-[var(--color-white)] text-[var(--color-primary)]"

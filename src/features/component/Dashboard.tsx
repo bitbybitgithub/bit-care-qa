@@ -112,7 +112,6 @@ const Dashboard = () => {
         className="
     h-[10vh] 
     relative 
-    mb-5 
     shadow-[var(--shadow-lg)] 
     px-6
     flex items-center justify-between 

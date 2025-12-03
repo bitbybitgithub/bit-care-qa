@@ -18,7 +18,7 @@ const Cards: React.FC<CardsProps> = ({ items, gridCols, loading, error }) => {
   const columns = Math.min(items.length || 1, 4);
   return (
     <div
-      className="grid gap-4 mb-4"
+      className="grid gap-4 my-4"
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
       {items.map((item, index) => (

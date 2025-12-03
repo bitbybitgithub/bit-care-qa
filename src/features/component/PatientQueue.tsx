@@ -106,6 +106,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
+
+  console.log("patient Data", patientsData)
   const [localSearch, setLocalSearch] = useState("");
   const search = typeof searchQuery === "string" ? searchQuery : localSearch;
   const setSearch = onSearchChange ?? setLocalSearch;

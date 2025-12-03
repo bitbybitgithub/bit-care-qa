@@ -70,3 +70,15 @@ export type WalkInRegisterFormProps = {
   onSuccess: () => void;
   contact: string;
 };
+
+//Medical Dispensing 
+export type MedicalDispensingProps {
+  mode?: "doctor" | "staff";
+  loading: boolean;
+  doctorId?: number;
+  classProp?: string;
+  error?: string;
+  data: any[];
+  searchQuery?: string;
+  onSearchChange?: (v: string) => void;
+}

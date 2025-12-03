@@ -1,3 +1,4 @@
+import type { Payload } from "recharts/types/component/DefaultTooltipContent";
 import { emrAPI } from "./EmrApi"; 
 
 export interface AppointmentDto {
@@ -26,9 +27,10 @@ export interface TodayAppointmentsResponse {
 // Define the request body type
 export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
-  user_id: number;
+  user_id: string;
   status: string;
-  clinic_id:string;
+  patient_id: number;
+  clinic_id: number;
 }
 
 // Define the response type
@@ -97,12 +99,20 @@ export interface followUpResponse{
   success: boolean;
   data: FollowUpDto[];
 }
+
+export interface GetPrescriptionRequest {
+  patient_id: number;
+  doctor_id:number;
+}
+
+
 /**
  * Fetch today's appointments for a specific doctor.
  *
  * @param doctorId - The ID of the doctor
  * @returns Promise<AppointmentDto[]> - List of today's appointments
  */
+
 export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
@@ -123,6 +133,7 @@ export async function updatePatientStatus(
       "/appointments/update-status",
       payload
     );
+    console.log("updatePatientStatus response:", response);
     return response;
   } catch (error: any) {
     console.error("Error updating appointment status:", error.message || error);
@@ -135,23 +146,38 @@ export async function getMedicalDispensingAsync(doctorId: number | null): Promis
     "/doctors/getMedicalDispensing",
     { doctor_id: doctorId } 
   );
-console.log('response', response)
   if (!response || !response.success) {
     throw new Error("Failed to Medical Dispensing");
   }
   return response?.body?.data?? [];
 }
 
-export async function getfollowUpAsync(doctorId: number | null):Promise<followUpDto[]> {
+export async function getfollowUpAsync(doctorId: number | null):Promise<FollowUpDto[]> {
   const response = await emrAPI.post<followUpResponse>(
     "/doctors/get-patient-followup",
     { doctor_id: doctorId } 
   );
-console.log('response', response)
   if (!response || !response.success) {
     throw new Error("Failed to follow up");
   }
   return response.body || [];
 }
 
+export const getPrescriptionDetails = async (
+  payload: GetPrescriptionRequest
+): Promise<any> => {
+  try {
+    const response = await emrAPI.post<any>("/doctors/get-prescription-details", payload);
+    return response;
+  } catch (err: any) {
+    console.error(
+      "Get Prescription  API error:",
+      err.response?.data || err.message
+    );
+    throw new Error(
+      err.response?.data?.message ||
+        "Something went wrong while fetching Patient Prescription "
+    );
+  }
+};
 

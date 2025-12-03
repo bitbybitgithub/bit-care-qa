@@ -75,6 +75,8 @@ const StaffDashboard: React.FC = () => {
   const [stats, setStats] = useState([]);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
+  const docId=getSessionItem("docId", "doctor_id");
+
 
   // Parent-level queue search state
   const [sharedSearch, setSharedSearch] = useState("");
@@ -164,12 +166,13 @@ const StaffDashboard: React.FC = () => {
   useEffect(() => {
     if (activeTab === "queue") fetchQueue();
     else if (activeTab === "followUp")
-      getfollowUpAsync(4).then(setfollowUpData);
-    else getMedicalDispensingAsync(4).then(setDispensingData);
+      getfollowUpAsync(20).then(setfollowUpData);
+    else getMedicalDispensingAsync(20).then(setDispensingData);
   }, [activeTab]);
 
   console.log("GetDispensingData", dispensingData);
 
+  console.log("setDispensingData",dispensingData)
   const handleAddWalkIn = () => {
     resetModalState();
     setOpen(true);
@@ -208,8 +211,8 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
-        // email:""
       });
+      console.log("otp response", res)
 
       if (res.success) {
         setUserId(res.userId ?? null);

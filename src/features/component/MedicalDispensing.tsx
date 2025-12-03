@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,16 +13,13 @@ import {
   type GridColDef,
   type GridPaginationModel,
 } from "@mui/x-data-grid";
-interface MedicalDispensingProps {
-  mode?: "doctor" | "staff";
-  loading: boolean;
-  doctorId?: number;
-  classProp?: string;
-  error?: string;
-  data: any[];
-  searchQuery?: string;
-  onSearchChange?: (v: string) => void;
-}
+import type { MedicalDispensingProps } from "../../types/staffdashboardtype/staffdashboardinterfaces";
+import {
+  getPrescriptionDetails,
+  updatePatientStatus,
+} from "../../api/PatientQueueApi";
+import { getSessionItem } from "../../context/sessions/userSession";
+import { toast } from "react-toastify";
 
 const formatDate = (iso?: string) => {
   if (!iso) return "—";
@@ -45,17 +42,22 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
 }) => {
   const [localSearch, setLocalSearch] = useState("");
   const search = typeof searchQuery === "string" ? searchQuery : localSearch;
+
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 5,
   });
 
+  const userId = getSessionItem("user", "user_id");
+  const clinicID = getSessionItem("user", "clinic_id");
+
+
   if (loading) return <div className="p-4 text-center">Loading...</div>;
   if (error) return <div className="p-4 text-center text-[var(--color-error)]">{error}</div>;
 
   const newDispensingData = data.filter(
-    (item) => item.appointment_status === "Dispensing Pending"
+    (item) => item.appointment_status === "Dispensing Pending" || item.appointment_status === "Completed"
   );
 
   const q = (search || "").toString().trim().toLowerCase();
@@ -66,23 +68,62 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
       })
     : newDispensingData;
 
-  // reset to first page when search changes (optional, improves UX)
   useEffect(() => {
     setPaginationModel((m) => ({ ...m, page: 0 }));
   }, [q]);
 
-  console.log("newDispensingData", newDispensingData);
+  const getPrescription = async (row: any) => {
+    try {
+      const payload = {
+        patient_id: row.patient_id,
+        doctor_id: row.doctor_id,
+      };
+
+      const response = await getPrescriptionDetails(payload);
+
+      const updatedRow = {
+        ...row,
+        prescriptions: response?.data || [],
+      };
+
+      setSelectedItem(updatedRow); // OPEN DIALOG
+    } catch (err) {
+      console.error("Error fetching prescription details:", err);
+    }
+  };
+
+  const updateMedicineDespensing = async (row: any) => {
+    try {
+      const payload = {
+        appointment_id: row.appointment_id,
+        user_id: String(userId),
+        status: "Completed",
+        patient_id: row.patient_id,
+        clinic_id: clinicID,
+      };
+      const response = await updatePatientStatus(payload);
+      window.location.reload();
+      console.log("response", response);
+      if (response.success==true) {
+
+        toast.success("Status updated successfully");
+      }
+
+    } catch (err) {
+      console.error("Error updating patient status:", err);
+    }
+  };
+
+
   const columns: GridColDef[] = [
     {
       field: "appointment_id",
       headerName: "Appt. No",
       width: 80,
       renderCell: (params) => (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography sx={{ fontSize: 13 }}>
-            {params.row.appointment_id || "—"}
-          </Typography>
-        </Box>
+        <Typography sx={{ fontSize: 13 }}>
+          {params.row.appointment_id || "—"}
+        </Typography>
       ),
     },
     {
@@ -94,23 +135,14 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
       renderCell: (params) => {
         const row = params.row || {};
         const name = row.patient_name || "--";
-        const id = row.appointment_id ?? row.patient_id ?? "—";
         const gender = row.gender ? String(row.gender).charAt(0) : "-";
         return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
-            >
-              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-                {name}{" "}
-                <span
-                  style={{ color: "var(--color-primary)", fontWeight: 500 }}
-                >
-                  ({gender})
-                </span>
-              </Typography>
-            </Box>
-          </Box>
+          <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+            {name}{" "}
+            <span style={{ color: "var(--color-primary)", fontWeight: 500 }}>
+              ({gender})
+            </span>
+          </Typography>
         );
       },
     },
@@ -118,25 +150,20 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
       field: "appointment_date",
       headerName: "Appt. Date",
       width: 180,
-      renderCell: (params) => {
-        const d = params.row.appointment_date;
-        return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ fontSize: 13 }}>{formatDate(d)}</Typography>
-          </Box>
-        );
-      },
+      renderCell: (params) => (
+        <Typography sx={{ fontSize: 13 }}>
+          {formatDate(params.row.appointment_date)}
+        </Typography>
+      ),
     },
     {
       field: "doctor_name",
       headerName: "Doctor",
       width: 170,
       renderCell: (params) => (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography sx={{ fontSize: 13 }}>
-            {params.row.doctor_name || "—"}
-          </Typography>
-        </Box>
+        <Typography sx={{ fontSize: 13 }}>
+          {params.row.doctor_name || "—"}
+        </Typography>
       ),
     },
     {
@@ -163,7 +190,8 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
       width: 200,
       renderCell: (params) => {
         const status = params.row.appointment_status;
-        const isPending = status === "Dispensing Pending";
+        const isPending =
+          status === "Dispensing Pending";
 
         return (
           <Button
@@ -173,7 +201,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
             disabled={!isPending}
             onClick={(e) => {
               e.stopPropagation();
-              // if (isPending) updatePatientStatusAPI(params.row);
+              updateMedicineDespensing(params.row);
             }}
             sx={{
               textTransform: "none",
@@ -191,7 +219,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
   ];
 
   const getRowId = (row: any) =>
-    String(row.appointment_id ?? row.patient_id ?? Math.random());
+    String(row.patient_id ?? row.doctor_id ?? Math.random());
 
   return (
     <div>
@@ -199,18 +227,16 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         rows={filteredData}
         columns={columns}
         getRowId={getRowId}
-        onRowClick={(params) => setSelectedItem(params.row)}
+        onRowClick={(params) => getPrescription(params.row)}
         paginationModel={paginationModel}
         onPaginationModelChange={(model) => setPaginationModel(model)}
         pageSizeOptions={[5, 10, 20]}
         pagination
         rowHeight={64}
-        // disableSelectionOnClick
         density="compact"
         sx={{
           minWidth: 900,
           backgroundColor: "var(--color-white)",
-          overflow: "hidden",
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "transparent",
             color: "var(--color-primary)",
@@ -221,19 +247,9 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
           "& .MuiDataGrid-row": { fontSize: 13 },
           "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(0,0,0,0.02)" },
           "& .MuiDataGrid-cell": { alignItems: "center", display: "flex" },
-          "& .MuiDataGrid-virtualScrollerRenderZone": {
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "rgba(15,23,42,0.02)",
-            },
-            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
-              outline: "none !important",
-            },
-            "& .MuiDataGrid-row:focus, & .MuiDataGrid-row:focus-within": {
-              outline: "none !important",
-            },
-          },
         }}
       />
+
       <Dialog
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
@@ -267,64 +283,38 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         <DialogContent dividers>
           {selectedItem && (
             <div className="space-y-3 text-sm px-2">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="font-semibold text-xs">Appt No:</span>{" "}
-                  {selectedItem.appointment_id}
-                </div>
-                <div>
-                  <span className="font-semibold text-xs">Gender:</span>{" "}
-                  {selectedItem.gender?.[0] ?? "-"}
-                </div>
-                <div className="col-span-2">
-                  <span className="font-semibold text-xs">Reason:</span>{" "}
-                  {selectedItem.reason ?? "-"}
-                </div>
-              </div>
+              <div className="font-semibold mb-1">Prescriptions</div>
 
-              <div>
-                <div className="font-semibold mb-1">Medicines</div>
-                {selectedItem.medicines?.length ? (
-                  <ul className="space-y-1">
-                    {selectedItem.medicines.map((m: any, i: number) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <div className="w-6 h-6 border rounded flex items-center justify-center text-[var(--color-primary)]">
-                          💊
-                        </div>
-                        <div>
-                          {m.medicine_name}{" "}
-                          <span className="text-xs text-gray-500">
-                            ({m.quantity})
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-gray-500 italic text-xs">
-                    No medicines
-                  </div>
-                )}
-              </div>
+              {selectedItem.prescriptions?.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedItem.prescriptions.map((p: any) => (
+                    <li
+                      key={p.prescribe_id}
+                      className="border rounded-md p-2 bg-gray-50 shadow-sm text-sm"
+                    >
+                      <div className="mt-1">{p.prescription}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(p.created_date).toLocaleString()}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-gray-500 italic text-xs">
+                  No prescriptions found
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
 
         <DialogActions>
-          <div className="flex justify-end gap-2 px-3 py-2 w-full">
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="text-sm px-3 py-1 rounded-[var(--radius-lg)] hover:bg-gray-100"
-            >
-              Close
-            </button>
-
-            {selectedItem?.appointment_status === "Dispensing Pending" && (
-              <button className="text-sm px-3 py-1 rounded-[var(--radius-lg)] bg-[var(--color-primary)] text-[var(--color-white)] hover:opacity-90">
-                Mark Dispensed
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setSelectedItem(null)}
+            className="text-sm px-3 py-1 rounded bg-[var(--color-primary)] text-white hover:opacity-90"
+          >
+            Close Prescriptions View
+          </button>
         </DialogActions>
       </Dialog>
     </div>
@@ -332,3 +322,106 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
 };
 
 export default MedicalDispensing;
+
+{
+  /* <div className="space-y-3 text-sm px-2">
+  <div className="grid grid-cols-6">
+    <div>
+      <span className="font-semibold text-xs">Appt No:</span>{" "}
+      {selectedItem.appointment_id}
+    </div>
+    <div>
+      <span className="font-semibold text-xs">Gender:</span>{" "}
+      {selectedItem.gender?.[0] ?? "-"}
+    </div>
+    <div className="col-span-2">
+      <span className="font-semibold text-xs">Reason:</span>{" "}
+      {selectedItem.reason ?? "-"}
+    </div>
+    <div className="col-span-2">
+      <span className="font-semibold text-xs">Doctor:</span>{" "}
+      {selectedItem.doctor_name ?? "-"}
+    </div>
+  </div>
+
+  <div className="border rounded-md p-3 bg-slate-50 mb-2">
+    <div className="text-xs">
+      <div>
+        <span className="font-semibold">Patient Name:</span>{" "}
+        {selectedItem.patient_name ?? "-"}
+      </div>
+      <div>
+        <span className="font-semibold">Consulting Doctor:</span>{" "}
+        {selectedItem.doctor_name ?? "-"}
+      </div>
+      <div>
+        <span className="font-semibold">Consultation Date:</span>{" "}
+        {formatDate(selectedItem.appointment_date)}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div className="font-semibold mb-1">Prescriptions</div>
+
+    {selectedItem.prescriptions?.length ? (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-xs">
+          <thead>
+            <tr className="bg-green-600 text-white">
+              <th className="px-2 py-1 border">#</th>
+              <th className="px-2 py-1 border text-left">Medication</th>
+              <th className="px-2 py-1 border text-left">Dosage</th>
+              <th className="px-2 py-1 border text-center">Frequency</th>
+              <th className="px-2 py-1 border text-left">Duration</th>
+              <th className="px-2 py-1 border text-left">Instructions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {selectedItem.prescriptions.map((p: any, index: number) => {
+              const frequency =
+                p.frequency ??
+                [
+                  p.freq_morning ?? 0,
+                  p.freq_afternoon ?? 0,
+                  p.freq_evening ?? 0,
+                  p.freq_night ?? 0,
+                ].join(" - ");
+
+              return (
+                <tr key={p.prescribe_id ?? index} className="bg-white">
+                  <td className="px-2 py-1 border text-center">
+                    {index + 1}
+                  </td>
+                  <td className="px-2 py-1 border">
+                    {p.medication_name || p.medicine_name || "-"}
+                  </td>
+                  <td className="px-2 py-1 border">
+                    {p.dosage || "-"}
+                  </td>
+                  <td className="px-2 py-1 border text-center">
+                    {frequency}
+                  </td>
+                  <td className="px-2 py-1 border">
+                    {p.duration || "-"}
+                  </td>
+                  <td className="px-2 py-1 border">
+                    {p.instructions || "-"}
+                    <div className="text-[10px] text-gray-500 mt-0.5">
+                      {p.created_date && formatDateTime(p.created_date)}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="text-gray-500 italic text-xs">
+        No prescriptions found
+      </div>
+    )}
+  </div>
+</div> */
+}

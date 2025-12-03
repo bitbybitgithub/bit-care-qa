@@ -7,7 +7,7 @@ export interface OtpVerificationProps {
 }
 
 export interface GenerateOtpRequest {
-  // email:string,
+  email:string,
   mobile_number: string;
   otp_type: number;
 }

@@ -72,7 +72,7 @@ export type WalkInRegisterFormProps = {
 };
 
 //Medical Dispensing 
-export type MedicalDispensingProps {
+export type MedicalDispensingProps ={
   mode?: "doctor" | "staff";
   loading: boolean;
   doctorId?: number;

@@ -14,7 +14,7 @@ interface OperationalDay {
     co_id: number | string;
     clinic_id: number | string;
     day: string;
-    is_active: number;
+    is_active: boolean;
 }
 
 interface ScheduleDayWrapperProps {
@@ -37,16 +37,20 @@ const ScheduleDayWrapper: React.FC<ScheduleDayWrapperProps> = ({
         .map((s) => ({ start: s.shift_start, end: s.shift_end })),
     [initialAllShifts, day.co_id]);
 
-    return (
-        <DailySchedule
-            key={day.co_id}
-            day={day.day}
-            opShift={day}
-            handleOperationDay={handleOperationDay}
-            onShiftChange={onShiftChange}
-            initialShifts={dayShifts} // Stable array thanks to useMemo
-        />
-    );
+return (
+  <DailySchedule
+    key={day.co_id}
+    day={day.day}
+    opShift={{
+      ...day,
+      is_active: Boolean(day.is_active),
+    }}
+    handleOperationDay={handleOperationDay}
+    onShiftChange={onShiftChange}
+    initialShifts={dayShifts}
+  />
+);
+
 };
 
 // 🌟 IMPORTANT: Memoize the wrapper component!

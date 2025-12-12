@@ -1,20 +1,25 @@
-import type { GenerateOtpRequest, GenerateOtpResponse, VerifyOtpRequest, VerifyOtpResponse } from "../types/otpType";
+import type {
+  GenerateOtpRequest,
+  GenerateOtpResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
+} from "../types/otpType";
 import { emrAPI } from "../services/EmrApi";
-
 
 export const generateOtpApi = async (
   payload: GenerateOtpRequest
 ): Promise<GenerateOtpResponse> => {
   try {
-    const response = await emrAPI.post("/common/generate-otp", payload);
+    // emrAPI returns data directly
+    const data = await emrAPI.post<GenerateOtpResponse>(
+      "/common/generate-otp",
+      payload
+    );
 
-    // Axios wraps the backend JSON inside response.data
-    return response;
-
+    return data;
   } catch (error: any) {
     console.error("Generate OTP API Error:", error);
 
-    // Return a structured failure response
     return {
       success: false,
       message:
@@ -26,14 +31,26 @@ export const generateOtpApi = async (
   }
 };
 
-
-export const verifyOtpApi = async (payload: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+export const verifyOtpApi = async (
+  payload: VerifyOtpRequest
+): Promise<VerifyOtpResponse> => {
   try {
-    const response = await emrAPI.post("/common/verify-otp", payload);
-    console.log("verify-otp response",response)
-    return response;
+    const data = await emrAPI.post<VerifyOtpResponse>(
+      "/common/verify-otp",
+      payload
+    );
+
+    console.log("verify-otp response", data);
+    return data;
   } catch (err: any) {
     console.error("Verify OTP API error:", err);
-    return { success: false, message: "Something went wrong while verifying OTP" };
+
+    return {
+      success: false,
+      message: err?.response?.data?.message || "Something went wrong while verifying OTP",
+      found: false,
+      patients: [],
+      isOtpValid: false,
+    };
   }
 };

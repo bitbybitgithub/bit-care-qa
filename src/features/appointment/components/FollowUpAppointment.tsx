@@ -16,13 +16,22 @@ import { calculateAge, getNextFollowupDate } from "../../../utils/followup";
 import { toast } from "react-toastify";
 import { FiMinus, FiPlus } from "react-icons/fi";
 
-const FollowUpAppointment = ({
+interface FollowUpAppointmentProps {
+  mode?: "doctor" | "staff";
+  loading: boolean;
+  classProp?: string;
+  error?: string;
+  data?: any[];
+  searchQuery?: string;
+  onSearchChange?: (v: string) => void;
+}
+
+const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
   loading,
   classProp = "",
   error,
   data = [],
   searchQuery,
-  onSearchChange,
 }) => {
   const [localSearch, setLocalSearch] = useState("");
   const [showTodayOnly, setShowTodayOnly] = useState(true);
@@ -308,7 +317,7 @@ return (
       pageSizeOptions={[5, 10, 20]}
       pagination
       rowHeight={64}
-      componentsProps={{ cell: { tabIndex: -1 } }}
+      slotProps={{cell: { tabIndex: -1 }}}
       density="compact"
       sx={{
         minWidth: "100%",

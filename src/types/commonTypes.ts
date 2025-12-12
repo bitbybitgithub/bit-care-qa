@@ -1,8 +1,10 @@
+import type { JSX, ReactNode } from "react";
+
 export interface DashboardCard {
   id: number;
   title: string;
-  discription:string;
+  description?: string;
   key: string;
-  count: number;
+  value: number;
   icon?: JSX.Element;
 }

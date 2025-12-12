@@ -4,13 +4,12 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import { ToastContainer } from "react-toastify";
 import { ApiInterceptor } from "./services/EmrApi";
-import { logoutApi } from "./api/LogoutApi";
+import { logoutApi } from "./api/auth/LogoutApi";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
-import { clearSession, getSession } from "./context/sessions/userSession";
+import { clearSession } from "./context/sessions/userSession";
 import useClientIp from "./hooks/useClientIp";
 import { useEffect } from "react";
-import { TokenManager } from "./api/auth/tokenManager";
 
 export default function App() {
   const dispatch = useDispatch();

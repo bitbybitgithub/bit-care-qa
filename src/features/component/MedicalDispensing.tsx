@@ -13,7 +13,7 @@ import {
   type GridColDef,
   type GridPaginationModel,
 } from "@mui/x-data-grid";
-import type { MedicalDispensingProps } from "../../types/staffdashboardtype/staffdashboardinterfaces";
+import type { MedicalDispensingProps } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 import {
   getPrescriptionDetails,
   updatePatientStatus,

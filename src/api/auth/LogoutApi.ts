@@ -1,4 +1,4 @@
-import { emrAPI } from "../services/EmrApi";
+import { emrAPI } from "../../services/EmrApi";
 
 export const logoutApi = async () => {
   try {

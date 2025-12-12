@@ -25,7 +25,6 @@ export const resetPasswordApi = async (formData: ResetPassword) => {
   try {
     const resetPayload = {
       userId: formData.userId,
-      phone:formData.phone,
       newPassword: formData.newPassword,
     };
 console.log("Reset Data",resetPayload)

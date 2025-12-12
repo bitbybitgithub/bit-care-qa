@@ -5,12 +5,10 @@ import Registration from "../pages/RegistrationPage";
 import MainLayout from "../layout/main/MainLayout";
 import BlankLayout from "../layout/main/BlankLayout";
 import Users from "../features/component/Users";
-// import Profile from "../pages/Clinic/ProfilePage";
 import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
-import ConsultationInProgress from "../features/appointment/consultation/in-progress/ConsultationInProgress";
 import ComingSoon from "../components/common/ComingSoon";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 

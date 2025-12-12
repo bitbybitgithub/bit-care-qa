@@ -12,8 +12,9 @@ import Dock from "../../../components/UI/Dock/Dock";
 import ConsultationSummary from "./ConsultationSummary";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import type { Patient } from "../../component/PatientQueue";
 import PatientHistory from "./PatientHistory";
+import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
+import type { ConsultationSummaryResponse } from "../../../types/appointmentTypes";
 
 // 📘 Sample Tab Components
 const DocumentationView = () => (
@@ -74,46 +75,9 @@ const sampleData = {
   chiefComplaint: "Flu-like symptoms persisting for 7 days (fever, body aches).",
   triageNotes: "Patient rated pain at 5/10. Needs detailed assessment.",
 };
-//  <ConsultationSummary data = {sampleData} />
 
 
-export interface PatientVitalsDetails {
-  vital_id: number;
-  appointment_id: number;
-  patient_id: number;
-  recorded_date: string;
-  height_cm: string;
-  weight_kg: string;
-  blood_pressure_systolic: number;
-  blood_pressure_diastolic: number;
-  pulse_rate: number;
-  temperature_c: string;
-  oxygen_saturation: number;
-  respiration_rate: number;
-  bmi: string;
-  notes: string;
-  chief_complaint: string;
-  current_medications: string;
-  allergies: string;
-}
 
-export interface PatientAppointmentHistory {
-  appointment_id: number;
-  patient_id: number;
-  doctor_id: number;
-  clinic_id: number;
-  appointment_date: string;
-  appointment_status: string;
-  consultation_notes: string | null;
-  diagnosis: string | null;
-  prescription: string | null;
-}
-
-export interface ConsultationSummaryResponse {
-  PatientvitalsDetails: PatientVitalsDetails;
-  patientAppointmentHistory: PatientAppointmentHistory[];
-  message: string;
-}
 
 const fetchPatientInfo = async (
   patientId: number
@@ -125,15 +89,6 @@ const fetchPatientInfo = async (
   );
   return res.data;
 };
-
-// export interface PatientDetails {
-//   patientId: number,
-//   name: string,
-//   gender: string,
-//   age: number,
-//   status: string,
-// }
-
 interface ConsultationProps {
   patientInfo: Patient;
   onCloseDrawer: () => void;
@@ -145,13 +100,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
 
   const [patientData, setPatientData] = useState<ConsultationSummaryResponse>();
   const patientId = patientInfo?.raw?.patient_id;
-  // const patientInfo = {
-  //   patientId: 1,
-  //   name: "John M. Davis",
-  //   gender: "M",
-  //   age: 35,
-  //   status: "In Consultation",
-  // }
   const { data } = useQuery<ConsultationSummaryResponse>({
     queryKey: ["patientInfo", patientId],//patientInfo?.raw?.patient_id],
     queryFn: () => fetchPatientInfo(patientId),//patientInfo?.raw?.patient_id),
@@ -169,9 +117,11 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
   console.log({ data })
 
   const appDockItems: DockItem[] = [
-    { key: "summary", icon: Info, label: "Summary", component: <ConsultationSummary data={patientData?.PatientvitalsDetails} info={patientInfo} /> },
+    { key: "summary", icon: Info, label: "Summary", component: <ConsultationSummary 
+      data={patientData?.PatientvitalsDetails} info={patientInfo} /> },
     { key: "documentation", icon: FileText, label: "Documentation", component: <DocumentationView /> },
-    { key: "history", icon: ClipboardList, label: "History", component: <PatientHistory patientAppointmentHistory={patientData?.patientAppointmentHistory} /> },
+    { key: "history", icon: ClipboardList, label: "History", component: 
+    <PatientHistory patientAppointmentHistory={patientData?.patientAppointmentHistory} /> },
     { key: "results", icon: FlaskConical, label: "Results & Labs", component: <ResultsView /> },
     { key: "vitals", icon: HeartPulse, label: "Vitals Log", component: <VitalsView /> },
   ];

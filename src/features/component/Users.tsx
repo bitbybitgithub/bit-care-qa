@@ -72,7 +72,7 @@ const Users: React.FC = () => {
         phone: u.phone,
       };
 
-      const res = await updateUsers(payload);
+      const res = await updateUsers(payload) as { success: boolean; message: string };
       if (res.success == true) {
         alert(res.message);
         window.location.reload();

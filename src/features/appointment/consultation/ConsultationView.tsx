@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Tabs, Tab, Button } from "@mui/material";
 import { X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import PatientHeader from "./PatientHeader";
 import PatientHistory from "./PatientHistory";
 import SaveSOAPForm from "./SaveSOAPForm";
 import DoctEPrescription from "./DoctEPrescription";
-import type { Patient } from "../../component/PatientQueue";
+import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import type { ConsultationSummaryResponse } from "../../../types/appointmentTypes";
 import { toast } from "react-toastify";
 import type { SaveSOAPRequest } from "../../../types/soap";
@@ -18,7 +17,7 @@ import {
   addEPrescription,
   fetchPatientInfo,
   saveSOAPDetails,
-} from "../../../api/patientAPi";
+} from "../../../api/PatientApi";
 import { formatEnumText } from "../../../utils/FormatText";
 
 interface ConsultationProps {
@@ -132,11 +131,11 @@ const ConsultationView: React.FC<ConsultationProps> = ({
 
   const handleDispenseMedication = () => {
     if (tab == "prescription") {
-      addEPrescription(prescriptionPayload).then((res) =>
+      addEPrescription(prescriptionPayload).then(() =>
         toast.success("Prescription saved successfully")
       );
     } else if (tab == "consultation") {
-      saveSOAPDetails(soapForm).then((res) =>
+      saveSOAPDetails(soapForm).then(() =>
         toast.success("SOAP saved successfully")
       );
     }

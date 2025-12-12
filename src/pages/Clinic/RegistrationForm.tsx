@@ -79,13 +79,13 @@ const RegistrationForm = () => {
     setFormData((prev) => ({ ...prev, address: value }));
   };
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length === 1 && /^[0-5]/.test(value)) return;
     if (value.length <= 10) setFormData((prev) => ({ ...prev, phone: value }));
   };
 
-  const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const cleaned = e.target.value.trim().replace(/\s/g, "");
     setFormData((prev) => ({ ...prev, email: cleaned }));
     if (!cleaned) return setErrors((p) => ({ ...p, email: "Email is required" }));

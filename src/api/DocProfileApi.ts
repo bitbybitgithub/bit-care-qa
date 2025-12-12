@@ -1,4 +1,4 @@
-// src/api/docProfileApi.ts
+// src/api/DocProfileApi.ts
 import { emrAPI } from "../services/EmrApi";
 
 export interface DoctorProfileResponse {

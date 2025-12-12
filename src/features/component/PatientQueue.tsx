@@ -11,7 +11,6 @@ import {
   Drawer,
   Box,
   Chip,
-  Avatar,
   Typography,
 } from "@mui/material";
 import {
@@ -28,9 +27,9 @@ import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
 import { formatEnumText } from "../../utils/FormatText";
 import type {
-  Patient,
   PatientQueueProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
+import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 
 /* ---------- small visual helpers (status chip) ---------- */
 const statusMap: Record<
@@ -101,7 +100,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   classProp,
   patientsData = [],
   onStartConsultation,
-  onAddWalkIn,
   handleUpdatePatientStatus,
   searchQuery,
   onSearchChange,

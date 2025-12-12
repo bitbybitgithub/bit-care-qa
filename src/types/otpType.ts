@@ -1,15 +1,20 @@
+//src\types\otpType.ts
 export interface OtpVerificationProps {
-  className?: string;              
-  otp: string;                     
-  otpType?: 1 | 2; 
-  label?: string;                 
-  length?: number;                
+  className?: string;
+  otp: string;
+  otpType?: 1 | 2;
+  label?: string;
+  length?: number;
 }
 
+/* ============================================================
+   GENERATE OTP
+   ============================================================ */
+
 export interface GenerateOtpRequest {
-  email:string,
-  mobile_number: string;
-  otp_type: number;
+  email?: string;           // optional
+  mobile_number?: string;   // optional
+  otp_type: number;         // 1=email, 2=mobile
 }
 
 export interface GenerateOtpResponse {
@@ -19,15 +24,22 @@ export interface GenerateOtpResponse {
   errors?: { message: string }[];
 }
 
+/* ============================================================
+   VERIFY OTP
+   ============================================================ */
+
 export interface VerifyOtpRequest {
-  userId: number;
-  otp: number;
-  otp_type: number; 
+  email?: string;
+  mobile_number?: string;
+  otp: string | number;
+  otp_type: number;
+  userId?: number;
 }
 
 export interface VerifyOtpResponse {
-  found: any;
-  patients(patients: any): unknown;
   success: boolean;
   message: string;
+  found?: boolean;
+  isOtpValid?: boolean;
+  patients?: any[];
 }

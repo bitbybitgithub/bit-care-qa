@@ -1,7 +1,7 @@
 import React from "react";
 import { Clock, MoreHorizontal } from "lucide-react";
-import type { Patient } from "../../../../types/appointmentTypes";
 import { motion } from "framer-motion";
+import type { Patient } from "../../../../types/patientType/patientTypeInterfaces";
 
 interface ConsultationItemProps {
   patient: Patient;
@@ -32,7 +32,7 @@ const ConsultationItem: React.FC<ConsultationItemProps> = ({
           className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors"
           whileHover={{ x: 2 }}
         >
-          {patient?.raw?.patient_name}
+          {patient?.patient_name}
         </motion.span>
 
         {patient.reason && (
@@ -41,7 +41,7 @@ const ConsultationItem: React.FC<ConsultationItemProps> = ({
             initial={{ opacity: 0.7 }}
             whileHover={{ opacity: 1 }}
           >
-            {patient.raw.reason}
+            {patient.reason}
           </motion.span>
         )}
 

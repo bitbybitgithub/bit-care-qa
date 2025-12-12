@@ -1,27 +1,27 @@
-import type { Payload } from "recharts/types/component/DefaultTooltipContent";
+//src\api\PatientQueueApi.ts
 import { emrAPI } from "../services/EmrApi";
-
-export interface AppointmentDto {
-  doctor_name: string;
-  source: string;
-  waitingMinutes: any;
-  clinic_id: number;
-  doctor_id: number;
-  patient_name: string;
-  appointment_id:number;
-  gender:string;
-  appointment_date: string; 
-  start_time: string;       
-  end_time: string;         
-  status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
-  reason?: string;
-  date_of_birth:string;
-  mobile_number:string;
-}
-
+import type { AppointmentDto } from "../types/appointmentTypes";
+// export interface AppointmentDto {
+//   doctor_name: string;
+//   source: string;
+//   waitingMinutes: any;
+//   clinic_id: number;
+//   doctor_id: number;
+//   patient_id: number;
+//   patient_name: string;
+//   appointment_id:number;
+//   gender:string;
+//   appointment_date: string; 
+//   start_time: string;       
+//   end_time: string;         
+//   status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
+//   reason?: string;
+//   date_of_birth:string;
+//   mobile_number:string;
+// }
 export interface TodayAppointmentsResponse {
   success: boolean;
-  data: AppointmentDto[];
+  records: AppointmentDto[];
 }
 
 // Define the request body type
@@ -29,7 +29,6 @@ export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
   user_id: string;
   status: string;
-  patient_id: number;
   clinic_id: number;
 }
 
@@ -105,24 +104,18 @@ export interface GetPrescriptionRequest {
   doctor_id:number;
 }
 
-
-/**
- * Fetch today's appointments for a specific doctor.
- *
- * @param doctorId - The ID of the doctor
- * @returns Promise<AppointmentDto[]> - List of today's appointments
- */
-
 export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
+  console.log("fetchTodayAppointments",doctorId);
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
     { doctor_id: doctorId } 
   );
-
+  console.log("appointments/today",response);
   if (!response || !response.success) {
     throw new Error("Failed to fetch today's appointments");
   }
-  return response?.records ?? [];
+  console.log("response.data",response.records);
+  return response.records ?? [];
 }
 
 export async function updatePatientStatus(
@@ -149,7 +142,7 @@ export async function getMedicalDispensingAsync(doctorId: number | null): Promis
   if (!response || !response.success) {
     throw new Error("Failed to Medical Dispensing");
   }
-  return response?.body?.data?? [];
+  return response?.data?? [];
 }
 
 export async function getfollowUpAsync(doctorId: number | null):Promise<FollowUpDto[]> {
@@ -160,7 +153,7 @@ export async function getfollowUpAsync(doctorId: number | null):Promise<FollowUp
   if (!response || !response.success) {
     throw new Error("Failed to follow up");
   }
-  return response.body || [];
+  return response.data || [];
 }
 
 export const getPrescriptionDetails = async (

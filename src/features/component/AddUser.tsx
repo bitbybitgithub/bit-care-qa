@@ -13,7 +13,7 @@ import {
   FaKey,
 } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { getRoles } from "../../api/MasterApi";
+import { getRoles, type Role } from "../../api/MasterApi";
 import {
   Button,
   FormControl,
@@ -135,7 +135,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
       };
 
       const resp = await saveDocAPI(payload);
-      const data = resp?.data ?? resp;
+      const data = (resp as any)?.data ?? resp;
 
       if (data?.success) {
         toast.success(data?.message || "User added successfully");
@@ -193,7 +193,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               name="name"
               placeholder="Name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
               size="small"
               error={!!errors.name}
               helperText={errors.name || " "}
@@ -213,7 +213,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               name="email"
               placeholder="Email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
               size="small"
               error={!!errors.email}
               helperText={errors.email || " "}
@@ -233,7 +233,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               name="phone"
               placeholder="Phone"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
               size="small"
               error={!!errors.phone}
               helperText={errors.phone || " "}
@@ -254,7 +254,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               name="username"
               placeholder="Username"
               value={formData.username}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
               size="small"
               error={!!errors.username}
               helperText={errors.username || " "}
@@ -275,7 +275,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               type="password"
               placeholder="Password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
               size="small"
               error={!!errors.password}
               helperText={errors.password || " "}
@@ -333,32 +333,6 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
               ))}
             </TextField>
           </FormControl>
-          {/* <FormControl fullWidth error={!!errors.role}>
-            <TextField
-              name="role"
-              select
-              size="small"
-              value={formData.role}
-              onChange={handleChange}
-              placeholder="Select Role"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUserMd />
-                  </InputAdornment>
-                ),
-               
-              }}
-              helperText={errors.role || " "}
-            >
-              <option value="">Select Role</option>
-              {roles.map((r) => (
-                <option key={r.role_id} value={r.role_name}>
-                  {r.role_name}
-                </option>
-              ))}
-            </TextField>
-          </FormControl> */}
         </div>
 
         <div className="flex justify-center gap-4 mt-8">

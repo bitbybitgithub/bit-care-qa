@@ -25,7 +25,7 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import type {
   WalkinFormData,
   WalkInRegisterFormProps,
-} from "../../types/staffdashboardtype/staffdashboardinterfaces";
+} from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,

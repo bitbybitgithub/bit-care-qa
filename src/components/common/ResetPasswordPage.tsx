@@ -16,10 +16,9 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { usePasswordStrength } from "./usePasswordStrength";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { checkUserExists, resetPasswordApi } from "../../api";
+import { checkUserExists, resetPasswordApi, generateOtpApi, verifyOtpApi } from "../../api";
 import { FaUser } from "react-icons/fa";
 import type { ResetPassErrors } from "../../types/types";
-import { generateOtpApi, verifyOtpApi } from "../../api/GenerateAndVerifyOtpApi";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);

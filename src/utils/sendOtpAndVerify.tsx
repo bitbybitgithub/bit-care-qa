@@ -1,6 +1,6 @@
 // src/utils/sendOtpAndVerify.tsx
 import axios from "axios";
-import { emrAPI } from "../api/EmrApi";
+import { emrAPI } from "../services/EmrApi";
 import { OtpType } from "../context/contextApi";
 import { API_BASE } from "./Utils";
 

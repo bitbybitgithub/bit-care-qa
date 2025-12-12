@@ -33,7 +33,7 @@ interface DailyScheduleProps {
     day: string;
     is_active: boolean;
   };
-  handleOperationDay: (
+  handleOperationDay: ( 
     coId: string | number,
     clinicId: string | number,
     value: boolean

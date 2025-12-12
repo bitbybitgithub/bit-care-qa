@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query"; // 👈 NEW IMPORT
 import {
   Button,
@@ -13,7 +13,6 @@ import UploadControl from "../../../components/common/UploadControl";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Base64ToImage } from "../../../utils/converter";
-import { useLoader } from "../../../context/LoaderContext";
 import ScheduleDayWrapper from "./ScheduleDayWrapper";
 import { getSessionItem } from "../../../context/sessions/userSession";
 
@@ -72,9 +71,8 @@ const Profile: React.FC = () => {
 
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const clinicId = getSessionItem("user", "clinic_id");
-  const { setLoading } = useLoader();
 
-  const { data, isLoading, isSuccess, isError, isFetched } =
+  const { data, isFetched } =
     useQuery<ClinicProfileData>({
       queryKey: ["clinicProfile", clinicId],
       queryFn: () => fetchClinicProfile(clinicId),
@@ -338,7 +336,7 @@ const Profile: React.FC = () => {
           {operationalDays?.map((day) => (
             <ScheduleDayWrapper
               key={day.co_id}
-              day={day}
+              day={{ ...day, is_active: day.is_active === 1 }}
               initialAllShifts={initialAllShifts}
               handleOperationDay={handleOperationDay}
               onShiftChange={handleShiftChange}

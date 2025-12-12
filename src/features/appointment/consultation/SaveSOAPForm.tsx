@@ -27,7 +27,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
           <textarea
             name="subjective"
             placeholder="Patient reports headache starting 3 days ago..."
-            value={form.subjective}
+            value={form.subjective ?? ''}
             onChange={handleChange}
             className="w-full bg-gray-50 border border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-300 text-gray-800 p-3 rounded-lg shadow-sm transition-all duration-200 placeholder:text-gray-400 outline-none"
             rows={3}
@@ -41,7 +41,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
           <textarea
             name="objective"
             placeholder="Physical exam WNL except for mild tenderness in neck..."
-            value={form.objective}
+            value={form.objective ?? ''}
             onChange={handleChange}
             className="w-full bg-gray-50 border border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-300 text-gray-800 p-3 rounded-lg shadow-sm transition-all duration-200 placeholder:text-gray-400 outline-none"
             rows={3}
@@ -55,7 +55,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
           <textarea
             name="assessment"
             placeholder="Migraine without aura (G43.009)"
-            value={form.assessment}
+            value={form.assessment ?? ''}
             onChange={handleChange}
             className="w-full bg-gray-50 border border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-300 text-gray-800 p-3 rounded-lg shadow-sm transition-all duration-200 placeholder:text-gray-400 outline-none"
             rows={2}
@@ -69,11 +69,10 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
           <textarea
             name="plan"
             placeholder="Continue current therapy. RTC in 2 weeks or sooner..."
-            value={form.plan}
+            value={form.plan ?? ''}
             onChange={handleChange}
             className="w-full bg-gray-50 border border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-300 text-gray-800 p-3 rounded-lg shadow-sm transition-all duration-200 placeholder:text-gray-400 outline-none"
             rows={3}
-            l
           />
         </div>
       </form>

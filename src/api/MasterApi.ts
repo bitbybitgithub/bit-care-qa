@@ -10,26 +10,28 @@ export interface Role {
   modified_date: string | null;
 }
 
-export const getRoles = async (): Promise<{ success: boolean; data?: Role[]; error?: string }> => {
+/**
+ * Master API - Get Roles
+ * emrAPI.get returns *data directly*, not axios response
+ */
+export const getRoles = async (): Promise<{
+  success: boolean;
+  data?: Role[];
+  error?: string;
+}> => {
   try {
-    const response = await emrAPI.get<Role[]>("/master/getRole");
-
-    if (!response.success) {
-      return {
-        success: false,
-        error: `Unexpected status code: ${response.success}`,
-      };
-    }
-
+    // emrAPI.get<Role[]> returns a pure Role[]
+    const data = await emrAPI.get<Role[]>("/master/getRole");
+console.log("Role Data",data)
     return {
       success: true,
-      data: response.data,
+      data,
     };
   } catch (error: any) {
     console.error("getRoles API error:", error);
     return {
       success: false,
-      error: error.message || "Unknown error",
+      error: error?.message || "Unknown error",
     };
   }
 };

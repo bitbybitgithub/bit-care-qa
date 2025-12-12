@@ -1,6 +1,5 @@
+//src\types\types.ts
 import { Dayjs } from "dayjs";
-// ==========================
-// Core Form Data Interface
 export interface FormDataBase {
   userId:number;
   otp:number;
@@ -15,12 +14,11 @@ export interface FormDataBase {
 }
 
 export interface ResetPassword {
-  // otp:string;
-  phone:string,
-  userId:number;
-  username:string;
-  newPassword:string;
-  confirmPassword:string;
+  phone?:string,
+  userId?:number;
+  username?:string;
+  newPassword?:string;
+  confirmPassword?:string;
 }
 // ==========================
 // User / API Types

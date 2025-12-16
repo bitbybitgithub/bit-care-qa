@@ -1,4 +1,4 @@
-
+//src\types\soap.ts
 export interface SaveSOAPRequest {
   clinic_id: number;
   patient_id: number;

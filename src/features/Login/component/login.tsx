@@ -15,13 +15,10 @@ import { loginSuccess } from "../../../redux/authSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { loginApi } from "../../../api/clinic/loginApi";
+import {TokenManager,loginApi} from '../../../api';
 import Regex from "../../../Helper/Regex";
-import useClientIp from "../../../hooks/useClientIp";
 import { setSession } from "../../../context/sessions/userSession";
-import { TokenManager } from "../../../api/auth/tokenManager";
 import { Roles } from "../../../context/constant/enum";
-import ResetPasswordPage from "./ResetPasswordForm";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
@@ -130,10 +127,6 @@ const Login = () => {
           TokenManager.setAccessToken(data.accessToken);
           if (data.user.is_temp_password === "1") {
             console.log(data.user.user_id);
-            // setTimeout(() => {
-            //   navigate("/ResetPassword");
-            //   toast.success("Please reset your temporary password");
-            // }, 1000);
             setSource("resetPassword");
             setClinicUserId("");
             setClinicPassword("");
@@ -258,6 +251,7 @@ const Login = () => {
                 />
                 <div className="text-left -mt-2 mb-3 w-full">
                   <button
+                    type="button"
                     onClick={() => setSource("forgottenPassword")}
                     className="text-sm text-[var(--color-info)] hover:underline font-medium"
                   >
@@ -515,6 +509,7 @@ const Login = () => {
                 </FormControl>
                 <div className="text-left -mt-2 mb-3 w-full">
                   <button
+                    type="button"
                     onClick={() => setSource("forgottenPassword")}
                     className="text-sm text-[var(--color-info)] hover:underline font-medium"
                   >

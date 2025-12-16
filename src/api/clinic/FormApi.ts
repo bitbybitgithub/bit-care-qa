@@ -1,5 +1,5 @@
 import type { FormDataBase, ResetPassword } from "../../types/types";
-import { emrAPI } from "../EmrApi";
+import { emrAPI } from "../../services/EmrApi";
 
 export const registerApi = async (formData: FormDataBase) => {
   try {
@@ -25,7 +25,6 @@ export const resetPasswordApi = async (formData: ResetPassword) => {
   try {
     const resetPayload = {
       userId: formData.userId,
-      phone:formData.phone,
       newPassword: formData.newPassword,
     };
 console.log("Reset Data",resetPayload)

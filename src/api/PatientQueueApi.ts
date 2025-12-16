@@ -1,34 +1,35 @@
-import { emrAPI } from "./EmrApi"; 
-
-export interface AppointmentDto {
-  doctor_name: string;
-  source: string;
-  waitingMinutes: any;
-  clinic_id: number;
-  doctor_id: number;
-  patient_name: string;
-  appointment_id:number;
-  gender:string;
-  appointment_date: string; 
-  start_time: string;       
-  end_time: string;         
-  status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
-  reason?: string;
-  date_of_birth:string;
-  mobile_number:string;
-}
-
+//src\api\PatientQueueApi.ts
+import { emrAPI } from "../services/EmrApi";
+import type { AppointmentDto } from "../types/appointmentTypes";
+// export interface AppointmentDto {
+//   doctor_name: string;
+//   source: string;
+//   waitingMinutes: any;
+//   clinic_id: number;
+//   doctor_id: number;
+//   patient_id: number;
+//   patient_name: string;
+//   appointment_id:number;
+//   gender:string;
+//   appointment_date: string; 
+//   start_time: string;       
+//   end_time: string;         
+//   status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
+//   reason?: string;
+//   date_of_birth:string;
+//   mobile_number:string;
+// }
 export interface TodayAppointmentsResponse {
   success: boolean;
-  data: AppointmentDto[];
+  records: AppointmentDto[];
 }
 
 // Define the request body type
 export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
-  user_id: number;
+  user_id: string;
   status: string;
-  clinic_id:string;
+  clinic_id: number;
 }
 
 // Define the response type
@@ -97,22 +98,24 @@ export interface followUpResponse{
   success: boolean;
   data: FollowUpDto[];
 }
-/**
- * Fetch today's appointments for a specific doctor.
- *
- * @param doctorId - The ID of the doctor
- * @returns Promise<AppointmentDto[]> - List of today's appointments
- */
+
+export interface GetPrescriptionRequest {
+  patient_id: number;
+  doctor_id:number;
+}
+
 export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
+  console.log("fetchTodayAppointments",doctorId);
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
     { doctor_id: doctorId } 
   );
-
+  console.log("appointments/today",response);
   if (!response || !response.success) {
     throw new Error("Failed to fetch today's appointments");
   }
-  return response?.records ?? [];
+  console.log("response.data",response.records);
+  return response.records ?? [];
 }
 
 export async function updatePatientStatus(
@@ -123,6 +126,7 @@ export async function updatePatientStatus(
       "/appointments/update-status",
       payload
     );
+    console.log("updatePatientStatus response:", response);
     return response;
   } catch (error: any) {
     console.error("Error updating appointment status:", error.message || error);
@@ -135,23 +139,38 @@ export async function getMedicalDispensingAsync(doctorId: number | null): Promis
     "/doctors/getMedicalDispensing",
     { doctor_id: doctorId } 
   );
-console.log('response', response)
   if (!response || !response.success) {
     throw new Error("Failed to Medical Dispensing");
   }
-  return response?.body?.data?? [];
+  return response?.data?? [];
 }
 
-export async function getfollowUpAsync(doctorId: number | null):Promise<followUpDto[]> {
+export async function getfollowUpAsync(doctorId: number | null):Promise<FollowUpDto[]> {
   const response = await emrAPI.post<followUpResponse>(
     "/doctors/get-patient-followup",
     { doctor_id: doctorId } 
   );
-console.log('response', response)
   if (!response || !response.success) {
     throw new Error("Failed to follow up");
   }
-  return response.body || [];
+  return response.data || [];
 }
 
+export const getPrescriptionDetails = async (
+  payload: GetPrescriptionRequest
+): Promise<any> => {
+  try {
+    const response = await emrAPI.post<any>("/doctors/get-prescription-details", payload);
+    return response;
+  } catch (err: any) {
+    console.error(
+      "Get Prescription  API error:",
+      err.response?.data || err.message
+    );
+    throw new Error(
+      err.response?.data?.message ||
+        "Something went wrong while fetching Patient Prescription "
+    );
+  }
+};
 

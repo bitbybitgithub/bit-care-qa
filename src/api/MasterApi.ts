@@ -1,4 +1,5 @@
-import { emrAPI } from "../api/EmrApi";
+// src/api/MasterApi.ts
+import { emrAPI } from "../services/EmrApi";
 
 export interface Role {
   role_id: number;
@@ -10,26 +11,36 @@ export interface Role {
   modified_date: string | null;
 }
 
-export const getRoles = async (): Promise<{ success: boolean; data?: Role[]; error?: string }> => {
+/**
+ * Actual backend response shape
+ */
+interface RawGetRolesResponse {
+  success: boolean;
+  data: {
+    success: boolean;
+    data: Role[];
+  };
+}
+
+export interface GetRolesResult {
+  success: boolean;
+  data: Role[];
+  error?: string;
+}
+
+export const getRoles = async (): Promise<GetRolesResult> => {
   try {
-    const response = await emrAPI.get<Role[]>("/master/getRole");
-
-    if (!response.success) {
-      return {
-        success: false,
-        error: `Unexpected status code: ${response.success}`,
-      };
-    }
-
+    const res = await emrAPI.get<RawGetRolesResponse>("/master/getRole");
     return {
       success: true,
-      data: response.data,
+      data: res.data.data, // ✅ flattened here
     };
   } catch (error: any) {
     console.error("getRoles API error:", error);
     return {
       success: false,
-      error: error.message || "Unknown error",
+      data: [],
+      error: error?.message || "Failed to fetch roles",
     };
   }
 };

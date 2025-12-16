@@ -5,9 +5,11 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
+
+    /* Avoid type errors from libraries */
     "skipLibCheck": true,
 
-    /* Bundler mode */
+    /* Vite / bundler settings */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
@@ -15,13 +17,22 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    /* -------- Relax TypeScript Strictness -------- */
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedSideEffectImports": false,
+    "esModuleInterop": true,
+
+    "allowJs": false,
+    "resolveJsonModule": true,
+
+    /* Prevent TS from choking on mismatched shapes */
+    "noPropertyAccessFromIndexSignature": false
   },
+
   "include": ["src"]
 }

@@ -1,4 +1,4 @@
-import { emrAPI } from "../api/EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 export type UpdateDoctorProfileResponse = {
   success: boolean;

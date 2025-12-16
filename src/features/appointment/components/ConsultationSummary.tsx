@@ -9,8 +9,9 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { PatientDetails, PatientVitalsDetails } from "./ConsultationView";
+import type { PatientVitalsDetails } from "../../../types/appointmentTypes";
 import SafetyContext from "../../../components/UI/SafetyContext";
+import type { PatientDetails } from "../../../types/patientType/patientTypeInterfaces";
 
 interface ConsultationSummaryProps {
   data: PatientVitalsDetails;

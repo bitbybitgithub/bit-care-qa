@@ -2,8 +2,8 @@ import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronUp, Phone, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConsultationItem from "./ConsultationItem";
-import type { Patient } from "../../../../types/appointmentTypes";
 import { AppointmentStatus } from "../../../../context/constant/enum";
+import type { Patient } from "../../../../types/patientType/patientTypeInterfaces";
 
 interface Props {
   consultationList: Patient[];
@@ -107,9 +107,9 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
                   },
                 }}
               >
-                {activePatients.map((p) => (
+                {activePatients.map((p, index) => (
                   <motion.div
-                    key={p.appointment_id}
+                    key={index}
                     variants={{
                       hidden: { opacity: 0, x: -20 },
                       visible: { opacity: 1, x: 0 },

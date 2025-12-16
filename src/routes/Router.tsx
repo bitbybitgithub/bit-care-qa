@@ -5,13 +5,12 @@ import Registration from "../pages/RegistrationPage";
 import MainLayout from "../layout/main/MainLayout";
 import BlankLayout from "../layout/main/BlankLayout";
 import Users from "../features/component/Users";
-// import Profile from "../pages/Clinic/ProfilePage";
 import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
-import ConsultationInProgress from "../features/appointment/consultation/in-progress/ConsultationInProgress";
 import ComingSoon from "../components/common/ComingSoon";
+import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
 const Router = [
   {
@@ -40,15 +39,16 @@ const Router = [
       { path: "/profile", element: <DoctorProfile /> },
 
       { path: "/staff-dashboard", element: <Staffdashboard /> },
+      { path: "/patient-doc-managment", element: <PatientDocManagementPage /> },
       // { path: "/task-and-reminder", element: <ComingSoon /> },
       // { path: "/assign-patient", element: <ComingSoon /> },
       // { path: "/message", element: <ComingSoon /> },
       // { path: "/cln-protocol", element: <ComingSoon /> },
       // { path: "/shift-schedule", element: <ComingSoon /> },
-      {
-        path: "/consultation-in-progress",
-        element: <ConsultationInProgress />,
-      },
+      // {
+      //   path: "/consultation-in-progress",
+      //   element: <ConsultationInProgress />,
+      // },
 
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }

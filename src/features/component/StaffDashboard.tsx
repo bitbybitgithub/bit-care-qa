@@ -1,835 +1,491 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+// src/features/component/StaffDashboard.tsx
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
-  FaClipboardList,
-  FaUserMd,
-  FaEnvelopeOpenText,
-  FaCalendarAlt,
+  Button,
+  InputAdornment,
+  TextField,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogTitle,
+} from "@mui/material";
+import {
+  FaSearch,
   FaUser,
-  FaPhone,
-  FaTimes,
+  FaCalendarAlt,
 } from "react-icons/fa";
-import { FaPeopleGroup, FaPeopleLine } from "react-icons/fa6";
+import { toast } from "react-toastify";
 import Cards from "../../components/common/Cards";
-import PatientQueue, {
-  type Patient,
-} from "../../features/component/PatientQueue";
-import Regex from "../../Helper/Regex";
-import { generateOtpApi } from "../../api/GenerateOtpApi";
+import PatientQueue from "./PatientQueue";
+import MedicalDispensing from "./MedicalDispensing";
+import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
+import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
 import {
   fetchTodayAppointments,
   updatePatientStatus,
   type UpdateAppointmentStatusRequest,
-  getMedicalDispensingAsync,
-  getfollowUpAsync,
 } from "../../api/PatientQueueApi";
-import { verifyPatientpApi } from "../../api/VerifyPatientApi";
-import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
-import { useSocket } from "../../context/SocketContext";
-import { IoCall } from "react-icons/io5";
-import { toast } from "react-toastify";
+import { mapAppointmentsToPatients } from "../../types/patientType/patientMappers";
+import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 import { getSessionItem } from "../../context/sessions/userSession";
-import MedicalDispensing from "./MedicalDispensing";
-import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
-import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
-import { VscPersonAdd } from "react-icons/vsc";
+import { generateOtpApi,verifyPatientpApi,fetchDashboardStats } from "../../api";
+import Regex from "../../Helper/Regex";
+import { useSocket } from "../../context/SocketContext";
+import { FaPeopleLine } from "react-icons/fa6";
+import type { AppointmentDto } from "../../types/appointmentTypes";
+import type { DashboardCardItem } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 
-interface Appointment {
-  appointment_id: number;
-  status: string;
+
+// ---------- helper to normalize API shapes ----------
+function ensureAppointmentList(payload: any): AppointmentDto[] {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.records)) return payload.records;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (payload.data && Array.isArray(payload.data.records)) return payload.data.records;
+  return [];
 }
 
+// ---------- main component ----------
 const StaffDashboard: React.FC = () => {
-  const { socket, isConnected } = useSocket();
-  const [activeTab, setActiveTab] = useState<
-    "queue" | "dispensing" | "followUp"
-  >("queue");
-  const [open, setOpen] = useState(false);
-  const [contact, setContact] = useState("");
-  // const [error, setError] = useState("");
-  const [error, setError] = useState({
-    mobile: "",
-    otp: "",
-  });
+  const { socket } = useSocket();
 
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false); // <-- track if OTP was sent
-  const [editedAfterOtp, setEditedAfterOtp] = useState(false);
-  const [loadingGenerate, setLoadingGenerate] = useState(false);
-  const [loadingVerify, setLoadingVerify] = useState(false);
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [userId, setUserId] = useState<number | null>(null);
-  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const uId = getSessionItem("user", "user_id");
+  const clinicId = getSessionItem("user", "clinic_id");
+  const doctorId = getSessionItem("user", "doctor_id");
+
+  // top-level state
+  const [activeTab, setActiveTab] = useState<"queue" | "dispensing" | "followUp">(
+    "queue"
+  );
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
-  const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
-    null
-  );
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [dispensingData, setDispensingData] = useState([]);
-  const [loadingDispense, setLoadingDispense] = useState(false);
-  const [followUpData, setfollowUpData] = useState([]);
-  const uId = getSessionItem("user", "user_id");
-  const clinicId = getSessionItem("user", "clinic_id");
 
-  // ---------- Socket updates ----------
+  // dashboard cards
+  const [stats, setStats] = useState<DashboardCardItem[]>([]);
+  const cardIcon: Record<number, React.ReactNode> = {
+    1: <FaPeopleLine className="text-blue-600" />,
+    2: <FaUser className="text-emerald-600" />,
+    3: <FaCalendarAlt className="text-amber-600" />,
+  };
+
+  // shared search
+  const [sharedSearch, setSharedSearch] = useState("");
+  const searchConfigByTab = {
+    queue: { placeholder: "Last 4 digits of contact", inputProps: { maxLength: 4, inputMode: "numeric" as const } },
+    dispensing: { placeholder: "Search by patient name", inputProps: { maxLength: 50 } },
+    followUp: { placeholder: "Search by appointment id", inputProps: { maxLength: 50 } },
+  };
+  const currentSearchConfig = searchConfigByTab[activeTab];
+
+  // Walk-in modal & OTP states (preserve old UI)
+  const [openWalkin, setOpenWalkin] = useState(false);
+  const [contact, setContact] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const [userIdFromApi, setUserIdFromApi] = useState<number | null>(null);
+  const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [errorState, setErrorState] = useState({ mobile: "", otp: "" });
+
+  // ---------------- fetch queue ----------------
+  const loadQueue = useCallback(async () => {
+    setLoadingQueue(true);
+    setErrorQueue(null);
+    try {
+      const resp = await fetchTodayAppointments(doctorId ?? null);
+      const appointments: AppointmentDto[] = ensureAppointmentList(resp as any);
+      const mapped = mapAppointmentsToPatients(appointments);
+      setPatients(mapped);
+    } catch (err: any) {
+      console.error("Failed to load queue:", err);
+      setErrorQueue(err?.message ?? "Failed to fetch appointments");
+    } finally {
+      setLoadingQueue(false);
+    }
+  }, [doctorId]);
+
+  useEffect(() => {
+    loadQueue();
+  }, [loadQueue]);
+
+  // ---------------- dashboard stats ----------------
+  useEffect(() => {
+  if (!uId) return;
+
+  fetchDashboardStats(Number(uId))
+    .then((items) => {
+      const mapped: DashboardCardItem[] = items.map((it, idx) => ({
+        title: it.card_title ?? "Untitled",
+        value: it.count ?? 0,
+        icon: cardIcon[it.card_id] ?? null,
+      }));
+
+      setStats(mapped);
+    })
+    .catch((e) => {
+      console.warn("Failed to fetch dashboard stats", e);
+    });
+}, [uId]);
+
+
+
+  // ---------------- socket realtime updates ----------------
   useEffect(() => {
     if (!socket) return;
-    const handleUpdate = (data: Appointment) => {
-      setPatients((prev) =>
-        prev.map((p) =>
-          p?.raw.appointment_id === data.appointment_id
-            ? { ...p, status: data.status }
-            : p
-        )
-      );
+    const handler = (payload: any) => {
+      const list = ensureAppointmentList(payload && (payload.records || payload.data) ? payload : [payload]);
+      if (!list || list.length === 0) return;
+      const mapped = mapAppointmentsToPatients(list);
+      setPatients((prev) => {
+        const byAppt = new Map(prev.map((p) => [p.appointment_id, p]));
+        mapped.forEach((m) => byAppt.set(m.appointment_id!, m));
+        return Array.from(byAppt.values()).sort((a, b) => {
+          return Number(a.appointment_id ?? 0) - Number(b.appointment_id ?? 0);
+        });
+      });
     };
-    socket.on("appointmentUpdate", handleUpdate);
-    return () => socket.off("appointmentUpdate", handleUpdate);
+
+    socket.on("patient_assigned", handler);
+    socket.on("appointmentUpdate", handler); // older event name
+    return () => {
+      socket.off("patient_assigned", handler);
+      socket.off("appointmentUpdate", handler);
+    };
   }, [socket]);
 
-  // ---------- Reset Modal ----------
-  const resetModalState = () => {
-    setOpen(false);
+  // ---------------- update patient status ----------------
+  const handleUpdatePatientStatus = useCallback(
+    async (patient: Patient, newStatus: string) => {
+      if (!patient?.appointment_id) {
+        toast.error("Invalid appointment id");
+        return;
+      }
+      const payload: UpdateAppointmentStatusRequest = {
+        appointment_id: patient.appointment_id,
+        user_id: uId,
+        clinic_id: clinicId,
+        status: newStatus,
+      };
+      try {
+        const res = await updatePatientStatus(payload);
+        if (res?.success) {
+          setPatients((prev) =>
+            prev.map((p) =>
+              p.appointment_id === patient.appointment_id ? { ...p, status: newStatus } : p
+            )
+          );
+        } else {
+          toast.error(res?.message || "Failed to update status");
+        }
+      } catch (err) {
+        console.error("update status failed", err);
+        toast.error("Something went wrong updating status");
+      }
+    },
+    [uId, clinicId]
+  );
+
+  // ---------------- Walk-in / OTP flows ----------------
+  const openWalkinModal = () => {
+    setOpenWalkin(true);
     setContact("");
-    setError("");
     setShowOtp(false);
-    setOtpSent(false);
     setOtp(["", "", "", "", "", ""]);
-    setUserId(null);
-    setLoadingGenerate(false);
-    setLoadingVerify(false);
+    setOtpSent(false);
     setVerifiedPatients(null);
     setSelectedPatient(null);
     setShowRegistrationForm(false);
-    setEditedAfterOtp(false);
+    setErrorState({ mobile: "", otp: "" });
   };
 
-  // ---------- Fetch Queue ----------
-  const fetchQueue = () => {
-    setLoadingQueue(true);
-    setErrorQueue(null);
-    fetchTodayAppointments(null)
-      .then((appointments) => {
-        const mapped: Patient[] = appointments.map((a) => ({
-          appointment_id: a.appointment_id,
-          time:
-            a.start_time && a.end_time
-              ? `${a.start_time} - ${a.end_time}`
-              : undefined,
-          name: a.patient_name,
-          gender: a.gender,
-          status: a.status,
-          doctor: a.doctor_name,
-          source: a.source,
-          date_of_birth: a.date_of_birth,
-          mobile_number: a.mobile_number,
-          raw: a,
-        }));
-        setPatients(mapped);
-      })
-      .catch((err) => setErrorQueue(err.message || "Failed to load patients"))
-      .finally(() => setLoadingQueue(false));
-  };
+  const closeWalkin = () => setOpenWalkin(false);
 
-  useEffect(() => {
-    if (activeTab === "queue") fetchQueue();
-    else if (activeTab === "followUp")
-      getfollowUpAsync(4).then(setfollowUpData);
-    else getMedicalDispensingAsync(4).then(setDispensingData);
-  }, [activeTab]);
-
-  const handleAddWalkIn = () => {
-    resetModalState();
-    setOpen(true);
-  };
-
-  const handleClose = () => resetModalState();
-
-  // ---------- Clear OTP when contact cleared ----------
-  useEffect(() => {
-    if (contact.trim() === "") {
-      setOtp(["", "", "", "", "", ""]);
-      setShowOtp(false);
-      setOtpSent(false);
-      setEditedAfterOtp(false);
-      setUserId(null);
-    }
-  }, [contact]);
-
-  // ---------- OTP logic ----------
   const handleSendOtp = async () => {
-    debugger;
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
-      setError((prev) => ({
-        ...prev,
-        mobile: "Enter a valid 10-digit mobile number starting with 6–9",
-      }));
-
-      // setError("");
+      setErrorState((p) => ({ ...p, mobile: "Enter a valid 10-digit mobile number starting with 6–9" }));
       return;
     }
-
-    // setError("");
-    setError((prev) => ({ ...prev, otp: "" }));
     setLoadingGenerate(true);
-
     try {
-      const res = await generateOtpApi({
-        mobile_number: contact.trim(),
-        otp_type: 2,
-      });
-
+      const res = await generateOtpApi({ mobile_number: contact.trim(), otp_type: 2 });
       if (res.success) {
-        setUserId(res.userId ?? null);
+        setUserIdFromApi(res.userId ?? null);
         setShowOtp(true);
-        setEditedAfterOtp(false);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+        setOtpSent(true);
+        setErrorState((p) => ({ ...p, otp: "" }));
+        setTimeout(() => otpRefs.current[0]?.focus(), 120);
       } else {
-        setError((prev) => ({
-          ...prev,
-          otp: res.message || "Failed to send OTP",
-        }));
-        // setError();
+        setErrorState((p) => ({ ...p, otp: res.message || "Failed to send OTP" }));
       }
-    } catch {
-      setError((prev) => ({
-        ...prev,
-        otp: "Something went wrong. Please try again later.",
-      }));
+    } catch (err) {
+      console.error("send otp err", err);
+      setErrorState((p) => ({ ...p, otp: "Failed to send OTP" }));
     } finally {
       setLoadingGenerate(false);
     }
   };
 
   const handleResendOtp = async () => {
-    if (!Regex.MOBILEREGEX.test(contact.trim())) {
-      setError((prev) => ({
-        ...prev,
-        mobile: "Enter a valid 10-digit mobile number before resending OTP",
-      }));
-      return;
-    }
-
-    setError((prev) => ({ ...prev, mobile: "" }));
-    setLoadingGenerate(true);
-
-    try {
-      const res = await generateOtpApi({
-        mobile_number: contact.trim(),
-        otp_type: 2,
-      });
-
-      if (res.success) {
-        setUserId(res.userId ?? null);
-        setShowOtp(true);
-        setEditedAfterOtp(false);
-        setOtp(["", "", "", "", "", ""]);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
-      } else {
-        setError((prev) => ({
-          ...prev,
-          otp: res.message || "Failed to resend OTP",
-        }));
-        // setError();
-      }
-    } catch {
-      setError((prev) => ({
-        ...prev,
-        otp: "Something went wrong while resending OTP. Please try again.",
-      }));
-      // setError();
-    } finally {
-      setLoadingGenerate(false);
-    }
+    setOtp(["", "", "", "", "", ""]);
+    return handleSendOtp();
   };
 
-  const handleOtpChange = (value: string, index: number) => {
-    const val = value.replace(/\D/g, "");
-    const updatedOtp = [...otp];
-    updatedOtp[index] = val;
-    setOtp(updatedOtp);
-    if (val && index < otp.length - 1) otpRefs.current[index + 1]?.focus();
+  const handleOtpChange = (value: string, idx: number) => {
+    const v = value.replace(/\D/g, "");
+    setOtp((prev) => {
+      const next = [...prev];
+      next[idx] = v.slice(0, 1);
+      return next;
+    });
+    if (v && idx < 5) setTimeout(() => otpRefs.current[idx + 1]?.focus(), 0);
   };
 
-  const handleOtpKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0)
-      otpRefs.current[index - 1]?.focus();
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) otpRefs.current[idx - 1]?.focus();
   };
 
-  const handleConfirm = async () => {
-    debugger;
+  const handleConfirmOtp = async () => {
     const finalOtp = otp.join("");
     if (finalOtp.length !== 6) {
-      setError((prev) => ({
-        ...prev,
-        otp: "Please enter all 6 digits of the OTP",
-      }));
-      // setError();
+      setErrorState((p) => ({ ...p, otp: "Enter full 6-digit OTP" }));
       return;
     }
-    if (!userId) {
-      setError((prev) => ({
-        ...prev,
-        otp: "User ID not found. Please resend OTP.",
-      }));
-      // setError();
+    if (!userIdFromApi) {
+      setErrorState((p) => ({ ...p, otp: "User id missing. Resend OTP." }));
       return;
     }
-
     setLoadingVerify(true);
-    setError((prev) => ({ ...prev, otp: "" }));
-
     try {
       const res = await verifyPatientpApi({
-        userId,
+        userId: userIdFromApi,
         otp: Number(finalOtp),
         otp_type: 2,
         mobile_number: contact,
       });
 
       if (!res.isOtpValid) {
-        setError((prev) => ({ ...prev, otp: "Please enter valid OTP" }));
-        // setError();
-        setEditedAfterOtp(true);
+        setErrorState((p) => ({ ...p, otp: "Invalid OTP" }));
         return;
-      } else if (
-        res.found &&
-        Array.isArray(res.patients) &&
-        res.patients.length > 0
-      ) {
+      }
+
+      if (res.found && Array.isArray(res.patients) && res.patients.length > 0) {
         setVerifiedPatients(res.patients);
         setShowRegistrationForm(false);
       } else {
         setShowRegistrationForm(true);
       }
-      setEditedAfterOtp(false);
-    } catch {
-      setError((prev) => ({
-        ...prev,
-        otp: "Something went wrong while verifying OTP. Please try again.",
-      }));
-      // setError("Something went wrong while verifying OTP. Please try again.");
-      setEditedAfterOtp(true);
+    } catch (err) {
+      console.error("verify otp err", err);
+      setErrorState((p) => ({ ...p, otp: "Verification failed" }));
     } finally {
       setLoadingVerify(false);
     }
   };
 
-  const cardItems = [
-    {
-      title: "Patients in Queue",
-      value: patients.length,
-      icon: <FaPeopleGroup />,
-    },
-    {
-      title: "Tasks Due Today",
-      value: 5,
-      icon: <FaClipboardList />,
-    },
-    {
-      title: "Available Doctors",
-      value: 12,
-      icon: <FaUserMd />,
-    },
-    {
-      title: "Pending Messages",
-      value: 3,
-      icon: <FaEnvelopeOpenText />,
-    },
+  // --------------- UI: tabs etc ---------------
+  const tabs = [
+    { key: "queue", label: "Patient Queue" },
+    { key: "dispensing", label: "Medical Dispensing" },
+    { key: "followUp", label: "Set Follow Up" },
   ];
 
-  const handleUpdatePatientStatus = useCallback(
-    async (patient: Patient, newStatus: string) => {
-      if (!patient?.raw?.appointment_id) {
-        toast.error("Invalid appointment ID.");
-        return;
-      }
-      const payload: UpdateAppointmentStatusRequest = {
-        appointment_id: patient.raw.appointment_id,
-        user_id: uId,
-        status: newStatus,
-        clinic_id: clinicId,
-      };
-      try {
-        const res = await updatePatientStatus(payload);
-        if (res.success) {
-          setPatients((prev) =>
-            prev.map((p) =>
-              p?.raw.appointment_id === patient.appointment_id
-                ? { ...p, status: newStatus }
-                : p
-            )
-          );
-        } else
-          toast.error(res.message || "Failed to update appointment status.");
-      } catch {
-        toast.error("Error updating patient status.");
-      }
-    },
-    [uId, clinicId]
-  );
-
   return (
-    <div>
-      <Cards
-        items={cardItems}
-        gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
-      />
+    <div className="p-6">
+      <div className="relative mb-3 shadow px-5 py-4 flex items-center justify-between rounded-md overflow-hidden">
+        <div>
+          <h1 className="text-lg font-bold text-[var(--color-primary)]">Welcome, <span className="text-[var(--color-primary)]">Staff</span></h1>
+          <p className="text-sm text-[var(--color-text-secondary)]">Manage today's clinic workflow, patients and dispensing.</p>
+        </div>
+      </div>
 
-      {/* Tabs */}
-      <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]">
-        <div className="flex gap-3">
-          {["queue", "dispensing", "followUp"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-1 rounded-t-[var(--radius-lg)] font-[var(--font-weight-semibold)] transition-all cursor-pointer ${
-                activeTab === tab
-                  ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)] border-2 border-[var(--color-primary)]"
-                  : " text-gray-700 bg-white border-2 border-[var(--color-primary)]"
-              }`}
-            >
-              {tab === "queue"
-                ? "Patient Queue"
-                : tab === "dispensing"
-                ? "Medical Dispensing"
-                : "Set Follow up"}
-            </button>
-          ))}
+      <Cards
+        items={stats as any}
+      />
+      {/* Tabs + search */}
+      <div className="bg-white p-5 rounded-md shadow-md">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex gap-2">
+            <div className="flex p-1 rounded-md" style={{ background: "var(--color-primary)" }}>
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key as any)}
+                  className={`px-3 py-1 text-sm rounded-md font-semibold ${activeTab === t.key ? "bg-white text-[var(--color-primary)]" : "text-white"}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {activeTab === "queue" && (
+              <button
+                onClick={openWalkinModal}
+                className="bg-[var(--color-primary)] text-white px-3 py-2 rounded-md font-semibold"
+              >
+                + Add Walk-in Patient
+              </button>
+            )}
+
+            <TextField
+              size="small"
+              placeholder={currentSearchConfig.placeholder}
+              value={sharedSearch}
+              onChange={(e) => setSharedSearch(e.target.value)}
+              sx={{ width: 280 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaSearch />
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={currentSearchConfig.inputProps}
+            />
+          </div>
         </div>
 
         <div className="mt-4">
           {activeTab === "queue" ? (
             <PatientQueue
               mode="staff"
-              patientsData={patients}
               loading={loadingQueue}
               error={errorQueue}
-              onAddWalkIn={handleAddWalkIn}
+              doctorId={doctorId}
+              patientsData={patients}
               handleUpdatePatientStatus={handleUpdatePatientStatus}
+              onAddWalkIn={openWalkinModal}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           ) : activeTab === "followUp" ? (
             <FollowUpAppointment
               mode="staff"
-              data={followUpData}
-              loading={loadingDispense}
+              data={[]}
+              loading={false}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           ) : (
             <MedicalDispensing
               mode="staff"
-              data={dispensingData}
-              loading={loadingDispense}
+              data={[]}
+              loading={false}
+              searchQuery={sharedSearch}
+              onSearchChange={setSharedSearch}
             />
           )}
         </div>
       </div>
-      {/* Modal */}
-      {open && !showRegistrationForm && (
-        <div
-          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center px-4"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
-        >
-          <div
-            className="w-full max-w-md p-6 animate-fadeIn overflow-y-auto max-h-[90vh]"
-            style={{
-              backgroundColor: "var(--color-bg)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "var(--shadow-xl)",
-              color: "var(--color-text)",
-              transition: "all var(--transition-normal)",
-            }}
-          >
-            {!verifiedPatients && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-2">
-                    <FaPeopleLine
-                      className="text-[var(--color-primary)]"
-                      style={{ fontSize: "var(--font-h2)" }}
-                    />
-                    <h3
-                      className="font-semibold text-[var(--color-primary)]"
-                      style={{ fontSize: "var(--font-h3)" }}
-                    >
-                      Add Walk-In Patient
-                    </h3>
-                  </div>
-                  <button
-                    onClick={handleClose}
-                    className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-                <p
-                  className=" mt-1"
-                  style={{
-                    fontSize: "var(--font-small)",
+
+      {/* Walk-in Modal */}
+      <Dialog open={openWalkin} onClose={closeWalkin} maxWidth="md" fullWidth>
+        <DialogTitle>Add Walk-in Patient</DialogTitle>
+        <DialogContent>
+          {!verifiedPatients && !showRegistrationForm && (
+            <>
+              <div className="mb-3">
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Enter 10-digit mobile number"
+                  value={contact}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, "");
+                    // allow only mobile patterns
+                    if (raw === "" || /^[6-9]\d{0,9}$/.test(raw)) {
+                      setContact(raw);
+                      setErrorState({ mobile: "", otp: "" });
+                    }
                   }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <span className="font-semibold">+91</span>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant="contained"
+                  onClick={handleSendOtp}
+                  disabled={contact.length !== 10 || loadingGenerate}
                 >
-                  We'll verify your contact to find existing records
-                </p>
-              </>
-            )}
+                  {loadingGenerate ? "Sending..." : "Send OTP"}
+                </Button>
 
-            {/* ================= Contact / OTP Section ================= */}
-            {!verifiedPatients && (
-              <>
-                {/* Contact Input */}
-                <div className="mt-4">
-                  <div className="flex items-center gap-3">
-                    <FormControl>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="Enter 10-digit number"
-                        value={contact}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "");
-
-                          if (val.length === 1 && /[0-5]/.test(val)) return;
-
-                          if (showOtp && val !== contact) {
-                            setOtp(["", "", "", "", "", ""]);
-                            setShowOtp(false);
-                            setOtpSent(false);
-                            setEditedAfterOtp(false);
-                          }
-
-                          if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
-                            setContact(val);
-                            setError("");
-                          } else if (val.length === 1) {
-                            setError("Contact number should start from 6");
-                          } else {
-                            setContact(val);
-                          }
-                        }}
-                        error={!!error.mobile}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <span
-                                  style={{
-                                    fontWeight: 600,
-                                    color: "var(--color-text-secondary)",
-                                  }}
-                                >
-                                  +91
-                                </span>
-                              </InputAdornment>
-                            ),
-                            inputProps: { maxLength: 10 },
-                          },
-                        }}
-                      />
-                    </FormControl>
-                    {/* {contact.length === 10 && !showOtp && !loadingGenerate && ( */}
-                    <Button
-                      onClick={handleSendOtp}
-                      // fullWidth
-                      variant="text"
-                      disabled={
-                        contact.length !== 10 || showOtp || loadingGenerate
-                      }
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: "var(--font-small)",
-                        color: "var(--color-white)",
-                        boxShadow:"var(--shadow-md)",
-                        textTransform: "none",
-                        transition: "all .2s",
-                        paddingX: "10px",
-                        cursor: "pointer",
-                        backgroundColor: "var(--color-info)",
-                        "&:hover": {
-                          backgroundColor: "var(--color-info)",
-                          opacity: 0.8,
-                        },
-                        "&.Mui-disabled": {
-                          backgroundColor: "var(--color-info)",
-                          opacity: 0.6,
-                          cursor: "not-allowed",
-                          color: "var(--color-white)",
-                        },
-                      }}
-                    >
-                      Send OTP
-                    </Button>
-
-                    {/* ) */}
-                    {/* } */}
-                  </div>
-
-                  {error.mobile && (
-                    <p
-                      className="mt-1 font-small"
-                      style={{
-                        fontSize: "var(--font-xs)",
-                        color: "var(--color-error)",
-                      }}
-                    >
-                      {error.mobile}
-                    </p>
-                  )}
-                </div>
-
-                {/* OTP Section */}
                 {showOtp && (
-                  <div className="mt-4 text-center">
-                    <p
-                      className="font-medium mb-2"
-                      style={{
-                        color: "var(--color-text-secondary)",
-                        fontSize: "var(--font-small)",
-                      }}
-                    >
-                      Enter 6-digit OTP
-                    </p>
-                    <div className="flex justify-center gap-2 sm:gap-2.5">
-                      {otp.map((digit, index) => (
-                        <input
-                          key={index}
-                          type="text"
-                          value={digit}
-                          onChange={(e) =>
-                            handleOtpChange(e.target.value, index)
-                          }
-                          onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                          maxLength={1}
-                          ref={(el) => (otpRefs.current[index] = el)}
-                          className="text-center outline-none transition-all transform"
-                          style={{
-                            width: "2.5rem",
-                            height: "2.5rem",
-                            boxShadow:"var(--shadow-md)",
-                            border: `1px solid ${
-                              error.otp
-                                ? "var(--color-error)"
-                                : "var(--color-none)"
-                            }`,
-                            borderRadius: "var(--radius-lg)",
-                            backgroundColor: "var(--color-surface)",
-                            color: "var(--color-text)",
-                            fontWeight: "var(--font-weight-semibold)",
-                          }}
-                        />
-                      ))}
-
-                      {loadingVerify && (
-                        <div className="relative w-5 h-5 mt-1">
-                          <div
-                            className="absolute inset-0 border-4 rounded-full animate-spin"
-                            style={{
-                              borderColor: "var(--color-border)",
-                              borderTopColor: "var(--color-success)",
-                            }}
-                          ></div>
-                        </div>
-                      )}
-                    </div>
-
-                    {otpSent && !loadingGenerate && (
-                      <button
-                        onClick={() => {
-                          setOtp(["", "", "", "", "", ""]);
-                          handleResendOtp();
-                        }}
-                        className="mt-2 font-semibold transition-all"
-                        style={{
-                          fontSize: "var(--font-small)",
-                          color: "var(--color-primary)",
-                        }}
-                      >
-                        Resend OTP
-                      </button>
-                    )}
-                    {error.otp && (
-                      <p
-                        className="mt-1 font-small"
-                        style={{
-                          fontSize: "var(--font-xs)",
-                          color: "var(--color-error)",
-                        }}
-                      >
-                        {error.otp}
-                      </p>
-                    )}
+                  <div className="flex gap-1 items-center">
+                    {otp.map((d, i) => (
+                      <input
+                        key={i}
+                        ref={(el) => { otpRefs.current[i] = el; }}
+                        value={d}
+                        onChange={(e) => handleOtpChange(e.target.value, i)}
+                        onKeyDown={(e) => handleOtpKeyDown(e, i)}
+                        maxLength={1}
+                        className="w-10 h-10 text-center rounded-md border"
+                      />
+                    ))}
+                    <Button onClick={handleConfirmOtp} disabled={loadingVerify}>
+                      {loadingVerify ? "Verifying..." : "Confirm"}
+                    </Button>
+                    <Button onClick={handleResendOtp} disabled={loadingGenerate}>
+                      Resend
+                    </Button>
                   </div>
                 )}
-              </>
-            )}
-
-            {/* ================= Verified Patients Section ================= */}
-            {verifiedPatients && (
-              <div className=" mt-1">
-                <h2 className="text-xl font-bold text-gray-800 text-center">
-                  Select Patient
-                </h2>
-                <h3 className="text-md font-semibold text-gray-700 text-center">
-                  Found {verifiedPatients.length} patient(s) registered with +91{" "}
-                  {contact}
-                </h3>
-                {/* --- Register New Button --- */}
-
-                <div className="max-h-[300px] overflow-y-auto space-y-1  custom-scrollbar">
-                  {verifiedPatients.map((p, i) => (
-                    <div
-                      key={i}
-                      onClick={() => {
-                        setSelectedPatient(p);
-                        setShowRegistrationForm(true);
-                      }}
-                      className="flex items-center justify-between bg-white border-2 border-gray-200 rounded-2xl sm:p-6 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
-                    >
-                      <div className="flex flex-col gap-2 flex-1">
-                        {/* TOP ROW: PHOTO + NAME + GENDER */}
-                        <div className="flex items-center px-2 gap-3">
-                          <div
-                            className="w-10 h-10 flex items-center justify-center rounded-full"
-                            style={{
-                              background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-light))`,
-                            }}
-                          >
-                            <FaUser className="text-white text-xl" />
-                          </div>
-
-                          <h4
-                            className="font-semibold text-md  transition-colors"
-                            style={{
-                              color: "var(--color-text)",
-                            }}
-                          >
-                            {p.patient_name}
-                          </h4>
-
-                          <p
-                            className="text-sm"
-                            style={{
-                              color: "var(--color-text-secondary)",
-                            }}
-                          >
-                            {p.gender.toLowerCase() === "male"
-                              ? "(M)"
-                              : p.gender.toLowerCase() === "female"
-                              ? "(F)"
-                              : "(O)"}
-                          </p>
-                        </div>
-
-                        {/* SECOND ROW: DOB + CONTACT */}
-                        <div
-                          className="flex items-center gap-6 ml-12 text-sm"
-                          style={{
-                            color: "var(--color-text-secondary)",
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <FaCalendarAlt
-                              style={{ color: "var(--color-primary)" }}
-                              className="text-base"
-                            />
-                            <span>
-                              {new Date(p.date_of_birth).toLocaleDateString()}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            <IoCall
-                              style={{ color: "var(--color-primary)" }}
-                              className="text-base"
-                            />
-                            <span>+91 {contact}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold shadow-sm self-start">
-                        {p.age} yrs
-                      </div>
-                    </div>
-                  ))}
-                  <div className="w-full flex flex-col items-center ">
-                    <h2 className="text-sm font-semibold text-gray-800 text-center">
-                      No patient found for this contact ?
-                    </h2>
-
-                    <Button
-                      variant="contained"
-                      onClick={() => {
-                        setSelectedPatient(null);
-                        setShowRegistrationForm(true);
-                      }}
-                      sx={{
-                        px: 3,
-                        py: 1.5,
-                        fontSize: "0.875rem",
-                        fontWeight: 600,
-                        borderRadius: "14px",
-                        boxShadow: 2,
-                        textTransform: "none",
-                        backgroundColor: "primary.main",
-                        "&:hover": {
-                          backgroundColor: "primary.dark",
-                        },
-                      }}
-                    >
-                      Register Patient
-                    </Button>
-                  </div>
-                </div>
+                {errorState.mobile && <div className="text-sm text-red-500 ml-2">{errorState.mobile}</div>}
+                {errorState.otp && <div className="text-sm text-red-500 ml-2">{errorState.otp}</div>}
               </div>
-            )}
+            </>
+          )}
 
-            {/* ================= Buttons ================= */}
-            <div className="flex justify-center items-center mt-4">
-              {showOtp && !verifiedPatients && (
-                <Button
-                  onClick={handleConfirm}
-                  disabled={loadingVerify}
-                  variant="contained"
-                  fullWidth={false}
-                  sx={{
-                    px: 5,
-                    py: 1.2,
-                    fontWeight: 600,
-                    borderRadius: "var(--radius-lg)",
-                    backgroundColor: loadingVerify
-                      ? "var(--color-secondary)"
-                      : "var(--color-success)",
-                    opacity: loadingVerify
-                      ? "var(--opacity-disabled)"
-                      : "var(--opacity-focus)",
-                    color: "white",
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      backgroundColor: "var(--color-success)",
-                      opacity: "var(--opacity-focus)",
-                    },
-                  }}
-                >
-                  {loadingVerify ? "Verifying..." : "Confirm"}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+          {verifiedPatients && !showRegistrationForm && (
+            <>
+              <h3>Found {verifiedPatients.length} patient(s) for +91 {contact}</h3>
+              <div className="space-y-2 max-h-60 overflow-auto mt-2">
+                {verifiedPatients.map((p, idx) => (
+                  <div key={idx} className="p-2 border rounded-md flex justify-between items-center cursor-pointer" onClick={() => { setSelectedPatient(p); setShowRegistrationForm(true); }}>
+                    <div>
+                      <div className="font-semibold">{p.patient_name}</div>
+                      <div className="text-sm text-gray-600">{p.gender} • {p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString() : "—"}</div>
+                    </div>
+                    <div className="text-sm font-semibold">{p.age ?? "—"} yrs</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
-      {showRegistrationForm && (
-        <WalkInRegisterForm
-          onClose={resetModalState}
-          patientData={selectedPatient}
-          onSuccess={fetchQueue}
-          contact={contact}
-        />
-      )}
+          {showRegistrationForm && (
+            <WalkInRegisterForm onClose={() => { setShowRegistrationForm(false); setSelectedPatient(null); }} patientData={selectedPatient} onSuccess={() => { loadQueue(); closeWalkin(); }} contact={contact} />
+          )}
+        </DialogContent>
+
+        {!showRegistrationForm && (
+          <DialogActions>
+            <Button onClick={closeWalkin}>Close</Button>
+            {!showOtp && <Button onClick={() => setShowRegistrationForm(true)}>Register New Patient</Button>}
+          </DialogActions>
+        )}
+      </Dialog>
     </div>
   );
 };

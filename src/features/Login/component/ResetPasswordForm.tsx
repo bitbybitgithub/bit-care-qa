@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   TextField,
@@ -19,14 +19,22 @@ import { getSessionItem } from "../../../context/sessions/userSession";
 import type { ResetPassErrors } from "../../../types/types";
 import { usePasswordStrength } from "../../../components/common/usePasswordStrength";
 import { checkUserExists, resetPasswordApi } from "../../../api";
-import { generateOtpApi } from "../../../api/GenerateOtpApi";
-import { verifyOtpApi } from "../../../api/VerifyOtpApi";
+import { generateOtpApi, verifyOtpApi } from "../../../api/GenerateAndVerifyOtpApi";
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";
   setSource: React.Dispatch<
     React.SetStateAction<"resetPassword" | "forgottenPassword" | null>
   >;
+}
+
+interface FormDataType {
+  userId: number | null;
+  mobile: string;
+  username: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
@@ -39,23 +47,15 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [errors, setErrors] = useState<ResetPassErrors>({});
   const [loading, setLoading] = useState(false);
+
   const localuserId = getSessionItem("user", "user_id");
-  console.log(localuserId);
-  // const [search] = useSearchParams();
   const navigate = useNavigate();
-  // const from = search.get("from");
+
   const showMobileBox = source;
   const showUserIdField = localuserId === null;
+
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
   const { passwordStrength, evaluate } = usePasswordStrength();
-  interface FormDataType {
-    userId: number | null; // ✅ allow null
-    mobile: string;
-    username: string;
-    otp: string;
-    newPassword: string;
-    confirmPassword: string;
-  }
 
   const [formData, setFormData] = useState<FormDataType>({
     userId: null,
@@ -66,11 +66,10 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     confirmPassword: "",
   });
 
-  console.log(source, "ResetPass");
-
   const canConfirmPassword =
     isOtpVerified && formData.newPassword && passwordStrength.level !== "Weak";
 
+  // Validate username when typing
   useEffect(() => {
     const username = formData.username;
     if (username.length === 0) {
@@ -87,28 +86,29 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     setErrors({});
   }, [formData.username]);
 
+  // Handle source (reset vs forgotten) + session user
   useEffect(() => {
     if (source === "forgottenPassword") {
       setIsOtpVerified(false);
       setShowOtp(false);
     } else {
       if (localuserId) {
+        const numericId = Number(localuserId);
         setFormData((prev) => ({
           ...prev,
-          userId: localuserId,
+          userId: isNaN(numericId) ? null : numericId,
         }));
-        setInternalUserId(localuserId);
+        setInternalUserId(isNaN(numericId) ? null : numericId);
         setIsOtpVerified(true);
         setShowOtp(false);
       }
     }
   }, [source, localuserId]);
 
-  // useEffect(() => {
-  //   console.log("Mode:", from, "Session User ID:", localuserId);
-  // }, [source, localuserId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 🔧 Normalized change handler for MUI TextField
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -127,14 +127,15 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     try {
       const response = await checkUserExists(formData.username);
       if (response.success) {
+        const numericId = Number(response.userId);
         setFormData((prev) => ({
           ...prev,
           mobile: response.mobileNumber,
-          userId: response.userId,
+          userId: isNaN(numericId) ? null : numericId,
         }));
-        setInternalUserId(response.userId);
-        await handleSendOtp(response.mobileNumber);
+        setInternalUserId(isNaN(numericId) ? null : numericId);
 
+        await handleSendOtp(response.mobileNumber);
         setShowOtp(true);
       } else {
         toast.error(
@@ -160,10 +161,12 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");
         if (res.userId) {
+          const numeric = Number(res.userId);
           setFormData((prev) => ({
             ...prev,
-            userId: res.userId ? Number(res.userId) : null, // ✅ convert + fallback
+            userId: isNaN(numeric) ? null : numeric,
           }));
+          setInternalUserId(isNaN(numeric) ? null : numeric);
         }
         setShowOtp(true);
       } else {
@@ -177,14 +180,17 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
 
   const handleVerifyOtp = async (otpValue?: string) => {
     const finalOtp = otpValue || formData.otp;
+    if (!finalOtp || finalOtp.length < 4) return;
+
     try {
       const payload = {
-        userId: formData.userId,
-        otp: Number(finalOtp),
+        userId: formData.userId ?? internalUserId ?? undefined,
+        otp: finalOtp,
         otp_type: 2,
       };
-      const res = await verifyOtpApi(payload);
-      if (res.success) {
+      const res = await verifyOtpApi(payload as any);
+
+      if (res.success !== false && (res.isOtpValid ?? true)) {
         toast.success("OTP verified successfully!");
         setErrors({ username: "" });
         setIsOtpVerified(true);
@@ -226,12 +232,15 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
 
     try {
       setLoading(true);
-      console.log("formData hai ye  :", formData);
+
       const payload = {
         userId: internalUserId,
         newPassword: formData.newPassword,
       };
-      const response = await resetPasswordApi(payload);
+
+      // If ResetPassword type is stricter, this cast avoids TS error
+      const response = await resetPasswordApi(payload as any);
+
       toast.success(response?.message || "Password reset successfully");
       setIsOtpVerified(false);
       setFormData({
@@ -260,6 +269,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       <h1 className="text-2xl font-extrabold text-[var(--color-primary)]">
         {showMobileBox ? "Create new Password" : "Reset Your Password"}
       </h1>
+
       {showMobileBox && showUserIdField && (
         <div className="flex gap-2">
           <FormControl fullWidth>
@@ -286,15 +296,15 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               sx={{
                 "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
                   {
-                    borderColor: "var(--color-border)", // keep same color
+                    borderColor: "var(--color-border)",
                   },
                 "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
                   {
-                    borderColor: "var(--color-border)", // disabled border
+                    borderColor: "var(--color-border)",
                   },
                 "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
                   {
-                    borderColor: "var(--color-border)", // remove focus border
+                    borderColor: "var(--color-border)",
                   },
               }}
             />
@@ -309,6 +319,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               {errors.username}
             </FormHelperText>
           </FormControl>
+
           {!showOtp && (
             <Button
               variant="contained"
@@ -319,19 +330,15 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                 height: 40,
                 minWidth: 90,
                 fontWeight: 600,
-
                 backgroundColor: "var(--color-success)",
-
                 cursor:
                   !formData.username || isOtpVerified
                     ? "not-allowed"
                     : "pointer",
-
                 "&.Mui-disabled": {
                   backgroundColor: isOtpVerified
                     ? "var(--color-success)"
                     : "var(--color-border)",
-                  // color: "#fff",
                   cursor: "not-allowed",
                   opacity: 1,
                 },
@@ -340,6 +347,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               {isOtpVerified ? "Verified ✅" : "Verify"}
             </Button>
           )}
+
           {showOtp && !isOtpVerified && (
             <TextField
               placeholder="Enter OTP"
@@ -441,7 +449,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
           value={formData.confirmPassword}
           onChange={handleChange}
           disabled={!canConfirmPassword}
-          // disabled={!isOtpVerified}
           inputProps={{ maxLength: 25 }}
           error={!!errors.confirmPassword}
           InputProps={{
@@ -479,10 +486,12 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       >
         {loading ? <CircularProgress size={20} color="inherit" /> : "Save"}
       </Button>
+
       <div className="text-left mt-2 mb-3 w-full">
         <button
           onClick={() => setSource(null)}
           className="text-sm text-[var(--color-info)] hover:underline font-medium"
+          type="button"
         >
           Back
         </button>

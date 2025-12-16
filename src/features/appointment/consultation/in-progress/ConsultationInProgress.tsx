@@ -1,85 +1,65 @@
-import React, { useCallback, useEffect, useState, useMemo } from "react";
-import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
-import ConsultationView from "../ConsultationView";
-import { toast } from "react-toastify";
-import type { Patient } from "../../../../types/appointmentTypes";
-import {
-  fetchTodayAppointments,
-  type AppointmentDto,
-} from "../../../../api/PatientQueueApi";
+// src/pages/doctor/ConsultationInProgress.tsx
+import React, { useState, useEffect, useCallback } from "react";
+// import ConsultationView from "../appointment/consultation/ConsultationView";
+// import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
+
+// import {
+//   fetchTodayAppointments,
+//   AppointmentDto,
+// } from "../../../api/PatientQueueApi";
+
+// import { mapAppointmentsToPatients } from "../../../mappers/patientMapper";
+// import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import { getSessionItem } from "../../../../context/sessions/userSession";
+import type { Patient } from "../../../../types/patientType/patientTypeInterfaces";
+import type { AppointmentDto } from "../../../../types/appointmentTypes";
+import { fetchTodayAppointments } from "../../../../api/PatientQueueApi";
+import { mapAppointmentsToPatients } from "../../../../types/patientType/patientMappers";
+import ConsultationView from "../../components/ConsultationView";
+import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
 
 const ConsultationInProgress: React.FC = () => {
-  const [patientList, setPatientList] = useState<Patient[]>([]);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-
   const doctorId = getSessionItem("user", "doctor_id");
 
-  const fetchAppointments = useCallback(async () => {
-    if (!doctorId) {
-      toast.error("Doctor ID is required to fetch appointments.");
-      return;
-    }
-    try {
-      const appointments: AppointmentDto[] = await fetchTodayAppointments(
-        doctorId
-      );
-      const mapped: Patient[] = appointments
-        // .filter((item) => item.status === "in_consultation")
-        .map((a) => ({
-          appointment_id: a.appointment_id,
-          gender: a.gender,
-          time: `${a.start_time} - ${a.end_time}`,
-          name: a.patient_name,
-          reason: a.reason,
-          status: a.status,
-          raw: a,
-        }));
+  const [list, setList] = useState<Patient[]>([]);
+  const [selected, setSelected] = useState<Patient | null>(null);
 
-      setPatientList(mapped);
-    } catch (err) {
-      console.error("Error fetching appointments:", err);
-    }
+  const load = useCallback(async () => {
+    if (!doctorId) return;
+
+    const appts: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+
+    setList(
+      mapAppointmentsToPatients(appts).filter(p =>
+        p.status?.toLowerCase() === "in_consultation"
+      )
+    );
   }, [doctorId]);
 
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    load();
+  }, [load]);
 
-  // Memoize the default patient
-  const defaultPatient = useMemo(
-    () => (patientList.length > 0 ? patientList[0] : null),
-    [patientList]
-  );
-
-  const currentPatient = selectedPatient || defaultPatient;
+  const current = selected || list[0] || null;
 
   return (
     <div>
-      {patientList.length > 0 ? (
+      {!current ? (
+        <h2 className="text-center text-gray-500 mt-6">
+          No active consultation
+        </h2>
+      ) : (
         <>
-          {currentPatient && (
-            <ConsultationView
-              key={currentPatient.appointment_id}
-              patientInfo={currentPatient}
-              onCloseDrawer={() => setDrawerOpen(false)}
-              isDrawer={false}
-            />
-          )}
+          <ConsultationView
+            patientInfo={current}
+            onCloseDrawer={() => {}}
+          />
 
           <ConsultationInProgressPanel
-            consultationList={patientList}
-            onPatientSelect={(patient) => {
-              setSelectedPatient(patient);
-              setDrawerOpen(true);
-            }}
+            consultationList={list}
+            onPatientSelect={p => setSelected(p)}
           />
         </>
-      ) : (
-        <h2 className="text-gray-500 text-center mt-6">
-          No Active Patients in Consultation...
-        </h2>
       )}
     </div>
   );

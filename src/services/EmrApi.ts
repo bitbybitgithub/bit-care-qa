@@ -1,8 +1,9 @@
 // src/api/api.ts
-import { TokenManager } from "./auth/tokenManager";
+import { TokenManager } from "../api/auth/tokenManager";
 import type { RefreshToken } from "../types/types";
 import { getSocket } from "../context/socket";
 
+// const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
 const BASE_URL = "http://localhost:8989/api";
 
 // -------------------- //
@@ -38,7 +39,7 @@ const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
 const fetchWithTimeout = (
   url: string,
   options: RequestInit,
-  timeout = 10000
+  timeout = 20000
 ): Promise<Response> => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -111,7 +112,7 @@ const refreshAccessToken = async (
 async function request<T = unknown>(
   url: string,
   options: RequestInit = {},
-  timeout = 10000,
+  timeout = 30000,
   retry = true
 ): Promise<T> {
   const fullUrl = `${BASE_URL}${url}`;

@@ -6,7 +6,7 @@ import {
   type SlotInfo,
   type ToolbarProps,
 } from "react-big-calendar";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs  from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { ChevronLeft, ChevronRight } from "lucide-react"; 
 import type { AvailabilityProps } from "../../../types/types";

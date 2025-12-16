@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { fetchDashboardStats, type Stats } from "../../api/dashboardApi";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
 import { useQuery } from "@tanstack/react-query";
@@ -11,62 +10,64 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
+
 import { TfiAnnouncement } from "react-icons/tfi";
-import SidebarBg from "../../assets/SidebarBg.png"
+import SidebarBg from "../../assets/SidebarBg.png";
+import { fetchDashboardStats } from "../../api/DashboardApi";
+import { useLoader } from "../../context/LoaderContext";
+export interface DashboardCard {
+  id: number;
+  title: string;
+  key: string;
+  count: number;
+  icon?: JSX.Element;
+}
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const clinicId = getSessionItem("user", "clinic_id");
+  const { loading, setLoading } = useLoader();
+  useEffect(() => {
+    setLoading(true);
+  }, []);
+  const userId = getSessionItem("user", "user_id");
 
-  const [stats, setStats] = useState({
-    totalDoctors: 0,
-    totalStaff: 0,
-    totalPatients: 0,
-    appointmentsToday: 0,
-    newPatientsThisWeek: 0,
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [stats, setStats] = useState<DashboardCard[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
 
-  const { data } = useQuery<Stats>({
-    queryKey: ["clinicProfile", clinicId],
-    queryFn: () => fetchDashboardStats(Number(clinicId)),
-    enabled: !!clinicId,
+  const { data, isFetched } = useQuery<DashboardCard[]>({
+    queryKey: ["dashboardStats", userId],
+    queryFn: () => fetchDashboardStats(Number(userId)),
+    enabled: !!userId,
     staleTime: Infinity,
   });
 
+  // -------------------------
+  // ICON MAP
+  // -------------------------
+  const cardIcon: Record<number, JSX.Element> = {
+    1: <FaCalendarDays className="text-amber-600" />,
+    2: <FaPeopleGroup className="text-blue-600" />,
+    3: <FaUserDoctor className="text-emerald-600" />,
+    4: <FaUserNurse className="text-violet-600" />,
+  };
+
+  // -------------------------
+  // MAP DATA + ICONS
+  // -------------------------
   useEffect(() => {
-    if (data) {
-      setStats(data);
+    if (data && isFetched) {
+      const mapped = data
+        .map((item) => ({
+          ...item,
+          icon: cardIcon[item.card_id] ?? null,
+        }))
+        .sort((a, b) => a.card_id - b.card_id);
+
+      setStats(mapped);
       setLoading(false);
     }
   }, [data]);
-
-  const cardItems = [
-    {
-      title: "Total Appointments Today",
-      value: stats.appointmentsToday,
-      icon: <FaCalendarDays />,
-    },
-    {
-      title: "New Patients This Week",
-      value: stats.newPatientsThisWeek,
-      icon: <FaPeopleGroup />,
-    },
-    {
-      title: "Doctors on Staff",
-      value: stats.totalDoctors,
-      icon: <FaUserDoctor />,
-    },
-    {
-      title: "Medical Staff",
-      value: stats.totalStaff,
-      icon: <FaUserNurse />,
-    },
-  ];
 
   // Reusable button
   const ActionButton = ({
@@ -108,10 +109,9 @@ const Dashboard = () => {
     <div className="flex flex-col relative">
       {/* ⭐ Welcome Banner */}
       <div
-  className="
+        className="
     h-[10vh] 
     relative 
-    mb-5 
     shadow-[var(--shadow-lg)] 
     px-6
     flex items-center justify-between 
@@ -119,8 +119,8 @@ const Dashboard = () => {
     rounded-[var(--radius-md)]
     overflow-hidden
   "
-  style={{
-    backgroundImage: `
+        style={{
+          backgroundImage: `
       linear-gradient(to right, 
         rgba(255,255,255,1) 0%,
         rgba(255,255,255,0.85) 70%,
@@ -129,35 +129,34 @@ const Dashboard = () => {
       ),
       url(${SidebarBg})
     `,
-    backgroundSize: "cover",
-    backgroundPosition: "left center",
-  }}
->
-  <div>
-    <h1
-      className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
-      style={{ fontSize: "var(--font-h2)" }}
-    >
-      Welcome, <span className="text-[var(--color-primary)]">Admin</span>
-    </h1>
+          backgroundSize: "cover",
+          backgroundPosition: "left center",
+        }}
+      >
+        <div>
+          <h1
+            className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
+            style={{ fontSize: "var(--font-h2)" }}
+          >
+            Welcome, <span className="text-[var(--color-primary)]">Admin</span>
+          </h1>
 
-    <p
-      className="text-[var(--color-text)] opacity-70 -mt-1"
-      style={{ fontSize: "var(--font-h5)" }}
-    >
-      Your clinic is running smoothly today.<br />
-      <h3 className="opacity-60">
-        Check your daily stats and announcements below.
-      </h3>
-    </p>
-  </div>
-
-  {/* <img src={AdminImg} className="w-40 relative z-10" /> */}
-</div>
-
+          <p
+            className="text-[var(--color-text)] opacity-70 -mt-1"
+            style={{ fontSize: "var(--font-h5)" }}
+          >
+            Your clinic is running smoothly today.
+            <br />
+            <h3 className="opacity-60">
+              Check your daily stats and announcements below.
+            </h3>
+          </p>
+        </div>
+      </div>
 
       {/* ⭐ Stats Cards */}
-      <Cards items={cardItems} loading={loading} error={error} />
+
+      <Cards items={stats} loading={loading} error={error} />
 
       {/* ⭐ Quick Actions + Announcements */}
       <div className="md:flex gap-x-4">

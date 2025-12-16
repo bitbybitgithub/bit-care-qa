@@ -1,20 +1,23 @@
-// src/api/dashboardApi.ts
-import axios from "axios";
-import { emrAPI } from "./EmrApi";
+// src/api/DashboardApi.ts
+import { emrAPI } from "../services/EmrApi";
 
-export interface Stats {
-  totalDoctors: number;
-  totalStaff: number;
-  totalPatients: number;
-  appointmentsToday: number;
-  newPatientsThisWeek: number;
+// src/api/DashboardApi.ts
+
+export interface DashboardApiCard {
+  card_id: number;
+  card_title: string;
+  card_description: string;
+  key: string;
+  count: number;
 }
 
-export const fetchDashboardStats = async (clinic_id: number): Promise<Stats> => {
+export const fetchDashboardStats = async (
+  user_id: number
+): Promise<DashboardApiCard[]> => {
   try {
-    const response = await emrAPI.post<Stats>(
-      "/clinics/dashboard/overview",
-      { clinic_id }
+    const response = await emrAPI.post<DashboardApiCard[]>(
+      "/clinics/dashboard/cards",
+      { user_id }
     );
 
     return response;

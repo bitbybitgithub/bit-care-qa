@@ -7,13 +7,14 @@ import { FaHome, FaUsers, FaHospital, FaCog, FaTasks } from "react-icons/fa";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { TiMessages } from "react-icons/ti";
 import { HiOutlineDocumentReport } from "react-icons/hi";
-import { GrSchedules } from "react-icons/gr";
+import { GrDocumentText, GrSchedules } from "react-icons/gr";
 import { BiTimer } from "react-icons/bi";
 import Logo1 from "../../assets/BitCareLogo.png";
 import Logo2 from "../../assets/BitCareLogo2.png";
 import SidebarBg from "../../assets/SidebarBg.png";
 
 import { getSessionItem } from "../../context/sessions/userSession";
+import { DockIcon } from "lucide-react";
 
 interface MenuItem {
   title: string;
@@ -71,6 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const StaffMenus: MenuItem[] = [
     { title: "Staff Dashboard", link: "/staff-dashboard", icon: FaHome },
+    {
+      title: "Patient Document Management",
+      link: "/patient-doc-managment",
+      icon: GrDocumentText,
+    },
     // { title: "Tasks & Reminder", link: "/task-and-reminder", icon: FaTasks },
     // {
     //   title: "Assigned Patients",
@@ -99,50 +105,50 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // ----------------------------------------------
   const SidebarContent = (
- <div
-  className={`relative flex flex-col h-full bg-[var(--color-primary)] transition-all duration-300
+    <div
+      className={`relative flex flex-col h-full bg-[var(--color-primary)] transition-all duration-300
   ${isCollapsed ? "w-20" : "w-56"} overflow-hidden`}
->
-  {/* Blurred background image */}
-  {/* <div
+    >
+      {/* Blurred background image */}
+      {/* <div
     className="absolute inset-1 bg-cover bg-no-repeat opacity-20"
     style={{ backgroundImage: `url(${SidebarBg})` }}
   ></div> */}
 
-  {/* Sidebar content */}
-  <div className="relative z-10">
-    {/* Header */}
-    <div className="p-2 flex items-center justify-center w-full">
-      {!isCollapsed ? (
-        <img
-          src={Logo1}
-          alt="Menu"
-          className="w-[80%] h-[70px] object-contain bg-[var(--color-white)] shadow-2xl border-y-2 border-black rounded-[var(--radius-none)]"
-        />
-      ) : (
-        <div className="flex items-center justify-center">
-          <img
-            src={Logo2}
-            alt="Menu"
-            className="w-full h-auto bg-white rounded-[var(--radius-full)] p-1"
-          />
+      {/* Sidebar content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="p-2 flex items-center justify-center w-full">
+          {!isCollapsed ? (
+            <img
+              src={Logo1}
+              alt="Menu"
+              className="w-[80%] h-[70px] object-contain bg-[var(--color-white)] shadow-2xl border-y-2 border-black rounded-[var(--radius-none)]"
+            />
+          ) : (
+            <div className="flex items-center justify-center">
+              <img
+                src={Logo2}
+                alt="Menu"
+                className="w-full h-auto bg-white rounded-[var(--radius-full)] p-1"
+              />
+            </div>
+          )}
         </div>
-      )}
-    </div>
 
-    {/* Menu List */}
-    <nav className="flex-1 overflow-y-auto">
-      <ul className="py-3 space-y-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const active = isItemActive(item.link);
+        {/* Menu List */}
+        <nav className="flex-1 overflow-y-auto">
+          <ul className="py-3 space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isItemActive(item.link);
 
-          return (
-            <li key={item.link} className="px-3">
-              <NavLink
-                to={item.link}
-                onClick={() => isMobile && setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition 
+              return (
+                <li key={item.link} className="px-3">
+                  <NavLink
+                    to={item.link}
+                    onClick={() => isMobile && setMobileOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition 
                   ${isCollapsed ? "justify-center" : ""}
                   ${
                     active
@@ -150,18 +156,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                       : "text-white hover:bg-[var(--color-white)] hover:text-[var(--color-primary)]"
                   }
                 `}
-              >
-                <Icon className="h-5 w-5" />
-                {!isCollapsed && <span>{item.title}</span>}
-              </NavLink>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  </div>
-</div>
-
+                  >
+                    <Icon className="h-5 w-5" />
+                    {!isCollapsed && <span>{item.title}</span>}
+                  </NavLink>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </div>
   );
 
   return (

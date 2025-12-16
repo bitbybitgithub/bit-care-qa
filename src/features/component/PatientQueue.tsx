@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Button,
   Menu,
@@ -10,11 +10,14 @@ import {
   TextField,
   Drawer,
   Box,
+  Chip,
+  Typography,
 } from "@mui/material";
 import {
   DataGrid,
   type GridColDef,
   type GridRenderCellParams,
+  type GridRowIdGetter,
 } from "@mui/x-data-grid";
 import { RiHeartAdd2Line } from "react-icons/ri";
 import { AiOutlineUserDelete } from "react-icons/ai";
@@ -23,51 +26,55 @@ import { AppointmentStatus } from "../../context/constant/enum";
 import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
 import { formatEnumText } from "../../utils/FormatText";
+import type {
+  PatientQueueProps,
+} from "../../types/staffdashboardtype/StaffDashboardInterfaces";
+import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 
-export interface Patient {
-  patient_id: number;
-  appointment_id: number;
-  patient_name: string;
-  date_of_birth: string | number | Date;
-  mobile_number: string;
-  gender: string;
-  age?: number;
-  time?: string;
-  name: string;
-  raw: any;
-  reason?: string;
-  status: string;
-  doctor?: string;
-  source?: string;
-}
+/* ---------- small visual helpers (status chip) ---------- */
+const statusMap: Record<
+  string,
+  { label: string; color: string; bg: string; icon?: React.ReactNode }
+> = {
+  waiting: { label: "Waiting", color: "#92400E", bg: "#FFFBEB" },
+  pending_vitals: { label: "Pending Vitals", color: "#3730A3", bg: "#EEF2FF" },
+  checked_in: { label: "Checked In", color: "#0EA5A4", bg: "#ECFEFF" },
+  in_progress: { label: "In Progress", color: "#1D4ED8", bg: "#EFF6FF" },
+  in_consultation: {
+    label: "In Consultation",
+    color: "#7C3AED",
+    bg: "#F5EEFF",
+  },
+  started: { label: "Started", color: "#3730A3", bg: "#EEF2FF" },
+  on_hold: { label: "On Hold", color: "#374151", bg: "#F3F4F6" },
+  completed: { label: "Completed", color: "#059669", bg: "#ECFDF5" },
+  scheduled: { label: "Scheduled", color: "#0EA5A4", bg: "#ECFEFF" },
+  cancelled: { label: "Cancelled", color: "#B91C1C", bg: "#FEF2F2" },
+};
 
-interface PatientQueueProps {
-  mode?: "doctor" | "staff";
-  loading: boolean;
-  doctorId?: number;
-  classProp?: string;
-  patientsData?: Patient[];
-  error: string | null;
-  onStartConsultation?: (patient: Patient) => void;
-  onAddWalkIn?: () => void;
-  handleUpdatePatientStatus: (patient: Patient, status: string) => void;
-}
-
-/* ---------- PURE HELPERS ---------- */
-const badgeClasses = (status: string): string => {
-  const colors: Record<string, string> = {
-    waiting: "bg-amber-200 text-amber-800",
-    pending_vitals: "bg-indigo-200 text-indigo-800",
-    checked_in: "bg-sky-200 text-sky-800",
-    in_progress: "bg-blue-200 text-blue-800",
-    in_consultation: "bg-violet-200 text-violet-800",
-    started: "bg-indigo-200 text-indigo-800",
-    on_hold: "bg-gray-200 text-gray-700",
-    completed: "bg-emerald-200 text-emerald-800",
-    scheduled: "bg-cyan-200 text-cyan-800",
-    cancelled: "bg-rose-200 text-rose-800",
+const normalize = (s?: string) =>
+  s ? String(s).trim().toLowerCase().replace(/\s+/g, "_") : "";
+const getStatusChip = (status?: string) => {
+  const key = normalize(status);
+  const meta = statusMap[key] || {
+    label: status || "Unknown",
+    color: "#374151",
+    bg: "#F3F4F6",
   };
-  return colors[status.toLowerCase()] || "bg-gray-100 text-gray-800";
+  return (
+    <Chip
+      size="small"
+      label={meta.label}
+      sx={{
+        backgroundColor: meta.bg,
+        color: meta.color,
+        fontWeight: 600,
+        fontSize: 12,
+        height: 28,
+        px: 1,
+      }}
+    />
+  );
 };
 
 const getActionsForStatus = (status: string): string[] => {
@@ -85,6 +92,7 @@ const getActionsForStatus = (status: string): string[] => {
 
 const PAGE_SIZE = 5;
 
+/* ---------- PatientQueue (updated UI) ---------- */
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
   error,
@@ -92,9 +100,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   classProp,
   patientsData = [],
   onStartConsultation,
-  onAddWalkIn,
   handleUpdatePatientStatus,
+  searchQuery,
+  onSearchChange,
 }) => {
+
+  console.log("patient Data", patientsData)
+  const [localSearch, setLocalSearch] = useState("");
+  const search = typeof searchQuery === "string" ? searchQuery : localSearch;
+  const setSearch = onSearchChange ?? setLocalSearch;
+
   const [currentPage, setCurrentPage] = useState(1);
   const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>(
     {}
@@ -108,20 +123,37 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     return allowedStatuses.includes(status.toLowerCase());
   };
 
-  // Drawer States
   const [vitalsDrawerOpen, setVitalsDrawerOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  console.log(selectedPatient, "selectedPatient");
-  console.log(patientsData, "patientsData");
-
-  // Filter (if needed later)
   const filteredPatients = useMemo(() => {
-    return patientsData;
-  }, [patientsData]);
+    const q = (search || "").toString().trim().toLowerCase();
+    if (!q) return patientsData;
 
-  const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
+    return patientsData.filter((p) => {
+      const contact = String(p.mobile_number || "").trim();
+      const last4 = contact.length >= 4 ? contact.slice(-4).toLowerCase() : "";
+      // also allow searching by name or appointment id
+      return (
+        last4.includes(q) ||
+        String(p.name || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(p.appointment_id ?? p.patient_id ?? "")
+          .toLowerCase()
+          .includes(q)
+      );
+    });
+  }, [patientsData, search]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredPatients.length / PAGE_SIZE)
+  );
   const currentPatients = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredPatients.slice(start, start + PAGE_SIZE);
@@ -150,7 +182,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const handleAction = useCallback(
     async (action: string, patient: Patient) => {
       handleMenuClose(patient.patient_id);
-
       if (action === "Cancel Appointment") {
         setPatientToCancel(patient);
         setCancelDialogOpen(true);
@@ -158,7 +189,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setSelectedPatient(patient);
         setVitalsDrawerOpen(true);
       } else if (action === "Hold Appointment") {
-        await handleUpdatePatientStatus(patient, AppointmentStatus.OnHold);
+        await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
         setAnchorEl({});
       }
     },
@@ -167,55 +198,55 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const handleConfirmCancel = useCallback(() => {
     if (!patientToCancel) return;
-
-    console.log("CANCEL APPOINTMENT", {
-      patient_id: patientToCancel.patient_id,
-      reason: cancelReason.trim(),
-    });
-
-    handleUpdatePatientStatus(patientToCancel, AppointmentStatus.Cancelled);
-
+    handleUpdatePatientStatus?.(patientToCancel, AppointmentStatus.Cancelled);
     setCancelDialogOpen(false);
     setCancelReason("");
     setPatientToCancel(null);
-  }, [cancelReason, patientToCancel, handleUpdatePatientStatus]);
+  }, [patientToCancel, handleUpdatePatientStatus]);
 
-  /* -------------------- DataGrid setup -------------------- */
-
+  /* -------------------- DataGrid setup (visuals changed) -------------------- */
   const rows = useMemo(() => currentPatients, [currentPatients]);
 
   const columns: GridColDef[] = useMemo(() => {
     const common: GridColDef[] = [
       {
-        field: "name",
-        headerName: "Name",
-        flex: 1.3,
-        minWidth: 180,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          if (!row) return "";
-          const gender = row.gender?.toLowerCase();
-          const suffix =
-            gender === "male" ? "(M)" : gender === "female" ? "(F)" : "(O)";
+        field: "appointment_id",
+        headerName: "Appt. No",
+        width: 80,
+        renderCell: (params) => (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography sx={{ fontSize: 13 }}>
+              {params.row.appointment_id || "—"}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        field: "patient",
+        headerName: "Patient Name",
+        flex: 1.6,
+        minWidth: 200,
+        sortable: false,
+        renderCell: (params) => {
+          const row = params.row || {};
+          const name = row.name || "--";
+          const id = row.appointment_id ?? row.patient_id ?? "—";
+          const gender = row.gender ? String(row.gender).charAt(0) : "-";
           return (
-            <div
-              className="truncate"
-              style={{
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--color-text)",
-              }}
-            >
-              {row.name}
-              <span
-                style={{
-                  marginLeft: "0.25rem",
-                  color: "var(--color-text)",
-                  fontSize: "var(--font-xs)",
-                }}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
               >
-                {suffix}
-              </span>
-            </div>
+                <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                  {name}{" "}
+                  <span
+                    style={{ color: "var(--color-primary)", fontWeight: 500 }}
+                  >
+                    ({gender})
+                  </span>
+                </Typography>
+              </Box>
+            </Box>
           );
         },
       },
@@ -276,7 +307,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             const p = params?.row as Patient;
             if (!p) return null;
             return (
-              <div className="flex justify-center w-full">
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
                 <Button
                   variant="contained"
                   onClick={() => {
@@ -289,20 +326,20 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   sx={{
                     backgroundColor: "var(--color-primary)",
                     color: "var(--color-white)",
-                    fontWeight: "var(--font-weight-medium)",
-                    borderRadius: "var(--radius-lg)",
-                    padding: "4px 12px",
-                    fontSize: "var(--font-small)",
+                    fontWeight: 600,
+                    borderRadius: "8px",
+                    padding: "6px 14px",
+                    fontSize: 13,
                     textTransform: "none",
                     "&:hover": {
+                      opacity: 0.95,
                       backgroundColor: "var(--color-primary)",
-                      opacity: 0.9,
                     },
                   }}
                 >
                   Ready For Consultation
                 </Button>
-              </div>
+              </Box>
             );
           },
         },
@@ -310,7 +347,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       return doctorColumns;
     }
 
-    // mode === "staff"
+    // staff mode
     const staffColumns: GridColDef[] = [
       ...common,
       {
@@ -341,18 +378,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         renderCell: (params: GridRenderCellParams<any, Patient>) => {
           const row = params?.row as Patient;
           if (!row) return "";
-          return (
-            <div
-              className={`flex justify-center items-center ${badgeClasses(
-                row.status
-              )}`}
-              style={{
-                fontSize: "var(--font-xs)",
-              }}
-            >
-              {formatEnumText(row.status)}
-            </div>
-          );
+          // use the nicer chip used across grids
+          return getStatusChip(row?.status);
         },
       },
       {
@@ -365,21 +392,29 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         renderCell: (params: GridRenderCellParams<any, Patient>) => {
           const p = params?.row as Patient;
           if (!p) return null;
-
           const pid = p.raw?.patient_id ?? p.patient_id;
           if (!shouldShowSelectButton(p.status)) return null;
 
           return (
-            <div className="flex justify-center items-center h-full ">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
               <>
                 <Button
                   variant="outlined"
                   size="small"
                   sx={{
-                    borderRadius: "var(--radius-lg)",
+                    borderRadius: "8px",
                     textTransform: "none",
                     fontWeight: 600,
                     my: "auto",
+                    px: 1.5,
+                    py: 0.5,
                   }}
                   onClick={(e) => handleMenuOpen(e, pid)}
                 >
@@ -392,28 +427,30 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                 >
                   {getActionsForStatus(p.status).map((a) => (
                     <MenuItem key={a} onClick={() => handleAction(a, p)}>
-                      <div
-                        className="flex items-center gap-2"
-                        style={{
-                          fontSize: "var(--font-small)",
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          fontSize: 13,
                         }}
                       >
                         {a === "Add Vitals" && (
-                          <RiHeartAdd2Line className="text-blue-600 text-lg" />
+                          <RiHeartAdd2Line style={{ color: "#2563EB" }} />
                         )}
                         {a === "Cancel Appointment" && (
-                          <AiOutlineUserDelete className="text-red-600 text-lg" />
+                          <AiOutlineUserDelete style={{ color: "#DC2626" }} />
                         )}
                         {a === "Hold Appointment" && (
-                          <IoClose className="text-orange-600 text-lg" />
+                          <IoClose style={{ color: "#F97316" }} />
                         )}
-                        {a}
-                      </div>
+                        <span>{a}</span>
+                      </Box>
                     </MenuItem>
                   ))}
                 </Menu>
               </>
-            </div>
+            </Box>
           );
         },
       },
@@ -435,7 +472,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       sx={{
         p: 2,
         textAlign: "center",
-        fontSize: "var(--font-small)",
+        fontSize: 13,
         color: error ? "error.main" : "text.secondary",
       }}
     >
@@ -447,14 +484,21 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     </Box>
   );
 
+  const getRowId: GridRowIdGetter = (row: any) =>
+    row?.raw?.patient_id ??
+    row?.patient_id ??
+    row?.appointment_id ??
+    Math.random();
+
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] p-6 ${
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${
         classProp || ""
       }`}
     >
+    
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         {mode !== "staff" ? (
           <h2
             className="truncate"
@@ -469,30 +513,17 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         ) : (
           <h1> </h1>
         )}
-        {mode === "staff" && onAddWalkIn && (
-          <button
-            onClick={onAddWalkIn}
-            className="flex items-center gap-2 text-white px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base shadow-[var(--shadow-md)]"
-            style={{
-              backgroundColor: "var(--color-primary)",
-              fontWeight: "var(--font-weight-medium)",
-            }}
-          >
-            + Add Walk-in Patient
-          </button>
-        )}
+        <div className="flex items-center gap-3"></div>
       </div>
 
       {/* DataGrid Wrapper */}
-      <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-auto lg:overflow-visible scrollbar-thin scrollbar-thumb-gray-400">
+      <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400">
         <DataGrid
           rows={rows}
-          getRowId={(row) =>
-            row?.raw?.patient_id ?? row?.patient_id ?? row?.appointment_id
-          }
+          getRowId={getRowId}
           columns={columns}
           loading={loading}
-          rowHeight={42}
+          rowHeight={64}
           disableRowSelectionOnClick
           paginationMode="server"
           rowCount={filteredPatients.length}
@@ -503,9 +534,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           }}
           onPaginationModelChange={(model) => {
             const newPage = model.page + 1;
-            if (newPage !== currentPage) {
-              handlePageChange(newPage);
-            }
+            if (newPage !== currentPage) handlePageChange(newPage);
           }}
           getRowClassName={(params) =>
             params.row.status === AppointmentStatus.OnHold
@@ -515,29 +544,25 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           slots={{
             noRowsOverlay: CustomNoRowsOverlay,
           }}
+          density="compact"
           sx={{
             minWidth: 900,
             backgroundColor: "var(--color-white)",
-            boxShadow: "var(--shadow-md)",
-            
-            // Header row + each header cell
-            "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
-              backgroundColor: "var(--color-white)",
+            overflow: "hidden",
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "transparent",
               color: "var(--color-primary)",
               textTransform: "uppercase",
-              fontSize: "var(--font-small)",
-              fontWeight: "var(--font-weight-semibold)",
-              letterSpacing: "0.05em",
+              fontSize: 12,
+              letterSpacing: "0.06em",
             },
-
-            "& .MuiDataGrid-row": {
-              fontSize: "var(--font-body)",
-            },
-            "& .MuiDataGrid-row.on-hold-row": {
-              backgroundColor: "var(--color-surface-alt)",
-            },
-            "& .MuiDataGrid-row.default-row": {
-              backgroundColor: "var(--color-surface)",
+            "& .MuiDataGrid-row": { fontSize: 13 },
+            "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(0,0,0,0.02)" },
+            "& .MuiDataGrid-cell": { alignItems: "center", display: "flex" },
+            "& .MuiDataGrid-virtualScrollerRenderZone": {
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "rgba(15,23,42,0.02)",
+              },
             },
           }}
         />
@@ -572,7 +597,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/*  Vitals Drawer */}
+      {/* Vitals Drawer */}
       <Drawer
         anchor="right"
         open={vitalsDrawerOpen}
@@ -596,7 +621,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             patientName={selectedPatient.name}
             createdBy="SystemUser"
             onStatusUpdate={() =>
-              handleUpdatePatientStatus(
+              handleUpdatePatientStatus?.(
                 selectedPatient,
                 AppointmentStatus.CheckedIn
               )

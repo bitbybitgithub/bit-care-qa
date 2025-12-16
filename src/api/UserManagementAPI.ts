@@ -1,4 +1,4 @@
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 import type { AxiosResponse } from "axios";
 
 export interface User {

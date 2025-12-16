@@ -1,6 +1,4 @@
-import { emrAPI } from "./EmrApi";
-import type { AxiosResponse } from "axios";
-
+import { emrAPI } from "../services/EmrApi";
 export interface Doctor {
   clinic_id: number;
   id: number;
@@ -12,7 +10,6 @@ export interface Doctor {
   phone?: string;
 }
 
-// Specialize map
 const specializationMap: Record<number, string> = {
   1: "Cardiology",
   2: "Dermatology",
@@ -20,25 +17,42 @@ const specializationMap: Record<number, string> = {
   4: "Orthopedics",
   5: "Homeopathy",
 };
+interface DoctorListResponse {
+  success: boolean;
+  doctorList: Array<{
+    doctor_id: number;
+    clinic_id: number;
+    name: string;
+    qualification: string;
+    specialization: number;
+    license_no: string;
+    isActive: string | number | boolean;
+    phone?: string;
+  }>;
+}
 
 export const getDoctorList = async (clinic_id: number): Promise<Doctor[]> => {
   try {
-    const response: AxiosResponse<any> = await emrAPI.post("/doctors/getdoctorlist", { clinic_id: clinic_id });
+    const response  = await emrAPI.post<DoctorListResponse>("/doctors/getdoctorlist",{ clinic_id });
 
-    console.log("Full API response:", response);
-
-    if (!response || !response?.doctorList) {
+    if (!response?.doctorList) {
       throw new Error("doctorList is missing in API response");
     }
 
-    console.log(response)
-    const mappedDoctors: Doctor[] = response?.doctorList.map((d: any) => ({
+    const mappedDoctors: Doctor[] = response.doctorList.map((d) => ({
+      clinic_id: d.clinic_id,
       id: d.doctor_id,
       name: d.name,
       qualification: d.qualification,
       specialist: specializationMap[d.specialization] || "Unknown",
       license_no: d.license_no,
-      status: d.isActive === "1" ? "Active" : "Inactive",
+      status:
+        d.isActive === 1 ||
+        d.isActive === "1" ||
+        d.isActive === true
+          ? "Active"
+          : "Inactive",
+      phone: d.phone,
     }));
 
     return mappedDoctors;

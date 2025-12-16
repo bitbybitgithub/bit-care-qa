@@ -1,6 +1,6 @@
 import type { ConsultationSummaryResponse } from "../types/appointmentTypes";
 import type { SaveSOAPRequest, SaveSOAPResponse } from "../types/soap";
-import { emrAPI } from "./EmrApi";
+import { emrAPI } from "../services/EmrApi";
 
 export async function fetchPatientInfo(patient_id: number): Promise<ConsultationSummaryResponse> {
   const response:ConsultationSummaryResponse = await emrAPI.post(

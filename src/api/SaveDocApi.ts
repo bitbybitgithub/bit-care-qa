@@ -1,4 +1,4 @@
-import { emrAPI } from "./EmrApi"
+import { emrAPI } from "../services/EmrApi";
 
 // Function to add a new doctor
 export const saveDocAPI = async (doctorData: {

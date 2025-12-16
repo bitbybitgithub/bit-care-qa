@@ -11,18 +11,9 @@ import {
   Stack,
 } from "@mui/material";
 import dayjs from "dayjs";
+import type { PatientAppointment } from "../../../types/appointmentTypes";
 
-interface PatientAppointment {
-  appointment_id: number;
-  patient_id: number;
-  doctor_id: number;
-  clinic_id: number;
-  appointment_date: string;
-  appointment_status: "completed" | "cancelled" | "pending" | string;
-  consultation_notes: string | null;
-  diagnosis: string | null;
-  prescription: string | null;
-}
+
 
 interface PatientHistoryProps {
   patientAppointmentHistory: PatientAppointment[];

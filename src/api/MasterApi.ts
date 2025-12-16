@@ -1,3 +1,4 @@
+// src/api/MasterApi.ts
 import { emrAPI } from "../services/EmrApi";
 
 export interface Role {
@@ -11,27 +12,35 @@ export interface Role {
 }
 
 /**
- * Master API - Get Roles
- * emrAPI.get returns *data directly*, not axios response
+ * Actual backend response shape
  */
-export const getRoles = async (): Promise<{
+interface RawGetRolesResponse {
   success: boolean;
-  data?: Role[];
+  data: {
+    success: boolean;
+    data: Role[];
+  };
+}
+
+export interface GetRolesResult {
+  success: boolean;
+  data: Role[];
   error?: string;
-}> => {
+}
+
+export const getRoles = async (): Promise<GetRolesResult> => {
   try {
-    // emrAPI.get<Role[]> returns a pure Role[]
-    const data = await emrAPI.get<Role[]>("/master/getRole");
-console.log("Role Data",data)
+    const res = await emrAPI.get<RawGetRolesResponse>("/master/getRole");
     return {
       success: true,
-      data,
+      data: res.data.data, // ✅ flattened here
     };
   } catch (error: any) {
     console.error("getRoles API error:", error);
     return {
       success: false,
-      error: error?.message || "Unknown error",
+      data: [],
+      error: error?.message || "Failed to fetch roles",
     };
   }
 };

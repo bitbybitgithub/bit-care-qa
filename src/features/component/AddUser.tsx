@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { saveDocAPI } from "../../api/SaveDocApi";
-import Regex from "../../Helper/Regex";
-import { VscPersonAdd } from "react-icons/vsc";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import {
   FaTimes,
   FaUser,
@@ -12,15 +15,12 @@ import {
   FaUserMd,
   FaKey,
 } from "react-icons/fa";
+import { VscPersonAdd } from "react-icons/vsc";
+
+import Regex from "../../Helper/Regex";
+import { saveDocAPI } from "../../api/SaveDocApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { getRoles, type Role } from "../../api/MasterApi";
-import {
-  Button,
-  FormControl,
-  InputAdornment,
-  MenuItem,
-  TextField,
-} from "@mui/material";
 
 interface AddUserProps {
   onClose: () => void;
@@ -36,54 +36,54 @@ interface Form {
 }
 
 const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
+  const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState<Form>({
     name: "",
     email: "",
-    role: "",
     phone: "",
+    role: "",
     username: "",
     password: "",
   });
-
-  const clinicId = getSessionItem("user", "clinic_id");
-  const role = getSessionItem("user", "role");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([]);
+
+  const clinicId = getSessionItem("user", "clinic_id");
+  const createdBy = getSessionItem("user", "role");
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const result = await getRoles();
-        if (result?.success && result.data) {
-          setRoles(result.data);
-        } else {
-          toast.error(result?.error || "Failed to load roles");
+        setRoles(Array.isArray(result.data) ? result.data : []);
+        if (!result.success) {
+          toast.error(result.error || "Failed to load roles");
         }
       } catch (err) {
-        console.error("Error fetching roles:", err);
-        toast.error("Failed to fetch roles");
+        console.error("fetchRoles error:", err);
+        setRoles([]);
+        toast.error("Failed to load roles");
       }
     };
+
     fetchRoles();
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
     if (name === "name" && /[^a-zA-Z\s]/.test(value)) return;
-
     if (name === "phone") {
       if (/[^0-9]/.test(value)) return;
       if (value.length === 1 && !/^[6-9]$/.test(value)) return;
       if (value.length > 10) return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setFormData((p) => ({ ...p, [name]: value }));
+    setErrors((p) => ({ ...p, [name]: "" }));
   };
 
   const handleClose = () => {
@@ -95,27 +95,24 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    else if (!Regex.name.test(formData.name.trim()))
-      newErrors.name = "Enter a valid name (letters only, 5–50 chars)";
+    else if (!Regex.name.test(formData.name))
+      newErrors.name = "Invalid name";
 
     if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!Regex.email.test(formData.email.trim()))
-      newErrors.email = "Enter a valid email";
+    else if (!Regex.email.test(formData.email))
+      newErrors.email = "Invalid email";
 
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    else if (!Regex.MOBILEREGEX.test(formData.phone.trim()))
-      newErrors.phone = "Enter a valid 10-digit phone number starting with 6–9";
+    if (!Regex.MOBILEREGEX.test(formData.phone))
+      newErrors.phone = "Invalid phone number";
 
     if (!formData.role) newErrors.role = "Role is required";
-    if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.password.trim()) newErrors.password = "Password is required";
+    if (!formData.username.trim())
+      newErrors.username = "Username required";
+    if (!formData.password.trim())
+      newErrors.password = "Password required";
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length) {
-      // toast.error("Please fill all required fields correctly");
-      return false;
-    }
-    return true;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
@@ -128,30 +125,20 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        role: formData.role.trim(),
+        role: formData.role,
         username: formData.username.trim(),
         password: formData.password.trim(),
-        created_by: role,
+        created_by: createdBy,
       };
 
       const resp = await saveDocAPI(payload);
       const data = (resp as any)?.data ?? resp;
 
       if (data?.success) {
-        toast.success(data?.message || "User added successfully");
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          role: "",
-          username: "",
-          password: "",
-        });
-        window.location.reload();
+        toast.success(data.message || "User added successfully");
         handleClose();
       } else {
         toast.error(data?.message || "Failed to add user");
-        window.location.reload();
       }
     } catch (err) {
       console.error("Save error:", err);
@@ -162,186 +149,144 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center items-center bg-[var(--color-white)]/40 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur">
       <div
-        className={`bg-[var(--color-bg)]  border border-[var(--color-primary)] shadow-[var(shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-md mx-4 p-6 transform transition-all ${
+        className={`bg-white rounded-xl w-full max-w-md p-6 transition ${
           isClosing ? "animate-slide-out" : "animate-slide-in"
         }`}
       >
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <VscPersonAdd
-              className="text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h2)" }}
-            />
-            <h3 className="font-semibold text-[var(--color-primary)]" style={{fontSize:"var(--font-h3)"}}>
-              Add New User
-            </h3>
+            <VscPersonAdd className="text-blue-600 text-xl" />
+            <h3 className="font-semibold text-lg">Add New User</h3>
           </div>
-          <button
-            onClick={handleClose}
-            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
-          >
+          <button onClick={handleClose}>
             <FaTimes />
           </button>
         </div>
 
-        <div className="flex flex-col gap-y-1">
-          {/* NAME */}
-          <FormControl fullWidth>
-            <TextField
-              name="name"
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
-              size="small"
-              error={!!errors.name}
-              helperText={errors.name || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUser className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+        {/* FORM */}
+        <div className="flex flex-col gap-2">
+          <TextField
+            name="name"
+            placeholder="Name"
+            size="small"
+            value={formData.name}
+            onChange={handleChange}
+            error={!!errors.name}
+            helperText={errors.name || " "}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaUser />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-          {/* EMAIL */}
-          <FormControl fullWidth>
-            <TextField
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
-              size="small"
-              error={!!errors.email}
-              helperText={errors.email || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaEnvelope className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+          <TextField
+            name="email"
+            placeholder="Email"
+            size="small"
+            value={formData.email}
+            onChange={handleChange}
+            error={!!errors.email}
+            helperText={errors.email || " "}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaEnvelope />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-          {/* PHONE */}
-          <FormControl fullWidth>
-            <TextField
-              name="phone"
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
-              size="small"
-              error={!!errors.phone}
-              helperText={errors.phone || " "}
-              inputProps={{ maxLength: 10, inputMode: "tel" }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaPhoneAlt className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+          <TextField
+            name="phone"
+            placeholder="Phone"
+            size="small"
+            value={formData.phone}
+            onChange={handleChange}
+            error={!!errors.phone}
+            helperText={errors.phone || " "}
+            inputProps={{ maxLength: 10 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaPhoneAlt />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-          {/* USERNAME */}
-          <FormControl fullWidth>
-            <TextField
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
-              size="small"
-              error={!!errors.username}
-              helperText={errors.username || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUser className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+          <TextField
+            name="username"
+            placeholder="Username"
+            size="small"
+            value={formData.username}
+            onChange={handleChange}
+            error={!!errors.username}
+            helperText={errors.username || " "}
+          />
 
-          {/* PASSWORD */}
-          <FormControl fullWidth>
-            <TextField
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)}
-              size="small"
-              error={!!errors.password}
-              helperText={errors.password || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaKey className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+          <TextField
+            name="password"
+            type="password"
+            placeholder="Password"
+            size="small"
+            value={formData.password}
+            onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password || " "}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaKey />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-          {/* ROLE SELECT */}
-          <FormControl fullWidth error={!!errors.role}>
-            <TextField
-              select
-              name="role"
-              error={!!errors.role} 
-              label="" // optional: remove if you don't want a floating label
-              value={formData.role}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e)} 
-              className="text-[var(--color-text)]"
-              size="small"
-              fullWidth
-              helperText={errors.role || " "}
-              // variant="outlined"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUserMd className="text-[var(--color-text)]"/>
-                  </InputAdornment>
-                ),
-              }}
-              SelectProps={{
-                displayEmpty: true,
-                renderValue: (selected: any) =>
-                  !selected ? (
-                    <span style={{ color: "rgba(0,0,0,0.6)" }}>
-                      Select Role
-                    </span>
-                  ) : (
-                    selected
-                  ),
-              }}
-            >
-              <MenuItem value="">
-                <em>Select Role</em>
-              </MenuItem>
+          {/* ROLE DROPDOWN */}
+          <TextField
+            select
+            size="small"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            error={!!errors.role}
+            helperText={errors.role || " "}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaUserMd />
+                </InputAdornment>
+              ),
+            }}
+          >
+            <MenuItem value="">
+              <em>Select Role</em>
+            </MenuItem>
 
-              {roles.map((r) => (
+            {roles.length === 0 ? (
+              <MenuItem disabled>No roles available</MenuItem>
+            ) : (
+              roles.map((r) => (
                 <MenuItem key={r.role_id} value={r.role_name}>
                   {r.role_name}
                 </MenuItem>
-              ))}
-            </TextField>
-          </FormControl>
+              ))
+            )}
+          </TextField>
         </div>
 
-        <div className="flex justify-center gap-4 mt-8">
-       
+        {/* ACTION */}
+        <div className="flex justify-center mt-6">
           <Button
+            variant="contained"
             onClick={handleSave}
             disabled={isSaving}
-            variant="contained"
-            className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
           >
             {isSaving ? "Saving..." : "Save"}
           </Button>

@@ -228,6 +228,13 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
             onChange={handleChange}
             error={!!errors.username}
             helperText={errors.username || " "}
+             InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FaUser />
+                </InputAdornment>
+              ),
+            }}
           />
 
           <TextField
@@ -248,11 +255,11 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
             }}
           />
 
-          {/* ROLE DROPDOWN */}
           <TextField
             select
             size="small"
             name="role"
+            placeholder="Select Role"
             value={formData.role}
             onChange={handleChange}
             error={!!errors.role}
@@ -264,11 +271,18 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
                 </InputAdornment>
               ),
             }}
+            SelectProps={{
+                displayEmpty: true,
+                renderValue: (selected: any) =>
+                  !selected ? (
+                    <span style={{ color: "rgba(0,0,0,0.6)" }}>
+                      Select Role
+                    </span>
+                  ) : (
+                    selected
+                  ),
+              }}
           >
-            <MenuItem value="">
-              <em>Select Role</em>
-            </MenuItem>
-
             {roles.length === 0 ? (
               <MenuItem disabled>No roles available</MenuItem>
             ) : (

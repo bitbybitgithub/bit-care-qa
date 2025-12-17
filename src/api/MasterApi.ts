@@ -11,15 +11,9 @@ export interface Role {
   modified_date: string | null;
 }
 
-/**
- * Actual backend response shape
- */
 interface RawGetRolesResponse {
   success: boolean;
-  data: {
-    success: boolean;
-    data: Role[];
-  };
+  data: Role[];
 }
 
 export interface GetRolesResult {
@@ -33,7 +27,7 @@ export const getRoles = async (): Promise<GetRolesResult> => {
     const res = await emrAPI.get<RawGetRolesResponse>("/master/getRole");
     return {
       success: true,
-      data: res.data.data, // ✅ flattened here
+      data: res.data, 
     };
   } catch (error: any) {
     console.error("getRoles API error:", error);

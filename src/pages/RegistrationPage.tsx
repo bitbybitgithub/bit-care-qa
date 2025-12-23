@@ -30,7 +30,7 @@ const Registration = () => {
   ];
 
   return (
-    <div className="bg-[var(--color-surface)] lg:min-h-screen min-w-full lg:flex lg:flex-row flex flex-col-reverse items-center justify-center px-2 lg:px-30 gap-x-2">
+    <div className="bg-[var(--color-surface)] lg:min-h-screen min-w-full lg:flex lg:flex-row flex flex-col-reverse items-center justify-center px-2 lg:px-20 gap-x-2">
       {/* Left Image Section */}
       <div className="relative w-full flex justify-center items-center h-auto lg:h-auto lg:w-[50%] p-2 border-b-2 border-[var(--color-primary)] ">
         <div>
@@ -39,7 +39,7 @@ const Registration = () => {
             style={{ fontSize: "var(--font-h1)" }}
           >
             Register Your{" "}
-            <span className="text-[var(--color-primary)]">Clinic</span>
+            <span className="text-[var(--color-primary)]">Centre</span>
           </h1>
 
           <p className="text-center lg:text-start">

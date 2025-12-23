@@ -24,6 +24,7 @@ import { getRoles, type Role } from "../../api/MasterApi";
 
 interface AddUserProps {
   onClose: () => void;
+  module:string;
 }
 
 interface Form {
@@ -35,7 +36,7 @@ interface Form {
   password: string;
 }
 
-const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
+const AddUser: React.FC<AddUserProps> = ({ onClose,module }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState<Form>({
     name: "",
@@ -51,14 +52,35 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
 
   const clinicId = getSessionItem("user", "clinic_id");
   const createdBy = getSessionItem("user", "role");
+  const LAB_ROLES: Role[] = [
+  { role_id: 201, role_name: "Lab Staff" },
+  // { role_id: 202, role_name: "Lab Supervisor" },
+  // { role_id: 203, role_name: "Pathologist" },
+];
 
+const PHARMACY_ROLES: Role[] = [
+  { role_id: 301, role_name: "Pharmacist" },
+  { role_id: 302, role_name: "Pharmacy Assistant" },
+  { role_id: 303, role_name: "Inventory Manager" },
+];
+
+  console.log(module)
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const result = await getRoles();
-        setRoles(Array.isArray(result.data) ? result.data : []);
-        if (!result.success) {
-          toast.error(result.error || "Failed to load roles");
+        if (module === "CLINIC") {
+          const result = await getRoles();
+          setRoles(Array.isArray(result.data) ? result.data : []);
+          if (!result.success) {
+            toast.error(result.error || "Failed to load roles");
+          }
+        } else if (module === "LAB") {
+          setRoles(LAB_ROLES);
+        } else if (module === "PHARMACY") {
+          setRoles(PHARMACY_ROLES);
+        } else {
+          setRoles([]);
+          toast.error("Invalid module");
         }
       } catch (err) {
         console.error("fetchRoles error:", err);
@@ -68,7 +90,24 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
     };
 
     fetchRoles();
-  }, []);
+  }, [module]);
+  // useEffect(() => {
+  //   const fetchRoles = async () => {
+  //     try {
+  //       const result = await getRoles();
+  //       setRoles(Array.isArray(result.data) ? result.data : []);
+  //       if (!result.success) {
+  //         toast.error(result.error || "Failed to load roles");
+  //       }
+  //     } catch (err) {
+  //       console.error("fetchRoles error:", err);
+  //       setRoles([]);
+  //       toast.error("Failed to load roles");
+  //     }
+  //   };
+
+  //   fetchRoles();
+  // }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -161,7 +200,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose }) => {
             <VscPersonAdd className="text-blue-600 text-xl" />
             <h3 className="font-semibold text-lg">Add New User</h3>
           </div>
-          <button onClick={handleClose}>
+          <button onClick={handleClose} className="bg-[var(--color-primary)] p-1 rounded-[var(--radius-full)] text-[var(--color-white)]">
             <FaTimes />
           </button>
         </div>

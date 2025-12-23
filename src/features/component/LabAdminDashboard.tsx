@@ -16,6 +16,8 @@ import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import { useLoader } from "../../context/LoaderContext";
 import { Module } from "../../Helper/Enums";
+import type { ActiveTab } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
+import LabProcessingQueue from "./LabProcessingQueue";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -24,19 +26,24 @@ export interface DashboardCard {
   icon?: JSX.Element;
 }
 
-const Dashboard = () => {
+const LabAdminDashboard = () => {
   const { loading, setLoading } = useLoader();
   useEffect(() => {
     setLoading(true);
   }, []);
   const userId = getSessionItem("user", "user_id");
-  const module=Module.CLINIC;
+  const module=Module.LAB;
 
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
-
+  const [activeTab, setActiveTab] = useState("pendingQueue");
+ const tabs = [
+    { key: "pendingQueue", label: "Pending Queue" },
+    { key: "processingQueue", label: "Processing Queue" },
+    { key: "completedQueue", label: "Completed Queue" },
+  ];
   const { data, isFetched } = useQuery<DashboardCard[]>({
     queryKey: ["dashboardStats", userId],
     queryFn: () => fetchDashboardStats(Number(userId)),
@@ -97,14 +104,7 @@ const Dashboard = () => {
       icon: <FaUserPlus />,
       onClick: () => setShowAddUser(true),
     },
-    {
-      label: "View Audit Log",
-      icon: <FaClipboardList className="text-lg" />,
-    },
-    {
-      label: "View KYC Details",
-      icon: <FaIdCard className="text-lg" />,
-    },
+  
   ];
 
   return (
@@ -147,7 +147,7 @@ const Dashboard = () => {
             className="text-[var(--color-text)] opacity-70 -mt-1"
             style={{ fontSize: "var(--font-h5)" }}
           >
-            Your clinic is running smoothly today.
+            Your lab is running smoothly today.
             <br />
             <h3 className="opacity-60">
               Check your daily stats and announcements below.
@@ -159,6 +159,8 @@ const Dashboard = () => {
       {/* ⭐ Stats Cards */}
 
       <Cards items={stats} loading={loading} error={error} />
+
+     
 
       {/* ⭐ Quick Actions + Announcements */}
       <div className="md:flex gap-x-4">
@@ -183,14 +185,14 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Clinic Announcements */}
+        {/* Lab Announcements */}
         <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-4 md:p-6 md:w-[70%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
           <div
             className="flex items-center gap-x-2 mb-4"
             style={{ fontSize: "var(--font-h3)" }}
           >
             <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-              Clinic Announcements
+              Lab Announcements
             </h2>
           </div>
 
@@ -199,14 +201,111 @@ const Dashboard = () => {
               className="text-[var(--color-error)] "
               style={{ fontSize: "var(--font-h3)" }}
             />
-            <h1>The clinic will be closed for the holiday on December 25th.</h1>
+            <h1>The lab will be closed for the holiday on December 25th.</h1>
           </div>
         </div>
       </div>
+
+  <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] mt-5">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex">
+                  <div
+                    className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
+                    style={{ background: "var(--color-primary)" }}
+                  >
+                    {tabs.map((t) => (
+                      <button
+                        key={t.key}
+                        role="tab"
+                        aria-selected={activeTab === t.key}
+                        onClick={() => {
+                          setActiveTab(t.key);
+                          // optionally clear or keep search when switching:
+                          // setSharedSearch("");
+                        }}
+                        className={`
+                    px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
+                    ${
+                      activeTab === t.key
+                        ? "bg-[var(--color-white)] text-[var(--color-primary)]"
+                        : "text-[var(--color-white)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-white)]"
+                    }
+                  `}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+      
+                {/* <div className="flex items-center gap-x-2">
+                  {activeTab === "queue" && (
+                    <button
+                      onClick={handleAddWalkIn}
+                      className="flex items-center gap-2 text-white px-3 py-2 rounded-lg hover:opacity-80 transition text-sm sm:text-base shadow-[var(--shadow-md)] cursor-pointer"
+                      style={{
+                        backgroundColor: "var(--color-primary)",
+                        fontWeight: "var(--font-weight-medium)",
+                      }}
+                    >
+                      + Add Walk-in Patient
+                    </button>
+                  )}
+                  <TextField
+                    size="small"
+                    placeholder={currentSearchConfig.placeholder}
+                    value={sharedSearch}
+                    onChange={(e) => setSharedSearch(e.target.value)}
+                    sx={{ width: 280 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <FaSearch className="text-gray-500 text-[16px]" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    inputProps={currentSearchConfig.inputProps}
+                  />
+                </div> */}
+              </div>
+              <div className="mt-4">
+                {activeTab === "processingQueue" ? (
+                       <LabProcessingQueue mode="processing" />
+                //   <PatientQueue
+                //     mode="staff"
+                //     patientsData={patients}
+                //     loading={loadingQueue}
+                //     error={errorQueue}
+                //     onAddWalkIn={handleAddWalkIn}
+                //     handleUpdatePatientStatus={handleUpdatePatientStatus}
+                //     searchQuery={sharedSearch}
+                //     onSearchChange={setSharedSearch}
+                //   />
+                ) : activeTab === "completedQueue" ? (
+                       <LabProcessingQueue mode="completed" />
+                //   <FollowUpAppointment
+                //     mode="staff"
+                //     data={followUpData}
+                //     loading={loadingDispense}
+                //     searchQuery={sharedSearch}
+                //     onSearchChange={setSharedSearch}
+                //   />
+                ) : (
+                         <LabProcessingQueue mode="pending" />
+                //   <MedicalDispensing
+                //     mode="staff"
+                //     data={dispensingData}
+                //     loading={loadingDispense}
+                //     searchQuery={sharedSearch}
+                //     onSearchChange={setSharedSearch}
+                //   />
+                )}
+              </div>
+            </div>
 
       {showAddUser && <AddUser module={module} onClose={() => setShowAddUser(false)} />}
     </div>
   );
 };
 
-export default Dashboard;
+export default LabAdminDashboard;

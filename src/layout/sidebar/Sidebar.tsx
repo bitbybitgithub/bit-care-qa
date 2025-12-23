@@ -38,6 +38,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const role = getSessionItem("user", "role");
+  // const role = "labadmin";
+  // const role = "labstaff"
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -91,11 +93,24 @@ const Sidebar: React.FC<SidebarProps> = ({
     // },
     // { title: "Shift Schedule", link: "/shift-schedule", icon: GrSchedules },
   ];
+    const LabStaffMenus: MenuItem[] = [
+    { title: "Pending Queue", link: "/LabPendingQueue", icon: FaHome },
+    { title: "Processing Queue", link: "/LabProcessingQueue", icon: FaUsers },
+    { title: "Completed queue", link: "/LabCompletedQueue", icon: FaCog }
+    ]
+   const LabAdminMenus: MenuItem[] = [
+    { title: "Dashboard", link: "/lab/dashboard", icon: FaUsers },
+    { title: "Users", link: "/lab/users", icon: FaUsers },
+    { title: "Lab App Setting", link: "/profile", icon: FaUsers },
+    { title: "Service Management", link: "/", icon: FaUsers },
+    ]
 
   const menuMap = {
     Admin: ClinicMenus,
     Doctor: DoctorMenus,
     Staff: StaffMenus,
+    labstaff:LabStaffMenus,
+    labadmin:LabAdminMenus
   };
 
   const menuItems = menuMap[role] || [];

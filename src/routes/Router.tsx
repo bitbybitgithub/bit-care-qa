@@ -12,6 +12,9 @@ import Staffdashboard from "../features/component/StaffDashboard";
 import ComingSoon from "../components/common/ComingSoon";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
+import LabProcessingQueue from "../features/component/LabProcessingQueue";
+import LabAdminDashboard from "../features/component/LabAdminDashboard";
+
 const Router = [
   {
     path: "/",
@@ -28,6 +31,10 @@ const Router = [
     children: [
       { path: "/clinic-dashboard", element: <Dashboard /> },
       { path: "/users", element: <Users /> },
+      { path: "/clinic/users", element: <Users /> },
+      { path: "/lab/users", element: <Users /> },
+      { path: "/pharmacy/users", element: <Users /> },
+      // { path: "/clinic/users", element: <Users /> },
       { path: "/clinic-settings", element: <Profile /> },
       // { path: "/clinic-operations", element: <ComingSoon /> },
 
@@ -40,6 +47,22 @@ const Router = [
 
       { path: "/staff-dashboard", element: <Staffdashboard /> },
       { path: "/patient-doc-managment", element: <PatientDocManagementPage /> },
+
+      { path: "/lab/dashboard", element: <LabAdminDashboard /> },
+      {
+        path: "/LabPendingQueue",
+        element: <LabProcessingQueue queueType="pending" />,
+      },
+      {
+        path: "/LabProcessingQueue",
+        element: <LabProcessingQueue queueType="processing" />,
+      },
+      {
+        path: "/LabCompletedQueue",
+        element: <LabProcessingQueue queueType="completed" />,
+      },
+      // { path: "/users", element: <Users/> },
+
       // { path: "/task-and-reminder", element: <ComingSoon /> },
       // { path: "/assign-patient", element: <ComingSoon /> },
       // { path: "/message", element: <ComingSoon /> },

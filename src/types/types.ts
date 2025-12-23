@@ -1,6 +1,7 @@
 //src\types\types.ts
 import { Dayjs } from "dayjs";
 export interface FormDataBase {
+  CentreType:string;
   userId:number;
   otp:number;
   name: string;

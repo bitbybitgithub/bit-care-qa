@@ -116,6 +116,13 @@ export const muiTheme = () =>
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
               borderColor: "var(--color-primary)"
             },
+                      "&.Mui-disabled.Mui-error .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--color-error)",
+            },
+            "&.Mui-disabled:not(.Mui-error) .MuiOutlinedInput-notchedOutline": {
+              borderColor: "transparent",
+            },
+            
             transition: "all var(--transition-normal)",
           },
           input: {

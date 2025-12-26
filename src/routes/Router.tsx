@@ -15,6 +15,7 @@ import PatientDocManagementPage from "../features/patient-document-management/pa
 import LabQueues from "../features/component/LabQueues";
 import LabDashboard from "../features/component/LabDashboard";
 import PharmacyDashboard from "../features/component/PharmacyDashboard";
+import ServiceManagement from "../features/lab/ServiceManagement";
 
 const Router = [
   {
@@ -47,7 +48,7 @@ const Router = [
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
       { path: "/lab/appsetting", element: <Profile /> },
-      { path: "/service-management", element: <Profile /> },
+      { path: "/service-management", element: <ServiceManagement /> },
 
 
       {
@@ -82,6 +83,7 @@ const Router = [
       // },
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
+      
     ],
   },
 ];

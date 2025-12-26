@@ -11,7 +11,7 @@ import {
 } from "../../api/UserManagementAPI";
 import { updateUsers } from "../../api/SaveDocApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { getDummyLabUsers } from "./labUsers.mock";
+import { getDummyLabUsers, getDummyPharmacyUsers } from "./labUsers.mock";
 import type { Module } from "../../Helper/Enums";
 import ProfileCard from "../../components/common/ProfileCards";
 
@@ -30,7 +30,7 @@ const MODULE_CONFIG = {
     sessionKey: "lab_id",
   },
   PHARMACY: {
-    fetchUsers: getUsersList,
+    fetchUsers: getDummyPharmacyUsers,
     sessionKey: "pharmacy_id",
   },
 } as const;

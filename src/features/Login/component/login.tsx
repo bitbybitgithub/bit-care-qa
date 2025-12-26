@@ -132,11 +132,11 @@ const Login = () => {
             setClinicPassword("");
           } else {
             if (data.user.role == Roles.Doctor) {
-              navigate("/doctor-dashboard");
+              navigate("/doctor/dashboard");
             } else if (data.user.role === Roles.Staff) {
-              navigate("/staff-dashboard");
+              navigate("/staff/dashboard");
             } else {
-              navigate("/clinic-dashboard");
+              navigate("/clinic/dashboard");
             }
             toast.success("Login successful");
           }

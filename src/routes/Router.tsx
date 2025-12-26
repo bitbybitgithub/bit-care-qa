@@ -9,11 +9,12 @@ import DoctorProfile from "../features/component/DocProfile";
 import DocDashboard from "../features/component/DocDashboard";
 import Profile from "../features/clinic/components/Profile";
 import Staffdashboard from "../features/component/StaffDashboard";
-import ComingSoon from "../components/common/ComingSoon";
+// import ComingSoon from "../components/common/ComingSoon";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
-import LabProcessingQueue from "../features/component/LabProcessingQueue";
-import LabAdminDashboard from "../features/component/LabAdminDashboard";
+import LabQueues from "../features/component/LabQueues";
+import LabDashboard from "../features/component/LabDashboard";
+import PharmacyDashboard from "../features/component/PharmacyDashboard";
 
 const Router = [
   {
@@ -29,40 +30,47 @@ const Router = [
     path: "/",
     element: <MainLayout />,
     children: [
-      { path: "/clinic-dashboard", element: <Dashboard /> },
-      { path: "/users", element: <Users /> },
+      // clinic admin routes
+      { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
-      { path: "/lab/users", element: <Users /> },
-      { path: "/pharmacy/users", element: <Users /> },
-      // { path: "/clinic/users", element: <Users /> },
-      { path: "/clinic-settings", element: <Profile /> },
-      // { path: "/clinic-operations", element: <ComingSoon /> },
+      { path: "/clinic/settings", element: <Profile /> },
 
-      { path: "/doctor-dashboard", element: <DocDashboard /> },
-      { path: "/patients-records", element: <ComingSoon /> },
-      { path: "/add-diagnosis", element: <ComingSoon /> },
-      { path: "/manage-medication", element: <ComingSoon /> },
-      { path: "/refer-patient", element: <ComingSoon /> },
-      { path: "/profile", element: <DoctorProfile /> },
-
+      // clinic doctor routes
+      { path: "/doctor/dashboard", element: <DocDashboard /> },
+      { path: "/doctor/profile", element: <DoctorProfile /> },
+      
+      // clinic staff routes
       { path: "/staff-dashboard", element: <Staffdashboard /> },
       { path: "/patient-doc-managment", element: <PatientDocManagementPage /> },
 
-      { path: "/lab/dashboard", element: <LabAdminDashboard /> },
+      // lab routes
+      { path: "/lab/dashboard", element: <LabDashboard /> },
+      { path: "/lab/users", element: <Users /> },
+      { path: "/lab/appsetting", element: <Profile /> },
+      { path: "/service-management", element: <Profile /> },
+
+
       {
         path: "/LabPendingQueue",
-        element: <LabProcessingQueue queueType="pending" />,
+        element: <LabQueues queueType="pending" />,
       },
       {
         path: "/LabProcessingQueue",
-        element: <LabProcessingQueue queueType="processing" />,
+        element: <LabQueues queueType="processing" />,
       },
       {
         path: "/LabCompletedQueue",
-        element: <LabProcessingQueue queueType="completed" />,
+        element: <LabQueues queueType="completed" />,
       },
-      // { path: "/users", element: <Users/> },
+      
+      // pharmacy routes
+      { path: "/pharmacy/users", element: <Users /> },
+      { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
 
+      // { path: "/patients-records", element: <ComingSoon /> },
+      // { path: "/add-diagnosis", element: <ComingSoon /> },
+      // { path: "/manage-medication", element: <ComingSoon /> },
+      // { path: "/refer-patient", element: <ComingSoon /> },
       // { path: "/task-and-reminder", element: <ComingSoon /> },
       // { path: "/assign-patient", element: <ComingSoon /> },
       // { path: "/message", element: <ComingSoon /> },
@@ -72,7 +80,6 @@ const Router = [
       //   path: "/consultation-in-progress",
       //   element: <ConsultationInProgress />,
       // },
-
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
     ],

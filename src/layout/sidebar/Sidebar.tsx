@@ -40,6 +40,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const role = getSessionItem("user", "role");
   // const role = "labadmin";
   // const role = "labstaff"
+  // const role = "pharmacyadmin"
+  // const role = "pharmacystaff"
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -47,70 +49,73 @@ const Sidebar: React.FC<SidebarProps> = ({
   const toggleMobileDrawer = () => setMobileOpen(!mobileOpen);
 
   // ---------------- Menus ----------------
-  const ClinicMenus: MenuItem[] = [
-    { title: "Clinic Dashboard", link: "/clinic-dashboard", icon: FaHome },
-    { title: "Users", link: "/users", icon: FaUsers },
-    { title: "Clinic App Settings", link: "/clinic-settings", icon: FaCog },
+  const ClinicAdminMenus: MenuItem[] = [
+    { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
+    { title: "Users", link: "/clinic/users", icon: FaUsers },
+    { title: "Clinic App Settings", link: "/clinic/settings", icon: FaCog },
+  ];
+
+  const ClinicDoctorDoctorMenus: MenuItem[] = [
+    { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },
+    { title: "Profile", link: "/profile", icon: FaUsers },
+    // { title: "Patients Records", link: "/patients-records", icon: FaUsers },
+    // { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: FaUsers },
+    // { title: "Manage Medication", link: "/manage-medication", icon: FaUsers },
+    // { title: "Refer Patient", link: "/refer-patient", icon: FaUsers },
     // {
-    //   title: "Clinic Operations",
-    //   link: "/clinic-operations",
-    //   icon: FaHospital,
+    //   title: "Consultation in Progress",
+    //   link: "/consultation-in-progress",
+    //   icon: BiTimer,
     // },
   ];
 
-  const DoctorMenus: MenuItem[] = [
-    { title: "Doctor Dashboard", link: "/doctor-dashboard", icon: FaHome },
-    { title: "Profile", link: "/profile", icon: FaUsers },
-    { title: "Patients Records", link: "/patients-records", icon: FaUsers },
-    { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: FaUsers },
-    { title: "Manage Medication", link: "/manage-medication", icon: FaUsers },
-    { title: "Refer Patient", link: "/refer-patient", icon: FaUsers },
-    {
-      title: "Consultation in Progress",
-      link: "/consultation-in-progress",
-      icon: BiTimer,
-    },
-  ];
-
-  const StaffMenus: MenuItem[] = [
-    { title: "Staff Dashboard", link: "/staff-dashboard", icon: FaHome },
+  const ClinicStaffMenus: MenuItem[] = [
+    { title: "Staff Dashboard", link: "/staff/dashboard", icon: FaHome },
     {
       title: "Patient Document Management",
       link: "/patient-doc-managment",
       icon: GrDocumentText,
     },
-    // { title: "Tasks & Reminder", link: "/task-and-reminder", icon: FaTasks },
-    // {
-    //   title: "Assigned Patients",
-    //   link: "/assign-patient",
-    //   icon: FaPeopleGroup,
-    // },
-    // { title: "Internal Messaging", link: "/message", icon: TiMessages },
-    // {
-    //   title: "Clinic Protocol",
-    //   link: "/cln-protocol",
-    //   icon: HiOutlineDocumentReport,
-    // },
-    // { title: "Shift Schedule", link: "/shift-schedule", icon: GrSchedules },
   ];
-    const LabStaffMenus: MenuItem[] = [
+  const LabAdminMenus: MenuItem[] = [
+    { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
+    { title: "Users", link: "/lab/users", icon: FaUsers },
+    { title: "Lab App Setting", link: "/lab/appsetting", icon: FaCog },
+    { title: "Service Management", link: "/service-management", icon: FaCog },
+  ];
+  const LabStaffMenus: MenuItem[] = [
+    //  { title: "Dashboard", link: "/lab/dashboard", icon: FaUsers },
     { title: "Pending Queue", link: "/LabPendingQueue", icon: FaHome },
     { title: "Processing Queue", link: "/LabProcessingQueue", icon: FaUsers },
-    { title: "Completed queue", link: "/LabCompletedQueue", icon: FaCog }
-    ]
-   const LabAdminMenus: MenuItem[] = [
-    { title: "Dashboard", link: "/lab/dashboard", icon: FaUsers },
-    { title: "Users", link: "/lab/users", icon: FaUsers },
-    { title: "Lab App Setting", link: "/profile", icon: FaUsers },
-    { title: "Service Management", link: "/", icon: FaUsers },
-    ]
+    { title: "Completed queue", link: "/LabCompletedQueue", icon: FaCog },
+  ];
+  const PharmacyAdminMenus: MenuItem[] = [
+    { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
+    { title: "Users", link: "/pharmacy/users", icon: FaUsers },
+    { title: "Lab App Setting", link: "/doctor/profile", icon: FaCog },
+  ];
+
+  // { title: "Tasks & Reminder", link: "/task-and-reminder", icon: FaTasks },
+  // {
+  //   title: "Assigned Patients",
+  //   link: "/assign-patient",
+  //   icon: FaPeopleGroup,
+  // },
+  // { title: "Internal Messaging", link: "/message", icon: TiMessages },
+  // {
+  //   title: "Clinic Protocol",
+  //   link: "/cln-protocol",
+  //   icon: HiOutlineDocumentReport,
+  // },
+  // { title: "Shift Schedule", link: "/shift-schedule", icon: GrSchedules },
 
   const menuMap = {
-    Admin: ClinicMenus,
-    Doctor: DoctorMenus,
-    Staff: StaffMenus,
-    labstaff:LabStaffMenus,
-    labadmin:LabAdminMenus
+    Admin: ClinicAdminMenus,
+    Doctor: ClinicDoctorDoctorMenus,
+    Staff: ClinicStaffMenus,
+    labstaff: LabStaffMenus,
+    labadmin: LabAdminMenus,
+    pharmacyadmin: PharmacyAdminMenus,
   };
 
   const menuItems = menuMap[role] || [];

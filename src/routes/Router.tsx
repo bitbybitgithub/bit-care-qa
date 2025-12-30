@@ -41,7 +41,7 @@ const Router = [
       { path: "/doctor/profile", element: <DoctorProfile /> },
       
       // clinic staff routes
-      { path: "/staff-dashboard", element: <Staffdashboard /> },
+      { path: "/staff/dashboard", element: <Staffdashboard /> },
       { path: "/patient-doc-managment", element: <PatientDocManagementPage /> },
 
       // lab routes
@@ -49,7 +49,6 @@ const Router = [
       { path: "/lab/users", element: <Users /> },
       { path: "/lab/appsetting", element: <Profile /> },
       { path: "/service-management", element: <ServiceManagement /> },
-
 
       {
         path: "/LabPendingQueue",

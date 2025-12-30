@@ -2,12 +2,15 @@ export interface SessionData {
   user_id: number;
   clinic_id: number;
   doctor_id?: number;
+  lab_id:number;
+  pharmacy_id:number;
   full_name: string;
   email: string;
   phone: string;
   is_active: string;
   role: string;
-  clinic_name: string;
+  entity_type: number;
+  entity_name: string;
   is_temp_password: string;
   [key: string]: any; // allow dynamic extras
 }

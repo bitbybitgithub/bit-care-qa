@@ -15,7 +15,7 @@ import { loginSuccess } from "../../../redux/authSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import {TokenManager,loginApi} from '../../../api';
+import { TokenManager, loginApi } from "../../../api";
 import Regex from "../../../Helper/Regex";
 import { setSession } from "../../../context/sessions/userSession";
 import { Roles } from "../../../context/constant/enum";
@@ -42,6 +42,30 @@ const Login = () => {
   const [source, setSource] = useState<
     "resetPassword" | "forgottenPassword" | null
   >(null);
+
+  const DASHBOARD_ROUTES: Record<number, Record<string, string>> = {
+  1: { 
+    Admin: "/clinic/dashboard",
+    Staff: "/staff/dashboard",
+    Doctor: "/doctor/dashboard",
+  },
+  2: { 
+    Admin: "/lab/dashboard",
+    staff: "/lab/dashboard",
+  },
+  3: { 
+    Admin: "/pharmacy/dashboard",
+    Staff: "/pharmacy/dashboard",
+  },
+};
+
+  function getDashboardRoute(
+  entityType: number,
+  role: string
+): string | null {
+  return DASHBOARD_ROUTES[entityType]?.[role] ?? null;
+}
+
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -131,13 +155,21 @@ const Login = () => {
             setClinicUserId("");
             setClinicPassword("");
           } else {
-            if (data.user.role == Roles.Doctor) {
-              navigate("/doctor/dashboard");
-            } else if (data.user.role === Roles.Staff) {
-              navigate("/staff/dashboard");
-            } else {
-              navigate("/clinic/dashboard");
+            // if (data.user.role == Roles.Doctor) {
+            //   navigate("/doctor/dashboard");
+            // } else if (data.user.role === Roles.Staff) {
+            //   navigate("/staff/dashboard");
+            // } else {
+            //   navigate("/clinic/dashboard");
+            // }
+            console.log(data.user.entity_type, data.user.role)
+            const route = getDashboardRoute(data.user.entity_type, data.user.role);
+
+            if (!route) {
+              toast.error("No dashboard configured for this user role");
+              return;
             }
+            navigate(route);
             toast.success("Login successful");
           }
           dispatch(loginSuccess());
@@ -278,7 +310,7 @@ const Login = () => {
                         to="/register"
                         className="text-[var(--color-info)] hover:underline cursor-pointer font-semibold"
                       >
-                        Register Clinic
+                        Register Centre
                       </Link>
                     </p>
                   </footer>
@@ -437,7 +469,7 @@ const Login = () => {
                 className="flex flex-col items-center justify-center h-full px-10 space-y-5"
               >
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
-                  Clinic Login
+                  Centre Login
                 </h1>
                 <FormControl fullWidth>
                   <TextField
@@ -552,7 +584,7 @@ const Login = () => {
                         to="/register"
                         className="text-[var(--color-info)] hover:underline cursor-pointer"
                       >
-                        Register Clinic
+                        Register Centre
                       </Link>
                     </span>
                   </p>
@@ -572,9 +604,10 @@ const Login = () => {
             <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-[var(--color-white)] items-center justify-center text-center px-8">
               {isClinic ? (
                 <div className="space-y-2 animate-fadeIn">
-                  <h1 className="text-2xl font-bold">Welcome, Clinic!</h1>
+                  <h1 className="text-2xl font-bold">Welcome to BITCARE!</h1>
                   <p className="text-sm opacity-90">
-                    Login to manage patients and records.
+                    Login to securely access and manage your healthcare
+                    services.
                   </p>
                 </div>
               ) : (

@@ -17,7 +17,12 @@ import { FaHospital, FaPhoneAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
 import Regex from "../../Helper/Regex";
-import { getPincodeDetails, registerApi } from "../../api";
+import {
+  getEntityTypes,
+  getPincodeDetails,
+  registerApi,
+  type Entity,
+} from "../../api";
 import { validateRegistration } from "../../Helper/ErrorHandler";
 import type {
   FormDataBase,
@@ -28,7 +33,7 @@ import OtpVerification from "../../components/common/OtpVerification";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({
-    CentreType: "",
+    entityType: 0,
     userId: 0,
     otp: 0,
     name: "",
@@ -40,7 +45,6 @@ const RegistrationForm = () => {
     district: "",
     state: "",
   });
-  const CentreTypeOptions = ["Clinic", "Diagnostic Lab", "Pharmacy"];
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [loading, setLoading] = useState(false);
@@ -54,14 +58,36 @@ const RegistrationForm = () => {
   const navigate = useNavigate();
 
   const clearError = (field: keyof FormDataBase) => {
-  setErrors((prev) => ({ ...prev, [field]: "" }));
-};
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
   // ---- OTP POPUP ----
   const [mobileAnchor, setMobileAnchor] = useState<HTMLElement | null>(null);
   const [emailAnchor, setEmailAnchor] = useState<HTMLElement | null>(null);
   const [showMobileOtp, setShowMobileOtp] = useState(false);
   const [showEmailOtp, setShowEmailOtp] = useState(false);
+  const [entityList, setEntityList] = useState<Entity[]>([]);
+  const [entityLoading, setEntityLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEntities = async () => {
+      setEntityLoading(true);
+      try {
+        const res = await getEntityTypes();
+        if (res.success) {
+          setEntityList(res.data.filter((e) => e.is_active === "1"));
+        } else {
+          toast.error(res.error || "Failed to load centre types");
+        }
+      } catch {
+        toast.error("Unable to load centre types");
+      } finally {
+        setEntityLoading(false);
+      }
+    };
+
+    fetchEntities();
+  }, []);
 
   /* ---------------- INPUT CHANGE HANDLERS ---------------- */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,11 +95,11 @@ const RegistrationForm = () => {
 
     if (name === "name") {
       let error = "";
-      if (!value.trim()) error = "Clinic name is required";
+      if (!value.trim()) error = "Centre name is required";
       else if (value.trim().length < 5)
-        error = "Clinic name must be at least 5 characters long";
+        error = "Centre name must be at least 5 characters long";
       else if (value.trim().length > 50)
-        error = "Clinic name cannot exceed 50 characters";
+        error = "Centre name cannot exceed 50 characters";
       else if (!Regex.name.test(value.trim()))
         error = "Only alphabets and spaces are allowed";
 
@@ -134,56 +160,61 @@ const RegistrationForm = () => {
     setAreaList(Array.from(areas));
   };
 
-const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value.replace(/\D/g, "");
-  if (value.length > 6) return;
+  const handlePincodeChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length > 6) return;
 
-  setFormData((p) => ({ ...p, PINCode: value }));
+    setFormData((p) => ({ ...p, PINCode: value }));
 
-  // typing phase
-  if (value.length < 6) {
-    setErrors((p) => ({ ...p, PINCode: "Pincode must be 6 digits" }));
-    setStateList([]);
-    setDistrictList([]);
-    setAreaList([]);
-    setFormData((p) => ({ ...p, state: "", district: "", area: "" }));
-    return;
-  }
-
-  if (!Regex.pincode.test(value)) {
-    setErrors((p) => ({ ...p, PINCode: "Invalid pincode" }));
-    return;
-  }
-
-  try {
-    setErrors((p) => ({ ...p, PINCode: "" }));
-
-    const result = await getPincodeDetails(value);
-
-    if (!Array.isArray(result) || result.length === 0) {
-      setErrors((p) => ({ ...p, PINCode: "No records found for this pincode" }));
+    // typing phase
+    if (value.length < 6) {
+      setErrors((p) => ({ ...p, PINCode: "Pincode must be 6 digits" }));
+      setStateList([]);
+      setDistrictList([]);
+      setAreaList([]);
+      setFormData((p) => ({ ...p, state: "", district: "", area: "" }));
       return;
     }
 
-    const first = result[0];
+    if (!Regex.pincode.test(value)) {
+      setErrors((p) => ({ ...p, PINCode: "Invalid pincode" }));
+      return;
+    }
 
-    setFormData((p) => ({
-      ...p,
-      state: first.State || "",
-      district: first.District || "",
-    }));
+    try {
+      setErrors((p) => ({ ...p, PINCode: "" }));
 
-    setErrors((p) => ({
-      ...p,
-      state: "",
-      district: "",
-    }));
+      const result = await getPincodeDetails(value);
 
-    fetchLocationList(result);
-  } catch {
-    setErrors((p) => ({ ...p, PINCode: "Failed to fetch pincode details" }));
-  }
-};
+      if (!Array.isArray(result) || result.length === 0) {
+        setErrors((p) => ({
+          ...p,
+          PINCode: "No records found for this pincode",
+        }));
+        return;
+      }
+
+      const first = result[0];
+
+      setFormData((p) => ({
+        ...p,
+        state: first.State || "",
+        district: first.District || "",
+      }));
+
+      setErrors((p) => ({
+        ...p,
+        state: "",
+        district: "",
+      }));
+
+      fetchLocationList(result);
+    } catch {
+      setErrors((p) => ({ ...p, PINCode: "Failed to fetch pincode details" }));
+    }
+  };
 
   /* ---------------- SUBMIT REGISTRATION ---------------- */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,20 +292,26 @@ const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         <div className="grid md:grid-cols-2 gap-2 md:gap-5 my-4">
           <FormControl fullWidth>
             <Autocomplete
-              options={CentreTypeOptions}
-              value={formData.CentreType || null}
-                onChange={(_, v) => {
-  setFormData((p) => ({ ...p, CentreType: v || "" }));
-  clearError("CentreType");
-}}
+              options={entityList}
+              loading={entityLoading}
+              getOptionLabel={(option) => option.entity_name}
+              value={
+                entityList.find((e) => e.entity_id === formData.entityType) ||
+                null
+              }
+              onChange={(_, v) => {
+                setFormData((p) => ({
+                  ...p,
+                  entityType: v ? v.entity_id : 0,
+                }));
+                clearError("entityType");
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   placeholder="Centre Type"
                   size="small"
-                  error={!!errors.CentreType}
-               
-
+                  error={!!errors.entityType}
                   slotProps={{
                     input: {
                       ...params.InputProps,
@@ -286,12 +323,18 @@ const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
                           {params.InputProps.startAdornment}
                         </>
                       ),
+                      endAdornment: (
+                        <>
+                          {entityLoading && <CircularProgress size={18} />}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
                     },
                   }}
                 />
               )}
             />
-            <FieldErrorText error={errors.CentreType} />
+            <FieldErrorText error={errors.entityType} />
           </FormControl>
 
           <FormControl fullWidth>
@@ -442,10 +485,9 @@ const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
               value={formData.area || null}
               // onChange={(_, v) => setFormData((p) => ({ ...p, area: v || "" },))}
               onChange={(_, v) => {
-  setFormData((p) => ({ ...p, area: v || "" }));
-  clearError("area");
-}}
-
+                setFormData((p) => ({ ...p, area: v || "" }));
+                clearError("area");
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}

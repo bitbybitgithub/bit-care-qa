@@ -4,7 +4,8 @@ import { emrAPI } from "../../services/EmrApi";
 export const registerApi = async (formData: FormDataBase) => {
   try {
     const registerPayload = {
-      clinic_name: formData.name,
+      entity_type:formData.entityType,
+      name: formData.name,
       mobile_number: formData.phone,
       email: formData.email,
       address: formData.address,
@@ -14,7 +15,7 @@ export const registerApi = async (formData: FormDataBase) => {
       state: formData.state,
     };
   console.log("Register data",registerPayload)
-    const response = await emrAPI.post<any>(`/clinics/register`, registerPayload);
+    const response = await emrAPI.post<any>(`/onboard/register`, registerPayload);
     return response;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || error.message || "Registration failed");

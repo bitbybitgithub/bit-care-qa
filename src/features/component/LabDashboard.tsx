@@ -1,6 +1,4 @@
-import { useDispatch } from "react-redux";
-import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { FaUserPlus } from "react-icons/fa";
 import { useState, useEffect, type JSX } from "react";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
@@ -10,15 +8,14 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
-
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import { useLoader } from "../../context/LoaderContext";
 import { Module } from "../../Helper/Enums";
-import type { ActiveTab } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 import { TextField } from "@mui/material";
 import LabQueues from "./LabQueues";
+import { Roles } from "../../context/constant/enum";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -32,15 +29,14 @@ const LabDashboard = () => {
   useEffect(() => {
     setLoading(true);
   }, []);
-  const userId = getSessionItem("user", "user_id");
-  const module = Module.LAB;
-  const user = "admin";
 
+  const user = getSessionItem("user", "role");
+  const userId = getSessionItem("user", "user_id");
+  const username = getSessionItem("user", "full_name");
+  const module = Module.LAB;
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [queueSearch, setQueueSearch] = useState("");
-
-  // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [activeTab, setActiveTab] = useState("pendingQueue");
   const tabs = [
@@ -55,9 +51,6 @@ const LabDashboard = () => {
     staleTime: Infinity,
   });
 
-  // -------------------------
-  // ICON MAP
-  // -------------------------
   const cardIcon: Record<number, JSX.Element> = {
     1: <FaCalendarDays className="text-amber-600" />,
     2: <FaPeopleGroup className="text-blue-600" />,
@@ -65,9 +58,6 @@ const LabDashboard = () => {
     4: <FaUserNurse className="text-violet-600" />,
   };
 
-  // -------------------------
-  // MAP DATA + ICONS
-  // -------------------------
   useEffect(() => {
     if (data && isFetched) {
       const mapped = data
@@ -82,7 +72,6 @@ const LabDashboard = () => {
     }
   }, [data]);
 
-  // Reusable button
   const ActionButton = ({
     icon,
     label,
@@ -144,9 +133,7 @@ const LabDashboard = () => {
             style={{ fontSize: "var(--font-h2)" }}
           >
             Welcome,{" "}
-            <span className="text-[var(--color-primary)]">
-              {user === "admin" ? "Admin" : "Lab Staff"}
-            </span>
+            <span className="text-[var(--color-primary)]">{username}</span>
           </h1>
 
           <p
@@ -162,9 +149,7 @@ const LabDashboard = () => {
         </div>
       </div>
 
-      {/* ⭐ Stats Cards */}
-
-      {user === "admin" && (
+      {user === Roles.Admin && (
         <>
           <Cards items={stats} loading={loading} error={error} />
 
@@ -216,18 +201,18 @@ const LabDashboard = () => {
         </>
       )}
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] mt-5">
-     <div className="flex items-center justify-between gap-4 mb-4">
-  <div
-    className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
-    style={{ background: "var(--color-primary)" }}
-  >
-    {tabs.map((t) => (
-      <button
-        key={t.key}
-        role="tab"
-        aria-selected={activeTab === t.key}
-        onClick={() => setActiveTab(t.key)}
-        className={`
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div
+            className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
+            style={{ background: "var(--color-primary)" }}
+          >
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`
           px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition 
           ${
             activeTab === t.key
@@ -235,33 +220,31 @@ const LabDashboard = () => {
               : "text-white hover:bg-[var(--color-hover)]"
           }
         `}
-      >
-        {t.label}
-      </button>
-    ))}
-  </div>
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-  {/* 🔍 SEARCH — PARENT OWNED */}
-     <TextField
+          <TextField
             size="small"
             placeholder="Search by Patient Name"
             value={queueSearch}
-    onChange={(e) => setQueueSearch(e.target.value)}
+            onChange={(e) => setQueueSearch(e.target.value)}
           />
-
-</div>
+        </div>
 
         <div className="mt-4">
-        <LabQueues
-    mode={
-      activeTab === "processingQueue"
-        ? "processing"
-        : activeTab === "completedQueue"
-        ? "completed"
-        : "pending"
-    }
-    searchTerm={queueSearch}
-  />
+          <LabQueues
+            mode={
+              activeTab === "processingQueue"
+                ? "processing"
+                : activeTab === "completedQueue"
+                ? "completed"
+                : "pending"
+            }
+            searchTerm={queueSearch}
+          />
         </div>
       </div>
 

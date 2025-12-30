@@ -16,3 +16,9 @@ export enum Roles {
  Doctor="Doctor",
  Staff="Staff"
 }
+
+export enum EntityType {
+  Clinic = 1,
+  Lab = 2,
+  Pharmacy = 3,
+}

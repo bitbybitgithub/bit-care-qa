@@ -1,35 +1,13 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Drawer, IconButton, useMediaQuery } from "@mui/material";
-import { Close, Menu as MenuIcon } from "@mui/icons-material";
-
-import { FaHome, FaUsers, FaHospital, FaCog, FaTasks } from "react-icons/fa";
-import { FaPeopleGroup } from "react-icons/fa6";
-import { TiMessages } from "react-icons/ti";
-import { HiOutlineDocumentReport } from "react-icons/hi";
-import { GrDocumentText, GrSchedules } from "react-icons/gr";
-import { BiTimer } from "react-icons/bi";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import Logo1 from "../../assets/BitCareLogo.png";
 import Logo2 from "../../assets/BitCareLogo2.png";
-import SidebarBg from "../../assets/SidebarBg.png";
-
 import { getSessionItem } from "../../context/sessions/userSession";
-import { DockIcon } from "lucide-react";
-
-interface MenuItem {
-  title: string;
-  link: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-interface SidebarProps {
-  isCollapsed: boolean;
-  setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
-  mobileOpen: boolean;
-  setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-// --------------------------------------------------
+import type { Role, SidebarProps } from "../../types/common/sidebarTypes";
+import type { EntityType } from "../../context/constant/enum";
+import { SIDEBAR_MENUS } from "../../context/constant/sidebarMenus";
 const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   setIsCollapsed,
@@ -37,155 +15,72 @@ const Sidebar: React.FC<SidebarProps> = ({
   setMobileOpen,
 }) => {
   const location = useLocation();
-  const role = getSessionItem("user", "role");
-  // const role = "labadmin";
-  // const role = "labstaff"
-  // const role = "pharmacyadmin"
-  // const role = "pharmacystaff"
-
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+  const role = getSessionItem<Role>("user", "role");
+  const entityType = getSessionItem<number>("user", "entity_type");
+
+  const menuItems =
+    role && entityType
+      ? SIDEBAR_MENUS[entityType as EntityType]?.[role] ?? []
+      : [];
+
   const toggleMobileDrawer = () => setMobileOpen(!mobileOpen);
-
-  // ---------------- Menus ----------------
-  const ClinicAdminMenus: MenuItem[] = [
-    { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
-    { title: "Users", link: "/clinic/users", icon: FaUsers },
-    { title: "Clinic App Settings", link: "/clinic/settings", icon: FaCog },
-  ];
-
-  const ClinicDoctorDoctorMenus: MenuItem[] = [
-    { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },
-    { title: "Profile", link: "/profile", icon: FaUsers },
-    // { title: "Patients Records", link: "/patients-records", icon: FaUsers },
-    // { title: "Add Diagnosis Notes", link: "/add-diagnosis", icon: FaUsers },
-    // { title: "Manage Medication", link: "/manage-medication", icon: FaUsers },
-    // { title: "Refer Patient", link: "/refer-patient", icon: FaUsers },
-    // {
-    //   title: "Consultation in Progress",
-    //   link: "/consultation-in-progress",
-    //   icon: BiTimer,
-    // },
-  ];
-
-  const ClinicStaffMenus: MenuItem[] = [
-    { title: "Staff Dashboard", link: "/staff/dashboard", icon: FaHome },
-    {
-      title: "Patient Document Management",
-      link: "/patient-doc-managment",
-      icon: GrDocumentText,
-    },
-  ];
-  const LabAdminMenus: MenuItem[] = [
-    { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
-    { title: "Users", link: "/lab/users", icon: FaUsers },
-    { title: "Lab App Setting", link: "/lab/appsetting", icon: FaCog },
-    { title: "Service Management", link: "/service-management", icon: FaCog },
-  ];
-  const LabStaffMenus: MenuItem[] = [
-    //  { title: "Dashboard", link: "/lab/dashboard", icon: FaUsers },
-    { title: "Pending Queue", link: "/LabPendingQueue", icon: FaHome },
-    { title: "Processing Queue", link: "/LabProcessingQueue", icon: FaUsers },
-    { title: "Completed queue", link: "/LabCompletedQueue", icon: FaCog },
-  ];
-  const PharmacyAdminMenus: MenuItem[] = [
-    { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
-    { title: "Users", link: "/pharmacy/users", icon: FaUsers },
-    { title: "Lab App Setting", link: "/doctor/profile", icon: FaCog },
-  ];
-
-  // { title: "Tasks & Reminder", link: "/task-and-reminder", icon: FaTasks },
-  // {
-  //   title: "Assigned Patients",
-  //   link: "/assign-patient",
-  //   icon: FaPeopleGroup,
-  // },
-  // { title: "Internal Messaging", link: "/message", icon: TiMessages },
-  // {
-  //   title: "Clinic Protocol",
-  //   link: "/cln-protocol",
-  //   icon: HiOutlineDocumentReport,
-  // },
-  // { title: "Shift Schedule", link: "/shift-schedule", icon: GrSchedules },
-
-  const menuMap = {
-    Admin: ClinicAdminMenus,
-    Doctor: ClinicDoctorDoctorMenus,
-    Staff: ClinicStaffMenus,
-    labstaff: LabStaffMenus,
-    labadmin: LabAdminMenus,
-    pharmacyadmin: PharmacyAdminMenus,
-  };
-
-  const menuItems = menuMap[role] || [];
 
   const isItemActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
-  // ----------------------------------------------
   const SidebarContent = (
     <div
-      className={`relative flex flex-col h-full bg-[var(--color-primary)] transition-all duration-300
-  ${isCollapsed ? "w-20" : "w-56"} overflow-hidden`}
+      className={`relative flex flex-col h-full bg-[var(--color-primary)]
+      transition-all duration-300
+      ${isCollapsed ? "w-20" : "w-56"}`}
     >
-      {/* Blurred background image */}
-      {/* <div
-    className="absolute inset-1 bg-cover bg-no-repeat opacity-20"
-    style={{ backgroundImage: `url(${SidebarBg})` }}
-  ></div> */}
-
-      {/* Sidebar content */}
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="p-2 flex items-center justify-center w-full">
-          {!isCollapsed ? (
-            <img
-              src={Logo1}
-              alt="Menu"
-              className="w-[80%] h-[70px] object-contain bg-[var(--color-white)] shadow-2xl border-y-2 border-black rounded-[var(--radius-none)]"
-            />
-          ) : (
-            <div className="flex items-center justify-center">
-              <img
-                src={Logo2}
-                alt="Menu"
-                className="w-full h-auto bg-white rounded-[var(--radius-full)] p-1"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Menu List */}
-        <nav className="flex-1 overflow-y-auto">
-          <ul className="py-3 space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isItemActive(item.link);
-
-              return (
-                <li key={item.link} className="px-3">
-                  <NavLink
-                    to={item.link}
-                    onClick={() => isMobile && setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition 
-                  ${isCollapsed ? "justify-center" : ""}
-                  ${
-                    active
-                      ? "bg-white text-[var(--color-primary)]"
-                      : "text-white hover:bg-[var(--color-white)] hover:text-[var(--color-primary)]"
-                  }
-                `}
-                  >
-                    <Icon className="h-5 w-5" />
-                    {!isCollapsed && <span>{item.title}</span>}
-                  </NavLink>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+      <div className="p-2 flex justify-center">
+        {!isCollapsed ? (
+          <img
+            src={Logo1}
+            alt="Logo"
+            className="w-[80%] h-[70px] object-contain bg-white shadow-2xl rounded"
+          />
+        ) : (
+          <img
+            src={Logo2}
+            alt="Logo"
+            className="w-10 h-10 bg-white rounded-full p-1"
+          />
+        )}
       </div>
+
+      <nav className="flex-1 overflow-y-auto">
+        <ul className="py-3 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isItemActive(item.link);
+
+            return (
+              <li key={item.link} className="px-3">
+                <NavLink
+                  to={item.link}
+                  onClick={() => isMobile && setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md
+                    text-sm font-medium transition
+                    ${isCollapsed ? "justify-center" : ""}
+                    ${
+                      active
+                        ? "bg-white text-[var(--color-primary)]"
+                        : "text-white hover:bg-white hover:text-[var(--color-primary)]"
+                    }
+                  `}
+                >
+                  <Icon className="h-5 w-5" />
+                  {!isCollapsed && <span>{item.title}</span>}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 
@@ -202,7 +97,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           open={mobileOpen}
           onClose={toggleMobileDrawer}
           PaperProps={{
-            style: { width: 290, background: "var(--color-primary)" },
+            style: {
+              width: 290,
+              background: "var(--color-primary)",
+            },
           }}
         >
           {SidebarContent}

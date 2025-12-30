@@ -1,6 +1,4 @@
-import { useDispatch } from "react-redux";
-import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { FaUserPlus } from "react-icons/fa";
 import { useState, useEffect, type JSX } from "react";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
@@ -10,14 +8,11 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
-
-import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import { useLoader } from "../../context/LoaderContext";
 import { Module } from "../../Helper/Enums";
-import type { ActiveTab } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
-import LabQueues from "./LabQueues";
+import PharmacyQueues from "./PharmacyQueues";
 import { TextField } from "@mui/material";
 export interface DashboardCard {
   id: number;
@@ -35,17 +30,13 @@ const PharmacyDashboard = () => {
   const userId = getSessionItem("user", "user_id");
   const module = Module.PHARMACY;
   const user = "admin";
-
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [queueSearch, setQueueSearch] = useState("");
-
-  // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [activeTab, setActiveTab] = useState("pendingQueue");
   const tabs = [
     { key: "pendingQueue", label: "Pending Queue" },
-//     { key: "processingQueue", label: "Processing Queue" },
     { key: "completedQueue", label: "Completed Queue" },
   ];
   const { data, isFetched } = useQuery<DashboardCard[]>({
@@ -55,9 +46,6 @@ const PharmacyDashboard = () => {
     staleTime: Infinity,
   });
 
-  // -------------------------
-  // ICON MAP
-  // -------------------------
   const cardIcon: Record<number, JSX.Element> = {
     1: <FaCalendarDays className="text-amber-600" />,
     2: <FaPeopleGroup className="text-blue-600" />,
@@ -65,9 +53,6 @@ const PharmacyDashboard = () => {
     4: <FaUserNurse className="text-violet-600" />,
   };
 
-  // -------------------------
-  // MAP DATA + ICONS
-  // -------------------------
   useEffect(() => {
     if (data && isFetched) {
       const mapped = data
@@ -82,7 +67,6 @@ const PharmacyDashboard = () => {
     }
   }, [data]);
 
-  // Reusable button
   const ActionButton = ({
     icon,
     label,
@@ -112,7 +96,6 @@ const PharmacyDashboard = () => {
 
   return (
     <div className="flex flex-col relative">
-      {/* ⭐ Welcome Banner */}
       <div
         className="
     h-[10vh] 
@@ -145,7 +128,7 @@ const PharmacyDashboard = () => {
           >
             Welcome,{" "}
             <span className="text-[var(--color-primary)]">
-              {user === "admin" ? "Admin" : "Lab Staff"}
+              {user === "admin" ? "Admin" : "Staff"}
             </span>
           </h1>
 
@@ -153,7 +136,7 @@ const PharmacyDashboard = () => {
             className="text-[var(--color-text)] opacity-70 -mt-1"
             style={{ fontSize: "var(--font-h5)" }}
           >
-            Your lab is running smoothly today.
+            Your pharmacy is running smoothly today.
             <br />
             <h3 className="opacity-60">
               Check your daily stats and announcements below.
@@ -162,15 +145,11 @@ const PharmacyDashboard = () => {
         </div>
       </div>
 
-      {/* ⭐ Stats Cards */}
-
       {user === "admin" && (
         <>
           <Cards items={stats} loading={loading} error={error} />
 
-          {/* ⭐ Quick Actions + Announcements */}
           <div className="md:flex gap-x-4">
-            {/* Quick Actions */}
             <div className="md:w-[30%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-4 md:p-6 mb-6 md:mb-0">
               <h2
                 className="font-semibold mb-4 text-[var(--color-primary)]"
@@ -190,44 +169,22 @@ const PharmacyDashboard = () => {
                 ))}
               </div>
             </div>
-
-            {/* Lab Announcements */}
-            {/* <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-4 md:p-6 md:w-[70%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
-              <div
-                className="flex items-center gap-x-2 mb-4"
-                style={{ fontSize: "var(--font-h3)" }}
-              >
-                <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-                  Lab Announcements
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-x-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-4">
-                <TfiAnnouncement
-                  className="text-[var(--color-error)] "
-                  style={{ fontSize: "var(--font-h3)" }}
-                />
-                <h1>
-                  The lab will be closed for the holiday on December 25th.
-                </h1>
-              </div>
-            </div> */}
           </div>
         </>
       )}
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] mt-5">
-     <div className="flex items-center justify-between gap-4 mb-4">
-  <div
-    className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
-    style={{ background: "var(--color-primary)" }}
-  >
-    {tabs.map((t) => (
-      <button
-        key={t.key}
-        role="tab"
-        aria-selected={activeTab === t.key}
-        onClick={() => setActiveTab(t.key)}
-        className={`
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div
+            className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
+            style={{ background: "var(--color-primary)" }}
+          >
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`
           px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition 
           ${
             activeTab === t.key
@@ -235,33 +192,31 @@ const PharmacyDashboard = () => {
               : "text-white hover:bg-[var(--color-hover)]"
           }
         `}
-      >
-        {t.label}
-      </button>
-    ))}
-  </div>
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-  {/* 🔍 SEARCH — PARENT OWNED */}
-     <TextField
+          <TextField
             size="small"
             placeholder="Search by Patient Name"
             value={queueSearch}
-    onChange={(e) => setQueueSearch(e.target.value)}
+            onChange={(e) => setQueueSearch(e.target.value)}
           />
-
-</div>
+        </div>
 
         <div className="mt-4">
-        <LabQueues
-    mode={
-      activeTab === "processingQueue"
-        ? "processing"
-        : activeTab === "completedQueue"
-        ? "completed"
-        : "pending"
-    }
-    searchTerm={queueSearch}
-  />
+          <PharmacyQueues
+            mode={
+              activeTab === "processingQueue"
+                ? "processing"
+                : activeTab === "completedQueue"
+                ? "completed"
+                : "pending"
+            }
+            searchTerm={queueSearch}
+          />
         </div>
       </div>
 

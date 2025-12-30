@@ -1,0 +1,58 @@
+import {
+  FaHome,
+  FaUsers,
+  FaCog,
+} from "react-icons/fa";
+import { GrDocumentText } from "react-icons/gr";
+import  { EntityType } from "./enum";
+import type { MenuItem, Role } from "../../types/common/sidebarTypes";
+
+export const SIDEBAR_MENUS: Record<
+  EntityType,
+  Partial<Record<Role, MenuItem[]>>
+> = {
+  [EntityType.Clinic]: {
+    Admin: [
+      { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
+      { title: "Users", link: "/clinic/users", icon: FaUsers },
+      { title: "Clinic App Settings", link: "/clinic/settings", icon: FaCog },
+    ],
+    Staff: [
+      { title: "Staff Dashboard", link: "/staff/dashboard", icon: FaHome },
+      {
+        title: "Patient Document Management",
+        link: "/patient-doc-managment",
+        icon: GrDocumentText,
+      },
+    ],
+    Doctor: [
+      { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },
+      { title: "Profile", link: "/doctor/profile", icon: FaUsers },
+    ],
+  },
+
+  [EntityType.Lab]: {
+    Admin: [
+      { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
+      { title: "Users", link: "/lab/users", icon: FaUsers },
+      { title: "Lab App Setting", link: "/lab/appsetting", icon: FaCog },
+      { title: "Service Management", link: "/service-management", icon: FaCog },
+    ],
+    Staff: [
+      { title: "Pending Queue", link: "/LabPendingQueue", icon: FaHome },
+      { title: "Processing Queue", link: "/LabProcessingQueue", icon: FaUsers },
+      { title: "Completed Queue", link: "/LabCompletedQueue", icon: FaCog },
+    ],
+  },
+
+  [EntityType.Pharmacy]: {
+    Admin: [
+      { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
+      { title: "Users", link: "/pharmacy/users", icon: FaUsers },
+      { title: "Pharmacy App Setting", link: "/pharmacy/settings", icon: FaCog },
+    ],
+    Staff: [
+      { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
+    ],
+  },
+};

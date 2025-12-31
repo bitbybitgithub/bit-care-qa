@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -21,154 +21,101 @@ import {
   DialogActions,
 } from "@mui/material";
 import { toast } from "react-toastify";
-
-/* ================= TYPES ================= */
-
-export interface LabTest {
-  id: string;
-  name: string;
-}
-
-export interface LabCategory {
-  category: string;
-  tests: LabTest[];
-}
-
-interface SelectedTest {
-  category: string;
-  testId: string;
-  testName: string;
-}
-
-/* ================= DATA ================= */
-
-export const LAB_TESTS: LabCategory[] = [
-  {
-    category: "Hematology",
-    tests: [
-      { id: "cbc", name: "CBC" },
-      { id: "esr", name: "ESR" },
-      { id: "malaria", name: "Malarial Parasite" },
-      { id: "smear", name: "Peripheral Smear" },
-      { id: "platelet", name: "Platelet Count" },
-      { id: "hb", name: "Hemoglobin (Hb)" },
-      { id: "btct", name: "Bleeding Time / Clotting Time" },
-      { id: "pt_inr", name: "Prothrombin Time (PT-INR)" },
-      { id: "aptt", name: "APTT" },
-      { id: "d_dimer", name: "D-Dimer" },
-      { id: "rh", name: "Rh Antibody Titer" },
-      { id: "coombs", name: "Coombs Test (ICT/DCT)" },
-      { id: "retic", name: "Reticulocyte Count" },
-    ],
-  },
-  {
-    category: "Serology",
-    tests: [
-      { id: "crp", name: "CRP" },
-      { id: "aso", name: "ASO Titre" },
-      { id: "rf", name: "RA Factor" },
-      { id: "vdrl", name: "VDRL" },
-      { id: "widal", name: "Widal Test" },
-      { id: "dengue", name: "Dengue Test (IgM/NS1)" },
-      { id: "leptospira", name: "Leptospira" },
-      { id: "chikungunya", name: "Chikungunya" },
-    ],
-  },
-  {
-    category: "Biochemistry",
-    tests: [
-      { id: "fbs", name: "Fasting Blood Sugar" },
-      { id: "ppbs", name: "Post Lunch Blood Sugar" },
-      { id: "rbs", name: "Random Blood Sugar" },
-      { id: "cholesterol", name: "Cholesterol" },
-      { id: "triglyceride", name: "Triglyceride" },
-      { id: "hba1c", name: "HbA1c" },
-      { id: "sgot", name: "SGOT / AST" },
-      { id: "sgpt", name: "SGPT / ALT" },
-      { id: "alk_phos", name: "Alkaline Phosphatase" },
-      { id: "total_protein", name: "Total Protein" },
-      { id: "albumin", name: "Albumin" },
-      { id: "globulin", name: "Globulin" },
-      { id: "a_g_ratio", name: "A/G Ratio" },
-      { id: "bilirubin", name: "Bilirubin (Total / Direct)" },
-      { id: "bun", name: "Blood Urea Nitrogen" },
-      { id: "creatinine", name: "Creatinine" },
-      { id: "uric_acid", name: "Uric Acid" },
-      { id: "amylase", name: "Amylase" },
-      { id: "lipase", name: "Lipase" },
-      { id: "ck_mb", name: "CPK / CK-MB" },
-      { id: "ldh", name: "LDH" },
-    ],
-  },
-  {
-    category: "Enzyme Marker",
-    tests: [
-      { id: "thyroid", name: "Thyroid Profile" },
-      { id: "lh", name: "LH / FSH / Prolactin" },
-      { id: "testosterone", name: "Testosterone" },
-      { id: "triple_marker", name: "Triple Marker Test" },
-      { id: "torcht", name: "TORCH Test" },
-      { id: "hiv", name: "HIV" },
-      { id: "hbsag", name: "HBsAg" },
-      { id: "hcv", name: "HCV" },
-      { id: "ana", name: "ANA / DS-DNA" },
-      { id: "psa", name: "PSA / Free PSA" },
-      { id: "troponin", name: "Trop-I / Trop-T" },
-      { id: "ca125", name: "CA-125" },
-    ],
-  },
-  {
-    category: "Profile",
-    tests: [
-      { id: "Lipid_Profile", name: "Lipid Profile" },
-      { id: "Liver_Function", name: "Liver Function Test (LFT)" },
-      { id: "Kidney_Function", name: "Kidney Function Test (KFT)" },
-      { id: "Thyroid_Profile", name: "Thyroid Profile" },
-      { id: "Diabetic_Profile", name: "Diabetic Profile" },
-      { id: "ANC_Profile", name: "ANC Profile" },
-      { id: "Cardiac_Profile", name: "Cardiac Profile" },
-    ],
-  },
-  {
-    category: "Clinical Test",
-    tests: [
-      { id: "pregnancy", name: "Pregnancy Test (UPT)" },
-      { id: "urine_routine", name: "Urine Routine" },
-      { id: "stool_routine", name: "Stool Routine" },
-      { id: "sputum", name: "Sputum Routine / AFB" },
-      { id: "semen", name: "Semen Routine / Semen Wash" },
-    ],
-  },
-  {
-    category: "Microbiology",
-    tests: [
-      { id: "urine_culture", name: "Urine Culture & Sensitivity" },
-      { id: "pus_culture", name: "Pus / CSF / Semen / Blood Culture" },
-      { id: "hanging_drop", name: "Hanging Drop Test" },
-    ],
-  },
-];
-
-
-/* ================= COMPONENT ================= */
+import { getlabtestserviceApi, saveAvailableLabApi } from "../../api/labApis/LabApi";
+import type {
+  LabTest,
+  LabCategory,
+  SelectedTest,
+  LabTestApiResponse,
+  LabTestItemRequest
+} from "../../types/labType/LabTestInterfaces";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 const ServiceManagement: React.FC = () => {
   const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
   const [search, setSearch] = useState<string>("");
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [labTests, setLabTests] = useState<LabCategory[]>(LAB_TESTS);
+  const [labTests, setLabTests] = useState<LabCategory[]>([]);
+
+  const transformLabTests = (data: Record<string, LabTestApiResponse[]>): LabCategory[] => {
+    return Object.entries(data).map(([categoryName, tests]) => ({
+      category: categoryName,
+      tests: tests
+        .filter(t => t.is_active === "1")
+        .map(test => ({
+          id: String(test.test_id), // IMPORTANT: id as string
+          name: test.test_name,
+        })),
+    }));
+  };
+  useEffect(() => {
+    const fetchlist = async () => {
+      try {
+        const res: any = await getlabtestserviceApi();
+        const formattedData = transformLabTests(res);
+        setLabTests(formattedData);
+
+      }
+      catch {
+        console.log(Error)
+      }
+    }
+    fetchlist();
+  }, [])
+
+
+  const labId = getSessionItem("user", "lab_id");
+  console.log(labId)
+ 
+  
+const savelist = async () => {
+  try {
+    if (!labId) {
+      console.error("Lab ID not found");
+      return;
+    }
+   
+    const testIds: number[] = selectedTests
+      .map(test => Number(test.testId))
+      .filter(id => !isNaN(id));
+
+    if (testIds.length === 0) {
+      console.error("No valid test IDs");
+      return;
+    }else if( labId==testIds){
+      console.error("LabId and TestId not same")  
+      return;
+    }
+    const payload: LabTestItemRequest = {
+      lab_id: Number(labId),
+      test_id: testIds,
+      created_by: "Admin",
+    };
+    console.log("FINAL PAYLOAD:", payload);
+    const res = await saveAvailableLabApi(payload);
+    if(res.success){
+      toast.success(res.message);
+    }else{
+      toast.success(res.message);
+    }
+    console.log(res);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+
+
   React.useEffect(() => {
     if (!search) return;
-
     const searchLower = search.toLowerCase();
-
-    const matchedCategory = labTests.find((group) => 
+    const matchedCategory = labTests.find((group) =>
       group.tests.some((test) =>
         test.name.toLowerCase().includes(searchLower)
       )
     );
-
     if (matchedCategory) {
       setExpandedAccordion(matchedCategory.category);
     }
@@ -217,15 +164,7 @@ const ServiceManagement: React.FC = () => {
             <h3
               className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-0 "
               style={{ fontSize: "var(--font-h3)" }}>
-              Service Management
-              {selectedTests.length > 0 && (
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label={`${selectedTests.length} Tests Selected`}
-                  color="primary"
-                  className="mt-0 ml-1 "
-                />
-              )}
+              
             </h3>
 
             <TextField
@@ -349,7 +288,12 @@ const ServiceManagement: React.FC = () => {
           <Typography className="text-slate-600">
             {selectedTests.length === 0
               ? "No tests selected"
-              : `${selectedTests.length} tests ready to save`}
+              : <Chip
+                  icon={<CheckCircleIcon />}
+                  label={`${selectedTests.length} Tests Selected`}
+                  color="primary"
+                  className="mt-0 ml-1 "
+                />}
           </Typography>
 
           <div className="flex gap-3">
@@ -424,7 +368,7 @@ const ServiceManagement: React.FC = () => {
                     className={`px-3 py-2 text-sm font-semibold
                 ${index % 2 === 0 ? "bg-gray-300" : "bg-[var(--color-bg]"}`}
                   >
-                    {test}  
+                    {test}
                   </div>
                 ))}
               </div>
@@ -442,8 +386,9 @@ const ServiceManagement: React.FC = () => {
             variant="contained"
             onClick={() => {
               console.log(selectedTests);
+               savelist();
               setSearch("");
-              toast.success("Data Saved Successfully");
+              
               setOpenDialog(false);
               setSelectedTests([]);
               setExpandedAccordion(false);
@@ -463,3 +408,5 @@ const ServiceManagement: React.FC = () => {
 };
 
 export default ServiceManagement;
+
+

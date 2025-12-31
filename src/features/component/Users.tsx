@@ -1,67 +1,67 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
 import ProfileCard from "../../components/common/ProfileCards";
 import { getUsersList, type User } from "../../api/UserManagementAPI";
 import { updateUsers } from "../../api/SaveDocApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { getDummyLabUsers, getDummyPharmacyUsers } from "./labUsers.mock";
-import type { Module } from "../../Helper/Enums";
 
 const Users: React.FC = () => {
-  const location = useLocation();
-  const clinicId = getSessionItem<number>("user", "clinic_id");
+  const entity_name = getSessionItem<string>("user", "entity_name");
+  const clinic_id = getSessionItem<number>("user", "clinic_id");
+  const lab_id = getSessionItem<number>("user", "lab_id");
+  const pharmacy_id = getSessionItem<number>("user", "pharmacy_id");
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  const moduleKey: Module = useMemo(() => {
-    if (location.pathname.startsWith("/lab")) return "LAB";
-    if (location.pathname.startsWith("/pharmacy")) return "PHARMACY";
-    return "CLINIC";
-  }, [location.pathname]);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["users", moduleKey],
-    queryFn: () => {
-      if (moduleKey === "LAB") {
-        return getDummyLabUsers();
-      }
-      if (moduleKey === "PHARMACY") {
-        return getDummyPharmacyUsers();
-      }
-      return getUsersList(clinicId!);
-    },
-    enabled: moduleKey === "CLINIC" ? !!clinicId : true,
-    staleTime: Infinity,
-  });
+  const getEntityId = () => {
+    if (entity_name === "clinic") return clinic_id;
+    if (entity_name === "lab") return lab_id;
+    if (entity_name === "pharmacy") return pharmacy_id;
+    return null;
+  };
 
   useEffect(() => {
-    if (data) setUsers(data);
-  }, [data]);
+    const entity_id = getEntityId();
+    if (!entity_name || !entity_id) return;
+    setLoading(true);
 
-  const filteredUsers = useMemo(
-    () =>
-      users.filter((u) =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [users, searchTerm]
+    getUsersList(entity_name, entity_id)
+      .then((data) => {
+        setUsers(data);
+      })
+      .catch((error: any) => {
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to load users";
+
+        alert(message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [entity_name, clinic_id, lab_id, pharmacy_id]);
+
+  const filteredUsers = users.filter((u) =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleUserStatus = async (user: User) => {
     const newStatus = user.status === "Active" ? false : true;
 
-    const ok = window.confirm(
+    const confirmed = window.confirm(
       `Are you sure you want to ${newStatus ? "activate" : "deactivate"} ${
         user.name
       }?`
     );
-    if (!ok) return;
 
-    const prevStatus = user.status;
+    if (!confirmed) return;
+
+    const previousStatus = user.status;
     setUpdatingId(user.userid);
 
     setUsers((prev) =>
@@ -81,10 +81,10 @@ const Users: React.FC = () => {
     } catch {
       setUsers((prev) =>
         prev.map((u) =>
-          u.userid === user.userid ? { ...u, status: prevStatus } : u
+          u.userid === user.userid ? { ...u, status: previousStatus } : u
         )
       );
-      alert("Failed to update user status.");
+      alert("Failed to update user status");
     } finally {
       setUpdatingId(null);
     }
@@ -96,7 +96,7 @@ const Users: React.FC = () => {
         <button
           onClick={() => setShowAddUser(true)}
           className="flex items-center gap-2 bg-[var(--color-primary)]
-            text-white px-4 py-2 rounded-lg shadow-md"
+          text-white px-4 py-2 rounded-lg shadow-md"
         >
           <FaPlus /> Add New User
         </button>
@@ -108,20 +108,17 @@ const Users: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search user..."
             className="w-full pl-10 pr-3 py-2 rounded-lg
-              border border-[var(--color-primary)]"
+            border border-[var(--color-primary)]"
           />
         </div>
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <p className="text-center py-10">Loading users...</p>
       ) : filteredUsers.length === 0 ? (
         <p className="text-center py-10">No users found.</p>
       ) : (
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2
-          lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredUsers.map((u) => (
             <ProfileCard
               key={u.userid}
@@ -134,7 +131,10 @@ const Users: React.FC = () => {
       )}
 
       {showAddUser && (
-        <AddUser module={moduleKey} onClose={() => setShowAddUser(false)} />
+        <AddUser
+          module={entity_name?.toUpperCase()}
+          onClose={() => setShowAddUser(false)}
+        />
       )}
     </div>
   );

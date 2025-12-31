@@ -8,12 +8,20 @@ export interface User {
   phone?: string;
   role: string;
   status: "Active" | "Inactive";
-  username?:string;
+  username?: string;
 }
 
-export const getUsersList = async (): Promise<User[]> => {
+export const getUsersList = async (
+  entity_type: string | null,
+  entity_id: number | null
+): Promise<User[]> => {
+  console.log(entity_type);
+  console.log(entity_id);
   try {
-    const response: AxiosResponse<any> = await emrAPI.get("/clinics/users");
+    const response: AxiosResponse<any> = await emrAPI.post("/clinics/users", {
+      entity_type: entity_type,
+      entity_id: entity_id,
+    });
 
     if (!response || !response.data || !Array.isArray(response.data)) {
       throw new Error("Invalid API response: missing data array");

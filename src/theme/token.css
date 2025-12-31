@@ -32,14 +32,6 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
-
-  /* SHADOWS (default fallback, overridden in dark/ocean) */
-  /* --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2); */
-
   
   /* TRANSITIONS */
   --transition-fast: 150ms ease;
@@ -52,27 +44,6 @@
   --z-overlay: 1100;
   --z-tooltip: 1200;
 }
-
-/* ==========================================================
-   🌞 THEME: LIGHT (Default)
-========================================================== */
-/* [data-theme="light"] {
-  --color-primary: #2563eb;
-  --color-primary-light: #60a5fa;
-  --color-primary-dark: #1e3a8a;
-
-  --color-secondary: #16a34a;
-  --color-accent: #f59e0b;
-
-  --color-bg: #f9fafb;
-  --color-surface: #ffffff;
-  --color-surface-alt: #f3f4f6;
-  --color-border: #e5e7eb;
-
-  --color-text: #1f2937;
-  --color-text-secondary: #4b5563;
-  --color-disabled: #9ca3af;
-} */
 
 /* ==========================================================
    🌙 THEME: DARK
@@ -121,33 +92,9 @@
   --color-disabled: #0f172a;
 
   --shadow-xs: 0 1px 2px rgba(3, 105, 161, 0.05);
-  /* --shadow-md: 0 4px 6px rgba(14, 165, 233, 0.1); */
   --shadow-md: 0 4px 6px rgba(14, 165, 233, 0.15);
-  /* --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1); */
   --shadow-lg: 0 10px 15px rgba(14, 165, 233, 0.15);
 }
-/* ✅ Healthcare / EMR Green Theme */
-/* [data-theme="green"] {
-  --color-primary: #16a34a; 
-  --color-primary-light: #4ade80;
-  --color-primary-dark: #15803d;
-
-  --color-secondary: #10b981;
-  --color-accent: #22c55e;
-
-  --color-bg: #f0fdf4; 
-  --color-surface: #c9e7d9;
-  --color-surface-alt: #d1fae5;
-  --color-border: #16a34a;
-
-  --color-text: #000000;
-  --color-text-secondary: #065f46;
-  --color-disabled: #000000;
-
-  --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
-  --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);
-  --shadow-lg: 0 10px 15px rgba(5, 150, 105, 0.15);
-} */
 
 
 /* ==========================================================
@@ -187,3 +134,48 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-dark);
 }
+
+
+/* ✅ Healthcare / EMR Green Theme */
+/* [data-theme="green"] {
+  --color-primary: #16a34a; 
+  --color-primary-light: #4ade80;
+  --color-primary-dark: #15803d;
+
+  --color-secondary: #10b981;
+  --color-accent: #22c55e;
+
+  --color-bg: #f0fdf4; 
+  --color-surface: #c9e7d9;
+  --color-surface-alt: #d1fae5;
+  --color-border: #16a34a;
+
+  --color-text: #000000;
+  --color-text-secondary: #065f46;
+  --color-disabled: #000000;
+
+  --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
+  --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);
+  --shadow-lg: 0 10px 15px rgba(5, 150, 105, 0.15);
+} */
+
+/* ==========================================================
+   🌞 THEME: LIGHT (Default)
+========================================================== */
+/* [data-theme="light"] {
+  --color-primary: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1e3a8a;
+
+  --color-secondary: #16a34a;
+  --color-accent: #f59e0b;
+
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f3f4f6;
+  --color-border: #e5e7eb;
+
+  --color-text: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-disabled: #9ca3af;
+} */

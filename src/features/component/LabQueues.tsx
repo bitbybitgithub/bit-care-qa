@@ -1,399 +1,272 @@
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  useEffect,
-  DragEvent,
-} from "react";
-import {
-  Box,
-  Button,
-  Chip,
-  LinearProgress,
-  Popover,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Chip } from "@mui/material";
 import {
   DataGrid,
   type GridColDef,
-  type GridRenderCellParams,
-  type GridRowIdGetter,
 } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
+import { getPendingQueueAsync } from "../../api/lab/labQueuesApi";
+import { Drawer } from "@mui/material";
 
 const PAGE_SIZE = 5;
-
-/* Status Chip rendering based on status */
 const getStatusChip = (status: string) => {
-  const meta: Record<
-    string,
-    { label: string; bg: string; color: string }
-  > = {
-    Pending: { label: "Pending", bg: "#FFE8B2", color: "#92400E" },
-    Processing: { label: "Processing", bg: "#C5FFB2", color: "#0B6A1B" },
-    Completed: { label: "Completed", bg: "#B2DDFF", color: "#1E40AF" },
+  const meta: Record<string, { bg: string; color: string }> = {
+    Pending: { bg: "#FFE8B2", color: "#92400E" },
+    Processing: { bg: "#C5FFB2", color: "#0B6A1B" },
+    Completed: { bg: "#B2DDFF", color: "#1E40AF" },
   };
 
-  const cfg = meta[status] ?? meta["Pending"];
+  const cfg = meta[status] ?? meta.Pending;
 
   return (
     <Chip
       size="small"
-      label={cfg.label}
+      label={status}
       sx={{
         backgroundColor: cfg.bg,
         color: cfg.color,
         fontWeight: 600,
         fontSize: 12,
-        height: 28,
-        px: 1,
-        borderRadius: "16px",
+        height: 26,
       }}
     />
   );
 };
 
-/* Dummy 20 Patients — we add status + uploadedReports */
-const dummyData = Array.from({ length: 20 }).map((_, i) => ({
-  patient_id: `PAT-${1000 + i}`,
-  name: ["Michael Brown", "Emma Johnson", "David Clark"][i % 3],
-  mobile_number: "98989898" + (i % 10),
-  age: `${50 + (i % 20)} yrs`,
-  gender: i % 2 ? "F" : "M",
-  test_requested: ["CBC", "Lipid Panel", "CRP"][i % 3],
-  request_date: "2025-12-12",
-  request_time: "09:12 AM",
-  requested_by: ["Dr. Alex", "Dr. Sara", "Dr. Patel"][i % 3],
-  status: "Pending",
-  uploadedReports: [], // store uploaded pdf names
-}));
+/* =======================
+   Types
+======================= */
+interface ApiTest {
+  patient_id: string;
+  test_id: string;
+  test_name: string;
+  report_id: string | null;
+}
+
+interface ApiRow {
+  patient_id: string;
+  patient_name: string;
+  contact_no: string;
+  gender: string;
+  lab_id: string;
+  doctor_id: string;
+  doctor_name: string;
+  clinic_id: string;
+  test_date: string;
+  result_status: "Pending" | "Processing" | "Completed";
+  created_date: string;
+  tests: ApiTest[];
+}
 
 interface Props {
   mode?: "pending" | "processing" | "completed";
   searchTerm?: string;
 }
 
-export default function LabQueues({ mode,searchTerm = "", }: Props) {
+/* =======================
+   Component
+======================= */
+export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const location = useLocation();
+  const [rows, setRows] = useState<ApiRow[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  /* Resolve mode based on pathname if mode prop missing */
-  const resolvedMode: "pending" | "processing" | "completed" = useMemo(() => {
+  /* Upload Popup */
+  const [activeRow, setActiveRow] = useState<ApiRow | null>(null);
+  const [fileMap, setFileMap] = useState<Record<string, File[]>>({});
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  /* =======================
+     Fetch API
+  ======================= */
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getPendingQueueAsync(2);
+      setRows(data);
+    };
+    fetchData();
+  }, []);
+
+  /* =======================
+     Resolve Mode
+  ======================= */
+  const resolvedMode = useMemo(() => {
     if (mode) return mode;
-    if (location.pathname.includes("LabPendingQueue")) return "pending";
-    if (location.pathname.includes("LabProcessingQueue")) return "processing";
-    if (location.pathname.includes("LabCompletedQueue")) return "completed";
+    if (location.pathname.includes("Pending")) return "pending";
+    if (location.pathname.includes("Processing")) return "processing";
+    if (location.pathname.includes("Completed")) return "completed";
     return "pending";
   }, [mode, location.pathname]);
 
-  const [patients, setPatients] = useState(dummyData);
-  const [currentPage, setCurrentPage] = useState(1);
+  /* =======================
+     Filter
+  ======================= */
+  const filteredRows = useMemo(() => {
+    const q = searchTerm.toLowerCase().trim();
 
-  /* Popover state */
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [activePatientId, setActivePatientId] = useState<string | null>(null);
+    return rows.filter((r) => {
+      if (resolvedMode === "pending" && r.result_status !== "Pending")
+        return false;
+      if (resolvedMode === "processing" && r.result_status !== "Processing")
+        return false;
+      if (resolvedMode === "completed" && r.result_status !== "Completed")
+        return false;
 
-  /* Upload state */
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
+      if (!q) return true;
 
-  /* Filter by search + mode */
-const filteredRows = useMemo(() => {
-  const q = searchTerm.toLowerCase().trim();
+      return (
+        r.patient_name.toLowerCase().includes(q) ||
+        r.contact_no.includes(q) ||
+        r.patient_id.includes(q)
+      );
+    });
+  }, [rows, resolvedMode, searchTerm]);
 
-  return patients.filter((p) => {
-    if (resolvedMode === "pending" && p.status !== "Pending") return false;
-    if (resolvedMode === "processing" && p.status !== "Processing") return false;
-    if (resolvedMode === "completed" && p.status !== "Completed") return false;
+  useEffect(() => setCurrentPage(1), [searchTerm, resolvedMode]);
 
-    if (!q) return true;
-
-    const last4 = p.mobile_number?.slice(-4) ?? "";
-
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.patient_id.toLowerCase().includes(q) ||
-      last4.includes(q)
-    );
-  });
-}, [patients, resolvedMode, searchTerm]);
-useEffect(() => {
-  setCurrentPage(1);
-}, [searchTerm, resolvedMode]);
-
-
-  /* Paging */
-  // useEffect(() => setCurrentPage(1), [search]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredRows.length / PAGE_SIZE)
-  );
-  const rows = useMemo(() => {
+  /* =======================
+     Paging
+  ======================= */
+  const pagedRows = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, currentPage]);
 
-  /* Open Popover */
-  const handleOpenPopover = (e: any, pid: string) => {
-    setAnchorEl(e.currentTarget);
-    setActivePatientId(pid);
-    setSelectedFiles([]);
-    setUploadProgress(0);
-  };
-
-  const handleClosePopover = () => {
-    setAnchorEl(null);
-    setActivePatientId(null);
-    setSelectedFiles([]);
-    setUploadProgress(0);
-  };
-
-  /* Pending → Processing button */
-  const startProcessing = (pid: string) => {
-    setPatients((prev) =>
-      prev.map((p) =>
-        p.patient_id === pid ? { ...p, status: "Processing" } : p
-      )
+  /* =======================
+     Actions
+  ======================= */
+  const startProcessing = (row: ApiRow) => {
+    setRows((prev) =>
+      prev.map((r) => (r === row ? { ...r, result_status: "Processing" } : r))
     );
   };
 
-  /* Completed queue → same UI but conceptually re-upload */
-  const redoUpload = (pid: string) => {
-    handleOpenPopover({ currentTarget: null }, pid);
+  const openUpload = (_: any, row: ApiRow) => {
+    setActiveRow(row);
+
+    const init: Record<string, File[]> = {};
+    row.tests.forEach((t) => (init[t.test_id] = []));
+    setFileMap(init);
+
+    setUploadProgress(0);
   };
 
-  /* Multiple PDF handling */
-  const handleFiles = (incoming: File[]) => {
-    const pdfs = incoming.filter((f) => f.type === "application/pdf");
-    const combined = [...selectedFiles, ...pdfs];
-    if (combined.length > 7) {
-      alert("Maximum 7 PDF files allowed");
-      return;
-    }
-    setSelectedFiles(combined);
+  const closeUpload = () => {
+    setActiveRow(null);
+    setFileMap({});
+    setUploadProgress(0);
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) =>
-    handleFiles(Array.from(e.target.files || []));
-
-  const removeFile = (idx: number) => {
-    const updated = [...selectedFiles];
-    updated.splice(idx, 1);
-    setSelectedFiles(updated);
-  };
-
-  const handleDragOver = (e: DragEvent) => {
-    e.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDrop = (e: DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    handleFiles(Array.from(e.dataTransfer?.files || []));
-  };
-
-  /* Upload Progress + Status update */
-  const uploadAllFiles = () => {
-    if (!selectedFiles.length || !activePatientId) return;
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-
-        /* Update patient status */
-        setPatients((prev) =>
-          prev.map((p) =>
-            p.patient_id === activePatientId
-              ? {
-                  ...p,
-                  status: "Completed",
-                  uploadedReports: [
-                    ...p.uploadedReports,
-                    ...selectedFiles.map((f) => f.name),
-                  ],
-                }
-              : p
-          )
-        );
-
-        /* Node.js request example */
-        console.log("===== NODE REQUEST EXAMPLE =====");
-        console.log(`const formData = new FormData();
-formData.append("patient_id", "${activePatientId}");`);
-        selectedFiles.forEach((f) =>
-          console.log(`formData.append("reports", file_${f.name});`)
-        );
-        console.log(`
-fetch("https://api.example.com/upload-labs", {
-  method: "POST",
-  body: formData
-})
-  .then(r => r.json())
-  .then(d => console.log(d))
-  .catch(e => console.log(e));`);
-
-        alert("Uploaded Successfully");
-        handleClosePopover();
-      }
-    }, 180);
-  };
-
-  /* Action column behavior changes by mode */
-  const renderActionBtn = (params: GridRenderCellParams) => {
-    const pid = params.row.patient_id;
-
-    if (resolvedMode === "pending")
-      return (
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            px: 2,
-            py: 0.5,
-          }}
-          onClick={() => startProcessing(pid)}
-        >
-          Start Processing
-        </Button>
-      );
-
-    if (resolvedMode === "processing")
-      return (
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 600,
-            px: 2,
-            py: 0.5,
-          }}
-          onClick={(e) => handleOpenPopover(e, pid)}
-        >
-          Upload
-        </Button>
-      );
-
-    return (
-      <Button
-        variant="outlined"
-        size="small"
-        sx={{
-          borderRadius: "8px",
-          textTransform: "none",
-          fontWeight: 600,
-          px: 2,
-          py: 0.5,
-        }}
-        onClick={() => redoUpload(pid)}
-      >
-        Re-Upload
-      </Button>
-    );
-  };
-
-  /* DataGrid Columns — unchanged UI */
+  /* =======================
+     Columns
+  ======================= */
   const columns: GridColDef[] = [
+    { field: "patient_id", headerName: "Patient ID", width: 100 },
+
     {
-      field: "patient_id",
-      headerName: "Patient ID",
-      width: 100,
-      renderCell: (p) => (
-        <Typography sx={{ fontSize: 13 }}>{p.row.patient_id}</Typography>
-      ),
-    },
-    {
-      field: "name",
+      field: "patient_name",
       headerName: "Patient Name",
       flex: 1.6,
-      minWidth: 150,
       sortable: false,
-      renderCell: (p) => {
-        const gender = p.row.gender?.charAt(0).toUpperCase() ?? "-";
-        return (
-          <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-            {p.row.name}{" "}
-            <span style={{ color: "var(--color-primary)" }}>({gender})</span>
-          </Typography>
-        );
-      },
+      renderCell: (p) => (
+        <h1 className="font-[var(--font-weight-semibold)]">
+          {p.row.patient_name}{" "}
+          <span style={{ color: "var(--color-primary)" }}>
+            ({p.row.gender?.charAt(0)})
+          </span>
+        </h1>
+      ),
     },
+
+    { field: "contact_no", headerName: "Contact", width: 130 },
+
     {
-      field: "age",
-      headerName: "Age",
-      flex: 0.5,
-      minWidth: 80,
-      renderCell: (p) => p.row.age ?? "—",
+      field: "tests",
+      headerName: "Tests",
+      flex: 1.6,
+      sortable: false,
+      renderCell: (p) => (
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+          {p.row.tests.map((t: ApiTest) => (
+            <Chip
+              key={t.test_id}
+              label={t.test_name}
+              size="small"
+              sx={{
+                fontSize: 11,
+                height: 22,
+                backgroundColor: "#EEF2FF",
+                color: "#1E3A8A",
+                fontWeight: 500,
+              }}
+            />
+          ))}
+        </Box>
+      ),
     },
+
     {
-      field: "mobile_number",
-      headerName: "Contact",
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (p) => p.row.mobile_number ?? "—",
+      field: "test_date",
+      headerName: "Test Date",
+      width: 130,
+      renderCell: (p) => new Date(p.row.test_date).toLocaleDateString(),
     },
+
     {
-      field: "test_requested",
-      headerName: "Test Requested",
-      flex: 1,
-      minWidth: 130,
-      renderCell: (p) => p.row.test_requested ?? "—",
-    },
-    {
-      field: "request_date",
-      headerName: "Request Date",
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (p) => p.row.request_date ?? "—",
-    },
-    {
-      field: "request_time",
-      headerName: "Request Time",
-      flex: 0.6,
-      minWidth: 100,
-      renderCell: (p) => p.row.request_time ?? "—",
-    },
-    {
-      field: "requested_by",
-      headerName: "Requested By",
-      flex: 0.8,
-      minWidth: 120,
-      renderCell: (p) => p.row.requested_by ?? "—",
-    },
-    {
-      field: "status",
+      field: "result_status",
       headerName: "Status",
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (p) => getStatusChip(p.row.status),
+      width: 120,
+      renderCell: (p) => getStatusChip(p.row.result_status),
     },
+
     {
       field: "action",
       headerName: "Action",
-      flex: 0.8,
-      minWidth: 150,
+      width: 160,
       sortable: false,
-      renderCell: renderActionBtn,
+      renderCell: (p: GridRenderCellParams) => {
+        if (resolvedMode === "pending")
+          return (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => startProcessing(p.row)}
+            >
+              Start
+            </Button>
+          );
+
+        if (resolvedMode === "processing")
+          return (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={(e) => openUpload(e, p.row)}
+            >
+              Upload
+            </Button>
+          );
+
+        return (
+          <Button size="small" variant="outlined">
+            Re-Upload
+          </Button>
+        );
+      },
     },
   ];
 
-  const getRowId: GridRowIdGetter = (row) => row.patient_id;
+  const getRowId = (row) =>
+    `${row.patient_id}_${row.created_date}_${row.result_status}`;
 
+  /* =======================
+     Render
+  ======================= */
   return (
     <>
-      <Box className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 mt-3">
+      <Box mt={2}>
         <DataGrid
-          rows={rows}
+          rows={pagedRows}
           columns={columns}
           getRowId={getRowId}
           rowHeight={64}
@@ -411,105 +284,299 @@ fetch("https://api.example.com/upload-labs", {
             minWidth: 1100,
             backgroundColor: "var(--color-white)",
             overflow: "hidden",
+
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "transparent",
               color: "var(--color-primary)",
               textTransform: "uppercase",
               fontSize: 12,
               letterSpacing: "0.06em",
+              fontWeight: 600,
             },
-            "& .MuiDataGrid-row": { fontSize: 13 },
-            "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(0,0,0,0.02)" },
+
+            "& .MuiDataGrid-columnSeparator": {
+              display: "none",
+            },
+
+            "& .MuiDataGrid-row": {
+              fontSize: 13,
+            },
+
+            "& .MuiDataGrid-row:hover": {
+              backgroundColor: "rgba(0,0,0,0.02)",
+            },
+
             "& .MuiDataGrid-virtualScrollerRenderZone": {
               "& .MuiDataGrid-row:nth-of-type(odd)": {
                 backgroundColor: "rgba(15,23,42,0.02)",
               },
             },
+
+            "& .MuiDataGrid-cell:focus": {
+              outline: "none",
+            },
+
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
+            },
           }}
         />
       </Box>
 
-      {/* Popover Upload UI — original styling preserved */}
-      <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={handleClosePopover}
-        anchorOrigin={{ vertical: "center", horizontal: "left" }}
-        transformOrigin={{ vertical: "center", horizontal: "right" }}
+      <Drawer
+        anchor="right"
+        open={Boolean(activeRow)}
+        onClose={closeUpload}
+        PaperProps={{
+          sx: {
+            width: 520,
+            backgroundColor: "var(--color-bg)",
+            boxShadow: "var(--shadow-lg)",
+          },
+        }}
       >
-        <div
-          onDragEnter={() => setDragActive(true)}
-          onDragLeave={() => setDragActive(false)}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className="w-80 p-5 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-[var(--color-primary)] flex flex-col gap-3"
-        >
-          <h3 className="font-semibold text-sm">Upload Reports (PDF)</h3>
-          <span className="text-xs text-gray-500 font-medium">
-            Patient: <span className="text-blue-600">{activePatientId}</span>
-          </span>
-
+        <div className="flex flex-col h-full">
+          {/* ================= HEADER (Vitals Style) ================= */}
           <div
-            className={`border border-dashed rounded-lg py-6 text-center cursor-pointer transition ${
-              dragActive ? "border-blue-400 bg-blue-50" : "border-gray-300"
-            }`}
+            className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
-            <span className="text-xs text-gray-600 font-medium">
-              Drag & Drop PDFs
-            </span>
-            <br />
-            <label className="underline cursor-pointer text-blue-500 text-xs">
-              or browse
-              <input
-                type="file"
-                accept="application/pdf"
-                multiple
-                className="hidden"
-                onChange={handleFileInput}
-              />
-            </label>
+            <div>
+              <h2
+                className="flex items-center gap-2"
+                style={{
+                  color: "var(--color-white)",
+                  fontSize: "var(--font-h3)",
+                  fontWeight: "var(--font-weight-medium)",
+                }}
+              >
+                Upload Reports
+              </h2>
+              <p
+                style={{
+                  color: "var(--color-primary-light)",
+                  fontSize: "var(--font-small)",
+                }}
+              >
+                Test-wise PDF upload
+              </p>
+            </div>
+
+            <button
+              onClick={closeUpload}
+              className="p-2 rounded-md"
+              style={{
+                backgroundColor: "var(--color-bg)",
+                color: "var(--color-primary)",
+              }}
+            >
+              ×
+            </button>
           </div>
 
-          {selectedFiles.length > 0 && (
-            <div className="max-h-24 overflow-auto mt-2">
-              {selectedFiles.map((f, idx) => (
-                <div
-                  key={idx}
-                  className="text-xs bg-gray-100 rounded px-2 py-1 mb-1 flex justify-between items-center"
-                >
-                  <span className="truncate">{f.name}</span>
-                  <button
-                    className="text-red-500 text-[10px] font-bold"
-                    onClick={() => removeFile(idx)}
-                  >
-                    X
-                  </button>
+          {/* ================= CONTENT ================= */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+            {/* -------- Patient Info -------- */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 pt-1">
+                <div className="flex-1 h-px bg-[var(--color-primary)]" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Patient Info
+                </span>
+                <div className="flex-1 h-px bg-[var(--color-primary)]" />
+              </div>
+
+              <div
+                className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs p-3"
+                style={{
+                  backgroundColor: "var(--color-surface)",
+                  borderRadius: "var(--radius-md)",
+                }}
+              >
+                <div>
+                  <b>ID:</b> {activeRow?.patient_id}
                 </div>
-              ))}
+                <div>
+                  <b>Name:</b> {activeRow?.patient_name}
+                </div>
+                <div>
+                  <b>Contact:</b> {activeRow?.contact_no}
+                </div>
+                <div>
+                  <b>Gender:</b> {activeRow?.gender}
+                </div>
+                <div className="col-span-2">
+                  <b>Doctor:</b> {activeRow?.doctor_name}
+                </div>
+                <div className="col-span-2">
+                  <b>Date:</b>{" "}
+                  {activeRow &&
+                    new Date(activeRow.test_date).toLocaleDateString()}
+                </div>
+              </div>
             </div>
-          )}
 
-          {uploadProgress > 0 && uploadProgress < 100 && (
-            <LinearProgress
-              variant="determinate"
-              value={uploadProgress}
-              sx={{ mt: 1 }}
-            />
-          )}
+            {/* -------- Tests Upload -------- */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-[var(--color-primary)]" />
+                <span className="text-xs font-semibold uppercase tracking-wide">
+                  Test Reports
+                </span>
+                <div className="flex-1 h-px bg-[var(--color-primary)]" />
+              </div>
 
-          <button
-            disabled={!selectedFiles.length || uploadProgress > 0}
-            onClick={uploadAllFiles}
-            className={`w-full py-2 text-sm font-semibold rounded ${
-              selectedFiles.length
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-300 text-gray-500"
-            }`}
+              <div className="flex flex-col gap-3">
+                {activeRow?.tests.map((t) => (
+                  <div
+                    key={t.test_id}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const pdfs = Array.from(e.dataTransfer.files).filter(
+                        (f) => f.type === "application/pdf"
+                      );
+                      setFileMap((prev) => ({
+                        ...prev,
+                        [t.test_id]: [...prev[t.test_id], ...pdfs],
+                      }));
+                    }}
+                    className="flex flex-col gap-2 p-3"
+                    style={{
+                      backgroundColor: "var(--color-surface)",
+                      borderRadius: "var(--radius-md)",
+                      border: `1px dashed var(--color-border)`,
+                    }}
+                  >
+                    {/* Top Row */}
+                    <div className="flex justify-between items-center">
+                      <span
+                        className="uppercase"
+                        style={{
+                          fontSize: "var(--font-small)",
+                          fontWeight: "var(--font-weight-semibold)",
+                        }}
+                      >
+                        {t.test_name}
+                      </span>
+
+                      <label
+                        className="cursor-pointer"
+                        style={{
+                          fontSize: "var(--font-xs)",
+                          color: "var(--color-primary)",
+                          fontWeight: "var(--font-weight-medium)",
+                        }}
+                      >
+                        + Add PDF
+                        <input
+                          type="file"
+                          hidden
+                          multiple
+                          accept="application/pdf"
+                          onChange={(e) =>
+                            setFileMap((prev) => ({
+                              ...prev,
+                              [t.test_id]: [
+                                ...prev[t.test_id],
+                                ...Array.from(e.target.files || []),
+                              ],
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    <span
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      Drag & drop PDFs here
+                    </span>
+
+                    {/* Files */}
+                    {fileMap[t.test_id]?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {fileMap[t.test_id].map((f, idx) => (
+                          <span
+                            key={idx}
+                            className="flex items-center gap-1 px-2 py-[2px]"
+                            style={{
+                              backgroundColor: "var(--color-primary-light)",
+                              color: "var(--color-primary-dark)",
+                              borderRadius: "var(--radius-full)",
+                              fontSize: "var(--font-xs)",
+                            }}
+                          >
+                            {f.name}
+                            <button
+                              onClick={() =>
+                                setFileMap((prev) => ({
+                                  ...prev,
+                                  [t.test_id]: prev[t.test_id].filter(
+                                    (_, i) => i !== idx
+                                  ),
+                                }))
+                              }
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ================= FOOTER ================= */}
+          <div
+            className="flex gap-3 p-4 border-t sticky bottom-0"
+            style={{
+              backgroundColor: "var(--color-surface)",
+              borderColor: "var(--color-primary)",
+            }}
           >
-            {uploadProgress > 0 ? "Uploading..." : "Submit"}
-          </button>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={closeUpload}
+              className="text-[var(--color-primary)]"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              fullWidth
+              disabled={!Object.values(fileMap).some((arr) => arr.length > 0)}
+              onClick={() => {
+                let p = 0;
+                const i = setInterval(() => {
+                  p += 10;
+                  setUploadProgress(p);
+                  if (p >= 100) {
+                    clearInterval(i);
+                    setRows((prev) =>
+                      prev.map((r) =>
+                        r === activeRow
+                          ? { ...r, result_status: "Completed" }
+                          : r
+                      )
+                    );
+                    closeUpload();
+                  }
+                }, 120);
+              }}
+            >
+              Submit Reports
+            </Button>
+          </div>
         </div>
-      </Popover>
+      </Drawer>
     </>
   );
 }

@@ -24,7 +24,7 @@ import { getRoles, type Role } from "../../api/MasterApi";
 
 interface AddUserProps {
   onClose: () => void;
-  module:string;
+  module: string;
 }
 
 interface Form {
@@ -36,7 +36,7 @@ interface Form {
   password: string;
 }
 
-const AddUser: React.FC<AddUserProps> = ({ onClose,module }) => {
+const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState<Form>({
     name: "",
@@ -53,18 +53,18 @@ const AddUser: React.FC<AddUserProps> = ({ onClose,module }) => {
   const clinicId = getSessionItem("user", "clinic_id");
   const createdBy = getSessionItem("user", "role");
   const LAB_ROLES: Role[] = [
-  { role_id: 201, role_name: "Lab Staff" },
-  // { role_id: 202, role_name: "Lab Supervisor" },
-  // { role_id: 203, role_name: "Pathologist" },
-];
+    { role_id: 201, role_name: "Lab Staff" },
+    // { role_id: 202, role_name: "Lab Supervisor" },
+    // { role_id: 203, role_name: "Pathologist" },
+  ];
 
-const PHARMACY_ROLES: Role[] = [
-  { role_id: 301, role_name: "Pharmacist" },
-  { role_id: 302, role_name: "Pharmacy Assistant" },
-  { role_id: 303, role_name: "Inventory Manager" },
-];
+  const PHARMACY_ROLES: Role[] = [
+    { role_id: 301, role_name: "Pharmacist" },
+    { role_id: 302, role_name: "Pharmacy Assistant" },
+    { role_id: 303, role_name: "Inventory Manager" },
+  ];
 
-  console.log(module)
+  console.log(module);
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -74,7 +74,7 @@ const PHARMACY_ROLES: Role[] = [
           if (!result.success) {
             toast.error(result.error || "Failed to load roles");
           }
-        } else if (module === "LAB") {
+        } else if (module === "lab") {
           setRoles(LAB_ROLES);
         } else if (module === "PHARMACY") {
           setRoles(PHARMACY_ROLES);
@@ -91,23 +91,6 @@ const PHARMACY_ROLES: Role[] = [
 
     fetchRoles();
   }, [module]);
-  // useEffect(() => {
-  //   const fetchRoles = async () => {
-  //     try {
-  //       const result = await getRoles();
-  //       setRoles(Array.isArray(result.data) ? result.data : []);
-  //       if (!result.success) {
-  //         toast.error(result.error || "Failed to load roles");
-  //       }
-  //     } catch (err) {
-  //       console.error("fetchRoles error:", err);
-  //       setRoles([]);
-  //       toast.error("Failed to load roles");
-  //     }
-  //   };
-
-  //   fetchRoles();
-  // }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -134,8 +117,7 @@ const PHARMACY_ROLES: Role[] = [
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    else if (!Regex.name.test(formData.name))
-      newErrors.name = "Invalid name";
+    else if (!Regex.name.test(formData.name)) newErrors.name = "Invalid name";
 
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!Regex.email.test(formData.email))
@@ -145,10 +127,8 @@ const PHARMACY_ROLES: Role[] = [
       newErrors.phone = "Invalid phone number";
 
     if (!formData.role) newErrors.role = "Role is required";
-    if (!formData.username.trim())
-      newErrors.username = "Username required";
-    if (!formData.password.trim())
-      newErrors.password = "Password required";
+    if (!formData.username.trim()) newErrors.username = "Username required";
+    if (!formData.password.trim()) newErrors.password = "Password required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -200,7 +180,10 @@ const PHARMACY_ROLES: Role[] = [
             <VscPersonAdd className="text-blue-600 text-xl" />
             <h3 className="font-semibold text-lg">Add New User</h3>
           </div>
-          <button onClick={handleClose} className="bg-[var(--color-primary)] p-1 rounded-[var(--radius-full)] text-[var(--color-white)]">
+          <button
+            onClick={handleClose}
+            className="bg-[var(--color-primary)] p-1 rounded-[var(--radius-full)] text-[var(--color-white)]"
+          >
             <FaTimes />
           </button>
         </div>
@@ -267,7 +250,7 @@ const PHARMACY_ROLES: Role[] = [
             onChange={handleChange}
             error={!!errors.username}
             helperText={errors.username || " "}
-             InputProps={{
+            InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <FaUser />
@@ -311,16 +294,14 @@ const PHARMACY_ROLES: Role[] = [
               ),
             }}
             SelectProps={{
-                displayEmpty: true,
-                renderValue: (selected: any) =>
-                  !selected ? (
-                    <span style={{ color: "rgba(0,0,0,0.6)" }}>
-                      Select Role
-                    </span>
-                  ) : (
-                    selected
-                  ),
-              }}
+              displayEmpty: true,
+              renderValue: (selected: any) =>
+                !selected ? (
+                  <span style={{ color: "rgba(0,0,0,0.6)" }}>Select Role</span>
+                ) : (
+                  selected
+                ),
+            }}
           >
             {roles.length === 0 ? (
               <MenuItem disabled>No roles available</MenuItem>
@@ -336,11 +317,7 @@ const PHARMACY_ROLES: Role[] = [
 
         {/* ACTION */}
         <div className="flex justify-center mt-6">
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
+          <Button variant="contained" onClick={handleSave} disabled={isSaving}>
             {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>

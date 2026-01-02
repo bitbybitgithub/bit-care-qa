@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Chip } from "@mui/material";
-import {
-  DataGrid,
-  type GridColDef,
-} from "@mui/x-data-grid";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import { getPendingQueueAsync } from "../../api/lab/labQueuesApi";
 import { Drawer } from "@mui/material";
@@ -186,22 +183,27 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       flex: 1.6,
       sortable: false,
       renderCell: (p) => (
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+        <div className="flex flex-wrap items-center gap-[2px] h-full">
           {p.row.tests.map((t: ApiTest) => (
             <Chip
               key={t.test_id}
               label={t.test_name}
               size="small"
               sx={{
-                fontSize: 11,
                 height: 22,
                 backgroundColor: "#EEF2FF",
                 color: "#1E3A8A",
                 fontWeight: 500,
+                "& .MuiChip-label": {
+                  fontSize: 11,
+                  lineHeight: "22px",
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                },
               }}
             />
           ))}
-        </Box>
+        </div>
       ),
     },
 
@@ -214,10 +216,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
     {
       field: "result_status",
-      headerName: "Status",
+    headerName: "Status",
       width: 120,
       renderCell: (p) => getStatusChip(p.row.result_status),
     },
+    { field: "doctor_name", headerName: "Ref by Doctor", width: 130 },
 
     {
       field: "action",
@@ -394,7 +397,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 }}
               >
                 <div>
-                  <b>ID:</b> {activeRow?.patient_id}
+                  <b>Patient ID:</b> {activeRow?.patient_id}
                 </div>
                 <div>
                   <b>Name:</b> {activeRow?.patient_name}

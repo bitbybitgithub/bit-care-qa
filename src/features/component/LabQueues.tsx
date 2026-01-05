@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Chip } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { DataGrid, type GridColDef, type GridRenderCellParams,} from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
-import { getPendingQueueAsync } from "../../api/lab/labQueuesApi";
+import {
+  getPendingQueueAsync,
+  updateLabTestStatusAsync,
+} from "../../api/lab/labQueuesApi";
 import { Drawer } from "@mui/material";
 
 const PAGE_SIZE = 5;
@@ -30,14 +33,12 @@ const getStatusChip = (status: string) => {
   );
 };
 
-/* =======================
-   Types
-======================= */
 interface ApiTest {
   patient_id: string;
   test_id: string;
   test_name: string;
   report_id: string | null;
+  lab_record_id: string;
 }
 
 interface ApiRow {
@@ -60,22 +61,14 @@ interface Props {
   searchTerm?: string;
 }
 
-/* =======================
-   Component
-======================= */
 export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const location = useLocation();
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  /* Upload Popup */
   const [activeRow, setActiveRow] = useState<ApiRow | null>(null);
   const [fileMap, setFileMap] = useState<Record<string, File[]>>({});
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  /* =======================
-     Fetch API
-  ======================= */
   useEffect(() => {
     const fetchData = async () => {
       const data = await getPendingQueueAsync(2);
@@ -84,9 +77,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     fetchData();
   }, []);
 
-  /* =======================
-     Resolve Mode
-  ======================= */
   const resolvedMode = useMemo(() => {
     if (mode) return mode;
     if (location.pathname.includes("Pending")) return "pending";
@@ -95,9 +85,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return "pending";
   }, [mode, location.pathname]);
 
-  /* =======================
-     Filter
-  ======================= */
   const filteredRows = useMemo(() => {
     const q = searchTerm.toLowerCase().trim();
 
@@ -121,30 +108,36 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
   useEffect(() => setCurrentPage(1), [searchTerm, resolvedMode]);
 
-  /* =======================
-     Paging
-  ======================= */
   const pagedRows = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, currentPage]);
 
-  /* =======================
-     Actions
-  ======================= */
-  const startProcessing = (row: ApiRow) => {
-    setRows((prev) =>
-      prev.map((r) => (r === row ? { ...r, result_status: "Processing" } : r))
-    );
+  const startProcessing = async (row: ApiRow) => {
+    try {
+      const payload = {
+        lab_id: row.lab_id,
+        status: "Processing",
+        tests: row.tests.map((t) => ({
+          test_id: t.test_id,
+          patient_id: row.patient_id,
+          lab_record_id: t.lab_record_id,
+        })),
+      };
+      await updateLabTestStatusAsync(payload);
+      setRows((prev) =>
+        prev.map((r) => (r === row ? { ...r, result_status: "Processing" } : r))
+      );
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
   };
 
   const openUpload = (_: any, row: ApiRow) => {
     setActiveRow(row);
-
     const init: Record<string, File[]> = {};
     row.tests.forEach((t) => (init[t.test_id] = []));
     setFileMap(init);
-
     setUploadProgress(0);
   };
 
@@ -152,6 +145,44 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     setActiveRow(null);
     setFileMap({});
     setUploadProgress(0);
+  };
+
+  const handleSubmitReports = async () => {
+    if (!activeRow) return;
+
+    // Pick only tests that have uploaded files
+    const completedTests = activeRow.tests
+      .filter((t) => fileMap[t.test_id]?.length > 0)
+      .map((t) => ({
+        lab_record_id: t.lab_record_id,
+        test_id: t.test_id,
+        patient_id: activeRow.patient_id,
+      }));
+
+    if (completedTests.length === 0) return;
+
+    try {
+      await updateLabTestStatusAsync({
+        lab_id: activeRow.lab_id,
+        status: "Completed",
+        tests: completedTests,
+      });
+
+      // If all tests completed, move row to Completed
+      const allCompleted = completedTests.length === activeRow.tests.length;
+
+      if (allCompleted) {
+        setRows((prev) =>
+          prev.map((r) =>
+            r === activeRow ? { ...r, result_status: "Completed" } : r
+          )
+        );
+      }
+
+      closeUpload();
+    } catch (err) {
+      console.error("Failed to submit reports", err);
+    }
   };
 
   /* =======================
@@ -216,7 +247,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
     {
       field: "result_status",
-    headerName: "Status",
+      headerName: "Status",
       width: 120,
       renderCell: (p) => getStatusChip(p.row.result_status),
     },
@@ -227,7 +258,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       headerName: "Action",
       width: 160,
       sortable: false,
-      renderCell: (p: GridRenderCellParams) => {
+      renderCell: (p: GridRenderCellParams<ApiRow>) => {
         if (resolvedMode === "pending")
           return (
             <Button
@@ -262,9 +293,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const getRowId = (row) =>
     `${row.patient_id}_${row.created_date}_${row.result_status}`;
 
-  /* =======================
-     Render
-  ======================= */
   return (
     <>
       <Box mt={2}>
@@ -287,7 +315,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             minWidth: 1100,
             backgroundColor: "var(--color-white)",
             overflow: "hidden",
-
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "transparent",
               color: "var(--color-primary)",
@@ -296,29 +323,23 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               letterSpacing: "0.06em",
               fontWeight: 600,
             },
-
             "& .MuiDataGrid-columnSeparator": {
               display: "none",
             },
-
             "& .MuiDataGrid-row": {
               fontSize: 13,
             },
-
             "& .MuiDataGrid-row:hover": {
               backgroundColor: "rgba(0,0,0,0.02)",
             },
-
             "& .MuiDataGrid-virtualScrollerRenderZone": {
               "& .MuiDataGrid-row:nth-of-type(odd)": {
                 backgroundColor: "rgba(15,23,42,0.02)",
               },
             },
-
             "& .MuiDataGrid-cell:focus": {
               outline: "none",
             },
-
             "& .MuiDataGrid-footerContainer": {
               borderTop: "none",
             },
@@ -339,7 +360,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         }}
       >
         <div className="flex flex-col h-full">
-          {/* ================= HEADER (Vitals Style) ================= */}
           <div
             className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
             style={{ backgroundColor: "var(--color-primary)" }}
@@ -367,7 +387,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
             <button
               onClick={closeUpload}
-              className="p-2 rounded-md"
+              className="p-2 rounded-full"
               style={{
                 backgroundColor: "var(--color-bg)",
                 color: "var(--color-primary)",
@@ -377,9 +397,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             </button>
           </div>
 
-          {/* ================= CONTENT ================= */}
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            {/* -------- Patient Info -------- */}
             <div className="space-y-2">
               <div className="flex items-center gap-3 pt-1">
                 <div className="flex-1 h-px bg-[var(--color-primary)]" />
@@ -419,7 +437,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               </div>
             </div>
 
-            {/* -------- Tests Upload -------- */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-[var(--color-primary)]" />
@@ -451,7 +468,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                       border: `1px dashed var(--color-border)`,
                     }}
                   >
-                    {/* Top Row */}
                     <div className="flex justify-between items-center">
                       <span
                         className="uppercase"
@@ -499,7 +515,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                       Drag & drop PDFs here
                     </span>
 
-                    {/* Files */}
                     {fileMap[t.test_id]?.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {fileMap[t.test_id].map((f, idx) => (
@@ -536,7 +551,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             </div>
           </div>
 
-          {/* ================= FOOTER ================= */}
           <div
             className="flex gap-3 p-4 border-t sticky bottom-0"
             style={{
@@ -556,24 +570,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               variant="contained"
               fullWidth
               disabled={!Object.values(fileMap).some((arr) => arr.length > 0)}
-              onClick={() => {
-                let p = 0;
-                const i = setInterval(() => {
-                  p += 10;
-                  setUploadProgress(p);
-                  if (p >= 100) {
-                    clearInterval(i);
-                    setRows((prev) =>
-                      prev.map((r) =>
-                        r === activeRow
-                          ? { ...r, result_status: "Completed" }
-                          : r
-                      )
-                    );
-                    closeUpload();
-                  }
-                }, 120);
-              }}
+              onClick={handleSubmitReports}
             >
               Submit Reports
             </Button>

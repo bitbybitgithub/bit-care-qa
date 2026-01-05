@@ -1,25 +1,21 @@
-export interface PendingQueueDto{
-  type:string,
-  appointment_id:number,
-  prescribe_id:number,
-  patient_id:number,
-  patient_name:string,
-  doctor_id:number,
-  doctor_name:string,
-  clinic_id:number,
-  appointment_date:string,
-  appointment_status:string,
-  reason:string,
-  consultation_notes:string,
-  diagnosis:string,
-  prescription:string,
-  is_active:string,
-  created_by:string,
-  created_date:string,
-  modified_by:string,
-  modified_date:string,
-  gender:string,
-  source:string,
-  start_time:string,
-  end_time:string
+export interface PendingQueueDto {
+  lab_record_id: number;
+  patient_id: number;
+  patient_name: string;
+  contact_no: string;
+  gender: "Male" | "Female" | "Other";
+  lab_id: number;
+  doctor_id: number;
+  doctor_name: string;
+  clinic_id: number;
+  test_date: string; 
+  result_status: "Pending" | "Processing" | "Completed";
+  created_date: string; 
+  tests: {
+    lab_record_id: number;
+    patient_id: number;
+    test_id: number;
+    test_name: string;
+    report_id: string | null;
+  }[];
 }

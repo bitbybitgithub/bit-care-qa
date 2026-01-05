@@ -222,9 +222,6 @@ const saveLabShifts = async (
   };
 
   const handleSave = async () => {
-    // 🔥 LATER:
-    // 1️⃣ logo upload API
-    // 2️⃣ shift save API
     uploadLogo(labLogo, labid);
     saveLabShifts(labid, shiftDetails, operationalDays);
     console.log("Logo:", labLogo);

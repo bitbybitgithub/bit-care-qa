@@ -264,11 +264,8 @@ const LabShift: React.FC<DailyScheduleProps> = ({
   onShiftChange,
   initialShifts = [],
 }) => {
-  // Initialize expanded once on mount from opShift.is_active
+ 
   const [expanded, setExpanded] = useState(() => !opShift.is_active);
-
-  // DO NOT sync expanded on every opShift.is_active change to avoid resetting user toggle
-
   const [shifts, setShifts] = useState<ShiftSlot[]>(() =>
     initialShifts.map((s) => ({ ...s, error: null }))
   );

@@ -37,6 +37,7 @@ const ServiceManagement: React.FC = () => {
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [labTests, setLabTests] = useState<LabCategory[]>([]);
+  const labId = getSessionItem("user", "lab_id");
 
   const transformLabTests = (data: Record<string, LabTestApiResponse[]>): LabCategory[] => {
     return Object.entries(data).map(([categoryName, tests]) => ({
@@ -65,8 +66,7 @@ const ServiceManagement: React.FC = () => {
   }, [])
 
 
-  const labId = getSessionItem("user", "lab_id");
-  console.log(labId)
+
  
   
 const savelist = async () => {

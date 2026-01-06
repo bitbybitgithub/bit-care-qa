@@ -16,6 +16,7 @@ import LabQueues from "../features/component/LabQueues";
 import LabDashboard from "../features/component/LabDashboard";
 import PharmacyDashboard from "../features/component/PharmacyDashboard";
 import ServiceManagement from "../features/lab/ServiceManagement";
+import LabProfile from "../features/lab/LabProfile";
 
 const Router = [
   {
@@ -47,7 +48,7 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
-      { path: "/lab/appsetting", element: <Profile /> },
+      { path: "/lab/appsetting", element: <LabProfile/> },
       { path: "/service-management", element: <ServiceManagement /> },
 
       {

@@ -7,6 +7,7 @@ import {
   updateLabTestStatusAsync,
 } from "../../api/lab/labQueuesApi";
 import { Drawer } from "@mui/material";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 const PAGE_SIZE = 5;
 const getStatusChip = (status: string) => {
@@ -69,9 +70,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [fileMap, setFileMap] = useState<Record<string, File[]>>({});
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  const labId=getSessionItem("user","lab_id");
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getPendingQueueAsync(2);
+      const data = await getPendingQueueAsync(labId);
       setRows(data);
     };
     fetchData();

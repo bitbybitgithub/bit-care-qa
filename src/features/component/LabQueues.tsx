@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
   updateLabTestStatusAsync,
-} from "../../api/lab/labQueuesApi";
+} from "../../api/labApis/labQueuesApi";
 import { Drawer } from "@mui/material";
 import { getSessionItem } from "../../context/sessions/userSession";
 

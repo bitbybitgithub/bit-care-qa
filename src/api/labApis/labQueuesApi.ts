@@ -1,5 +1,5 @@
 import { emrAPI } from "../../services/EmrApi";
-import type { PendingQueueDto } from "../../types/lab/pendingQueueTypes";
+import type { PendingQueueDto } from "../../types/labType/pendingQueueTypes";
 
 export interface PendingQueueResponse{
   //  success: boolean;

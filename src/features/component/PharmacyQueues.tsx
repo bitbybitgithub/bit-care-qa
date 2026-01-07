@@ -1,208 +1,195 @@
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Typography, Dialog } from "@mui/material";
 import {
   DataGrid,
   type GridColDef,
-  type GridRenderCellParams,
   type GridRowIdGetter,
 } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import DUMMY_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
+import {
+  getPharmaPatientRecords,
+  updatePharmaPatientStatus,
+} from "../../api/pharmacyApi/PharmacyApi";
+import { getSessionItem } from "../../context/sessions/userSession";
+import { formatDateDDMMYYYY } from "../../utils/DateUtils";
+import type {
+  PharmacyRecord,
+  PharmacyRecordProps,
+} from "../../types/pharmacyType/pharmacyInterfaceType";
+import { toast } from "react-toastify";
 
 const PAGE_SIZE = 5;
 
-/* Dummy Data */
-const dummyData = Array.from({ length: 20 }).map((_, i) => ({
-  patient_id: `PAT-${1000 + i}`,
-  name: ["Michael Brown", "Emma Johnson", "David Clark"][i % 3],
-  mobile_number: "98989898" + (i % 10),
-  age: `${50 + (i % 20)} yrs`,
-  gender: i % 2 ? "F" : "M",
-  request_date: "2025-12-12",
-  requested_by: ["Dr. Alex", "Dr. Sara", "Dr. Patel"][i % 3],
-  status: "Pending",
-  uploadedReports: [],
-}));
-
-interface Props {
-  mode?: "pending" | "processing" | "completed";
-  searchTerm?: string;
-}
-
-export default function PharmacyQueues({ mode, searchTerm = "" }: Props) {
+export default function PharmacyQueues({
+  mode,
+  searchTerm = "",
+}: PharmacyRecordProps) {
   const location = useLocation();
 
-  /* Resolve mode */
-  const resolvedMode: "pending" | "processing" | "completed" = useMemo(() => {
+  const resolvedMode: "pending" | "completed" = useMemo(() => {
     if (mode) return mode;
-    if (location.pathname.includes("LabPendingQueue")) return "pending";
-    if (location.pathname.includes("LabCompletedQueue")) return "completed";
+    if (location.pathname.toLowerCase().includes("completed"))
+      return "completed";
     return "pending";
   }, [mode, location.pathname]);
 
-  const [patients, setPatients] = useState(dummyData);
+  const [rows, setRows] = useState<PharmacyRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  /* PDF Viewer */
   const [openPdf, setOpenPdf] = useState(false);
-  const [pdfPatientId, setPdfPatientId] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<PharmacyRecord | null>(null);
+  const [updating, setUpdating] = useState(false);
 
-  /* Upload Popover (unchanged) */
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [activePatientId, setActivePatientId] = useState<string | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
+  const pharmaId = getSessionItem("user", "pharmacy_id");
+  useEffect(() => {
+    if (!pharmaId) return;
 
-  /* Filter rows */
+    const fetchData = async () => {
+      try {
+        2;
+        setLoading(true);
+        const res = await getPharmaPatientRecords(pharmaId);
+        console.log("PharmacyQueues - fetched records", res);
+        const data = (res && (res as any).data) ?? res ?? [];
+        if (Array.isArray(data)) {
+          setRows(data);
+        } else {
+          setRows([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch pharmacy records", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [pharmaId]);
+
   const filteredRows = useMemo(() => {
     const q = searchTerm.toLowerCase().trim();
 
-    return patients.filter((p) => {
-      if (resolvedMode === "pending" && p.status !== "Pending") return false;
-      if (resolvedMode === "completed" && p.status !== "Completed")
-        return false;
+    return rows.filter((r) => {
+      if (resolvedMode === "pending" && r.status !== "Pending") return false;
+      if (resolvedMode === "completed" && r.status !== "Complete") return false;
 
       if (!q) return true;
-      const last4 = p.mobile_number.slice(-4);
 
       return (
-        p.name.toLowerCase().includes(q) ||
-        p.patient_id.toLowerCase().includes(q) ||
-        last4.includes(q)
+        r.patient_name.toLowerCase().includes(q) || r.patient_id.includes(q)
       );
     });
-  }, [patients, resolvedMode, searchTerm]);
+  }, [rows, resolvedMode, searchTerm]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, resolvedMode]);
-
-  /* Pagination */
-  const rows = useMemo(() => {
+  const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, currentPage]);
 
-  /* Mark Done */
-  const markDone = (pid: string) => {
-    setPatients((prev) =>
-      prev.map((p) =>
-        p.patient_id === pid ? { ...p, status: "Completed" } : p
-      )
-    );
-  };
-
-  /* PDF Viewer */
-  const openPrescription = (pid: string) => {
-    setPdfPatientId(pid);
+  const openPrescription = (row: PharmacyRecord) => {
+    setSelectedRow(row);
     setOpenPdf(true);
   };
 
-  const closePrescription = () => {
-    setPdfPatientId(null);
-    setOpenPdf(false);
-  };
-
-  /* Action Renderer */
-  const renderActionBtn = (params: GridRenderCellParams) => {
-    if (resolvedMode === "pending") {
-      return (
-        <Button
-          variant="contained"
-          size="small"
-          color="success"
-          sx={{ textTransform: "none", fontWeight: 600 }}
-          onClick={() => markDone(params.row.patient_id)}
-        >
-          Done
-        </Button>
+  const handleCompletebtnClick = async () => {
+    if (!selectedRow || updating) return;
+    const prevRows = rows;
+    try {
+      setUpdating(true);
+      setRows((prev) =>
+        prev.map((r) =>
+          r.patient_id === selectedRow.patient_id &&
+          r.created_date === selectedRow.created_date
+            ? { ...r, status: "Complete" }
+            : r
+        )
       );
+      const res = await updatePharmaPatientStatus(
+        pharmaId,
+        selectedRow.patient_id
+      );
+      if (!res?.success) {
+        throw new Error("Status update failed");
+      }
+      toast.success("Prescription marked as complete");
+      setOpenPdf(false);
+    } catch (error) {
+      console.error("Update failed", error);
+      setRows(prevRows);
+      toast.error("Failed to update prescription status");
+    } finally {
+      setUpdating(false);
     }
-
-    return <Typography sx={{ fontSize: 12, color: "#6b7280" }}>—</Typography>;
   };
 
   const columns: GridColDef[] = [
     {
       field: "patient_id",
       headerName: "Patient ID",
-      width: 100,
-      renderCell: (p) => <h1>{p.row.patient_id}</h1>,
+      width: 110,
     },
     {
-      field: "name",
+      field: "patient_name",
       headerName: "Patient Name",
-      flex: 1.6,
-      minWidth: 160,
+      flex: 1.5,
       renderCell: (p) => (
-        <h1 className="font-[var(--font-weight-semibold)]">
-          {p.row.name} ({p.row.gender})
-        </h1>
+        <>
+          {p.row.patient_name} ({p.row.gender})
+        </>
       ),
     },
     {
       field: "age",
       headerName: "Age",
-      flex: 0.5,
-      minWidth: 80,
+      width: 80,
     },
     {
-      field: "mobile_number",
-      headerName: "Contact",
-      flex: 0.8,
-      minWidth: 110,
+      field: "clinic_name",
+      headerName: "Clinic",
+      flex: 1,
     },
     {
-      field: "request_date",
+      field: "created_date",
       headerName: "Request Date",
-      flex: 0.8,
-      minWidth: 110,
-    },
-    {
-      field: "requested_by",
-      headerName: "Requested By",
-      flex: 0.8,
-      minWidth: 130,
+      width: 130,
+      renderCell: (params) => formatDateDDMMYYYY(params.row.created_date),
     },
     {
       field: "prescription",
       headerName: "Prescription",
-      flex: 0.8,
-      minWidth: 150,
+      width: 150,
       sortable: false,
       renderCell: (p) => (
         <Button
-          variant="outlined"
           size="small"
-          sx={{ textTransform: "none", fontWeight: 600 }}
-          onClick={() => openPrescription(p.row.patient_id)}
+          variant="outlined"
+          onClick={() => openPrescription(p.row)}
         >
           View
         </Button>
       ),
     },
     {
-      field: "action",
-      headerName: "Action",
-      flex: 0.8,
-      minWidth: 150,
-      sortable: false,
-      renderCell: renderActionBtn,
+      field: "status",
+      headerName: "Status",
+      width: 120,
     },
   ];
 
-  const getRowId: GridRowIdGetter = (row) => row.patient_id;
+  const getRowId: GridRowIdGetter = (row) =>
+    `${row.patient_id}-${row.created_date}`;
 
   return (
     <>
-      <Box className="overflow-x-auto mt-3">
+      <Box className="mt-3">
         <DataGrid
-          rows={rows}
+          rows={paginatedRows}
           columns={columns}
           getRowId={getRowId}
-          rowHeight={64}
-          disableRowSelectionOnClick
+          rowHeight={60}
+          loading={loading}
           paginationMode="server"
           rowCount={filteredRows.length}
           pageSizeOptions={[PAGE_SIZE]}
@@ -211,104 +198,55 @@ export default function PharmacyQueues({ mode, searchTerm = "" }: Props) {
             pageSize: PAGE_SIZE,
           }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
-          density="compact"
+          disableRowSelectionOnClick
           sx={{
-            minWidth: 1100,
-            backgroundColor: "var(--color-white)",
+            minWidth: 1000,
+            backgroundColor: "#ffffff",
             "& .MuiDataGrid-columnHeaders": {
-              color: "var(--color-primary)",
               fontSize: 12,
-              letterSpacing: "0.06em",
-            },
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "rgba(0,0,0,0.02)",
+              letterSpacing: "0.05em",
             },
           }}
         />
       </Box>
-      <Dialog
-        open={openPdf}
-        onClose={closePrescription}
-        //   maxWidth="lg"
-        fullWidth
-        PaperProps={{
-          sx: {
-            overflow: "hidden",
-            background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
-          },
-        }}
-      >
+
+      <Dialog open={openPdf} onClose={() => setOpenPdf(false)} fullWidth>
         <Box
-          sx={{
-            px: 3,
-            py: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-          }}
+          px={3}
+          py={2}
+          display="flex"
+          justifyContent="space-between"
+          borderBottom="1px solid #e5e7eb"
         >
           <Box>
-            <Typography
-              sx={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "#0f172a",
-              }}
-            >
-              Patient Prescription
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 12,
-                color: "#64748b",
-              }}
-            >
-              Patient ID: {pdfPatientId}
+            <Typography fontWeight={700}>Patient Prescription</Typography>
+            <Typography fontSize={12}>
+              Patient ID: {selectedRow?.patient_id}
             </Typography>
           </Box>
 
-          <Button
-            onClick={closePrescription}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              color: "#ef4444",
-            }}
-          >
-            Close
-          </Button>
+          {selectedRow?.status === "Pending" && (
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              sx={{ textTransform: "none" }}
+              disabled={updating}
+              onClick={handleCompletebtnClick}
+            >
+              {updating ? "Updating..." : "Complete"}
+            </Button>
+          )}
         </Box>
 
-        <Box
-          sx={{
-            p: 2,
-            backgroundColor: "#f1f5f9",
-            height: "70vh",
-          }}
-        >
-          <Box
-            sx={{
-              height: "100%",
-              overflow: "hidden",
-              backgroundColor: "#ffffff",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <iframe
-              src={`${DUMMY_PDF}#toolbar=0`}
-              title="Prescription PDF"
-              width="100%"
-              height="100%"
-              style={{
-                border: "none",
-                backgroundColor: "#ffffff",
-              }}
-              referrerPolicy="no-referrer"
-            />
-          </Box>
+        <Box height="70vh">
+          <iframe
+            src={`${DUMMY_PDF}#toolbar=0`}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title="Prescription PDF"
+          />
         </Box>
       </Dialog>
     </>

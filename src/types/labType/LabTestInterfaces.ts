@@ -34,4 +34,15 @@ export interface SaveLabTestItem{
   message:string
 }
 
+export interface LabProfileData {
+  lab: {
+    lab_id: number;
+    logo?: string;
+  };
+  operational_days: any[];
+}
 
+export interface SaveLabShiftPayload {
+  lab_id: number|string;
+  operations: any[]; 
+}

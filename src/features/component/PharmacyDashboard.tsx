@@ -29,7 +29,8 @@ const PharmacyDashboard = () => {
   }, []);
   const userId = getSessionItem("user", "user_id");
   const module = Module.PHARMACY;
-  const user = "admin";
+  const user =  getSessionItem("user", "role");
+  console.log(user)
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [queueSearch, setQueueSearch] = useState("");

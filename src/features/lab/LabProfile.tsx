@@ -10,8 +10,7 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import LabScheduleDayWrapper from "./LabScheduleDayWrapper";
 import { useLoader } from "../../context/LoaderContext";
 import { fetchLabProfile, saveLabShift, uploadLabLogo } from "../../api/labApis/LabApi";
-// import type { LabProfileData } from "../../types/labType/LabTestInterfaces";
-// import { fetchLabProfile } from "../../api/labApis/LabApi";
+
 
 // ================= TYPES =================
 interface OperationalDay {
@@ -32,21 +31,6 @@ interface ShiftPayload {
   is_active: number | boolean;
 }
 
-// interface LabProfileData {
-//   lab: {
-//     lab_id: number;
-//     logo?: string;
-//   };
-//   operational_days: any[];
-// }
-
-// ================= API =================
-// const fetchLabProfile = async (labid: number): Promise<LabProfileData> => {
-//   const res = await axios.post("http://localhost:8989/api/lab/get-lab-profile", {
-//     lab_id: labid,
-//   });
-//   return res.data;
-// };
 
 // ================= COMPONENT =================
 const LabProfile: React.FC = () => {
@@ -289,9 +273,6 @@ if (!hasAtLeastOneValidShift) {
     } finally{
       setLoading(false)
     }
-    console.log("Logo:", labLogo);
-    console.log("Operational Days:", operationalDays);
-    console.log("Shift Payload:", shiftDetails);
   };
 
   // ================= UI =================

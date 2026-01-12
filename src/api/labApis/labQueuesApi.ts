@@ -12,6 +12,7 @@ export async function getPendingQueueAsync(labId: number | null): Promise<Pendin
     "/lab/get-lab-test-record",
     { lab_id: labId } 
   );
+  console.log("response",response)
   return response;
 }
 
@@ -19,16 +20,15 @@ export const updateLabTestStatusAsync = async (payload: {
   lab_id: string;
   status: "Processing" | "Completed";
   tests: {
+    lab_record_id:string;
     test_id: string;
     patient_id: string;
-    lab_record_id:string;
+    report_id: number | number[];
   }[];
 }) => {
 
-  const { data } = await emrAPI.post(
-    "/lab/update-lab-test-status",
-    payload
-  );
-
-  return data;
+  console.log("save statues request",payload)
+  const respone = await emrAPI.post("/lab/update-lab-test-status",payload);
+  console.log("save statues response",respone)
+  return respone;
 };

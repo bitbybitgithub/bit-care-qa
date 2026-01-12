@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Chip } from "@mui/material";
-import { DataGrid, type GridColDef, type GridRenderCellParams,} from "@mui/x-data-grid";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderCellParams,
+} from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
@@ -8,6 +12,7 @@ import {
 } from "../../api/labApis/labQueuesApi";
 import { Drawer } from "@mui/material";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { uploadReport } from "../../api/CommonApi/uploadFileApi";
 
 const PAGE_SIZE = 5;
 const getStatusChip = (status: string) => {
@@ -62,19 +67,30 @@ interface Props {
   searchTerm?: string;
 }
 
+interface UploadedReport {
+  reportId: number;
+  guid: string;
+  originalName: string;
+}
 export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const location = useLocation();
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<ApiRow | null>(null);
-  const [fileMap, setFileMap] = useState<Record<string, File[]>>({});
+  // const [reportMap, setReportMap] = useState<Record<string, File[]>>({});
+  const [reportMap, setReportMap] = useState<Record<string, UploadedReport[]>>(
+    {}
+  );
+  const [reuploadTestId, setReuploadTestId] = useState<string | null>(null);
+
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const labId=getSessionItem("user","lab_id");
+  const labId = getSessionItem("user", "lab_id");
 
   useEffect(() => {
     const fetchData = async () => {
       const data = await getPendingQueueAsync(labId);
+      console.log("getPendingQueueAsync response", data);
       setRows(data);
     };
     fetchData();
@@ -127,7 +143,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           lab_record_id: t.lab_record_id,
         })),
       };
-      await updateLabTestStatusAsync(payload);
+      await updateLabTestStatusAsync(payload as any);
       setRows((prev) =>
         prev.map((r) => (r === row ? { ...r, result_status: "Processing" } : r))
       );
@@ -138,59 +154,87 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
   const openUpload = (_: any, row: ApiRow) => {
     setActiveRow(row);
-    const init: Record<string, File[]> = {};
+    const init: Record<string, string[]> = {};
     row.tests.forEach((t) => (init[t.test_id] = []));
-    setFileMap(init);
+    setReportMap(init);
     setUploadProgress(0);
   };
 
   const closeUpload = () => {
     setActiveRow(null);
-    setFileMap({});
+    setReportMap({});
     setUploadProgress(0);
+  };
+
+  const uploadTestFile = async (testId: string, file: File) => {
+    try {
+      const response = await uploadReport({
+        folder: "reports",
+        file,
+      });
+
+      const uploaded = response.files[0];
+      const reportId = Number(uploaded.filename.split("-")[0]);
+      setReportMap((prev) => ({
+        ...prev,
+        [testId]: [
+          ...(prev[testId] || []),
+          {
+            reportId,
+            guid: uploaded.filename,
+            originalName: uploaded.originalName,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Failed to upload PDF");
+    }
   };
 
   const handleSubmitReports = async () => {
     if (!activeRow) return;
 
-    // Pick only tests that have uploaded files
     const completedTests = activeRow.tests
-      .filter((t) => fileMap[t.test_id]?.length > 0)
-      .map((t) => ({
-        lab_record_id: t.lab_record_id,
-        test_id: t.test_id,
-        patient_id: activeRow.patient_id,
-      }));
+      .filter((t) => reportMap[t.test_id]?.length > 0)
+      .map((t) => {
+        const reports = reportMap[t.test_id];
 
-    if (completedTests.length === 0) return;
+        return {
+          lab_record_id: t.lab_record_id,
+          test_id: t.test_id,
+          patient_id: activeRow.patient_id,
+          report_id:
+            reports.length === 1
+              ? reports[0].reportId
+              : reports.map((r) => r.reportId),
+        };
+      });
 
+    if (completedTests.length === 0) {
+      alert("Please upload at least one report");
+      return;
+    }
     try {
       await updateLabTestStatusAsync({
         lab_id: activeRow.lab_id,
         status: "Completed",
-        tests: completedTests,
-      });
+        tests: completedTests as any,
+      } as any);
 
-      // If all tests completed, move row to Completed
-      const allCompleted = completedTests.length === activeRow.tests.length;
-
-      if (allCompleted) {
-        setRows((prev) =>
-          prev.map((r) =>
-            r === activeRow ? { ...r, result_status: "Completed" } : r
-          )
-        );
-      }
-
+      setRows((prev) =>
+        prev.map((r) =>
+          r === activeRow ? { ...r, result_status: "Completed" } : r
+        )
+      );
+      setReportMap({});
       closeUpload();
-    } catch (err) {
-      console.error("Failed to submit reports", err);
+    } catch (error) {
+      console.error("Failed to submit reports", error);
+      alert("Failed to submit reports");
     }
   };
 
-  /* =======================
-     Columns
-  ======================= */
   const columns: GridColDef[] = [
     { field: "patient_id", headerName: "Patient ID", width: 100 },
 
@@ -285,7 +329,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           );
 
         return (
-          <Button size="small" variant="outlined">
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => {
+              setActiveRow(p.row);
+              setReuploadTestId(null);
+            }}
+          >
             Re-Upload
           </Button>
         );
@@ -295,7 +346,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
   const getRowId = (row) =>
     `${row.patient_id}_${row.created_date}_${row.result_status}`;
-
   return (
     <>
       <Box mt={2}>
@@ -454,15 +504,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                   <div
                     key={t.test_id}
                     onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
+                    onDrop={async (e) => {
                       e.preventDefault();
+
                       const pdfs = Array.from(e.dataTransfer.files).filter(
                         (f) => f.type === "application/pdf"
                       );
-                      setFileMap((prev) => ({
-                        ...prev,
-                        [t.test_id]: [...prev[t.test_id], ...pdfs],
-                      }));
+
+                      for (const file of pdfs) {
+                        await uploadTestFile(t.test_id, file);
+                      }
                     }}
                     className="flex flex-col gap-2 p-3"
                     style={{
@@ -496,15 +547,13 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                           hidden
                           multiple
                           accept="application/pdf"
-                          onChange={(e) =>
-                            setFileMap((prev) => ({
-                              ...prev,
-                              [t.test_id]: [
-                                ...prev[t.test_id],
-                                ...Array.from(e.target.files || []),
-                              ],
-                            }))
-                          }
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            files.forEach((file) => {
+                              uploadTestFile(t.test_id, file);
+                            });
+                            e.target.value = "";
+                          }}
                         />
                       </label>
                     </div>
@@ -518,9 +567,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                       Drag & drop PDFs here
                     </span>
 
-                    {fileMap[t.test_id]?.length > 0 && (
+                    {reportMap[t.test_id]?.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {fileMap[t.test_id].map((f, idx) => (
+                        {reportMap[t.test_id].map((file, idx) => (
                           <span
                             key={idx}
                             className="flex items-center gap-1 px-2 py-[2px]"
@@ -531,10 +580,10 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                               fontSize: "var(--font-xs)",
                             }}
                           >
-                            {f.name}
+                            {file.originalName}
                             <button
                               onClick={() =>
-                                setFileMap((prev) => ({
+                                setReportMap((prev) => ({
                                   ...prev,
                                   [t.test_id]: prev[t.test_id].filter(
                                     (_, i) => i !== idx
@@ -572,7 +621,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <Button
               variant="contained"
               fullWidth
-              disabled={!Object.values(fileMap).some((arr) => arr.length > 0)}
+              disabled={!Object.values(reportMap).some((arr) => arr.length > 0)}
               onClick={handleSubmitReports}
             >
               Submit Reports

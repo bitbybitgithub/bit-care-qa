@@ -8,7 +8,6 @@ import { logoutApi } from "./api/auth/LogoutApi";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
 import { clearSession } from "./context/sessions/userSession";
-import useClientIp from "./hooks/useClientIp";
 import { useEffect } from "react";
 
 export default function App() {
@@ -29,20 +28,6 @@ export default function App() {
     },
   });
   const routing = useRoutes(Router);
-
-  const { ip } = useClientIp();
-  useEffect(() => {
-    if (ip) sessionStorage.setItem("client_ip", ip);
-  }, [ip]);
-
-  // useEffect(() => {
-  //   const sessionUser = getSession("user");
-  //   if (sessionUser && ip) {
-  //     (async () => {
-  //       await TokenManager.rehydrate();
-  //     })();
-  //   }
-  // }, [ip]);
 
   return (
     <ErrorBoundary>

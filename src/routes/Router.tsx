@@ -40,7 +40,7 @@ const Router = [
       // clinic doctor routes
       { path: "/doctor/dashboard", element: <DocDashboard /> },
       { path: "/doctor/profile", element: <DoctorProfile /> },
-      
+
       // clinic staff routes
       { path: "/staff/dashboard", element: <Staffdashboard /> },
       { path: "/patient-doc-managment", element: <PatientDocManagementPage /> },
@@ -48,22 +48,13 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
-      { path: "/lab/appsetting", element: <LabProfile/> },
-      { path: "/service-management", element: <ServiceManagement /> },
+      { path: "/lab/appsetting", element: <LabProfile /> },
+      { path: "/lab/service-management", element: <ServiceManagement /> },
 
-      {
-        path: "/LabPendingQueue",
-        element: <LabQueues queueType="pending" />,
-      },
-      {
-        path: "/LabProcessingQueue",
-        element: <LabQueues queueType="processing" />,
-      },
-      {
-        path: "/LabCompletedQueue",
-        element: <LabQueues queueType="completed" />,
-      },
-      
+      { path: "/lab/pending-queue", element: <LabQueues /> },
+      { path: "/lab/processing-queue", element: <LabQueues /> },
+      { path: "/lab/completed-queue", element: <LabQueues /> },
+
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
@@ -84,7 +75,6 @@ const Router = [
       // },
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
       // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
-      
     ],
   },
 ];

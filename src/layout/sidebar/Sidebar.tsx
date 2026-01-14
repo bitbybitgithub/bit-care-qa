@@ -17,8 +17,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const role = getSessionItem<Role>("user", "role");
-  const entityType = getSessionItem<number>("user", "entity_type");
+  const [role, setRole] = React.useState<Role | null>(null);
+  const [entityType, setEntityType] = React.useState<EntityType | null>(null);
+
+  React.useEffect(() => {
+    setRole(getSessionItem("user", "role"));
+    setEntityType(getSessionItem("user", "entity_type"));
+  }, []);
 
   const menuItems =
     role && entityType

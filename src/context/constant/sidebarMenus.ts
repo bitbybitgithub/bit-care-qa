@@ -36,12 +36,12 @@ export const SIDEBAR_MENUS: Record<
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
       { title: "Lab App Setting", link: "/lab/appsetting", icon: FaCog },
-      { title: "Service Management", link: "/service-management", icon: FaCog },
+      { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],
     Staff: [
-      { title: "Pending Queue", link: "/LabPendingQueue", icon: FaHome },
-      { title: "Processing Queue", link: "/LabProcessingQueue", icon: FaUsers },
-      { title: "Completed Queue", link: "/LabCompletedQueue", icon: FaCog },
+     { title: "Pending Queue", link: "/lab/pending-queue", icon: FaHome },
+  { title: "Processing Queue", link: "/lab/processing-queue", icon: FaUsers },
+  { title: "Completed Queue", link: "/lab/completed-queue", icon: FaCog },
     ],
   },
 

@@ -10,7 +10,7 @@ import {
   getPendingQueueAsync,
   savereportAsync,
   updateLabTestStatusAsync,
-  getLabReportsByLabId
+  getLabReportsByLabId,
 } from "../../api/labApis/labQueuesApi";
 import { Drawer } from "@mui/material";
 import { getSessionItem } from "../../context/sessions/userSession";
@@ -84,7 +84,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [reportMap, setReportMap] = useState<Record<string, UploadedReport[]>>(
     {}
   );
-  const [reuploadTestId, setReuploadTestId] = useState<string | null>(null);
 
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -93,14 +92,10 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const data = await getPendingQueueAsync(labId);
-      console.log("getPendingQueueAsync response", data);
       setRows(data);
     };
     fetchData();
   }, []);
-
-
-
 
   const resolvedMode = useMemo(() => {
     if (mode) return mode;
@@ -167,39 +162,37 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   };
 
   const openReUpload = async (_: any, row: ApiRow) => {
-  setActiveRow(row);
-  setUploadProgress(0);
+    setActiveRow(row);
+    setUploadProgress(0);
 
-  try {
-    const labRecordId = Number(row.tests[0].lab_record_id);
+    try {
+      const labRecordId = Number(row.tests[0].lab_record_id);
 
-    const response = await getLabReportsByLabId({
-      lab_record_id: labRecordId,
-    });
-    console.log("getLabReportsByLabId",response)
-    const reports = response?.data ?? [];
-
-    const map: Record<string, UploadedReport[]> = {};
-
-    reports.forEach((r: any) => {
-      if (!map[r.test_id]) {
-        map[r.test_id] = [];
-      }
-
-      map[r.test_id].push({
-        reportId: Number(r.report_id),
-        guid: r.file_guid_name,
-        originalName: r.file_name,
+      const response = await getLabReportsByLabId({
+        lab_record_id: labRecordId,
       });
-    });
+      const reports = response;
 
-    setReportMap(map);
-  } catch (error) {
-    console.error("Failed to load reports for re-upload", error);
-    setReportMap({});
-  }
-};
+      const map: Record<string, UploadedReport[]> = {};
 
+      reports.forEach((r: any) => {
+        if (!map[r.test_id]) {
+          map[r.test_id] = [];
+        }
+
+        map[r.test_id].push({
+          reportId: Number(r.report_id),
+          guid: r.file_guid_name,
+          originalName: r.file_name,
+        });
+      });
+
+      setReportMap(map);
+    } catch (error) {
+      console.error("Failed to load reports for re-upload", error);
+      setReportMap({});
+    }
+  };
 
   const closeUpload = () => {
     setActiveRow(null);
@@ -207,48 +200,46 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     setUploadProgress(0);
   };
 
-const uploadTestFile = async (testId: string, file: File) => {
-  try {
-    if (!activeRow) return;
-    const uploadRes = await uploadReport({
-      folder: "reports",
-      file,
-    });
-    console.log("upload response", uploadRes)
-    const uploaded = uploadRes.files[0];
+  const uploadTestFile = async (testId: string, file: File) => {
+    try {
+      if (!activeRow) return;
+      const uploadRes = await uploadReport({
+        folder: "reports",
+        file,
+      });
+      const uploaded = uploadRes.files[0];
 
-    const saveRes = await savereportAsync({
-      lab_record_id: Number(
-        activeRow.tests.find(t => t.test_id === testId)!.lab_record_id
-      ),
-      test_id: Number(testId),
-      lab_id: Number(activeRow.lab_id),
-      test_date: activeRow.test_date,
-      file_guid_name: uploaded.filename,
-      file_path: uploaded.path,
-      created_by: String(activeRow.lab_id),
-      file_name: uploaded.originalName,
-      report_id: null,
-    });
-    const reportId = Number(uploaded.filename.split("-")[0]);
+      const saveRes = await savereportAsync({
+        lab_record_id: Number(
+          activeRow.tests.find((t) => t.test_id === testId)!.lab_record_id
+        ),
+        test_id: Number(testId),
+        lab_id: Number(activeRow.lab_id),
+        test_date: activeRow.test_date,
+        file_guid_name: uploaded.filename,
+        file_path: uploaded.path,
+        created_by: String(activeRow.lab_id),
+        file_name: uploaded.originalName,
+        report_id: null,
+      });
+      const reportId = Number(uploaded.filename.split("-")[0]);
 
-    setReportMap((prev) => ({
-      ...prev,
-      [testId]: [
-        ...(prev[testId] || []),
-        {
-          reportId,
-          guid: uploaded.filename,
-          originalName: uploaded.originalName,
-        },
-      ],
-    }));
-
-  } catch (error) {
-    console.error("Upload/save-report failed", error);
-    alert("Failed to upload & save report");
-  }
-};
+      setReportMap((prev) => ({
+        ...prev,
+        [testId]: [
+          ...(prev[testId] || []),
+          {
+            reportId,
+            guid: uploaded.filename,
+            originalName: uploaded.originalName,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error("Upload/save-report failed", error);
+      alert("Failed to upload & save report");
+    }
+  };
 
   const handleSubmitReports = async () => {
     if (!activeRow) return;
@@ -621,37 +612,69 @@ const uploadTestFile = async (testId: string, file: File) => {
                     >
                       Drag & drop PDFs here
                     </span>
-
-                    {reportMap[t.test_id]?.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {reportMap[t.test_id].map((file, idx) => (
-                          <span
-                            key={idx}
-                            className="flex items-center gap-1 px-2 py-[2px]"
-                            style={{
-                              backgroundColor: "var(--color-primary-light)",
-                              color: "var(--color-primary-dark)",
-                              borderRadius: "var(--radius-full)",
-                              fontSize: "var(--font-xs)",
-                            }}
-                          >
-                            {file.originalName}
-                            <button
-                              onClick={() =>
-                                setReportMap((prev) => ({
-                                  ...prev,
-                                  [t.test_id]: prev[t.test_id].filter(
-                                    (_, i) => i !== idx
-                                  ),
-                                }))
-                              }
+                    {resolvedMode === "processing" &&
+                      reportMap[t.test_id]?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {reportMap[t.test_id].map((file, idx) => (
+                            <span
+                              key={idx}
+                              className="flex items-center gap-1 px-2 py-[2px]"
+                              style={{
+                                backgroundColor: "var(--color-primary-light)",
+                                color: "var(--color-primary-dark)",
+                                borderRadius: "var(--radius-full)",
+                                fontSize: "var(--font-xs)",
+                              }}
                             >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                              {file.originalName}
+                              <button
+                                onClick={() =>
+                                  setReportMap((prev) => ({
+                                    ...prev,
+                                    [t.test_id]: prev[t.test_id].filter(
+                                      (_, i) => i !== idx
+                                    ),
+                                  }))
+                                }
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                    {resolvedMode === "completed" &&
+                      reportMap[t.test_id]?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {reportMap[t.test_id].map((file, idx) => (
+                            <span
+                              key={idx}
+                              className="flex items-center gap-1 px-2 py-[2px]"
+                              style={{
+                                backgroundColor: "var(--color-primary-light)",
+                                color: "var(--color-primary-dark)",
+                                borderRadius: "var(--radius-full)",
+                                fontSize: "var(--font-xs)",
+                              }}
+                            >
+                              {file.originalName}
+                              <button
+                                onClick={() =>
+                                  setReportMap((prev) => ({
+                                    ...prev,
+                                    [t.test_id]: prev[t.test_id].filter(
+                                      (_, i) => i !== idx
+                                    ),
+                                  }))
+                                }
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>

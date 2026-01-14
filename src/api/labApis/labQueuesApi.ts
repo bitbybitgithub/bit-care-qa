@@ -2,8 +2,22 @@ import { emrAPI } from "../../services/EmrApi";
 import type { PendingQueueDto } from "../../types/labType/pendingQueueTypes";
 
 export interface PendingQueueResponse{
-  //  success: boolean;
   response: PendingQueueDto[];
+}
+
+export const savereportAsync = async (payload: {
+  lab_record_id: number;
+  test_id: number;
+  lab_id: number;
+  test_date: string;
+  file_guid_name: string;
+  file_path: string;
+  created_by: string;
+  file_name: string;
+  report_id: string;
+}) => {
+  const respone = await emrAPI.post("/lab/save-report",payload);
+  return respone;
 }
 
 
@@ -12,7 +26,6 @@ export async function getPendingQueueAsync(labId: number | null): Promise<Pendin
     "/lab/get-lab-test-record",
     { lab_id: labId } 
   );
-  console.log("response",response)
   return response;
 }
 
@@ -29,6 +42,14 @@ export const updateLabTestStatusAsync = async (payload: {
 
   console.log("save statues request",payload)
   const respone = await emrAPI.post("/lab/update-lab-test-status",payload);
-  console.log("save statues response",respone)
   return respone;
 };
+
+export const getLabReportsByLabId=async(payload : {
+  lab_record_id:number
+})=>{
+  console.log("getLabReportsByLabId payload",payload)
+  const response = await emrAPI.post("/lab/get-reports-by-lab-record-id",payload);
+  console.log("response",response)
+  return response;
+}

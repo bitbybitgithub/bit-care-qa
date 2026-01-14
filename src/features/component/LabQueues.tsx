@@ -8,11 +8,14 @@ import {
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
+  savereportAsync,
   updateLabTestStatusAsync,
+  getLabReportsByLabId
 } from "../../api/labApis/labQueuesApi";
 import { Drawer } from "@mui/material";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReport } from "../../api/CommonApi/uploadFileApi";
+import { number } from "framer-motion";
 
 const PAGE_SIZE = 5;
 const getStatusChip = (status: string) => {
@@ -96,6 +99,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     fetchData();
   }, []);
 
+
+
+
   const resolvedMode = useMemo(() => {
     if (mode) return mode;
     if (location.pathname.includes("Pending")) return "pending";
@@ -160,37 +166,89 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     setUploadProgress(0);
   };
 
+  const openReUpload = async (_: any, row: ApiRow) => {
+  setActiveRow(row);
+  setUploadProgress(0);
+
+  try {
+    const labRecordId = Number(row.tests[0].lab_record_id);
+
+    const response = await getLabReportsByLabId({
+      lab_record_id: labRecordId,
+    });
+    console.log("getLabReportsByLabId",response)
+    const reports = response?.data ?? [];
+
+    const map: Record<string, UploadedReport[]> = {};
+
+    reports.forEach((r: any) => {
+      if (!map[r.test_id]) {
+        map[r.test_id] = [];
+      }
+
+      map[r.test_id].push({
+        reportId: Number(r.report_id),
+        guid: r.file_guid_name,
+        originalName: r.file_name,
+      });
+    });
+
+    setReportMap(map);
+  } catch (error) {
+    console.error("Failed to load reports for re-upload", error);
+    setReportMap({});
+  }
+};
+
+
   const closeUpload = () => {
     setActiveRow(null);
     setReportMap({});
     setUploadProgress(0);
   };
 
-  const uploadTestFile = async (testId: string, file: File) => {
-    try {
-      const response = await uploadReport({
-        folder: "reports",
-        file,
-      });
+const uploadTestFile = async (testId: string, file: File) => {
+  try {
+    if (!activeRow) return;
+    const uploadRes = await uploadReport({
+      folder: "reports",
+      file,
+    });
+    console.log("upload response", uploadRes)
+    const uploaded = uploadRes.files[0];
 
-      const uploaded = response.files[0];
-      const reportId = Number(uploaded.filename.split("-")[0]);
-      setReportMap((prev) => ({
-        ...prev,
-        [testId]: [
-          ...(prev[testId] || []),
-          {
-            reportId,
-            guid: uploaded.filename,
-            originalName: uploaded.originalName,
-          },
-        ],
-      }));
-    } catch (error) {
-      console.error("Upload failed", error);
-      alert("Failed to upload PDF");
-    }
-  };
+    const saveRes = await savereportAsync({
+      lab_record_id: Number(
+        activeRow.tests.find(t => t.test_id === testId)!.lab_record_id
+      ),
+      test_id: Number(testId),
+      lab_id: Number(activeRow.lab_id),
+      test_date: activeRow.test_date,
+      file_guid_name: uploaded.filename,
+      file_path: uploaded.path,
+      created_by: String(activeRow.lab_id),
+      file_name: uploaded.originalName,
+      report_id: null,
+    });
+    const reportId = Number(uploaded.filename.split("-")[0]);
+
+    setReportMap((prev) => ({
+      ...prev,
+      [testId]: [
+        ...(prev[testId] || []),
+        {
+          reportId,
+          guid: uploaded.filename,
+          originalName: uploaded.originalName,
+        },
+      ],
+    }));
+
+  } catch (error) {
+    console.error("Upload/save-report failed", error);
+    alert("Failed to upload & save report");
+  }
+};
 
   const handleSubmitReports = async () => {
     if (!activeRow) return;
@@ -332,10 +390,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           <Button
             size="small"
             variant="outlined"
-            onClick={() => {
-              setActiveRow(p.row);
-              setReuploadTestId(null);
-            }}
+            onClick={(e) => openReUpload(e, p.row)}
           >
             Re-Upload
           </Button>

@@ -1,44 +1,31 @@
-import React, { useMemo } from "react";
+import React from "react";
 import LabShift from "./LabShift";
+import type { ShiftSlot } from "./LabProfile";
 
 interface Props {
-  day: {
-    lab_opt_id: number | string;
-    lab_id: number | string;
-    day: string;
-    is_active: boolean;
-  };
-  initialAllShifts: any[];
+  day: any;
+  shifts: ShiftSlot[];
   handleOperationDay: (
     lab_opt_id: number | string,
     labId: number | string,
     value: boolean
   ) => void;
-  onShiftChange: (lab_opt_id: number | string, shifts: any[]) => void;
+  onShiftChange: (lab_opt_id: number | string, shifts: ShiftSlot[]) => void;
 }
 
 const LabScheduleDayWrapper: React.FC<Props> = ({
   day,
-  initialAllShifts,
+  shifts,
   handleOperationDay,
   onShiftChange,
 }) => {
-  // 👇 future proof (when shift API comes)
-  const dayShifts = useMemo(
-    () =>
-      initialAllShifts
-        .filter((s) => s.lab_opt_id === day.lab_opt_id)
-        .map((s) => ({ start: s.shift_start, end: s.shift_end })),
-    [initialAllShifts, day.lab_opt_id]
-  );
-
   return (
     <LabShift
       day={day.day}
       opShift={day}
+      shifts={shifts}
       handleOperationDay={handleOperationDay}
       onShiftChange={onShiftChange}
-      initialShifts={dayShifts}
     />
   );
 };

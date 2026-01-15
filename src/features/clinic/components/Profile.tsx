@@ -65,6 +65,7 @@ const Profile: React.FC = () => {
   const [updatedShiftDetails, setUpdatedShiftDetails] = useState<
     ShiftPayload[]
   >([]);
+  const [fileerror, setFileError] = useState<string | null>(null);
 
   // API data source
   const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
@@ -72,13 +73,12 @@ const Profile: React.FC = () => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const clinicId = getSessionItem("user", "clinic_id");
 
-  const { data, isFetched } =
-    useQuery<ClinicProfileData>({
-      queryKey: ["clinicProfile", clinicId],
-      queryFn: () => fetchClinicProfile(clinicId),
-      enabled: !!clinicId, // Only run if clinicId is available
-      staleTime: Infinity, // Treat the data as fresh after fetch
-    });
+  const { data, isFetched } = useQuery<ClinicProfileData>({
+    queryKey: ["clinicProfile", clinicId],
+    queryFn: () => fetchClinicProfile(clinicId),
+    enabled: !!clinicId, // Only run if clinicId is available
+    staleTime: Infinity, // Treat the data as fresh after fetch
+  });
 
   useEffect(() => {
     if (data && isFetched) {
@@ -247,7 +247,7 @@ const Profile: React.FC = () => {
 
           {/* Upload Control */}
           {!logoImg && (
-            <div className="flex-1 w-full">
+            <div className="flex flex-col  w-full">
               <label className="block font-medium text-[var(--color-text-secondary)] mb-2">
                 Upload Clinic Logo
               </label>
@@ -255,9 +255,12 @@ const Profile: React.FC = () => {
                 controlName="clinicLogo"
                 file={clinicLogo}
                 onFileChange={handleFileChange}
+                onError={setFileError}
                 acceptedFileTypes=".jpg,.jpeg,.png,.svg"
+                maxSizeMB={5}
                 height="50px"
               />
+              {fileerror && <p className="text-red-500 text-sm">{fileerror}</p>}
             </div>
           )}
         </div>

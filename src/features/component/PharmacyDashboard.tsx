@@ -129,7 +129,7 @@ const PharmacyDashboard = () => {
           >
             Welcome,{" "}
             <span className="text-[var(--color-primary)]">
-              {user === "admin" ? "Admin" : "Staff"}
+              {user === "Admin" ? "Admin" : "Staff"}
             </span>
           </h1>
 
@@ -146,7 +146,7 @@ const PharmacyDashboard = () => {
         </div>
       </div>
 
-      {user === "admin" && (
+      {user === "Admin" && (
         <>
           <Cards items={stats} loading={loading} error={error} />
 

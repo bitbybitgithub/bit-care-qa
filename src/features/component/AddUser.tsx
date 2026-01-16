@@ -60,31 +60,13 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
     if (entity_name === "pharmacy") return pharmacy_id;
     return null;
   };
-
-  const LAB_ROLES: Role[] = [{ role_id: 201, role_name: "Lab Staff" }];
-
-  const PHARMACY_ROLES: Role[] = [
-    { role_id: 301, role_name: "Pharmacist" },
-    { role_id: 302, role_name: "Pharmacy Assistant" },
-    { role_id: 303, role_name: "Inventory Manager" },
-  ];
-
   /* -------------------- FETCH ROLES -------------------- */
   useEffect(() => {
     setEntityId(getEntityId());
     const fetchRoles = async () => {
       try {
-        if (module === "CLINIC") {
-          const result = await getRoles();
+        const result = await getRoles();
           setRoles(Array.isArray(result.data) ? result.data : []);
-          if (!result.success) {
-            toast.error(result.error || "Failed to load roles");
-          }
-        } else if (module === "LAB") {
-          setRoles(LAB_ROLES);
-        } else if (module === "PHARMACY") {
-          setRoles(PHARMACY_ROLES);
-        }
       } catch (err) {
         console.error("fetchRoles error:", err);
         toast.error("Failed to load roles");

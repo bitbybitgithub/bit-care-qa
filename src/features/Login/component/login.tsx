@@ -51,7 +51,9 @@ const Login = () => {
   },
   2: { 
     Admin: "/lab/dashboard",
-    staff: "/lab/dashboard",
+    Staff: "/lab/dashboard",
+    Doctor:"/lab/dashboard",
+    Technician:"/lab/dashboard",
   },
   3: { 
     Admin: "/pharmacy/dashboard",

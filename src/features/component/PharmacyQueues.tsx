@@ -128,16 +128,19 @@ export default function PharmacyQueues({
     {
       field: "patient_id",
       headerName: "Patient ID",
-      width: 110,
+      width: 120,
     },
     {
       field: "patient_name",
       headerName: "Patient Name",
       flex: 1.5,
       renderCell: (p) => (
-        <>
-          {p.row.patient_name} ({p.row.gender})
-        </>
+         <h1 className="font-[var(--font-weight-semibold)]">
+          {p.row.patient_name}{" "}
+          <span style={{ color: "var(--color-primary)" }}>
+            ({p.row.gender?.charAt(0)})
+          </span>
+        </h1>
       ),
     },
     {
@@ -179,7 +182,7 @@ export default function PharmacyQueues({
   ];
 
   const getRowId: GridRowIdGetter = (row) =>
-    `${row.patient_id}-${row.created_date}`;
+    `${row.patient_id}-${row.status}`;
 
   return (
     <>
@@ -199,12 +202,45 @@ export default function PharmacyQueues({
           }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
           disableRowSelectionOnClick
+          // sx={{
+          //   minWidth: 1000,
+          //   backgroundColor: "#ffffff",
+          //   "& .MuiDataGrid-columnHeaders": {
+          //     fontSize: 12,
+          //     letterSpacing: "0.05em",
+          //   },
+          // }}
           sx={{
-            minWidth: 1000,
-            backgroundColor: "#ffffff",
+            minWidth: 1100,
+            backgroundColor: "var(--color-white)",
+            overflow: "hidden",
             "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "transparent",
+              color: "var(--color-primary)",
+              textTransform: "uppercase",
               fontSize: 12,
-              letterSpacing: "0.05em",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+            },
+            "& .MuiDataGrid-columnSeparator": {
+              display: "none",
+            },
+            "& .MuiDataGrid-row": {
+              fontSize: 13,
+            },
+            "& .MuiDataGrid-row:hover": {
+              backgroundColor: "rgba(0,0,0,0.02)",
+            },
+            "& .MuiDataGrid-virtualScrollerRenderZone": {
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "rgba(15,23,42,0.02)",
+              },
+            },
+            "& .MuiDataGrid-cell:focus": {
+              outline: "none",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
             },
           }}
         />

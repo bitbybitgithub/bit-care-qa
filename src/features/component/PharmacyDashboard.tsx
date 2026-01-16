@@ -30,6 +30,7 @@ const PharmacyDashboard = () => {
   const userId = getSessionItem("user", "user_id");
   const module = Module.PHARMACY;
   const user =  getSessionItem("user", "role");
+  const username = getSessionItem("user", "full_name");
   console.log(user)
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +129,7 @@ const PharmacyDashboard = () => {
             style={{ fontSize: "var(--font-h2)" }}
           >
             Welcome,{" "}
-            <span className="text-[var(--color-primary)]">
-              {user === "Admin" ? "Admin" : "Staff"}
-            </span>
+            <span className="text-[var(--color-primary)]">{username}</span>
           </h1>
 
           <p

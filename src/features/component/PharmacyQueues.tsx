@@ -134,6 +134,7 @@ export default function PharmacyQueues({
       field: "patient_name",
       headerName: "Patient Name",
       flex: 1.5,
+      width: 120,
       renderCell: (p) => (
          <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
@@ -146,7 +147,12 @@ export default function PharmacyQueues({
     {
       field: "age",
       headerName: "Age",
-      width: 80,
+      width: 100,
+    },
+    {
+      field: "gender",
+      headerName: "Gender",
+      width: 130,
     },
     {
       field: "clinic_name",
@@ -156,7 +162,7 @@ export default function PharmacyQueues({
     {
       field: "created_date",
       headerName: "Request Date",
-      width: 130,
+      width: 150,
       renderCell: (params) => formatDateDDMMYYYY(params.row.created_date),
     },
     {
@@ -177,7 +183,7 @@ export default function PharmacyQueues({
     {
       field: "status",
       headerName: "Status",
-      width: 120,
+      width: 150,
     },
   ];
 

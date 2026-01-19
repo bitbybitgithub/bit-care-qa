@@ -70,24 +70,35 @@ const RegistrationForm = () => {
   const [entityLoading, setEntityLoading] = useState(false);
 
   useEffect(() => {
-    const fetchEntities = async () => {
-      setEntityLoading(true);
-      try {
-        const res = await getEntityTypes();
-        if (res.success) {
-          setEntityList(res.data.filter((e) => e.is_active === "1"));
-        } else {
-          toast.error(res.error || "Failed to load centre types");
-        }
-      } catch {
-        toast.error("Unable to load centre types");
-      } finally {
-        setEntityLoading(false);
-      }
-    };
+  const fetchEntities = async () => {
+    setEntityLoading(true);
+    try {
+      const res = await getEntityTypes();
+      if (res.success) {
+        const formattedEntities = res.data
+          .filter((e) => e.is_active === "1")
+          .map((e) => ({
+            ...e,
+            entity_name:
+              e.entity_name === "lab"
+                ? "Diagnostic Lab"
+                : e.entity_name.charAt(0).toUpperCase() +
+                  e.entity_name.slice(1),
+          }));
 
-    fetchEntities();
-  }, []);
+        setEntityList(formattedEntities);
+      } else {
+        toast.error(res.error || "Failed to load centre types");
+      }
+    } catch {
+      toast.error("Unable to load centre types");
+    } finally {
+      setEntityLoading(false);
+    }
+  };
+
+  fetchEntities();
+}, []);
 
   /* ---------------- INPUT CHANGE HANDLERS ---------------- */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

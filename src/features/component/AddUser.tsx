@@ -66,7 +66,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
     const fetchRoles = async () => {
       try {
         const result = await getRoles();
-          setRoles(Array.isArray(result.data) ? result.data : []);
+        setRoles(Array.isArray(result.data) ? result.data : []);
       } catch (err) {
         console.error("fetchRoles error:", err);
         toast.error("Failed to load roles");
@@ -173,9 +173,8 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur">
       <div
-        className={`bg-white rounded-xl w-full max-w-md p-6 transition ${
-          isClosing ? "animate-slide-out" : "animate-slide-in"
-        }`}
+        className={`bg-white rounded-xl w-full max-w-md p-6 transition ${isClosing ? "animate-slide-out" : "animate-slide-in"
+          }`}
       >
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
@@ -303,6 +302,22 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
                 ) : (
                   selected
                 ),
+              MenuProps: {
+                disablePortal: true, 
+                anchorOrigin: {
+                  vertical: "bottom",
+                  horizontal: "left",
+                },
+                transformOrigin: {
+                  vertical: "top",
+                  horizontal: "left",
+                },
+                PaperProps: {
+                  sx: {
+                    mt: 3,
+                  },
+                },
+              },
             }}
           >
             {roles.length === 0 ? (

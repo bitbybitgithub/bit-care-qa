@@ -8,16 +8,15 @@ import {
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
-  savereportAsync,
+  // savereportAsync,
   updateLabTestStatusAsync,
   getLabReportsByLabId,
 } from "../../api/labApis/labQueuesApi";
 import { Drawer } from "@mui/material";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReport } from "../../api/CommonApi/uploadFileApi";
-import { number } from "framer-motion";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 const getStatusChip = (status: string) => {
   const meta: Record<string, { bg: string; color: string }> = {
     Pending: { bg: "#FFE8B2", color: "#92400E" },
@@ -75,27 +74,27 @@ interface UploadedReport {
   guid: string;
   originalName: string;
 }
+
 export default function LabQueues({ mode, searchTerm = "" }: Props) {
+  const USE_DUMMY_DATA = false;
   const location = useLocation();
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<ApiRow | null>(null);
-  // const [reportMap, setReportMap] = useState<Record<string, File[]>>({});
   const [reportMap, setReportMap] = useState<Record<string, UploadedReport[]>>(
     {}
   );
-
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const labId = getSessionItem("user", "lab_id");
 
   useEffect(() => {
     const fetchData = async () => {
       const data = await getPendingQueueAsync(labId);
+      console.log(data);
       setRows(data);
     };
     fetchData();
-  }, []);
+  }, [labId]);
 
   const resolvedMode = useMemo(() => {
     if (mode) return mode;
@@ -142,6 +141,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           test_id: t.test_id,
           patient_id: row.patient_id,
           lab_record_id: t.lab_record_id,
+          report_id: t.report_id,
         })),
       };
       await updateLabTestStatusAsync(payload as any);
@@ -153,17 +153,21 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     }
   };
 
-  const openUpload = (_: any, row: ApiRow) => {
+  const openUpload = (
+    _: React.MouseEvent<HTMLButtonElement>,
+    row: ApiRow
+  ) => {
     setActiveRow(row);
     const init: Record<string, string[]> = {};
     row.tests.forEach((t) => (init[t.test_id] = []));
     setReportMap(init);
-    setUploadProgress(0);
   };
 
-  const openReUpload = async (_: any, row: ApiRow) => {
+  const openReUpload = async (
+    _: React.MouseEvent<HTMLButtonElement>,
+    row: ApiRow
+  ) => {
     setActiveRow(row);
-    setUploadProgress(0);
 
     try {
       const labRecordId = Number(row.tests[0].lab_record_id);
@@ -197,7 +201,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const closeUpload = () => {
     setActiveRow(null);
     setReportMap({});
-    setUploadProgress(0);
   };
 
   const uploadTestFile = async (testId: string, file: File) => {
@@ -209,19 +212,19 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       });
       const uploaded = uploadRes.files[0];
 
-      const saveRes = await savereportAsync({
-        lab_record_id: Number(
-          activeRow.tests.find((t) => t.test_id === testId)!.lab_record_id
-        ),
-        test_id: Number(testId),
-        lab_id: Number(activeRow.lab_id),
-        test_date: activeRow.test_date,
-        file_guid_name: uploaded.filename,
-        file_path: uploaded.path,
-        created_by: String(activeRow.lab_id),
-        file_name: uploaded.originalName,
-        report_id: null,
-      });
+      // const saveRes = await savereportAsync({
+      //   lab_record_id: Number(
+      //     activeRow.tests.find((t) => t.test_id === testId)!.lab_record_id
+      //   ),
+      //   test_id: Number(testId),
+      //   lab_id: Number(activeRow.lab_id),
+      //   test_date: activeRow.test_date,
+      //   file_guid_name: uploaded.filename,
+      //   file_path: uploaded.path,
+      //   created_by: String(activeRow.lab_id),
+      //   file_name: uploaded.originalName,
+      //   report_id: null,
+      // });
       const reportId = Number(uploaded.filename.split("-")[0]);
 
       setReportMap((prev) => ({
@@ -285,8 +288,21 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   };
 
   const columns: GridColDef[] = [
+    {
+      field: "__srno__",
+      headerName: "Sr No",
+      width: 60,
+      sortable: false,
+      filterable: false,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        const rowIndex =
+          params.api.getRowIndexRelativeToVisibleRows(params.id);
+        return (currentPage - 1) * PAGE_SIZE + rowIndex + 1;
+      },
+    },
     { field: "patient_id", headerName: "Patient ID", width: 100 },
-
     {
       field: "patient_name",
       headerName: "Patient Name",
@@ -394,7 +410,10 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     `${row.patient_id}_${row.created_date}_${row.result_status}`;
   return (
     <>
-      <Box mt={2}>
+      <Box mt={2} sx={{
+        width: "100%",
+        overflowX: "auto", // fallback for very small screens
+      }}>
         <DataGrid
           rows={pagedRows}
           columns={columns}
@@ -411,7 +430,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
           density="compact"
           sx={{
-            minWidth: 1100,
+            width: "100%",
             backgroundColor: "var(--color-white)",
             overflow: "hidden",
             "& .MuiDataGrid-columnHeaders": {

@@ -18,7 +18,7 @@ import { saveUserAPI } from "../../api/SaveLabPharmacyUserApi";
 
 interface AddUserProps {
   onClose: () => void;
-  module: "CLINIC" | "LAB" | "PHARMACY";
+  module: string;
 }
 
 interface Form {

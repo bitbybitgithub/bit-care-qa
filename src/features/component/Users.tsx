@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import AddUser from "../../features/component/AddUser";
 import ProfileCard from "../../components/common/ProfileCards";
@@ -17,12 +17,12 @@ const Users: React.FC = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  const getEntityId = () => {
+  const getEntityId = useCallback((): number => {
     if (entity_name === "clinic") return clinic_id;
     if (entity_name === "lab") return lab_id;
     if (entity_name === "pharmacy") return pharmacy_id;
-    return null;
-  };
+    return 0;
+  }, [entity_name, clinic_id, lab_id, pharmacy_id]);
 
   useEffect(() => {
     const entity_id = getEntityId();
@@ -33,18 +33,26 @@ const Users: React.FC = () => {
       .then((data) => {
         setUsers(data);
       })
-      .catch((error: any) => {
-        const message =
-          error?.response?.data?.message ||
-          error?.message ||
-          "Failed to load users";
+      .catch((error: unknown) => {
+        let message = "Failed to load users";
 
+        if (error && typeof error === "object") {
+          const err = error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          };
+
+          message =
+            err.response?.data?.message ||
+            err.message ||
+            message;
+        }
         alert(message);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [entity_name, clinic_id, lab_id, pharmacy_id]);
+  }, [entity_name, getEntityId]);
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -54,8 +62,7 @@ const Users: React.FC = () => {
     const newStatus = user.status === "Active" ? false : true;
 
     const confirmed = window.confirm(
-      `Are you sure you want to ${newStatus ? "activate" : "deactivate"} ${
-        user.name
+      `Are you sure you want to ${newStatus ? "activate" : "deactivate"} ${user.name
       }?`
     );
 

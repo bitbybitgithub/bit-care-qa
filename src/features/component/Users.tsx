@@ -99,7 +99,7 @@ const Users: React.FC = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mb-5">
         <button
           onClick={() => setShowAddUser(true)}
           className="flex items-center gap-2 bg-[var(--color-primary)]

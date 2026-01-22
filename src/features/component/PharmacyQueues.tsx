@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Typography, Dialog } from "@mui/material";
+import { Box, Button, Typography, Dialog, Chip } from "@mui/material";
 import {
   DataGrid,
   type GridColDef,
@@ -19,7 +19,7 @@ import type {
 } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 export default function PharmacyQueues({
   mode,
@@ -36,8 +36,6 @@ export default function PharmacyQueues({
 
   const [rows, setRows] = useState<PharmacyRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-
   const [openPdf, setOpenPdf] = useState(false);
   const [selectedRow, setSelectedRow] = useState<PharmacyRecord | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -49,7 +47,6 @@ export default function PharmacyQueues({
     const fetchData = async () => {
       try {
         2;
-        setLoading(true);
         const res = await getPharmaPatientRecords(pharmaId);
         console.log("PharmacyQueues - fetched records", res);
         const data = (res && (res as any).data) ?? res ?? [];
@@ -60,8 +57,6 @@ export default function PharmacyQueues({
         }
       } catch (error) {
         console.error("Failed to fetch pharmacy records", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -103,12 +98,12 @@ export default function PharmacyQueues({
           r.patient_id === selectedRow.patient_id &&
           r.created_date === selectedRow.created_date
             ? { ...r, status: "Complete" }
-            : r
-        )
+            : r,
+        ),
       );
       const res = await updatePharmaPatientStatus(
         pharmaId,
-        selectedRow.patient_id
+        selectedRow.patient_id,
       );
       if (!res?.success) {
         throw new Error("Status update failed");
@@ -126,6 +121,19 @@ export default function PharmacyQueues({
 
   const columns: GridColDef[] = [
     {
+      field: "__srno__",
+      headerName: "Sr No",
+      width: 60,
+      sortable: false,
+      filterable: false,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
+        return (currentPage - 1) * PAGE_SIZE + rowIndex + 1;
+      },
+    },
+    {
       field: "patient_id",
       headerName: "Patient ID",
       width: 120,
@@ -136,7 +144,7 @@ export default function PharmacyQueues({
       flex: 1.5,
       width: 120,
       renderCell: (p) => (
-         <h1 className="font-[var(--font-weight-semibold)]">
+        <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
           <span style={{ color: "var(--color-primary)" }}>
             ({p.row.gender?.charAt(0)})
@@ -184,21 +192,48 @@ export default function PharmacyQueues({
       field: "status",
       headerName: "Status",
       width: 150,
+      renderCell: (p) => {
+        const meta: Record<string, { bg: string; color: string }> = {
+          Pending: { bg: "#FFE8B2", color: "#92400E" },
+          Complete: { bg: "#B2DDFF", color: "#1E40AF" },
+        };
+
+        const cfg = meta[p.row.status] ?? meta.Pending;
+
+        return (
+          <Chip
+            size="small"
+            label={p.row.status}
+            sx={{
+              backgroundColor: cfg.bg,
+              color: cfg.color,
+              fontWeight: 600,
+              fontSize: 12,
+              height: 26,
+            }}
+          />
+        );
+      },
     },
   ];
 
-  const getRowId: GridRowIdGetter = (row) =>
-    `${row.patient_id}-${row.status}`;
+  const getRowId: GridRowIdGetter = (row) => `${row.patient_id}-${row.status}`;
 
   return (
     <>
-      <Box className="mt-3">
+      <Box
+        mt={2}
+        sx={{
+          width: "100%",
+          overflowX: "auto",
+        }}
+      >
         <DataGrid
           rows={paginatedRows}
           columns={columns}
           getRowId={getRowId}
-          rowHeight={60}
-          loading={loading}
+          rowHeight={64}
+          disableRowSelectionOnClick
           paginationMode="server"
           rowCount={filteredRows.length}
           pageSizeOptions={[PAGE_SIZE]}
@@ -207,17 +242,9 @@ export default function PharmacyQueues({
             pageSize: PAGE_SIZE,
           }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
-          disableRowSelectionOnClick
-          // sx={{
-          //   minWidth: 1000,
-          //   backgroundColor: "#ffffff",
-          //   "& .MuiDataGrid-columnHeaders": {
-          //     fontSize: 12,
-          //     letterSpacing: "0.05em",
-          //   },
-          // }}
+          density="compact"
           sx={{
-            minWidth: 1100,
+            width: "100%",
             backgroundColor: "var(--color-white)",
             overflow: "hidden",
             "& .MuiDataGrid-columnHeaders": {

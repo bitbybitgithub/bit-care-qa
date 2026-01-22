@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Typography, Dialog, Chip } from "@mui/material";
+import { Box, Button, Typography, Dialog, IconButton, Chip } from "@mui/material";
 import {
   DataGrid,
   type GridColDef,
@@ -18,6 +18,7 @@ import type {
   PharmacyRecordProps,
 } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
+import { Close } from "@mui/icons-material";
 
 const PAGE_SIZE = 10;
 
@@ -279,10 +280,21 @@ export default function PharmacyQueues({
         />
       </Box>
 
-      <Dialog open={openPdf} onClose={() => setOpenPdf(false)} fullWidth>
+      <Dialog
+        open={openPdf}
+        onClose={() => setOpenPdf(false)}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            height: "90vh",
+            maxHeight: "95vh",
+          },
+        }}
+      >
         <Box
           px={3}
-          py={2}
+          py={1}
           display="flex"
           justifyContent="space-between"
           borderBottom="1px solid #e5e7eb"
@@ -293,19 +305,9 @@ export default function PharmacyQueues({
               Patient ID: {selectedRow?.patient_id}
             </Typography>
           </Box>
-
-          {selectedRow?.status === "Pending" && (
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              sx={{ textTransform: "none" }}
-              disabled={updating}
-              onClick={handleCompletebtnClick}
-            >
-              {updating ? "Updating..." : "Complete"}
-            </Button>
-          )}
+          <IconButton onClick={() => setOpenPdf(false)}>
+            <Close />
+          </IconButton>
         </Box>
 
         <Box height="70vh">
@@ -316,6 +318,25 @@ export default function PharmacyQueues({
             style={{ border: "none" }}
             title="Prescription PDF"
           />
+        </Box>
+        <Box
+          px={3}
+          py={2}
+          display="flex"
+          justifyContent="flex-end"
+          gap={2}
+          borderTop="1px solid #e5e7eb"
+        >
+          {selectedRow?.status === "Pending" && (
+            <Button
+              variant="contained"
+              color="success"
+              disabled={updating}
+              onClick={handleCompletebtnClick}
+            >
+              {updating ? "Updating..." : "Complete"}
+            </Button>
+          )}
         </Box>
       </Dialog>
     </>

@@ -98,7 +98,7 @@ const LabDashboard = () => {
             className="text-[var(--color-text)] opacity-70 "
             style={{ fontSize: "var(--font-body)" }}
           >
-            Your pharmacy is running smoothly today.
+            Your lab is running smoothly today.
             <h3 className="opacity-60">
               Check your daily stats and announcements below.
             </h3>
@@ -135,7 +135,7 @@ const LabDashboard = () => {
                 style={{ fontSize: "var(--font-h4)" }}
               >
                 <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-                  Pharmacy Announcements
+                  Lab Announcements
                 </h2>
               </div>
 
@@ -145,7 +145,7 @@ const LabDashboard = () => {
                   style={{ fontSize: "var(--font-h4)" }}
                 />
                 <h1>
-                  The pharmacy will be closed for the holiday on December 25th.
+                  The lab will be closed for the holiday on December 25th.
                 </h1>
               </div>
             </div>

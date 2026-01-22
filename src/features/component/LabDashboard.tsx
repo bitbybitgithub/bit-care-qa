@@ -1,11 +1,10 @@
-import { FaUserPlus } from "react-icons/fa";
+import { FaSearch, FaUserPlus } from "react-icons/fa";
 import { useState, type JSX } from "react";
 import AddUser from "./AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { Module } from "../../Helper/Enums";
-import { TextField } from "@mui/material";
 import LabQueues from "./LabQueues";
 import { Roles } from "../../context/constant/enum";
 export interface DashboardCard {
@@ -178,12 +177,16 @@ const LabDashboard = () => {
             ))}
           </div>
 
-          <TextField
-            size="small"
-            placeholder="Search by Patient Name"
-            value={queueSearch}
-            onChange={(e) => setQueueSearch(e.target.value)}
-          />
+          <div className="relative w-full sm:w-74">
+            <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
+            <input
+              value={queueSearch}
+              onChange={(e) => setQueueSearch(e.target.value)}
+              placeholder="Search by Patient Name/Patient ID"
+              className="w-full pl-10 pr-3 py-2 rounded-lg
+                      border border-[var(--color-primary)]"
+            />
+          </div>
         </div>
 
         <div className="mt-4">

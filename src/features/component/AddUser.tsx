@@ -167,6 +167,16 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
     }
   };
 
+  useEffect(() => {
+  if (roles.length === 1 && !formData.role) {
+    setFormData((prev) => ({
+      ...prev,
+      role: roles[0].role_name,
+    }));
+  }
+}, [roles, formData.role]);
+
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur">
       <div
@@ -274,57 +284,72 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
             }}
           />
 
-          <TextField
-            select
-            size="small"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            error={!!errors.role}
-            helperText={errors.role || " "}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FaUserMd />
-                </InputAdornment>
-              ),
-            }}
-            SelectProps={{
-              displayEmpty: true,
-              renderValue: (selected: string) =>
-                !selected ? (
-                  <span style={{ color: "rgba(0,0,0,0.6)" }}>Select Role</span>
-                ) : (
-                  selected
+          {roles.length <= 1 ? (
+            <TextField
+              size="small"
+              name="role"
+              value={roles.length === 1 ? roles[0].role_name : ""}
+              disabled
+              placeholder="Role"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUserMd />
+                  </InputAdornment>
                 ),
-              MenuProps: {
+              }}
+              helperText={roles.length === 0 ? "No roles available" : " "}
+            />
+          ) : (
+            <TextField
+              select
+              size="small"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              error={!!errors.role}
+              helperText={errors.role || " "}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUserMd />
+                  </InputAdornment>
+                ),
+              }}
+              SelectProps={{
+                displayEmpty: true,
+                renderValue: (selected: any) =>
+                  !selected ? (
+                    <span style={{ color: "rgba(0,0,0,0.6)" }}>Select Role</span>
+                  ) : (
+                    selected
+                  ),
+                   MenuProps: {
                 disablePortal: true, 
                 anchorOrigin: {
-                  vertical: "bottom",
+                  vertical: "top",
                   horizontal: "left",
                 },
                 transformOrigin: {
-                  vertical: "top",
+                  vertical: "bottom",
                   horizontal: "left",
                 },
                 PaperProps: {
                   sx: {
-                    mt: 3,
+                    mt:0,
                   },
                 },
               },
-            }}
-          >
-            {roles.length === 0 ? (
-              <MenuItem disabled>No roles available</MenuItem>
-            ) : (
-              roles.map((r) => (
+              }}
+            >
+              {roles.map((r) => (
                 <MenuItem key={r.role_id} value={r.role_name}>
                   {r.role_name}
                 </MenuItem>
-              ))
-            )}
-          </TextField>
+              ))}
+            </TextField>
+          )}
+
         </div>
 
         <div className="flex justify-center mt-6">

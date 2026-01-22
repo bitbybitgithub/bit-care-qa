@@ -7,14 +7,17 @@ import type {
   SaveLabShiftPayload,
   SaveLabTestItem,
 } from "../../types/labType/LabTestInterfaces";
+import { getSessionItem } from "../../context/sessions/userSession";
 
 // ================= LAB TEST SERVICES =================
-export const getlabtestserviceApi = async (): Promise<
+ const lab_Id = getSessionItem("user", "lab_id");
+ console.log(lab_Id)
+export const getlabtestserviceApi = async (lab_Id:number): Promise<
   LabTestApiResponse[]
 > => {
   try {
     const response = await emrAPI.get<LabTestApiResponse[]>(
-      "/lab/get-lab-test-service"
+      "/lab/get-lab-test-service",lab_Id
     );
     return response;
   } catch (error) {

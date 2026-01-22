@@ -11,6 +11,9 @@ import {
   Divider,
   TextField,
   InputAdornment,
+  FormControlLabel,
+  styled,
+  Switch,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -30,13 +33,14 @@ import type {
   LabTestItemRequest
 } from "../../types/labType/LabTestInterfaces";
 import { getSessionItem } from "../../context/sessions/userSession";
-
+import ArrowDropDownRoundedIcon from '@mui/icons-material/ArrowDropDownRounded';
 const ServiceManagement: React.FC = () => {
   const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
   const [search, setSearch] = useState<string>("");
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [labTests, setLabTests] = useState<LabCategory[]>([]);
+  const [isOn, setIsOn] = useState(false);
   const labId = getSessionItem("user", "lab_id");
 
   const transformLabTests = (data: Record<string, LabTestApiResponse[]>): LabCategory[] => {
@@ -53,7 +57,7 @@ const ServiceManagement: React.FC = () => {
   useEffect(() => {
     const fetchlist = async () => {
       try {
-        const res: any = await getlabtestserviceApi();
+        const res: any = await getlabtestserviceApi(labId);
         const formattedData = transformLabTests(res);
         setLabTests(formattedData);
 
@@ -67,43 +71,43 @@ const ServiceManagement: React.FC = () => {
 
 
 
- 
-  
-const savelist = async () => {
-  try {
-    if (!labId) {
-      console.error("Lab ID not found");
-      return;
-    }
-   
-    const testIds: number[] = selectedTests
-      .map(test => Number(test.testId))
-      .filter(id => !isNaN(id));
 
-    if (testIds.length === 0) {
-      console.error("No valid test IDs");
-      return;
-    }else if( labId==testIds){
-      console.error("LabId and TestId not same")  
-      return;
+
+  const savelist = async () => {
+    try {
+      if (!labId) {
+        console.error("Lab ID not found");
+        return;
+      }
+
+      const testIds: number[] = selectedTests
+        .map(test => Number(test.testId))
+        .filter(id => !isNaN(id));
+
+      if (testIds.length === 0) {
+        console.error("No valid test IDs");
+        return;
+      } else if (labId == testIds) {
+        console.error("LabId and TestId not same")
+        return;
+      }
+      const payload: LabTestItemRequest = {
+        lab_id: Number(labId),
+        test_id: testIds,
+        created_by: "Admin",
+      };
+      console.log("FINAL PAYLOAD:", payload);
+      const res = await saveAvailableLabApi(payload);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.success(res.message);
+      }
+      console.log(res);
+    } catch (error) {
+      console.error(error);
     }
-    const payload: LabTestItemRequest = {
-      lab_id: Number(labId),
-      test_id: testIds,
-      created_by: "Admin",
-    };
-    console.log("FINAL PAYLOAD:", payload);
-    const res = await saveAvailableLabApi(payload);
-    if(res.success){
-      toast.success(res.message);
-    }else{
-      toast.success(res.message);
-    }
-    console.log(res);
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
 
 
 
@@ -153,19 +157,107 @@ const savelist = async () => {
     },
     {}
   );
+
+ 
+  const getCategoryTestIds = (category: LabCategory) =>
+    category.tests.map(t => t.id);
+
+ 
+  const isCategoryChecked = (category: LabCategory) =>
+    getCategoryTestIds(category).every(id => selectedSet.has(id));
+
+
+  const isCategoryIndeterminate = (category: LabCategory) => {
+    const ids = getCategoryTestIds(category);
+    const selectedCount = ids.filter(id => selectedSet.has(id)).length;
+    return selectedCount > 0 && selectedCount < ids.length;
+  };
+
+  const handleSelectAll = (category: LabCategory, checked: boolean) => {
+    if (checked) {
+      setSelectedTests(prev => {
+        const existingIds = new Set(prev.map(p => p.testId));
+
+        const newOnes = category.tests
+          .filter(t => !existingIds.has(t.id))
+          .map(t => ({
+            category: category.category,
+            testId: t.id,
+            testName: t.name,
+          }));
+
+        return [...prev, ...newOnes];
+      });
+    } else {
+      // REMOVE all tests in this category
+      setSelectedTests(prev =>
+        prev.filter(t => t.category !== category.category)
+      );
+    }
+  };
+
   console.log(groupedTests)
+
+
+  const StyledSwitch = styled(Switch)(({ theme }) => ({
+    width: 52,
+    height: 28,
+    padding: 0,
+    display: "flex",
+    "& .MuiSwitch-switchBase": {
+      padding: 2,
+      "&.Mui-checked": {
+        transform: "translateX(24px)",
+        color: "#fff",
+        "& + .MuiSwitch-track": {
+          backgroundColor: theme.palette.primary.main,
+          opacity: 1,
+        },
+      },
+    },
+    "& .MuiSwitch-thumb": {
+      width: 24,
+      height: 24,
+      boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+    },
+    "& .MuiSwitch-track": {
+      borderRadius: 28 / 2,
+      backgroundColor: "#ccc",
+      opacity: 1,
+    },
+  }));
+
+  
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsOn(event.target.checked); // true = ON, false = OFF
+  };
   return (
     <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
       <div className="max-w-6xl mx-auto">
 
         {/* HEADER */}
         <div className="mb-3  p-2 bg-[var(--color-white)]">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h3
-              className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-0 "
-              style={{ fontSize: "var(--font-h3)" }}>
-              
-            </h3>
+          <div className="flex flex-col md:ml-3 md:flex-row md:items-center md:justify-between gap-4">
+
+            <FormControlLabel
+              control={
+                <StyledSwitch
+                  checked={isOn}
+                  onChange={handleChange}
+                />
+              }
+              label="Doorstepes services for 24 hrs"
+              sx={{
+                gap: 2,
+                color: "var(--color-primary-dark)",
+                "& .MuiFormControlLabel-label": {
+                  fontSize: "1.5rem", 
+                  fontWeight: 600,
+                },
+              }}
+            />
+
 
             <TextField
               size="small"
@@ -225,25 +317,47 @@ const savelist = async () => {
                 borderRadius: "var(--radius-lg)",
               }}
               disableGutters
-              className="mb-1  border rounded-[var(--radius-lg)]  border-[var(--color-primary)] hover:shadow-md transition before:hidden"
+              className="mb-2  border rounded-[var(--radius-lg)]  border-[var(--color-primary)] hover:shadow-md transition before:hidden"
             >
 
               <AccordionSummary
-
-                className=" rounded-[var(--radius-lg)] from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 "
+                className="rounded-[var(--radius-lg)] from-white to-blue-50 hover:from-blue-50 hover:to-blue-100"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-[var(--radius-lg)] bg-blue-100 text-blue-600">
-
+                {/* LEFT SIDE */}
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="text-[var(--color-primary-dark)]">
+                    <ArrowDropDownRoundedIcon sx={{ fontSize: 32 }} />
                   </div>
+
                   <div className="font-semibold text-[var(--color-text)]">
                     {group.category}
                   </div>
+
                   {count > 0 && (
                     <Chip size="small" label={count} color="primary" />
                   )}
                 </div>
+
+                {/* RIGHT SIDE – SELECT ALL */}
+                <div className="flex items-center gap-1">
+                  <Checkbox
+                    checked={isCategoryChecked(group)}
+                    indeterminate={isCategoryIndeterminate(group)}
+                    onChange={(e) => handleSelectAll(group, e.target.checked)}
+                    sx={{
+                      "&.Mui-checked": {
+                        color: "#2563eb",
+                      },
+                    }}
+                  />
+                  <span className="text-[var(--color-text)] font-medium">Select All</span>
+                </div>
               </AccordionSummary>
+
 
               <Divider />
 
@@ -284,16 +398,16 @@ const savelist = async () => {
         })}
 
         {/* FOOTER */}
-        <div className="mt-2  bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border border-[var(--color-border)] transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
+        <div className="mt-2  bg-[var(--color-white)]  rounded-[var(--radius-lg)]  transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <Typography className="text-slate-600">
             {selectedTests.length === 0
               ? "No tests selected"
               : <Chip
-                  icon={<CheckCircleIcon />}
-                  label={`${selectedTests.length} Tests Selected`}
-                  color="primary"
-                  className="mt-0 ml-1 "
-                />}
+                icon={<CheckCircleIcon />}
+                label={`${selectedTests.length} Tests Selected`}
+                color="primary"
+                className="mt-0 ml-1 "
+              />}
           </Typography>
 
           <div className="flex gap-3">
@@ -386,9 +500,9 @@ const savelist = async () => {
             variant="contained"
             onClick={() => {
               console.log(selectedTests);
-               savelist();
+              savelist();
               setSearch("");
-              
+
               setOpenDialog(false);
               setSelectedTests([]);
               setExpandedAccordion(false);

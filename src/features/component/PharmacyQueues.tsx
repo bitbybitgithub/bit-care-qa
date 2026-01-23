@@ -12,7 +12,6 @@ import {
   updatePharmaPatientStatus,
 } from "../../api/pharmacyApi/PharmacyApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { formatDateDDMMYYYY } from "../../utils/DateUtils";
 import type {
   PharmacyRecord,
   PharmacyRecordProps,
@@ -40,8 +39,8 @@ export default function PharmacyQueues({
   const [openPdf, setOpenPdf] = useState(false);
   const [selectedRow, setSelectedRow] = useState<PharmacyRecord | null>(null);
   const [updating, setUpdating] = useState(false);
-
   const pharmaId = getSessionItem("user", "pharmacy_id");
+
   useEffect(() => {
     if (!pharmaId) return;
 
@@ -161,18 +160,23 @@ export default function PharmacyQueues({
     {
       field: "gender",
       headerName: "Gender",
-      width: 130,
+      width: 80,
     },
     {
       field: "clinic_name",
-      headerName: "Clinic",
+      headerName: "Clinic Name",
       flex: 1,
     },
-    {
+     {
+      field: "doctor_name",
+      headerName: "Doctor Name",
+      flex: 1,
+    },
+     {
       field: "created_date",
       headerName: "Request Date",
-      width: 150,
-      renderCell: (params) => formatDateDDMMYYYY(params.row.created_date),
+      width: 130,
+      renderCell: (p) => new Date(p.row.created_date).toLocaleDateString(),
     },
     {
       field: "prescription",

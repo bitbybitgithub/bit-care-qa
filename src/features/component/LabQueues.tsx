@@ -76,7 +76,6 @@ interface UploadedReport {
 }
 
 export default function LabQueues({ mode, searchTerm = "" }: Props) {
-  const USE_DUMMY_DATA = false;
   const location = useLocation();
   const [rows, setRows] = useState<ApiRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -363,8 +362,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       width: 120,
       renderCell: (p) => getStatusChip(p.row.result_status),
     },
-    { field: "doctor_name", headerName: "Ref by Doctor", width: 130 },
-
+    { field: "clinic_name", headerName: "Clinic Name", width: 130 },
+    { field: "doctor_name", headerName: "Doctor Name", width: 130 },
     {
       field: "action",
       headerName: "Action",

@@ -1,5 +1,6 @@
 // src/theme/muiTheme.ts
 import { createTheme } from "@mui/material";
+import type { Shadows } from "@mui/material/styles";
 
 /**
  * Safe helper — only access CSS variables after DOM is ready
@@ -68,8 +69,8 @@ export const muiTheme = () =>
   getCssVar("--shadow-md", "0 4px 6px rgba(0,0,0,0.1)"),
   getCssVar("--shadow-lg", "0 10px 15px rgba(0,0,0,0.15)"),
   getCssVar("--shadow-xl", "0 20px 25px rgba(0,0,0,0.2)"),
-  ...Array(19).fill("none"), // fill remaining 19 shadows to make total = 25
-] as any,
+  ...Array(19).fill("none"),
+] as unknown as Shadows,
 
     components: {
       MuiCssBaseline: {

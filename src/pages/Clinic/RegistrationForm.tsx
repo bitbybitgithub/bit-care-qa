@@ -591,7 +591,7 @@ const RegistrationForm = () => {
             onClick={handlePopupClose}
             sx={{
               backgroundColor: "var(--color-primary)",
-              color: "#fff",
+              color: "var(--color-white)",
               px: 4,
               borderRadius: "var(--radius-lg)",
               "&:hover": { backgroundColor: "var(--color-primary-dark)" },

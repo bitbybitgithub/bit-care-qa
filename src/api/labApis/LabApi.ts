@@ -12,12 +12,11 @@ import { getSessionItem } from "../../context/sessions/userSession";
 // ================= LAB TEST SERVICES =================
  const lab_Id = getSessionItem("user", "lab_id");
  console.log(lab_Id)
-export const getlabtestserviceApi = async (lab_Id:number): Promise<
-  LabTestApiResponse[]
-> => {
+
+export const getlabtestserviceApi = async (lab_Id: number) => {
   try {
     const response = await emrAPI.get<LabTestApiResponse[]>(
-      "/lab/get-lab-test-service",lab_Id
+      `/lab/get-lab-test-service?lab_id=${lab_Id}` 
     );
     return response;
   } catch (error) {
@@ -25,6 +24,8 @@ export const getlabtestserviceApi = async (lab_Id:number): Promise<
     throw error;
   }
 };
+
+
 
 export const saveAvailableLabApi = async (
   payload: LabTestItemRequest

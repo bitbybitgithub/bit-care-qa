@@ -247,7 +247,7 @@ const ServiceManagement: React.FC = () => {
                   onChange={handleChange}
                 />
               }
-              label="Doorstepes services for 24 hrs"
+              label="Door-step's services"
               sx={{
                 gap: 2,
                 color: "var(--color-primary-dark)",

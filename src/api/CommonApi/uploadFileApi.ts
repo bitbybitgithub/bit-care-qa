@@ -18,9 +18,6 @@ export async function uploadReport(
       formData.append("files", f);
     });
   }
-  for (const [key, value] of formData.entries()) {
-    console.log("FormData:", key, value);
-  }
   const folder = payload.folder ?? "others";
    const response = await axios.post<UploadReportResponse>(
     `http://localhost:8989/api/common/upload-report?folder=${folder}`,

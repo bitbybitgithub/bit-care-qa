@@ -62,9 +62,9 @@ const ServiceManagement: React.FC = () => {
         setLabTests(formattedData);
 
       }
-      catch {
-        console.log(Error)
-      }
+     catch (error: unknown) {
+  console.warn("Request failed:", error);
+}
     }
     fetchlist();
   }, [])
@@ -96,14 +96,12 @@ const ServiceManagement: React.FC = () => {
         test_id: testIds,
         created_by: "Admin",
       };
-      console.log("FINAL PAYLOAD:", payload);
       const res = await saveAvailableLabApi(payload);
       if (res.success) {
         toast.success(res.message);
       } else {
         toast.success(res.message);
       }
-      console.log(res);
     } catch (error) {
       console.error(error);
     }
@@ -195,9 +193,6 @@ const ServiceManagement: React.FC = () => {
       );
     }
   };
-
-  console.log(groupedTests)
-
 
   const StyledSwitch = styled(Switch)(({ theme }) => ({
     width: 52,
@@ -499,7 +494,6 @@ const ServiceManagement: React.FC = () => {
           <Button
             variant="contained"
             onClick={() => {
-              console.log(selectedTests);
               savelist();
               setSearch("");
 

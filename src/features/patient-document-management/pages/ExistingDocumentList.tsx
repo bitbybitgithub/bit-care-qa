@@ -47,8 +47,6 @@ export default function ExistingDocumentsGrid() {
   };
 
   const confirmDelete = () => {
-    // TODO: replace with real delete API
-    console.log("Deleted:", selectedDoc);
     setOpenDelete(false);
   };
 
@@ -123,9 +121,9 @@ export default function ExistingDocumentsGrid() {
           <Tooltip title="Download">
             <IconButton
               size="small"
-              onClick={() =>
-                console.log("Download:", params.row.name) // hook up real download
-              }
+              // onClick={() =>
+              //   console.info("Download:", params.row.name) // hook up real download
+              // }
             >
               <FaDownload size={14} color="var(--color-primary)" />
             </IconButton>

@@ -82,7 +82,6 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (data && isFetched) {
-      debugger;
       setClinicType(data.operational_hrs);
       setPatientDemand(data.patient_demand);
       setSendReminders(data.patient_reminder === 1);
@@ -210,7 +209,6 @@ const Profile: React.FC = () => {
         updatedShiftDetails
       )
       .then((res) => {
-        console.log(res.data);
         toast.success(res.data.message);
       });
   };

@@ -106,7 +106,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
         };
 
         await SavePatientVital(payload);
-        console.log("Payload to be sent:", payload);
         toast.success("Vitals saved successfully!");
         try {
           onStatusUpdate?.();

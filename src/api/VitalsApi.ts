@@ -30,7 +30,6 @@ export const GetPatientVital = async (
 ): Promise<any> => {
   try {
     const response = await emrAPI.post<any>("/doctors/get-patient-vitals", payload);
-    console.log("/doctors/get-patient-vitals",response)
     return response;
   } catch (err: any) {
     console.error(
@@ -52,7 +51,6 @@ export const SavePatientVital = async (
       "/doctors/save-patient-vitals",
       payload
     );
-    console.log("/doctors/save-patient-vitals",response)
     return response;
   } catch (err: any) {
     console.error(

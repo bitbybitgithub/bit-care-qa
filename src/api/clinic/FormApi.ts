@@ -14,7 +14,6 @@ export const registerApi = async (formData: FormDataBase) => {
       district: formData.district,
       state: formData.state,
     };
-  console.log("Register data",registerPayload)
     const response = await emrAPI.post<any>(`/onboard/register`, registerPayload);
     return response;
   } catch (error: any) {
@@ -28,7 +27,6 @@ export const resetPasswordApi = async (formData: ResetPassword) => {
       userId: formData.userId,
       newPassword: formData.newPassword,
     };
-console.log("Reset Data",resetPayload)
 const response = await emrAPI.post<any>(`/auth/reset-password`, resetPayload);
 return response.data;
   } catch (error: any) {

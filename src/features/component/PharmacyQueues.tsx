@@ -48,7 +48,6 @@ export default function PharmacyQueues({
       try {
         2;
         const res = await getPharmaPatientRecords(pharmaId);
-        console.log("PharmacyQueues - fetched records", res);
         const data = (res && (res as any).data) ?? res ?? [];
         if (Array.isArray(data)) {
           setRows(data);

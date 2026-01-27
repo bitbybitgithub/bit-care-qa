@@ -7,11 +7,6 @@ import type {
   SaveLabShiftPayload,
   SaveLabTestItem,
 } from "../../types/labType/LabTestInterfaces";
-import { getSessionItem } from "../../context/sessions/userSession";
-
-// ================= LAB TEST SERVICES =================
- const lab_Id = getSessionItem("user", "lab_id");
- console.log(lab_Id)
 
 export const getlabtestserviceApi = async (lab_Id: number) => {
   try {
@@ -42,7 +37,6 @@ export const saveAvailableLabApi = async (
   }
 };
 
-// ================= LAB PROFILE =================
 export const fetchLabProfile = async (
   labid: number
 ): Promise<LabProfileData> => {
@@ -58,7 +52,6 @@ export const fetchLabProfile = async (
   }
 };
 
-// ================= LOGO UPLOAD =================
 export const uploadLabLogo = (formData: FormData) => {
   const response= axios.post(
     `${BASE_URL}/lab/upload-logo`,
@@ -72,9 +65,6 @@ export const uploadLabLogo = (formData: FormData) => {
    return response;
 };
 
-
-
-// ================= SHIFT SAVE =================
 export const saveLabShift = async (
   labid: number | string,
   operations: SaveLabShiftPayload["operations"]

@@ -10,7 +10,7 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 interface Props {
-  token: string; // JWT from your login
+  token: string; 
   clinicId: number;
   doctorId: number | null;
   children: React.ReactNode;
@@ -25,12 +25,10 @@ export const SocketProvider: React.FC<Props> = ({
   const [isConnected, setIsConnected] = useState(false);
   const socket = getSocket(token);
   useEffect(() => {
-    // connect if not connected
     if (!socket.connected) socket.connect();
 
     socket.on("connect", () => {
       setIsConnected(true);
-      console.log("✅   Socket connected:", socket.id);
       socket.emit("joinClinic", clinicId, doctorId);
     });
 
@@ -47,8 +45,6 @@ export const SocketProvider: React.FC<Props> = ({
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
-      // Optional: don’t fully disconnect if other pages still use socket
-      // socket.disconnect();
     };
   }, [socket, clinicId, doctorId]);
 

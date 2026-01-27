@@ -12,12 +12,9 @@ const SafetyContext: React.FC<SafetyContextProps> = ({
   allergies,
   current_medications,
 }) => {
-    console.log(" SafetyContext props:", { allergies, current_medications }); 
 
   const allergyList = allergies?.split(",").map(a => a.trim());
   const medicationList = current_medications?.split(",").map(m => m.trim());
-console.log(" Parsed allergyList:", allergyList);
-console.log(" Parsed medicationList:", medicationList);
   return (
     <div className="w-full h-full flex flex-col gap-6">
       <style>
@@ -33,7 +30,6 @@ console.log(" Parsed medicationList:", medicationList);
       `}
       </style>
 
-      {/* Header */}
       <div className="flex items-center gap-2">
         <PiSirenDuotone className="text-red-600 text-2xl pulse-alert" />
         <h2 className="text-lg font-semibold text-red-800">Safety Context</h2>
@@ -42,7 +38,6 @@ console.log(" Parsed medicationList:", medicationList);
         </span>
       </div>
 
-      {/* Allergies */}
       <div className="bg-red-50  rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
         <div className="flex items-center gap-2 mb-3">
           <BiSolidHand className="text-red-600 text-xl" />
@@ -63,7 +58,6 @@ console.log(" Parsed medicationList:", medicationList);
         </div>
       </div>
 
-      {/* Medications */}
       <div className="bg-red-50  rounded-xl p-4 shadow-sm border-l-6 border-red-200 dark:border-red-800">
         <div className="flex items-center gap-2 mb-3">
           <BsCapsulePill className="text-red-600 text-xl" />

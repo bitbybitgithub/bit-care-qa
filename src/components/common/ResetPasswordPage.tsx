@@ -36,7 +36,7 @@ const ResetPasswordPage: React.FC = () => {
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
   const { passwordStrength, evaluate } = usePasswordStrength();
   interface FormDataType {
-    userId: number | null; // ✅ allow null
+    userId: number | null;
     mobile: string;
     username: string;
     otp: string;
@@ -89,10 +89,6 @@ const ResetPasswordPage: React.FC = () => {
     }
   }, [from, localuserId]);
 
-  useEffect(() => {
-    console.log("Mode:", from, "Session User ID:", localuserId);
-  }, [from, localuserId]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -111,7 +107,6 @@ const ResetPasswordPage: React.FC = () => {
     }
     try {
       const response = await checkUserExists(formData.username);
-      console.log(response);
       if (response.success) {
         setFormData((prev) => ({
           ...prev,
@@ -213,7 +208,6 @@ const ResetPasswordPage: React.FC = () => {
 
     try {
       setLoading(true);
-      console.log("formData hai ye  :", formData);
       const payload = {
         userId: internalUserId,
         newPassword: formData.newPassword,

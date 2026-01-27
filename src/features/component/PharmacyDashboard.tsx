@@ -26,9 +26,7 @@ const PharmacyDashboard = () => {
     { key: "pendingQueue", label: "Pending" },
     { key: "completedQueue", label: "Completed" },
   ];
-
-  console.log(user);
-
+  
   const ActionButton = ({
     icon,
     label,

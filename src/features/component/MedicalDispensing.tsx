@@ -103,7 +103,6 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
       };
       const response = await updatePatientStatus(payload);
       window.location.reload();
-      console.log("response", response);
       if (response.success==true) {
 
         toast.success("Status updated successfully");

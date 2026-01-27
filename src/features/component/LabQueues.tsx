@@ -89,7 +89,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const data = await getPendingQueueAsync(labId);
-      console.log(data);
       setRows(data);
     };
     fetchData();

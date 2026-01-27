@@ -16,7 +16,6 @@
 //     const fetchAvailability = async () => {
 //       try {
 //         const res = await getDoctorAvailabilityApi(38, 1, 10, 2025);
-//         console.log("getDocavailibity Res",res);
 //         if (res.success) setSchedule(res.data);
 //       } catch (error) {
 //         console.error("Failed to fetch availability:", error);

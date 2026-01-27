@@ -1,38 +1,15 @@
-//src\api\PatientQueueApi.ts
 import { emrAPI } from "../services/EmrApi";
 import type { AppointmentDto } from "../types/appointmentTypes";
-// export interface AppointmentDto {
-//   doctor_name: string;
-//   source: string;
-//   waitingMinutes: any;
-//   clinic_id: number;
-//   doctor_id: number;
-//   patient_id: number;
-//   patient_name: string;
-//   appointment_id:number;
-//   gender:string;
-//   appointment_date: string; 
-//   start_time: string;       
-//   end_time: string;         
-//   status: "Scheduled" | "Completed" | "Cancelled" | "Waiting"|  "In Consultation"| "Scheduled"|  "Pending Vitals"|  "Checked In"|  "In Progress"|  "Started"| "On Hold"| string;
-//   reason?: string;
-//   date_of_birth:string;
-//   mobile_number:string;
-// }
 export interface TodayAppointmentsResponse {
   success: boolean;
   records: AppointmentDto[];
 }
-
-// Define the request body type
 export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
   user_id: string;
   status: string;
   clinic_id: number;
 }
-
-// Define the response type
 interface UpdateAppointmentStatusResponse {
   success: boolean;
   message: string;
@@ -77,22 +54,21 @@ export interface FollowUpDto {
   dob: string;
   doctor_id: number;
   doctor_name: string;
-  appointment_date: string; // ISO date string
+  appointment_date: string; 
   reason: string;
   start_time: string;
   end_time: string;
   status: string;
   source: string;
   created_by: string;
-  created_date: string; // ISO date string
+  created_date: string; 
   modified_by: string;
-  modified_date: string; // ISO date string
+  modified_date: string;
   gender: string | null;
   cancellation_reason: string | null;
   followup: boolean;
   duration: string | null;
 }
-
 
 export interface followUpResponse{
   success: boolean;
@@ -105,16 +81,13 @@ export interface GetPrescriptionRequest {
 }
 
 export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
-  console.log("fetchTodayAppointments",doctorId);
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
     { doctor_id: doctorId } 
   );
-  console.log("appointments/today",response);
   if (!response || !response.success) {
     throw new Error("Failed to fetch today's appointments");
   }
-  console.log("response.data",response.records);
   return response.records ?? [];
 }
 
@@ -126,7 +99,6 @@ export async function updatePatientStatus(
       "/appointments/update-status",
       payload
     );
-    console.log("updatePatientStatus response:", response);
     return response;
   } catch (error: any) {
     console.error("Error updating appointment status:", error.message || error);

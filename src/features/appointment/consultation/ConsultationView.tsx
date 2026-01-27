@@ -65,20 +65,12 @@ const ConsultationView: React.FC<ConsultationProps> = ({
     created_by: userId.toString(),
   });
 
-  // const { data, error } = useQuery<ConsultationSummaryResponse>({
-  //   queryKey: ["patientInfo", patientId],
-  //   queryFn: () => fetchPatientInfo(patientId),
-  //   enabled: !!patientId,
-  //   staleTime: 1000 * 60 * 10, // cache 10 minutes
-  // });
-
   useEffect(() => {
     if (!patientId) return;
 
     const getPatientInfo = async () => {
       try {
         const fetchedData = await fetchPatientInfo(patientId);
-        console.log(fetchedData);
         setData(fetchedData);
       } catch (error) {
         console.error("Error fetching patient info:", error);

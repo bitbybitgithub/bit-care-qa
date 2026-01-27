@@ -40,7 +40,6 @@ export const updateLabTestStatusAsync = async (payload: {
   }[];
 }) => {
 
-  console.log("save statues request",payload)
   const respone = await emrAPI.post("/lab/update-lab-test-status",payload);
   return respone;
 };
@@ -48,8 +47,6 @@ export const updateLabTestStatusAsync = async (payload: {
 export const getLabReportsByLabId=async(payload : {
   lab_record_id:number
 })=>{
-  console.log("getLabReportsByLabId payload",payload)
   const response = await emrAPI.post("/lab/get-reports-by-lab-record-id",payload);
-  console.log("response",response)
   return response;
 }

@@ -145,14 +145,11 @@ const Login = () => {
           platform: "web",
         };
 
-        console.log("Before calling loginApi", requestBody);
         const data = await loginApi(requestBody);
-        console.log("After calling loginApi, response:", data);
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
           if (data.user.is_temp_password === "1") {
-            console.log(data.user.user_id);
             setSource("resetPassword");
             setClinicUserId("");
             setClinicPassword("");
@@ -164,7 +161,6 @@ const Login = () => {
             // } else {
             //   navigate("/clinic/dashboard");
             // }
-            console.log(data.user.entity_type, data.user.role)
             const route = getDashboardRoute(data.user.entity_type, data.user.role);
 
             if (!route) {

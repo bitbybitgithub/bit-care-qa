@@ -231,7 +231,6 @@ const RegistrationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log(formData);
     const validationErrors = validateRegistration(formData);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length !== 0) return;

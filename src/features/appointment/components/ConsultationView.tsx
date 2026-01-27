@@ -16,7 +16,6 @@ import PatientHistory from "./PatientHistory";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import type { ConsultationSummaryResponse } from "../../../types/appointmentTypes";
 
-// 📘 Sample Tab Components
 const DocumentationView = () => (
   <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
     <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
@@ -77,8 +76,6 @@ const sampleData = {
 };
 
 
-
-
 const fetchPatientInfo = async (
   patientId: number
 ): Promise<ConsultationSummaryResponse> => {
@@ -101,10 +98,10 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
   const [patientData, setPatientData] = useState<ConsultationSummaryResponse>();
   const patientId = patientInfo?.raw?.patient_id;
   const { data } = useQuery<ConsultationSummaryResponse>({
-    queryKey: ["patientInfo", patientId],//patientInfo?.raw?.patient_id],
-    queryFn: () => fetchPatientInfo(patientId),//patientInfo?.raw?.patient_id),
-    enabled: !!patientId, // Only run if clinicId is available
-    staleTime: Infinity, // Treat the data as fresh after fetch
+    queryKey: ["patientInfo", patientId],
+    queryFn: () => fetchPatientInfo(patientId),
+    enabled: !!patientId,
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -113,8 +110,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
     }
   }, [data]);
 
-  console.log({ patientInfo })
-  console.log({ data })
 
   const appDockItems: DockItem[] = [
     { key: "summary", icon: Info, label: "Summary", component: <ConsultationSummary 
@@ -128,7 +123,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
 
   return (
     <div className="relative h-full flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Close button pinned at top-right */}
       <button
         onClick={onCloseDrawer}
         className="absolute right-4 top-4 z-50 text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white transition"
@@ -142,7 +136,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDra
     </div>
   )
 
-  // <Dock items={appDockItems} initialKey="summary" />;
 };
 
 export default ConsultationView;

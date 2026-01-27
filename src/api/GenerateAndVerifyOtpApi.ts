@@ -10,7 +10,6 @@ export const generateOtpApi = async (
   payload: GenerateOtpRequest
 ): Promise<GenerateOtpResponse> => {
   try {
-    // emrAPI returns data directly
     const data = await emrAPI.post<GenerateOtpResponse>(
       "/common/generate-otp",
       payload
@@ -39,8 +38,6 @@ export const verifyOtpApi = async (
       "/common/verify-otp",
       payload
     );
-
-    console.log("verify-otp response", data);
     return data;
   } catch (err: any) {
     console.error("Verify OTP API error:", err);

@@ -173,9 +173,6 @@ const StaffDashboard: React.FC = () => {
     else getMedicalDispensingAsync(20).then(setDispensingData);
   }, [activeTab]);
 
-  console.log("GetDispensingData", dispensingData);
-
-  console.log("setDispensingData", dispensingData);
   const handleAddWalkIn = () => {
     resetModalState();
     setOpen(true);
@@ -215,7 +212,6 @@ const StaffDashboard: React.FC = () => {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-      console.log("otp response", res);
 
       if (res.success) {
         setUserId(res.userId ?? null);

@@ -47,7 +47,6 @@ export const saveDoctorAvailabilityApi = async (
       reason,
       is_fullday_blocked
     };
-    console.log("saveRequest",payload)
     const response = await emrAPI.post<SaveDoctorAvailabilityResponse>(
       "/doctors/save-doctor-unavailability",
       payload

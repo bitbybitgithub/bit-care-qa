@@ -1,15 +1,4 @@
-// src/pages/doctor/ConsultationInProgress.tsx
 import React, { useState, useEffect, useCallback } from "react";
-// import ConsultationView from "../appointment/consultation/ConsultationView";
-// import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
-
-// import {
-//   fetchTodayAppointments,
-//   AppointmentDto,
-// } from "../../../api/PatientQueueApi";
-
-// import { mapAppointmentsToPatients } from "../../../mappers/patientMapper";
-// import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import { getSessionItem } from "../../../../context/sessions/userSession";
 import type { Patient } from "../../../../types/patientType/patientTypeInterfaces";
 import type { AppointmentDto } from "../../../../types/appointmentTypes";

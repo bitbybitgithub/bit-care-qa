@@ -1,4 +1,3 @@
-// DoctorProfile.tsx
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -36,18 +35,12 @@ type Doctor = {
 
 const DoctorProfile: React.FC = () => {
   const doctorId = getSessionItem("user", "doctor_id");
-
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<Doctor | null>(null);
-
-  // Validation states
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // Snackbar
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] =
@@ -60,13 +53,11 @@ const DoctorProfile: React.FC = () => {
   };
 
   const handleAlertClose = () => setAlertOpen(false);
-
-  // Regex Validation Rules
+  
   const nameRegex = /^[A-Za-z\s]{2,80}$/;
   const qualificationRegex = /^[A-Za-z\s]{2,80}$/;
   const phoneRegex = /^[6-9]\d{9}$/;
 
-  // Validators
   const validators: Record<string, (val: any) => string> = {
     doctor_name: (v) =>
       !v ? "Full Name is required"
@@ -111,7 +102,6 @@ const DoctorProfile: React.FC = () => {
   const isFormValid = (errs: Record<string, string>) =>
     Object.keys(errs).length === 0;
 
-  // Fetch profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -127,7 +117,6 @@ const DoctorProfile: React.FC = () => {
     fetchProfile();
   }, []);
 
-  // Handlers
   const handleEditClick = () => {
     if (!doctor) return;
     setFormData(doctor);
@@ -182,7 +171,6 @@ const DoctorProfile: React.FC = () => {
     }
   };
 
-  // Save Changes
   const handleSave = async () => {
     if (!formData) return;
 
@@ -226,7 +214,6 @@ const DoctorProfile: React.FC = () => {
     }
   };
 
-  // Render
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -242,15 +229,12 @@ const DoctorProfile: React.FC = () => {
       </div>
     );
   }
-
-  // ------------------ UI ----------------------
+  
   return (
     <div>
       <div className="flex justify-center mt-10">
-        {/* CARD */}
         <div className="flex flex-col md:flex-row max-w-4xl w-full bg-[var(--color-primary)]/70 rounded-lg shadow-xl overflow-hidden">
 
-          {/* LEFT */}
           <div className="md:w-2/5 bg-[var(--color-primary)] flex justify-center items-center p-6">
             <img
               src={docImg}
@@ -259,7 +243,6 @@ const DoctorProfile: React.FC = () => {
             />
           </div>
 
-          {/* RIGHT */}
           <div className="md:w-3/5 bg-white p-6">
             <h2 className="text-3xl font-semibold">{doctor.doctor_name}</h2>
             <p className="text-gray-600 mb-4">{doctor.qualification}</p>
@@ -283,7 +266,6 @@ const DoctorProfile: React.FC = () => {
               <FaMapMarkerAlt /> {doctor.address}
             </p>
 
-            {/* READ-ONLY FIELDS */}
             <p className="mt-3 text-sm">
               <strong>Title:</strong> {doctor.title}
             </p>
@@ -302,7 +284,6 @@ const DoctorProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* EDIT DIALOG */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -312,7 +293,6 @@ const DoctorProfile: React.FC = () => {
           {formData && (
             <div className="flex flex-col gap-3">
 
-              {/* Full Name */}
               <TextField
                 label="Full Name"
                 name="doctor_name"
@@ -325,7 +305,6 @@ const DoctorProfile: React.FC = () => {
                 size="small"
               />
 
-              {/* Qualification */}
               <TextField
                 label="Qualification"
                 name="qualification"
@@ -338,7 +317,6 @@ const DoctorProfile: React.FC = () => {
                 size="small"
               />
 
-              {/* Phone */}
               <TextField
                 label="Phone"
                 name="phone"
@@ -351,7 +329,6 @@ const DoctorProfile: React.FC = () => {
                 size="small"
               />
 
-              {/* Experience */}
               <TextField
                 label="Experience (years)"
                 name="experience"
@@ -364,7 +341,6 @@ const DoctorProfile: React.FC = () => {
                 size="small"
               />
 
-              {/* READ-ONLY FIELDS */}
               <TextField
                 label="Title"
                 value={formData.title}
@@ -397,7 +373,6 @@ const DoctorProfile: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={alertOpen}
         autoHideDuration={4000}

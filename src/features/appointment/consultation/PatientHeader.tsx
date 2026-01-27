@@ -13,7 +13,6 @@ const PatientHeader: React.FC<Props> = ({  vitals }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
 
-      {/* Vitals Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
         <VitalCard label="BP" value={bloodPressure} unit="mmHg" />
         <VitalCard label="Pulse" value={vitals?.pulse_rate} unit="bpm" />
@@ -40,8 +39,6 @@ const PatientHeader: React.FC<Props> = ({  vitals }) => {
     </div>
   );
 };
-
-// ✅ Reusable Vital Card
 interface VitalProps {
   label: string;
   value: string | number;

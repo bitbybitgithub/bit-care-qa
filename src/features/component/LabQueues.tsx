@@ -8,7 +8,6 @@ import {
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
-  // savereportAsync,
   updateLabTestStatusAsync,
   getLabReportsByLabId,
 } from "../../api/labApis/labQueuesApi";
@@ -209,20 +208,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         file,
       });
       const uploaded = uploadRes.files[0];
-
-      // const saveRes = await savereportAsync({
-      //   lab_record_id: Number(
-      //     activeRow.tests.find((t) => t.test_id === testId)!.lab_record_id
-      //   ),
-      //   test_id: Number(testId),
-      //   lab_id: Number(activeRow.lab_id),
-      //   test_date: activeRow.test_date,
-      //   file_guid_name: uploaded.filename,
-      //   file_path: uploaded.path,
-      //   created_by: String(activeRow.lab_id),
-      //   file_name: uploaded.originalName,
-      //   report_id: null,
-      // });
       const reportId = Number(uploaded.filename.split("-")[0]);
 
       setReportMap((prev) => ({
@@ -410,7 +395,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     <>
       <Box mt={2} sx={{
         width: "100%",
-        overflowX: "auto", // fallback for very small screens
+        overflowX: "auto",
       }}>
         <DataGrid
           rows={pagedRows}

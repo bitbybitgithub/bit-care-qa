@@ -1,4 +1,3 @@
-// src/pages/doctor/DocDashboard.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import PatientQueue from "./PatientQueue";
@@ -33,8 +32,6 @@ const DocDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ---------------- Fetch Appointments ---------------- */
-
   const loadAppointments = useCallback(async () => {
     if (!doctorId) {
       setError("Doctor ID missing");
@@ -59,7 +56,6 @@ const DocDashboard: React.FC = () => {
     loadAppointments();
   }, [loadAppointments]);
 
-  /* ---------------- Realtime Socket Updates ---------------- */
   useEffect(() => {
     if (!socket) return;
 
@@ -82,7 +78,6 @@ const DocDashboard: React.FC = () => {
     };
   }, [socket]);
 
-  /* ---------------- Status Update ---------------- */
   const handleStartConsultation = async (patient: Patient) => {
     if (!patient?.appointment_id) return;
 
@@ -125,7 +120,7 @@ const DocDashboard: React.FC = () => {
       />
 
       <PatientProgressCard />
-
+      
         <SwipeableDrawer
         anchor={"bottom"}
         open={drawerOpen}

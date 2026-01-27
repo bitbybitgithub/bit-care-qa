@@ -56,18 +56,15 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     initialShifts.map((s) => ({ ...s, error: null }))
   );
 
-  // Convert "HH:mm" → minutes since midnight
   const toMinutes = useCallback((time: string) => {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   }, []);
 
-  // Main validation logic
   const validateShifts = useCallback(
     (updated: ShiftSlot[]): ShiftSlot[] => {
       const validated = updated.map((s) => ({ ...s, error: null }));
 
-      // Sort by start time (for easier sequence validation)
       const sorted = validated
         .map((s, idx) => ({ ...s, idx }))
         .sort((a, b) => {
@@ -75,7 +72,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           return toMinutes(a.start) - toMinutes(b.start);
         });
 
-      // Check duplicates (exact start–end pairs)
       const seen = new Set<string>();
       sorted.forEach((s) => {
         const key = `${s.start}-${s.end}`;
@@ -86,7 +82,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
         }
       });
 
-      // Sequential validation
       for (let i = 1; i < sorted.length; i++) {
         const prev = sorted[i - 1];
         const curr = sorted[i];
@@ -96,7 +91,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           const currStart = toMinutes(curr.start);
           const currEnd = toMinutes(curr.end);
 
-          // Overlap / non-sequence check
           if (currStart <= prevEnd) {
             validated[curr.idx].error =
               "Shift must start after previous shift ends.";
@@ -111,7 +105,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     [toMinutes]
   );
 
-  // Update shift value
   const updateShift = useCallback(
     (index: number, field: keyof ShiftSlot, value: string) => {
       setShifts((prev) => {
@@ -124,7 +117,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     [validateShifts]
   );
 
-  // Add new shift (automatically starts after last shift end if possible)
   const handleAddShift = useCallback(() => {
     setShifts((prev) => {
       let suggestedStart = "";
@@ -140,7 +132,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     });
   }, [toMinutes]);
 
-  // Remove shift
   const handleRemoveShift = useCallback(
     (idx: number) => {
       if (idx < initialShifts.length) {
@@ -152,7 +143,6 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     [initialShifts.length]
   );
 
-  // Push valid shifts to parent when changed
   useEffect(() => {
     const validShifts = shifts.filter((s) => s.start && s.end && !s.error);
     const formatted: ShiftPayload[] = validShifts.map((s, i) => ({
@@ -165,12 +155,10 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
     }));
 
     onShiftChange(opShift.co_id, formatted);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts, opShift.is_active]);
 
   return (
     <div className="rounded-[var(--radius-lg)] p-4 mb-4 border-2 border-[var(--color-primary)] shadow-[var(--shadow-md)]">
-      {/* Header */}
       <div className="flex justify-between items-center mb-3">
         <Typography variant="h6" className="font-[var(--font-weight-medium)] text-[var(--color-text)]">
           {day}
@@ -189,8 +177,7 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           />
         </div>
       </div>
-
-      {/* Shift inputs */}
+      
       {opShift.is_active && (
         <>
           <div className="space-y-4 my-4">

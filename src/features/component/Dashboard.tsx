@@ -34,7 +34,6 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
-  // const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
 
   const { data, isFetched } = useQuery<DashboardCard[]>({
@@ -44,9 +43,6 @@ const Dashboard = () => {
     staleTime: Infinity,
   });
 
-  // -------------------------
-  // ICON MAP
-  // -------------------------
   const cardIcon: Record<number, JSX.Element> = {
     1: <FaCalendarDays className="text-amber-600" />,
     2: <FaPeopleGroup className="text-blue-600" />,
@@ -54,9 +50,6 @@ const Dashboard = () => {
     4: <FaUserNurse className="text-violet-600" />,
   };
 
-  // -------------------------
-  // MAP DATA + ICONS
-  // -------------------------
   useEffect(() => {
     if (data && isFetched) {
       const mapped = data
@@ -71,7 +64,6 @@ const Dashboard = () => {
     }
   }, [data]);
 
-  // Reusable button
   const ActionButton = ({
     icon,
     label,
@@ -109,7 +101,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col relative">
-      {/* ⭐ Welcome Banner */}
       <div
         className="
     h-[10vh] 
@@ -156,13 +147,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ⭐ Stats Cards */}
-
       <Cards items={stats} loading={loading} error={error} />
 
-      {/* ⭐ Quick Actions + Announcements */}
       <div className="md:flex gap-x-4">
-        {/* Quick Actions */}
         <div className="md:w-[30%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-4 md:p-6 mb-6 md:mb-0">
           <h2
             className="font-semibold mb-4 text-[var(--color-primary)]"
@@ -183,7 +170,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Clinic Announcements */}
         <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-4 md:p-6 md:w-[70%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
           <div
             className="flex items-center gap-x-2 mb-4"

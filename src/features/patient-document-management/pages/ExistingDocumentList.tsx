@@ -207,14 +207,12 @@ export default function ExistingDocumentsGrid() {
               background: "var(--color-surface-alt)",
             },
             "& .MuiDataGrid-virtualScroller": {
-              // horizontal scroll on small screens
               overflowX: "auto",
             },
           }}
         />
       </Box>
 
-      {/* VIEW DOCUMENT MODAL */}
       <Dialog
         open={openView}
         onClose={() => setOpenView(false)}
@@ -236,7 +234,6 @@ export default function ExistingDocumentsGrid() {
         </DialogActions>
       </Dialog>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <Dialog
         open={openDelete}
         onClose={() => setOpenDelete(false)}

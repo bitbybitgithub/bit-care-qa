@@ -18,7 +18,6 @@ export default function UploadDocument() {
       }}
     >
 
-      {/* LEFT SIDE */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <Typography
           sx={{
@@ -34,7 +33,6 @@ export default function UploadDocument() {
           2. Upload Document
         </Typography>
 
-        {/* Upload Box */}
         <Box
           onClick={handleBrowse}
           sx={{
@@ -83,13 +81,8 @@ export default function UploadDocument() {
         </Box>
       </Box>
 
-      {/* RIGHT SIDE */}
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-
-        {/* ROW 1 — Document Type + Date */}
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          
-          {/* Document Type */}
           <Box>
             <Typography
               sx={{
@@ -129,7 +122,6 @@ export default function UploadDocument() {
             </Select>
           </Box>
 
-          {/* Appointment Date */}
           <Box>
             <Typography
               sx={{
@@ -168,7 +160,6 @@ export default function UploadDocument() {
 
         </Box>
 
-        {/* ROW 2 — Notes */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Typography
             sx={{
@@ -202,7 +193,6 @@ export default function UploadDocument() {
             }}
           />
         </Box>
-
       </Box>
     </Box>
   );

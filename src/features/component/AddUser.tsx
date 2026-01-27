@@ -44,11 +44,9 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [entityId, setEntityId] = useState(0);
-
   const clinicId = getSessionItem("user", "clinic_id");
   const createdBy = getSessionItem("user", "role");
   const  entity_id= getSessionItem("user", "entity_type");
-
   const entity_name = getSessionItem<string>("user", "entity_name");
   const clinic_id = getSessionItem<number>("user", "clinic_id");
   const lab_id = getSessionItem<number>("user", "lab_id");
@@ -152,8 +150,6 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
       }
 
       const data = (response as any)?.data ?? response;
-    //  const { data } = response;
-
       if (data?.success) {
         toast.success(data.message || "User added successfully");
         handleClose();

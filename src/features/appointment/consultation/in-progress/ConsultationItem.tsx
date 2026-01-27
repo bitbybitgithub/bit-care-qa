@@ -19,7 +19,6 @@ const ConsultationItem: React.FC<ConsultationItemProps> = ({
     whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.03)" }}
     transition={{ duration: 0.2 }}
   >
-    {/* Animated background gradient on hover */}
     <motion.div
       className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-400/5 to-blue-500/0 opacity-0 group-hover:opacity-100"
       animate={{ x: ["-100%", "100%"] }}

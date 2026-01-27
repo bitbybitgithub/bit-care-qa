@@ -91,8 +91,6 @@ interface ConsultationProps {
   onCloseDrawer: () => void;
 }
 
-
-
 const ConsultationView: React.FC<ConsultationProps> = ({ patientInfo, onCloseDrawer }) => {
 
   const [patientData, setPatientData] = useState<ConsultationSummaryResponse>();

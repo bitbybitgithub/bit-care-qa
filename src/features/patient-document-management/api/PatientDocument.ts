@@ -10,8 +10,6 @@ export async function searchPatient(query: string): Promise<Patient[]> {
       `/appointments/search`,
       { query: query  }
     );
-
-    // Axios ALWAYS returns data inside res.data
     return res.patients;
   } catch (error: any) {
     console.error("Search API Error:", error);

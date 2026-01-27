@@ -37,7 +37,6 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
         whileHover={{ boxShadow: "0 20px 40px rgba(37, 99, 235, 0.2)" }}
         transition={{ duration: 0.2 }}
       >
-        {/* Animated background gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-5"
           animate={{ x: ["-100%", "100%"] }}
@@ -67,7 +66,6 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
 
           <motion.div
             className="flex items-center gap-2"
-            // animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.3 }}
           >
             <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">

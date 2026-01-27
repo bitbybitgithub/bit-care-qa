@@ -51,14 +51,13 @@ const StaffDashboard: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [contact, setContact] = useState("");
-  // const [error, setError] = useState("");
   const [error, setError] = useState<ErrorState>({
     mobile: "",
     otp: "",
   });
 
   const [showOtp, setShowOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false); // <-- track if OTP was sent
+  const [otpSent, setOtpSent] = useState(false);
   const [editedAfterOtp, setEditedAfterOtp] = useState(false);
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
@@ -80,8 +79,6 @@ const StaffDashboard: React.FC = () => {
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
   const docId = getSessionItem("docId", "doctor_id");
-
-  // Parent-level queue search state
   const [sharedSearch, setSharedSearch] = useState("");
   const tabs = [
     { key: "queue", label: "Patient Queue" },
@@ -105,7 +102,6 @@ const StaffDashboard: React.FC = () => {
   const currentSearchConfig =
     searchConfigByTab[activeTab] ?? searchConfigByTab.queue;
 
-  // ---------- Socket updates ----------
   useEffect(() => {
     if (!socket) return;
     const handleUpdate = (data: Appointment) => {
@@ -121,12 +117,10 @@ const StaffDashboard: React.FC = () => {
     return () => socket.off("appointmentUpdate", handleUpdate);
   }, [socket]);
 
-  // ---------- Reset Modal ----------
   const resetModalState = () => {
     setOpen(false);
     setContact("");
     setError({ mobile: "", otp: "" });
-
     setShowOtp(false);
     setOtpSent(false);
     setOtp(["", "", "", "", "", ""]);
@@ -139,7 +133,6 @@ const StaffDashboard: React.FC = () => {
     setEditedAfterOtp(false);
   };
 
-  // ---------- Fetch Queue ----------
   const fetchQueue = () => {
     setLoadingQueue(true);
     setErrorQueue(null);
@@ -180,7 +173,6 @@ const StaffDashboard: React.FC = () => {
 
   const handleClose = () => resetModalState();
 
-  // ---------- Clear OTP when contact cleared ----------
   useEffect(() => {
     if (contact.trim() === "") {
       setOtp(["", "", "", "", "", ""]);
@@ -191,19 +183,14 @@ const StaffDashboard: React.FC = () => {
     }
   }, [contact]);
 
-  // ---------- OTP logic ----------
   const handleSendOtp = async () => {
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
       setError((prev) => ({
         ...prev,
         mobile: "Enter a valid 10-digit mobile number starting with 6–9",
       }));
-
-      // setError("");
       return;
     }
-
-    // setError("");
     setError((prev) => ({ ...prev, otp: "" }));
     setLoadingGenerate(true);
 
@@ -223,7 +210,6 @@ const StaffDashboard: React.FC = () => {
           ...prev,
           otp: res.message || "Failed to send OTP",
         }));
-        // setError();
       }
     } catch {
       setError((prev) => ({
@@ -251,7 +237,6 @@ const StaffDashboard: React.FC = () => {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
-        // email:""
       });
 
       if (res.success) {
@@ -265,14 +250,12 @@ const StaffDashboard: React.FC = () => {
           ...prev,
           otp: res.message || "Failed to resend OTP",
         }));
-        // setError();
       }
     } catch {
       setError((prev) => ({
         ...prev,
         otp: "Something went wrong while resending OTP. Please try again.",
       }));
-      // setError();
     } finally {
       setLoadingGenerate(false);
     }
@@ -301,7 +284,6 @@ const StaffDashboard: React.FC = () => {
         ...prev,
         otp: "Please enter all 6 digits of the OTP",
       }));
-      // setError();
       return;
     }
     if (!userId) {
@@ -309,7 +291,6 @@ const StaffDashboard: React.FC = () => {
         ...prev,
         otp: "User ID not found. Please resend OTP.",
       }));
-      // setError();
       return;
     }
 
@@ -326,7 +307,6 @@ const StaffDashboard: React.FC = () => {
 
       if (!res.isOtpValid) {
         setError((prev) => ({ ...prev, otp: "Please enter valid OTP" }));
-        // setError();
         setEditedAfterOtp(true);
         return;
       } else if (
@@ -345,7 +325,6 @@ const StaffDashboard: React.FC = () => {
         ...prev,
         otp: "Something went wrong while verifying OTP. Please try again.",
       }));
-      // setError("Something went wrong while verifying OTP. Please try again.");
       setEditedAfterOtp(true);
     } finally {
       setLoadingVerify(false);
@@ -439,20 +418,13 @@ const StaffDashboard: React.FC = () => {
             style={{ fontSize: "var(--font-h5)" }}
           >
             Your clinic is running smoothly today.
-            {/* <br />
-                  <h3 className="opacity-60">
-                    Check your daily stats and announcements below.
-                  </h3> */}
           </p>
         </div>
       </div>
       <Cards
         items={stats}
-        // gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4"
       />
 
-      {/* Tabs */}
-      {/* Tabs + shared Search */}
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex">
@@ -467,8 +439,6 @@ const StaffDashboard: React.FC = () => {
                   aria-selected={activeTab === t.key}
                   onClick={() => {
                     setActiveTab(t.key);
-                    // optionally clear or keep search when switching:
-                    // setSharedSearch("");
                   }}
                   className={`
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
@@ -548,7 +518,6 @@ const StaffDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal */}
       {open && !showRegistrationForm && (
         <div
           className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center px-4"
@@ -597,10 +566,8 @@ const StaffDashboard: React.FC = () => {
               </>
             )}
 
-            {/* ================= Contact / OTP Section ================= */}
             {!verifiedPatients && (
               <>
-                {/* Contact Input */}
                 <div className="mt-4">
                   <div className="flex items-center gap-3">
                     <FormControl>
@@ -650,10 +617,8 @@ const StaffDashboard: React.FC = () => {
                         }}
                       />
                     </FormControl>
-                    {/* {contact.length === 10 && !showOtp && !loadingGenerate && ( */}
                     <Button
                       onClick={handleSendOtp}
-                      // fullWidth
                       variant="text"
                       disabled={
                         contact.length !== 10 || showOtp || loadingGenerate
@@ -682,9 +647,6 @@ const StaffDashboard: React.FC = () => {
                     >
                       Send OTP
                     </Button>
-
-                    {/* ) */}
-                    {/* } */}
                   </div>
 
                   {error.mobile && (
@@ -700,7 +662,6 @@ const StaffDashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* OTP Section */}
                 {showOtp && (
                   <div className="mt-4 text-center">
                     <p
@@ -786,7 +747,6 @@ const StaffDashboard: React.FC = () => {
               </>
             )}
 
-            {/* ================= Verified Patients Section ================= */}
             {verifiedPatients && (
               <div className=" mt-1">
                 <h2 className="text-xl font-bold text-gray-800 text-center">
@@ -796,7 +756,6 @@ const StaffDashboard: React.FC = () => {
                   Found {verifiedPatients.length} patient(s) registered with +91{" "}
                   {contact}
                 </h3>
-                {/* --- Register New Button --- */}
 
                 <div className="max-h-[300px] overflow-y-auto space-y-1  custom-scrollbar">
                   {verifiedPatients.map((p, i) => (
@@ -809,7 +768,6 @@ const StaffDashboard: React.FC = () => {
                       className="flex items-center justify-between bg-white border-2 border-gray-200 rounded-2xl sm:p-6 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
                     >
                       <div className="flex flex-col gap-2 flex-1">
-                        {/* TOP ROW: PHOTO + NAME + GENDER */}
                         <div className="flex items-center px-2 gap-3">
                           <div
                             className="w-10 h-10 flex items-center justify-center rounded-full"
@@ -843,7 +801,6 @@ const StaffDashboard: React.FC = () => {
                           </p>
                         </div>
 
-                        {/* SECOND ROW: DOB + CONTACT */}
                         <div
                           className="flex items-center gap-6 ml-12 text-sm"
                           style={{
@@ -907,7 +864,6 @@ const StaffDashboard: React.FC = () => {
               </div>
             )}
 
-            {/* ================= Buttons ================= */}
             <div className="flex justify-center items-center mt-4">
               {showOtp && !verifiedPatients && (
                 <Button

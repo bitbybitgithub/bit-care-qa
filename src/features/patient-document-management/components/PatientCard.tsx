@@ -32,7 +32,7 @@ export default function PatientCard({ patient }: PatientCardProps) {
       sx={{
         width: 320,
         background: "#ffffff",
-        borderLeft: "5px solid #2563eb", // blue accent
+        borderLeft: "5px solid #2563eb",
         borderRadius: "16px",
       }}
     >

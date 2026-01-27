@@ -30,10 +30,6 @@ export default function SearchPatient() {
   const [loading, setLoading] = useState(false);
 
   const activeRequest = useRef(0);
-
-  // -------------------
-  // Debounced API Search (Safe)
-  // -------------------
   useEffect(() => {
     if (!searchValue.trim()) {
       setOptions([]);
@@ -66,7 +62,6 @@ export default function SearchPatient() {
   }, [searchValue]);
   return (
     <div className="flex gap-6">
-      {/* LEFT SIDE */}
       <div className="flex-1">
         <h1 className="text-md font-semibold mb-3">Select Patient</h1>
 
@@ -120,7 +115,6 @@ export default function SearchPatient() {
         />
       </div>
 
-      {/* RIGHT SIDE: HORIZONTAL PATIENT CARD */}
       <div className="flex-1">
         {selectedPatient ? (
           <Card
@@ -133,7 +127,6 @@ export default function SearchPatient() {
             }}
           >
             <Box display="flex" alignItems="center" gap={2}>
-              {/* Avatar */}
               <Avatar
                 sx={{
                   width: 56,
@@ -146,7 +139,6 @@ export default function SearchPatient() {
                 {selectedPatient.patient_name?.charAt(0) || "?"}
               </Avatar>
 
-              {/* Main Info */}
               <Box flex={1}>
                 <Typography fontWeight={600}>
                   {selectedPatient.patient_name}
@@ -156,7 +148,6 @@ export default function SearchPatient() {
                 </Typography>
               </Box>
 
-              {/* Info Strip */}
               <Box display="flex" alignItems="center" gap={3}>
                 <HorizontalInfo
                   icon={<PhoneIcon fontSize="small" />}

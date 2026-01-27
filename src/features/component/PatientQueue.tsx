@@ -31,7 +31,6 @@ import type {
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 
-/* ---------- small visual helpers (status chip) ---------- */
 const statusMap: Record<
   string,
   { label: string; color: string; bg: string; icon?: React.ReactNode }
@@ -92,7 +91,6 @@ const getActionsForStatus = (status: string): string[] => {
 
 const PAGE_SIZE = 5;
 
-/* ---------- PatientQueue (updated UI) ---------- */
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
   error,
@@ -132,7 +130,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     return patientsData.filter((p) => {
       const contact = String(p.mobile_number || "").trim();
       const last4 = contact.length >= 4 ? contact.slice(-4).toLowerCase() : "";
-      // also allow searching by name or appointment id
       return (
         last4.includes(q) ||
         String(p.name || "")
@@ -203,7 +200,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setPatientToCancel(null);
   }, [patientToCancel, handleUpdatePatientStatus]);
 
-  /* -------------------- DataGrid setup (visuals changed) -------------------- */
   const rows = useMemo(() => currentPatients, [currentPatients]);
 
   const columns: GridColDef[] = useMemo(() => {
@@ -346,7 +342,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       return doctorColumns;
     }
 
-    // staff mode
     const staffColumns: GridColDef[] = [
       ...common,
       {
@@ -377,7 +372,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         renderCell: (params: GridRenderCellParams<any, Patient>) => {
           const row = params?.row as Patient;
           if (!row) return "";
-          // use the nicer chip used across grids
           return getStatusChip(row?.status);
         },
       },
@@ -496,7 +490,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       }`}
     >
     
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         {mode !== "staff" ? (
           <h2
@@ -515,7 +508,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         <div className="flex items-center gap-3"></div>
       </div>
 
-      {/* DataGrid Wrapper */}
       <Box className="overflow-x-auto sm:overflow-x-auto md:overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400">
         <DataGrid
           rows={rows}
@@ -567,7 +559,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         />
       </Box>
 
-      {/* Cancel Dialog */}
       <Dialog
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
@@ -596,7 +587,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Vitals Drawer */}
       <Drawer
         anchor="right"
         open={vitalsDrawerOpen}

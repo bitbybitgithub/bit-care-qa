@@ -26,7 +26,6 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-y-auto mt-10">
-      {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-white dark:bg-gray-800 shadow-sm">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -46,19 +45,11 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
           >
             <User size={16} /> {info?.status}
           </span>
-          {/* <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
-          >
-            <X size={22} />
-          </button> */}
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex flex-col sm:flex-row h-full overflow-hidden bg-white dark:bg-gray-900">
 
-        {/* LEFT SIDEBAR */}
         <div className="w-full sm:w-1/3 lg:w-1/4 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 bg-white dark:bg-gray-900">
           <SafetyContext
             allergies={data?.allergies ?? ""}
@@ -66,11 +57,8 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
           />
         </div>
 
-
-        {/* RIGHT CONTENT */}
         <div className="flex-1 p-4 sm:p-10 overflow-y-auto">
 
-          {/* Vitals */}
           <div className="mb-8">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
               Latest Vitals
@@ -113,7 +101,6 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
             </div>
           </div>
 
-          {/* Chief Complaint and Triage Notes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
             <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -141,7 +128,6 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
             </div>
 
           </div>
-
         </div>
       </div>
     </div>

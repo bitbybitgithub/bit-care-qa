@@ -18,14 +18,12 @@ import { Link } from "react-router-dom";
 import { TokenManager, loginApi } from "../../../api";
 import Regex from "../../../Helper/Regex";
 import { setSession } from "../../../context/sessions/userSession";
-import { Roles } from "../../../context/constant/enum";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  // const { ip } = useClientIp();
   const [isClinic, setIsClinic] = useState(true);
   const [patientNumber, setPatientNumber] = useState("");
   const [patientPassword, setPatientPassword] = useState<string>("");
@@ -154,15 +152,7 @@ const Login = () => {
             setClinicUserId("");
             setClinicPassword("");
           } else {
-            // if (data.user.role == Roles.Doctor) {
-            //   navigate("/doctor/dashboard");
-            // } else if (data.user.role === Roles.Staff) {
-            //   navigate("/staff/dashboard");
-            // } else {
-            //   navigate("/clinic/dashboard");
-            // }
             const route = getDashboardRoute(data.user.entity_type, data.user.role);
-
             if (!route) {
               toast.error("No dashboard configured for this user role");
               return;
@@ -192,7 +182,6 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] p-7">
       <div className="relative bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
-        {/* MOBILE TABS */}
         <div className="block md:hidden">
           <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">
             <button
@@ -318,9 +307,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* DESKTOP TOGGLE */}
         <div className="hidden md:flex">
-          {/* Patient Login Panel */}
           <div
             className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
               isClinic
@@ -451,7 +438,6 @@ const Login = () => {
             )}
           </div>
 
-          {/* Clinic Login Panel */}
           <div
             className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
               isClinic
@@ -552,7 +538,6 @@ const Login = () => {
                   color="primary"
                   sx={{
                     width: "65%",
-                    // borderRadius: "12px",
                     py: 1,
                     fontWeight: 600,
                   }}
@@ -591,7 +576,6 @@ const Login = () => {
             )}
           </div>
 
-          {/* Toggle Panel */}
           <div
             className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${
               isClinic

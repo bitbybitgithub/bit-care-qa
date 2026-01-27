@@ -1,5 +1,3 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
 import SearchPatient from "../components/SearchPatient";
 import UploadDocument from "../pages/UploadDocument";
 import ExistingDocumentList from "../pages/ExistingDocumentList";

@@ -86,7 +86,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         prescriptions: response?.data || [],
       };
 
-      setSelectedItem(updatedRow); // OPEN DIALOG
+      setSelectedItem(updatedRow);
     } catch (err) {
       console.error("Error fetching prescription details:", err);
     }
@@ -283,7 +283,6 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
           {selectedItem && (
             <div className="space-y-3 text-sm px-2">
               <div className="font-semibold mb-1">Prescriptions</div>
-
               {selectedItem.prescriptions?.length > 0 ? (
                 <ul className="space-y-2">
                   {selectedItem.prescriptions.map((p: any) => (
@@ -321,106 +320,3 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
 };
 
 export default MedicalDispensing;
-
-{
-  /* <div className="space-y-3 text-sm px-2">
-  <div className="grid grid-cols-6">
-    <div>
-      <span className="font-semibold text-xs">Appt No:</span>{" "}
-      {selectedItem.appointment_id}
-    </div>
-    <div>
-      <span className="font-semibold text-xs">Gender:</span>{" "}
-      {selectedItem.gender?.[0] ?? "-"}
-    </div>
-    <div className="col-span-2">
-      <span className="font-semibold text-xs">Reason:</span>{" "}
-      {selectedItem.reason ?? "-"}
-    </div>
-    <div className="col-span-2">
-      <span className="font-semibold text-xs">Doctor:</span>{" "}
-      {selectedItem.doctor_name ?? "-"}
-    </div>
-  </div>
-
-  <div className="border rounded-md p-3 bg-slate-50 mb-2">
-    <div className="text-xs">
-      <div>
-        <span className="font-semibold">Patient Name:</span>{" "}
-        {selectedItem.patient_name ?? "-"}
-      </div>
-      <div>
-        <span className="font-semibold">Consulting Doctor:</span>{" "}
-        {selectedItem.doctor_name ?? "-"}
-      </div>
-      <div>
-        <span className="font-semibold">Consultation Date:</span>{" "}
-        {formatDate(selectedItem.appointment_date)}
-      </div>
-    </div>
-  </div>
-
-  <div>
-    <div className="font-semibold mb-1">Prescriptions</div>
-
-    {selectedItem.prescriptions?.length ? (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-xs">
-          <thead>
-            <tr className="bg-green-600 text-white">
-              <th className="px-2 py-1 border">#</th>
-              <th className="px-2 py-1 border text-left">Medication</th>
-              <th className="px-2 py-1 border text-left">Dosage</th>
-              <th className="px-2 py-1 border text-center">Frequency</th>
-              <th className="px-2 py-1 border text-left">Duration</th>
-              <th className="px-2 py-1 border text-left">Instructions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {selectedItem.prescriptions.map((p: any, index: number) => {
-              const frequency =
-                p.frequency ??
-                [
-                  p.freq_morning ?? 0,
-                  p.freq_afternoon ?? 0,
-                  p.freq_evening ?? 0,
-                  p.freq_night ?? 0,
-                ].join(" - ");
-
-              return (
-                <tr key={p.prescribe_id ?? index} className="bg-white">
-                  <td className="px-2 py-1 border text-center">
-                    {index + 1}
-                  </td>
-                  <td className="px-2 py-1 border">
-                    {p.medication_name || p.medicine_name || "-"}
-                  </td>
-                  <td className="px-2 py-1 border">
-                    {p.dosage || "-"}
-                  </td>
-                  <td className="px-2 py-1 border text-center">
-                    {frequency}
-                  </td>
-                  <td className="px-2 py-1 border">
-                    {p.duration || "-"}
-                  </td>
-                  <td className="px-2 py-1 border">
-                    {p.instructions || "-"}
-                    <div className="text-[10px] text-gray-500 mt-0.5">
-                      {p.created_date && formatDateTime(p.created_date)}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <div className="text-gray-500 italic text-xs">
-        No prescriptions found
-      </div>
-    )}
-  </div>
-</div> */
-}

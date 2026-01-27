@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Tabs, Tab } from "@mui/material";
 import type { PatientAppointmentHistory } from "../../../types/appointmentTypes";
 
-// Mock for Vitals and Reports for demo
 interface VitalLog {
   date: string;
   bp: string;
@@ -26,13 +25,11 @@ const PatientHistory: React.FC<Props> = ({
 }) => {
   const [tab, setTab] = useState("history");
 
-  // Mock vitals logs
   const vitalsLogs: VitalLog[] = [
     { date: "05/10/2025", bp: "118/76", temp: "99.1°F", pulse: "80 bpm" },
     { date: "12/08/2025", bp: "130/85", temp: "101.2°F", pulse: "95 bpm" },
   ];
 
-  // Mock reports
   const reports: Report[] = [
     {
       title: "CBC & CRP - 05/10/2025",
@@ -50,7 +47,6 @@ const PatientHistory: React.FC<Props> = ({
     <div className="bg-white p-4 rounded-2xl shadow-sm mt-6 ">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Patient History</h2>
 
-      {/* Tabs */}
       <Tabs
         value={tab}
         onChange={(e, val) => setTab(val)}
@@ -66,7 +62,6 @@ const PatientHistory: React.FC<Props> = ({
       </Tabs>
 
       <div className="mt-4 max-h-64 overflow-y-auto">
-        {/* Consultations & Prescriptions */}
         {tab === "history" && (
           <div className="space-y-4">
             {patientAppointmentHistory?.length > 0 ? (
@@ -110,9 +105,6 @@ const PatientHistory: React.FC<Props> = ({
           </div>
         )}
 
-        
-
-        {/* Vitals Logs */}
         {tab === "vitals" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             {vitalsLogs.map((vital, idx) => (
@@ -131,7 +123,6 @@ const PatientHistory: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Reports */}
         {tab === "reports" && (
           <div className="space-y-3 mt-3">
             {reports.map((r, i) => (

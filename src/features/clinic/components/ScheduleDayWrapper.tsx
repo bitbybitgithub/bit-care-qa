@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import DailySchedule from './DailySchedule';
-
-// Assuming you have these interfaces available globally or pass them in
 interface ShiftPayload {
     clinic_id: number | string;
     co_id: number | string;
@@ -30,7 +28,6 @@ const ScheduleDayWrapper: React.FC<ScheduleDayWrapperProps> = ({
     handleOperationDay,
     onShiftChange,
 }) => {
-    // ✅ useMemo is now called correctly at the top level of this functional component
     const dayShifts = useMemo(() => 
         initialAllShifts
         .filter((s) => s.co_id === day.co_id)
@@ -53,5 +50,4 @@ return (
 
 };
 
-// 🌟 IMPORTANT: Memoize the wrapper component!
 export default React.memo(ScheduleDayWrapper);

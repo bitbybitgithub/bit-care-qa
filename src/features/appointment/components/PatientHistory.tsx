@@ -13,8 +13,6 @@ import {
 import dayjs from "dayjs";
 import type { PatientAppointment } from "../../../types/appointmentTypes";
 
-
-
 interface PatientHistoryProps {
   patientAppointmentHistory: PatientAppointment[];
 }
@@ -27,7 +25,6 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [search, setSearch] = useState("");
 
-  // Group history by year
   const groupedHistory = useMemo(() => {
     const grouped: Record<string, PatientAppointment[]> = {};
     [...patientAppointmentHistory]
@@ -44,7 +41,6 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
     return grouped;
   }, [patientAppointmentHistory]);
 
-  // Filter data based on tab and search
   const filteredHistory = useMemo(() => {
     const query = search.toLowerCase();
     return Object.entries(groupedHistory).reduce<
@@ -80,14 +76,13 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
     <Box
       sx={{
         p: 2,
-        height: "70vh", // for bottom drawer use
+        height: "70vh",
         overflowY: "auto",
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
         bgcolor: "background.paper",
       }}
     >
-      {/* Search Bar */}
       <TextField
         fullWidth
         placeholder="Search visits, diagnoses, or procedures..."
@@ -97,7 +92,6 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
         sx={{ mb: 2 }}
       />
 
-      {/* Tabs */}
       <Tabs
         value={activeTab}
         onChange={(_, val: TabValue) => setActiveTab(val)}
@@ -114,7 +108,6 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
         <Tab label="Procedures" value="procedures" />
       </Tabs>
 
-      {/* History Sections */}
       {Object.entries(filteredHistory).map(([year, records]) => (
         <Box key={year} sx={{ mb: 3 }}>
           <Typography
@@ -173,7 +166,6 @@ const PatientHistory: React.FC<PatientHistoryProps> = ({
         </Box>
       ))}
 
-      {/* Placeholder if no data */}
       {Object.keys(filteredHistory).length === 0 && (
         <Typography variant="body2" color="text.secondary" textAlign="center">
           No matching records found.

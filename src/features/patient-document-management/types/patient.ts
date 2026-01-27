@@ -6,7 +6,5 @@ export interface Patient {
 }
 
 export interface SearchResponse {
-  // success: boolean;
-  // count: number;
   data: Patient[];
 }

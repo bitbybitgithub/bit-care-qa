@@ -126,8 +126,7 @@ const LabDashboard = () => {
                 ))}
               </div>
             </div>
-
-            {/* Lab Announcements */}
+            
             <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
               <div
                 className="flex items-center gap-x-2 mb-2"

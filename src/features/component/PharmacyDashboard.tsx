@@ -26,7 +26,7 @@ const PharmacyDashboard = () => {
     { key: "pendingQueue", label: "Pending" },
     { key: "completedQueue", label: "Completed" },
   ];
-  
+
   const ActionButton = ({
     icon,
     label,
@@ -125,7 +125,6 @@ const PharmacyDashboard = () => {
               </div>
             </div>
 
-            {/* Lab Announcements */}
             <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
               <div
                 className="flex items-center gap-x-2 mb-2"

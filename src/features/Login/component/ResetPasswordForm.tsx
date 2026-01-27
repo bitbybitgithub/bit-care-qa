@@ -69,7 +69,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   const canConfirmPassword =
     isOtpVerified && formData.newPassword && passwordStrength.level !== "Weak";
 
-  // Validate username when typing
   useEffect(() => {
     const username = formData.username;
     if (username.length === 0) {
@@ -86,7 +85,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     setErrors({});
   }, [formData.username]);
 
-  // Handle source (reset vs forgotten) + session user
   useEffect(() => {
     if (source === "forgottenPassword") {
       setIsOtpVerified(false);
@@ -105,7 +103,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     }
   }, [source, localuserId]);
 
-  // 🔧 Normalized change handler for MUI TextField
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -238,7 +235,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         newPassword: formData.newPassword,
       };
 
-      // If ResetPassword type is stricter, this cast avoids TS error
       const response = await resetPasswordApi(payload as any);
 
       toast.success(response?.message || "Password reset successfully");
@@ -252,7 +248,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         confirmPassword: "",
       });
       setSource(null);
-      // navigate("/login");
     } catch (error: any) {
       toast.error(error.message || "Password reset failed");
     } finally {

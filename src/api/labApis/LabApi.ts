@@ -20,8 +20,6 @@ export const getlabtestserviceApi = async (lab_Id: number) => {
   }
 };
 
-
-
 export const saveAvailableLabApi = async (
   payload: LabTestItemRequest
 ): Promise<SaveLabTestItem> => {

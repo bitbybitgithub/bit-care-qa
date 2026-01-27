@@ -114,8 +114,6 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
         const rawGender = params.row.gender || "-";
         const gender =
           rawGender === "-" ? "-" : String(rawGender).charAt(0).toUpperCase();
-
-       
         return (
           <Box>
             <Typography fontSize="14px" fontWeight={600}>
@@ -228,14 +226,12 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
 
   const getRowId = (row) =>
     row.appointment_id ?? `${Math.random()}`;
-
   
   const handleUpdate = (type) => {
   if (!selectedRow) return;
 
   const followupAllowed = isFollowupAllowed(selectedRow);
 
-  // SUCCESSFUL
   if (type === "SUCCESS") {
     toast.success("Patient marked as Successful");
     setRows((prev) =>
@@ -245,7 +241,6 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
     );
   }
 
-  // NOT REQUIRED
   if (type === "CLOSED") {
     toast.info("Patient marked as Not Required");
     setRows((prev) =>
@@ -255,7 +250,6 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
     );
   }
 
-  // RESCHEDULE
   if (type === "RESCHEDULE") {
     if (!followupAllowed) {
       toast.error("Rescheduling is not allowed for this appointment");
@@ -355,7 +349,6 @@ return (
       }}
     />
 
-    {/* MODAL GOES HERE */}
     <Dialog
   open={dialogOpen}
   onClose={() => setDialogOpen(false)}
@@ -373,7 +366,6 @@ return (
     Update Follow-Up
   </Typography>
 
-  {/* Row container */}
   <Box
     display="flex"
     alignItems="flex-start"
@@ -381,7 +373,6 @@ return (
     gap={2}
     
   >
-    {/* Outcome Dropdown */}
     <Box flex={1}>
       <Typography fontSize="var(--font-small)" fontWeight={600} mb={0.5}>
         Outcome Status
@@ -446,7 +437,6 @@ return (
     </Box>
 
     
-    {/* Counter */}
 <Box width="150px">
   <Typography fontSize="var(--font-small)" fontWeight={600} mb={0.8} color="#000000">
     Extend (Days)
@@ -463,7 +453,6 @@ return (
       borderRadius: "16px",
     }}
   >
-    {/* MINUS */}
     <Button
       onClick={() => setExtendDays((d) => Math.max(0, d - 1))}
       disabled={outcome !== ""}
@@ -482,7 +471,6 @@ return (
       <FiMinus size={18} />
     </Button>
 
-    {/* NUMBER BOX */}
     <Box
       sx={{
         width: "42px",
@@ -501,7 +489,6 @@ return (
       {extendDays}
     </Box>
 
-    {/* PLUS */}
     <Button
       onClick={() => setExtendDays((d) => d + 1)}
       disabled={outcome !== ""}
@@ -521,12 +508,8 @@ return (
     </Button>
   </Box>
 </Box>
-
-
-
   </Box>
 
-  {/* Validation */}
   {extendDays > 0 && outcome !== "" && (
     <Typography color="error" fontSize={12} mt={1}>
       You cannot extend days when an outcome is selected.

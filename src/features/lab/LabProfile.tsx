@@ -13,8 +13,6 @@ import {
   uploadLabLogo,
 } from "../../api/labApis/LabApi";
 
-/* ================= TYPES ================= */
-
 export interface OperationalDay {
   lab_id: number | string;
   lab_opt_id: number | string;
@@ -32,19 +30,15 @@ export interface ShiftDayMap {
   [lab_opt_id: string]: ShiftSlot[];
 }
 
-/* ================= COMPONENT ================= */
-
 const LabProfile: React.FC = () => {
   const labid = getSessionItem("user", "lab_id");
   const { setLoading } = useLoader();
-
   const [operationalDays, setOperationalDays] = useState<OperationalDay[]>([]);
   const [shiftMap, setShiftMap] = useState<ShiftDayMap>({});
   const [labLogo, setLabLogo] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [logoImg, setLogoImg] = useState<string | null>(null);
   const [fileerror, setFileError] = useState<string | null>(null);
-  /* ================= LOAD PROFILE ================= */
 
   useEffect(() => {
     if (!labid) return;
@@ -84,8 +78,6 @@ const LabProfile: React.FC = () => {
     loadProfile();
   }, [labid]);
 
-  /* ================= HANDLERS ================= */
-
   const handleOperationDay = useCallback(
     (lab_opt_id: number | string, labId: number | string, active: boolean) => {
       setOperationalDays((prev) =>
@@ -119,8 +111,6 @@ const LabProfile: React.FC = () => {
     setLabLogo(file);
     setPreview(file ? URL.createObjectURL(file) : null);
   };
-
-  /* ================= SAVE ================= */
 
   const handleSave = async () => {
     try {
@@ -166,8 +156,6 @@ const LabProfile: React.FC = () => {
       setLoading(false);
     }
   };
-
-  /* ================= UI ================= */
 
   return (
     <div className="p-5 bg-white rounded-lg h-[82vh] overflow-y-scroll">

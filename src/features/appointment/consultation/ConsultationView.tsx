@@ -79,7 +79,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({
     getPatientInfo();
   }, [patientId]);
 
-  // Memoized derived data
   const mappedPatient = useMemo(() => {
     if (!patientInfo?.raw) return null;
     return {
@@ -97,11 +96,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({
     };
   }, [patientInfo]);
 
-  // keep status in sync when prop/derived mappedPatient changes
-  // useEffect(() => {
-  //   setStatus(patientInfo?.raw?.status ?? mappedPatient?.status);
-  // }, [patientInfo?.raw?.status, mappedPatient?.status]);
-
   const calculateAge = (dob: string | number | Date) => {
     const birthDate = new Date(dob);
     const today = new Date();
@@ -111,12 +105,10 @@ const ConsultationView: React.FC<ConsultationProps> = ({
     return age;
   };
 
-  // Prescription
   const handlePrescriptionChange = (val: any) => {
     setPrescriptionPayload((prev) => ({ ...prev, prescription: val }));
   };
 
-  // SOAP form
   const handleSoapDetails = (name: any, value: any) => {
     setSoapForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -136,7 +128,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({
   return (
     <div className="p-4 space-y-4 bg-gray-50 min-h-screen transition-all duration-300">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 p-6">
-        {/* Patient Info Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -145,7 +136,6 @@ const ConsultationView: React.FC<ConsultationProps> = ({
                 (MRN: {mappedPatient?.patient_id})
               </span>
 
-              {/* Status pill */}
               {status && (
                 <span
                   className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide
@@ -187,9 +177,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
           )}
         </div>
 
-        {/* ✅ Two-column layout starts here */}
         <div className="flex flex-col lg:flex-row gap-6 mt-6">
-          {/* LEFT: Safety Context */}
           {data?.PatientvitalsDetails && (
             <div className="w-full lg:w-1/3">
               <SafetyContext
@@ -201,13 +189,11 @@ const ConsultationView: React.FC<ConsultationProps> = ({
             </div>
           )}
 
-          {/* RIGHT: Consultation & History */}
           <div className="w-full lg:w-2/3 space-y-6">
             {data?.PatientvitalsDetails && (
               <PatientHeader vitals={data.PatientvitalsDetails} />
             )}
 
-            {/* Tabs Section */}
             <div className="w-full p-6 bg-[var(--color-white)] rounded-2xl shadow-lg border border-gray-200">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                 Consultation & Diagnosis (SOAP)

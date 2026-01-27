@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query"; // 👈 NEW IMPORT
+import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   FormControl,
@@ -16,7 +16,6 @@ import { Base64ToImage } from "../../../utils/converter";
 import ScheduleDayWrapper from "./ScheduleDayWrapper";
 import { getSessionItem } from "../../../context/sessions/userSession";
 
-// --- INTERFACES FOR TYPE SAFETY ---
 interface ShiftPayload {
   clinic_id: number | string;
   co_id: number | string;
@@ -29,7 +28,7 @@ interface OperationalDay {
   co_id: number | string;
   clinic_id: number | string;
   day: string;
-  is_active: number; // 0 or 1 from API
+  is_active: number;
 }
 interface ClinicProfileData {
   operational_hrs: string;
@@ -59,7 +58,6 @@ const Profile: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [logoImg, setLogoImg] = useState<string | null>(null);
 
-  // State initialized from API data
   const [operationalDays, setOperationalDays] = useState<OperationalDay[]>([]);
   const [shiftDetails, setShiftDetails] = useState<ShiftPayload[]>([]);
   const [updatedShiftDetails, setUpdatedShiftDetails] = useState<
@@ -67,7 +65,6 @@ const Profile: React.FC = () => {
   >([]);
   const [fileerror, setFileError] = useState<string | null>(null);
 
-  // API data source
   const [initialAllShifts, setInitialAllShifts] = useState<ShiftPayload[]>([]);
 
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,8 +73,8 @@ const Profile: React.FC = () => {
   const { data, isFetched } = useQuery<ClinicProfileData>({
     queryKey: ["clinicProfile", clinicId],
     queryFn: () => fetchClinicProfile(clinicId),
-    enabled: !!clinicId, // Only run if clinicId is available
-    staleTime: Infinity, // Treat the data as fresh after fetch
+    enabled: !!clinicId, 
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -86,17 +83,12 @@ const Profile: React.FC = () => {
       setPatientDemand(data.patient_demand);
       setSendReminders(data.patient_reminder === 1);
       data.logo && setLogoImg(Base64ToImage(data.logo));
-
-      // Initialize the mutable and immutable parts of the state
       setOperationalDays(data.operational_days);
       setShiftDetails(data.shifts);
       setInitialAllShifts(data.shifts);
     }
   }, [data, isFetched]);
 
-  // --- MEMOIZED HANDLERS ---
-
-  // 💡 Optimized: Memoize this function (passed as a prop)
   const handleShiftChange = useCallback(
     (coId: number | string, formattedShifts: ShiftPayload[]) => {
       setShiftDetails((prev) => {
@@ -122,10 +114,9 @@ const Profile: React.FC = () => {
         return [...others, ...newlyAddedShifts];
       });
     },
-    [initialAllShifts] // Stable dependency
+    [initialAllShifts]
   );
 
-  // 💡 Optimized: Memoize debounced function
   const debouncedUpdateClinicOperationStatus = useCallback(
     (coId: number | string, clinicId: number | string, value: boolean) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -146,10 +137,9 @@ const Profile: React.FC = () => {
         }
       }, 2500);
     },
-    [] // No dependencies means it's fully stable
+    [] 
   );
 
-  // 💡 Optimized: Memoize this function (passed as a prop)
   const handleOperationDay = useCallback(
     (coId: number | string, clinicId: number | string, value: boolean) => {
       setOperationalDays((prevData) =>
@@ -157,7 +147,7 @@ const Profile: React.FC = () => {
           (dayItem: OperationalDay) =>
             dayItem.co_id === coId
               ? { ...dayItem, is_active: value ? 1 : 0 }
-              : dayItem // Ensure state updates match type
+              : dayItem
         )
       );
       debouncedUpdateClinicOperationStatus(coId, clinicId, value);
@@ -165,7 +155,6 @@ const Profile: React.FC = () => {
     [debouncedUpdateClinicOperationStatus]
   );
 
-  // --- NON-API HANDLERS ---
   const handleFileChange = (file: File | null) => {
     if (file) {
       setClinicLogo(file);
@@ -215,7 +204,6 @@ const Profile: React.FC = () => {
 
   return (
     <div className="p-5 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all overflow-y-scroll h-[82vh]">
-      {/* Branding */}
       <section className="mb-6">
         <h3
           className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-3 "
@@ -225,7 +213,6 @@ const Profile: React.FC = () => {
         </h3>
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Logo Preview */}
           <div
             className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
             aria-hidden={!!(preview || logoImg) ? "false" : "true"}
@@ -243,7 +230,6 @@ const Profile: React.FC = () => {
             )}
           </div>
 
-          {/* Upload Control */}
           {!logoImg && (
             <div className="flex flex-col  w-full">
               <label className="block font-medium text-[var(--color-text-secondary)] mb-2">
@@ -264,7 +250,6 @@ const Profile: React.FC = () => {
         </div>
       </section>
 
-      {/* Operational Hours */}
       <section className="mb-6">
         <h3 className="font-semibold text-[var(--color-text)] mb-3">
           Operational Hours & Patient Demand
@@ -316,7 +301,6 @@ const Profile: React.FC = () => {
         </div>
       </section>
 
-      {/* Communication */}
       <section className="mb-6">
         <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
           <span className="font-medium text-[var(--color-text)]">
@@ -346,7 +330,6 @@ const Profile: React.FC = () => {
         </div>
       </section>
 
-      {/* Save */}
       <Button
         variant="contained"
         color="primary"

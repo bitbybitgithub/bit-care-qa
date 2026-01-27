@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Accordion,
@@ -49,7 +48,7 @@ const ServiceManagement: React.FC = () => {
       tests: tests
         .filter(t => t.is_active === "1")
         .map(test => ({
-          id: String(test.test_id), // IMPORTANT: id as string
+          id: String(test.test_id),
           name: test.test_name,
         })),
     }));
@@ -68,10 +67,6 @@ const ServiceManagement: React.FC = () => {
     }
     fetchlist();
   }, [])
-
-
-
-
 
   const savelist = async () => {
     try {
@@ -159,10 +154,8 @@ const ServiceManagement: React.FC = () => {
   const getCategoryTestIds = (category: LabCategory) =>
     category.tests.map(t => t.id);
 
- 
   const isCategoryChecked = (category: LabCategory) =>
     getCategoryTestIds(category).every(id => selectedSet.has(id));
-
 
   const isCategoryIndeterminate = (category: LabCategory) => {
     const ids = getCategoryTestIds(category);
@@ -186,7 +179,6 @@ const ServiceManagement: React.FC = () => {
         return [...prev, ...newOnes];
       });
     } else {
-      // REMOVE all tests in this category
       setSelectedTests(prev =>
         prev.filter(t => t.category !== category.category)
       );
@@ -224,13 +216,12 @@ const ServiceManagement: React.FC = () => {
   
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsOn(event.target.checked); // true = ON, false = OFF
+    setIsOn(event.target.checked); 
   };
   return (
     <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
       <div className="max-w-6xl mx-auto">
 
-        {/* HEADER */}
         <div className="mb-3  p-2 bg-[var(--color-white)]">
           <div className="flex flex-col md:ml-3 md:flex-row md:items-center md:justify-between gap-4">
 
@@ -252,7 +243,6 @@ const ServiceManagement: React.FC = () => {
               }}
             />
 
-
             <TextField
               size="small"
               placeholder="Search tests..."
@@ -268,11 +258,8 @@ const ServiceManagement: React.FC = () => {
               }}
             />
           </div>
-
-
         </div>
 
-        {/* ACCORDIONS */}
         {labTests.map((group, index) => {
           const searchLower = search.toLowerCase();
           const filteredTests = group.tests.filter(
@@ -299,7 +286,6 @@ const ServiceManagement: React.FC = () => {
           ).length;
 
           return (
-
             <Accordion
               key={group.category}
               expanded={expandedAccordion === group.category}
@@ -321,7 +307,6 @@ const ServiceManagement: React.FC = () => {
                   alignItems: "center",
                 }}
               >
-                {/* LEFT SIDE */}
                 <div className="flex items-center gap-3 flex-1">
                   <div className="text-[var(--color-primary-dark)]">
                     <ArrowDropDownRoundedIcon sx={{ fontSize: 32 }} />
@@ -336,7 +321,6 @@ const ServiceManagement: React.FC = () => {
                   )}
                 </div>
 
-                {/* RIGHT SIDE – SELECT ALL */}
                 <div className="flex items-center gap-1">
                   <Checkbox
                     checked={isCategoryChecked(group)}
@@ -351,7 +335,6 @@ const ServiceManagement: React.FC = () => {
                   <span className="text-[var(--color-text)] font-medium">Select All</span>
                 </div>
               </AccordionSummary>
-
 
               <Divider />
 
@@ -391,7 +374,6 @@ const ServiceManagement: React.FC = () => {
           );
         })}
 
-        {/* FOOTER */}
         <div className="mt-2  bg-[var(--color-white)]  rounded-[var(--radius-lg)]  transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <Typography className="text-slate-600">
             {selectedTests.length === 0
@@ -417,8 +399,6 @@ const ServiceManagement: React.FC = () => {
             <Button
               variant="contained"
               color="primary"
-
-
               className="rounded-[var(--radius-lg)] py-3 text-[var(--font-body)] font-semibold shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all"
               onClick={() => {
                 setOpenDialog(true)
@@ -439,7 +419,6 @@ const ServiceManagement: React.FC = () => {
         maxWidth="sm"
         fullWidth
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 ">
           <Typography sx={{ color: "var(--color-primary)" }} variant="h6" fontWeight={600}>
             Selected Laboratory Tests
@@ -453,11 +432,9 @@ const ServiceManagement: React.FC = () => {
           </Button>
         </div>
 
-        {/* Content */}
         <DialogContent sx={{ px: 4, py: 3 }}>
           {Object.entries(groupedTests).map(([category, tests]) => (
             <div key={category} className="mb-4">
-              {/* Category */}
               <Typography
                 sx={{
                   fontWeight: 600,
@@ -468,7 +445,6 @@ const ServiceManagement: React.FC = () => {
                 {category}
               </Typography>
 
-              {/* Test List */}
               <div className="border border-[var(--color-border)] rounded-md overflow-hidden">
                 {tests.map((test, index) => (
                   <div
@@ -484,18 +460,12 @@ const ServiceManagement: React.FC = () => {
           ))}
         </DialogContent>
 
-        {/* Actions */}
         <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #eee" }}>
-          {/* <Button onClick={() => setOpenDialog(false)}>
-      Cancel
-    </Button> */}
-
           <Button
             variant="contained"
             onClick={() => {
               savelist();
               setSearch("");
-
               setOpenDialog(false);
               setSelectedTests([]);
               setExpandedAccordion(false);
@@ -505,10 +475,6 @@ const ServiceManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-
-
-
     </div>
 
   );

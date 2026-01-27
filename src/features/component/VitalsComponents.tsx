@@ -36,7 +36,6 @@ interface PatientVitalsProps {
   patientName?: string;
   patientId: number;
   doctorId: number;
-  // clinicId: number;
   appointmentId: number;
   onClose?: () => void;
   isOpen?: boolean;
@@ -50,7 +49,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     onClose,
     patientId,
     doctorId,
-    // clinicId,
     appointmentId,
     createdBy,
     onStatusUpdate,
@@ -199,7 +197,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
 
     return (
       <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-bg)]  ">
-        {/* Header */}
         <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
           <div>
             <h2 className="text-[var(--color-white)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
@@ -215,7 +212,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 ">
           {renderDivider("Vitals Info")}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -312,7 +308,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 p-5 border-t border-[var(--color-primary)] bg-[var(--color-surface)] sticky bottom-0 z-10">
           <Button
             variant="outlined"

@@ -94,22 +94,21 @@ const ServiceManagement: React.FC = () => {
       const payload: LabTestItemRequest = {
         lab_id: Number(labId),
         test_id: testIds,
+         door_step_service: isOn,
         created_by: "Admin",
       };
       const res = await saveAvailableLabApi(payload);
       if (res.success) {
         toast.success(res.message);
       } else {
-        toast.success(res.message);
+        toast.error(res.message);
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-
-
-
+  
   React.useEffect(() => {
     if (!search) return;
     const searchLower = search.toLowerCase();

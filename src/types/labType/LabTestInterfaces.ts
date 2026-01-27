@@ -26,6 +26,7 @@ export interface LabTestApiResponse {
 export interface LabTestItemRequest {
   lab_id: number;
   test_id: number[];
+   door_step_service:boolean,
   created_by: string;
 }
 

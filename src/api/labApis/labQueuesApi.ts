@@ -24,7 +24,9 @@ export const savereportAsync = async (payload: {
 export async function getPendingQueueAsync(labId: number | null): Promise<PendingQueueDto[]> {
   const response = await emrAPI.post(
     "/lab/get-lab-test-record",
-    { lab_id: labId } 
+    { lab_id: labId,
+      days:15
+     } 
   );
   return response;
 }

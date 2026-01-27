@@ -37,10 +37,9 @@ export interface GetEntityResult {
   error?: string;
 }
 
-export const getRoles = async (): Promise<GetRolesResult> => {
+export const getRoles = async (entity_id:number): Promise<GetRolesResult> => {
   try {
-    const res = await emrAPI.get<RawGetRolesResponse>("/master/getRole");
-    console.log(res.data)
+    const res = await emrAPI.post<RawGetRolesResponse>("/master/getRole",{entity_id});
     return {
       success: true,
       data: res.data, 

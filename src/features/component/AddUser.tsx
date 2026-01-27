@@ -47,6 +47,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
 
   const clinicId = getSessionItem("user", "clinic_id");
   const createdBy = getSessionItem("user", "role");
+  const  entity_id= getSessionItem("user", "entity_type");
 
   const entity_name = getSessionItem<string>("user", "entity_name");
   const clinic_id = getSessionItem<number>("user", "clinic_id");
@@ -64,7 +65,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
     setEntityId(getEntityId());
     const fetchRoles = async () => {
       try {
-        const result = await getRoles();
+        const result = await getRoles(entity_id);
         setRoles(Array.isArray(result.data) ? result.data : []);
       } catch (err) {
         console.error("fetchRoles error:", err);

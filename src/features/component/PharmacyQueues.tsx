@@ -18,6 +18,7 @@ import type {
 } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
 import { Close } from "@mui/icons-material";
+import { formatDateDDMMYYYY } from "../../utils/DateUtils";
 
 const PAGE_SIZE = 10;
 
@@ -171,12 +172,21 @@ export default function PharmacyQueues({
       headerName: "Doctor Name",
       flex: 1,
     },
-     {
-      field: "created_date",
-      headerName: "Request Date",
-      width: 130,
-      renderCell: (p) => new Date(p.row.created_date).toLocaleDateString(),
-    },
+    //  {
+    //   field: "created_date",
+    //   headerName: "Request Date",
+    //   width: 130,
+    //   renderCell: (p) => new Date(p.row.created_date).toLocaleDateString(),
+    // },
+    
+{
+  field: "created_date",
+  headerName: "Request Date",
+  width: 130,
+  renderCell: (p) => formatDateDDMMYYYY(p.row.created_date),
+},
+
+
     {
       field: "prescription",
       headerName: "Prescription",

@@ -21,16 +21,21 @@ export const saveDocAPI = async (doctorData: {
   }
 };
 
-export const updateUsers=async (userData:{
-  user_id:number, 
-  status:boolean,
-  phone:string
-})=> {
+
+
+export const updateUsers = async (userData: {
+  user_id: number;
+  status: boolean;
+  phone: string;
+}): Promise<{success: boolean,message:string}> => {
   try {
-    const response = await emrAPI.post("/clinics/active-deactivate-user", userData);
+    const response = await emrAPI.post<{success: boolean,message:string}>(
+      "/clinics/active-deactivate-user",
+      userData
+    );
     return response; 
   } catch (error: any) {
-    console.error("Error:", error);
     throw error;
   }
 };
+

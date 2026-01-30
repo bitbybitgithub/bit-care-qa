@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { AxiosError } from "axios";
+
 import AddUser from "../../features/component/AddUser";
 import ProfileCard from "../../components/common/ProfileCards";
+import ConfirmModal from "../../utils/ConfirmModal";
+
 import { getUsersList, type User } from "../../api/UserManagementAPI";
 import { updateUsers } from "../../api/SaveDocApi";
 import { getSessionItem } from "../../context/sessions/userSession";
@@ -11,11 +16,15 @@ const Users: React.FC = () => {
   const clinic_id = getSessionItem<number>("user", "clinic_id");
   const lab_id = getSessionItem<number>("user", "lab_id");
   const pharmacy_id = getSessionItem<number>("user", "pharmacy_id");
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const getEntityId = useCallback((): number => {
     if (entity_name === "clinic") return clinic_id;
@@ -27,73 +36,76 @@ const Users: React.FC = () => {
   useEffect(() => {
     const entity_id = getEntityId();
     if (!entity_name || !entity_id) return;
+
     setLoading(true);
 
     getUsersList(entity_name, entity_id)
-      .then((data) => {
-        setUsers(data);
-      })
+      .then(setUsers)
       .catch((error: unknown) => {
         let message = "Failed to load users";
 
-        if (error && typeof error === "object") {
-          const err = error as {
-            response?: { data?: { message?: string } };
-            message?: string;
-          };
-
-          message =
-            err.response?.data?.message ||
-            err.message ||
-            message;
+        if (error instanceof AxiosError) {
+          message = error.response?.data?.message || error.message;
         }
-        alert(message);
+        toast.error(message);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [entity_name, getEntityId]);
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleUserStatus = async (user: User) => {
-    const newStatus = user.status === "Active" ? false : true;
+  const handleUserStatus = (user: User) => {
+    setSelectedUser(user);
+    setConfirmOpen(true);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to ${newStatus ? "activate" : "deactivate"} ${user.name
-      }?`
-    );
+  const confirmStatusChange = async () => {
+    if (!selectedUser) return;
 
-    if (!confirmed) return;
-
+    const user = selectedUser;
+    const isActive = user.status === "Active";
     const previousStatus = user.status;
+
+    setConfirmOpen(false);
     setUpdatingId(user.userid);
 
     setUsers((prev) =>
       prev.map((u) =>
         u.userid === user.userid
-          ? { ...u, status: newStatus ? "Active" : "Inactive" }
+          ? { ...u, status: isActive ? "Inactive" : "Active" }
           : u
       )
     );
 
     try {
-      await updateUsers({
+      const result = await updateUsers({
         user_id: user.userid,
-        status: newStatus,
+        status: !isActive,
         phone: user.phone,
       });
-    } catch {
+
+      if (result.success) {
+        toast.success(result.message);
+      }
+    } catch (error: unknown) {
       setUsers((prev) =>
         prev.map((u) =>
           u.userid === user.userid ? { ...u, status: previousStatus } : u
         )
       );
-      alert("Failed to update user status");
+
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message || "Failed to update user status"
+        );
+      } else {
+        toast.error("Failed to update user status");
+      }
     } finally {
       setUpdatingId(null);
+      setSelectedUser(null);
     }
   };
 
@@ -143,6 +155,18 @@ const Users: React.FC = () => {
           onClose={() => setShowAddUser(false)}
         />
       )}
+      <ConfirmModal
+        open={confirmOpen}
+        loading={updatingId !== null}
+        message={`Are you sure you want to ${
+          selectedUser?.status === "Active" ? "deactivate" : "activate"
+        } ${selectedUser?.name}?`}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={confirmStatusChange}
+      />
     </div>
   );
 };

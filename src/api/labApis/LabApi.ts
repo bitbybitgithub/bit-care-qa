@@ -81,3 +81,18 @@ export const saveLabShift = async (
     throw error;
   }
 };
+
+export const getLabTestListApi = async (
+  labid: number
+): Promise<any> => {
+  try {
+    const response = await emrAPI.post<any>(
+      "/lab/get-lab-testList",
+      { lab_id: labid }
+    );
+    return response;
+  } catch (error) {
+    console.error("fetchLabProfile error:", error);
+    throw error;
+  }
+};

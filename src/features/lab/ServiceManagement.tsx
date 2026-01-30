@@ -23,7 +23,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { getlabtestserviceApi, saveAvailableLabApi } from "../../api/labApis/LabApi";
+import { getLabTestListApi, getlabtestserviceApi, saveAvailableLabApi } from "../../api/labApis/LabApi";
 import type {
   LabTest,
   LabCategory,
@@ -61,9 +61,9 @@ const ServiceManagement: React.FC = () => {
         setLabTests(formattedData);
 
       }
-     catch (error: unknown) {
-  console.warn("Request failed:", error);
-}
+      catch (error: unknown) {
+        console.warn("Request failed:", error);
+      }
     }
     fetchlist();
   }, [])
@@ -89,7 +89,7 @@ const ServiceManagement: React.FC = () => {
       const payload: LabTestItemRequest = {
         lab_id: Number(labId),
         test_id: testIds,
-         door_step_service: isOn,
+        door_step_service: isOn,
         created_by: "Admin",
       };
       const res = await saveAvailableLabApi(payload);
@@ -101,9 +101,45 @@ const ServiceManagement: React.FC = () => {
     } catch (error) {
       console.error(error);
     }
+    finally {
+      setTimeout(() => {
+        window.location.reload()
+      }, 4000)
+    }
   };
 
-  
+  const fetchSavedLabTests = async () => {
+    try {
+      const res: any = await getLabTestListApi(Number(labId));
+      if (!res.data) return;
+      const savedTests = res.data;
+      setIsOn(savedTests.some((t: any) => t.home_service === "1") ? true : false);
+      const selected: SelectedTest[] = [];
+      labTests.forEach(category => {
+        category.tests.forEach(test => {
+          const exists = savedTests.find(
+            (s: any) => String(s.test_id) === test.id
+          );
+          if (exists) {
+            selected.push({
+              category: category.category,
+              testId: test.id,
+              testName: test.name,
+            });
+          }
+        });
+      });
+
+      setSelectedTests(selected);
+    } catch (error) {
+      console.error("Failed to bind saved tests", error);
+    }
+  };
+  useEffect(() => {
+    if (labTests.length > 0) {
+      fetchSavedLabTests();
+    }
+  }, [labTests]);
   React.useEffect(() => {
     if (!search) return;
     const searchLower = search.toLowerCase();
@@ -150,7 +186,7 @@ const ServiceManagement: React.FC = () => {
     {}
   );
 
- 
+
   const getCategoryTestIds = (category: LabCategory) =>
     category.tests.map(t => t.id);
 
@@ -213,10 +249,10 @@ const ServiceManagement: React.FC = () => {
     },
   }));
 
-  
+
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsOn(event.target.checked); 
+    setIsOn(event.target.checked);
   };
   return (
     <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
@@ -237,7 +273,7 @@ const ServiceManagement: React.FC = () => {
                 gap: 2,
                 color: "var(--color-primary-dark)",
                 "& .MuiFormControlLabel-label": {
-                  fontSize: "1.5rem", 
+                  fontSize: "1.5rem",
                   fontWeight: 600,
                 },
               }}
@@ -324,7 +360,7 @@ const ServiceManagement: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <Checkbox
                     checked={isCategoryChecked(group)}
-                    indeterminate={isCategoryIndeterminate(group)}
+                    // indeterminate={isCategoryIndeterminate(group)}
                     onChange={(e) => handleSelectAll(group, e.target.checked)}
                     sx={{
                       "&.Mui-checked": {

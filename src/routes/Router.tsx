@@ -49,7 +49,7 @@ const Router = [
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
       { path: "/lab/appsetting", element: <LabProfile /> },
-      { path: "/lab/service-management", element: <ServiceManagement /> },
+      // { path: "/lab/service-management", element: <ServiceManagement /> },
 
       { path: "/lab/pending-queue", element: <LabQueues /> },
       { path: "/lab/processing-queue", element: <LabQueues /> },

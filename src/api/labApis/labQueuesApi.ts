@@ -21,19 +21,22 @@ export const savereportAsync = async (payload: {
 }
 
 
-export async function getPendingQueueAsync(labId: number | null): Promise<PendingQueueDto[]> {
-  const response = await emrAPI.post(
-    "/lab/get-lab-test-record",
-    { lab_id: labId,
-      days:15
-     } 
-  );
-  return response;
+export async function getPendingQueueAsync(
+  labId: number | null
+): Promise<PendingQueueDto[]> {
+  const response = await emrAPI.post("/lab/get-lab-test-record", {
+    lab_id: labId,
+    days: 15,
+  });
+  return response.data;
 }
+
 
 export const updateLabTestStatusAsync = async (payload: {
   lab_id: string;
-  status: "Processing" | "Completed";
+  status: string;
+  user_id: number;
+  appointment_id: number; 
   tests: {
     lab_record_id:string;
     test_id: string;
@@ -41,7 +44,6 @@ export const updateLabTestStatusAsync = async (payload: {
     report_id: number | number[];
   }[];
 }) => {
-
   const respone = await emrAPI.post("/lab/update-lab-test-status",payload);
   return respone;
 };

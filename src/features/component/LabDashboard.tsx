@@ -26,7 +26,7 @@ const LabDashboard = () => {
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
     { key: "processingQueue", label: "Processing" },
-    { key: "completedQueue", label: "Completed" },
+    { key: "ReportingQueue", label: "Reporting" },
   ];
 
   const ActionButton = ({
@@ -193,8 +193,8 @@ const LabDashboard = () => {
             mode={
               activeTab === "processingQueue"
                 ? "processing"
-                : activeTab === "completedQueue"
-                  ? "completed"
+                : activeTab === "ReportingQueue"
+                  ? "reporting"
                   : "pending"
             }
             searchTerm={queueSearch}

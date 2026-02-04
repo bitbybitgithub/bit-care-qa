@@ -35,8 +35,8 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
-      { title: "Lab App Setting", link: "/lab/appsetting", icon: FaCog },
-      { title: "Service Management", link: "/lab/service-management", icon: FaCog },
+      { title: "Setting", link: "/lab/appsetting", icon: FaCog },
+      // { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],
     Staff: [
      { title: "Pending Queue", link: "/lab/pending-queue", icon: FaHome },

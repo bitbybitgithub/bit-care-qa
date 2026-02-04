@@ -13,8 +13,7 @@ import {
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import { Close } from "@mui/icons-material";
-import { FaUser, FaCalendarAlt, FaTimes } from "react-icons/fa";
-import { IoCall } from "react-icons/io5";
+import { FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import DUMMY_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
@@ -42,10 +41,10 @@ export default function PharmacyQueues({
   const location = useLocation();
 
   /* ================= MODE ================= */
-  const resolvedMode: "pending" | "completed" = useMemo(() => {
+  const resolvedMode: "pending" | "processing" = useMemo(() => {
     if (mode) return mode;
     if (location.pathname.toLowerCase().includes("completed"))
-      return "completed";
+      return "processing";
     return "pending";
   }, [mode, location.pathname]);
 
@@ -72,11 +71,11 @@ export default function PharmacyQueues({
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const pharmaId = getSessionItem("user", "pharmacy_id");
+  const userID = getSessionItem("user", "user_id");
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
     if (!pharmaId) return;
-
     const fetchData = async () => {
       try {
         const res = await getPharmaPatientRecords(pharmaId);
@@ -91,12 +90,13 @@ export default function PharmacyQueues({
   }, [pharmaId]);
 
   /* ================= FILTER ================= */
+
   const filteredRows = useMemo(() => {
     const q = searchTerm.toLowerCase().trim();
-
     return rows.filter((r) => {
       if (resolvedMode === "pending" && r.status !== "Pending") return false;
-      if (resolvedMode === "completed" && r.status !== "Complete") return false;
+      if (resolvedMode === "processing" && r.status !== "Processing")
+        return false;
       if (!q) return true;
       return (
         r.patient_name.toLowerCase().includes(q) || r.patient_id.includes(q)
@@ -113,6 +113,7 @@ export default function PharmacyQueues({
   const openPrescription = (row: PharmacyRecord) => {
     setSelectedRow(row);
     resetOtpFlow();
+    setContact(row.phone);
     setOpenOtpDialog(true);
   };
 
@@ -124,26 +125,36 @@ export default function PharmacyQueues({
     setVerifiedPatients(null);
     setError({});
   };
-
   /* ================= OTP ================= */
+  useEffect(() => {
+    if (openOtpDialog && contact) {
+      handleSendOtp();
+    }
+  }, [openOtpDialog, contact]);
+
   const handleSendOtp = async () => {
+    if (!contact) return;
+
+    setShowOtp(true);
     if (!Regex.MOBILEREGEX.test(contact.trim())) {
       setError((prev) => ({
         ...prev,
-        mobile: "Enter a valid 10-digit mobile number starting with 6–9",
+        otp: "Invalid mobile number",
       }));
       return;
     }
+
     setError((prev) => ({ ...prev, otp: "" }));
     setLoadingGenerate(true);
+
     try {
       const res = await generateOtpApi({
         mobile_number: contact.trim(),
         otp_type: 2,
       });
+
       if (res.success) {
         setUserId(res.userId ?? null);
-        setShowOtp(true);
         setEditedAfterOtp(false);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
@@ -161,61 +172,55 @@ export default function PharmacyQueues({
       setLoadingGenerate(false);
     }
   };
-  
-const handleVerifyOtp = async () => {
-  const enteredOtp = otp.join("");
 
-  if (enteredOtp.length !== 6) {
-    setError((prev) => ({
-      ...prev,
-      otp: "Please enter a valid 6-digit OTP",
-    }));
-    return;
-  }
+  const handleVerifyOtp = async () => {
+    const enteredOtp = otp.join("");
 
-  if (!userId) {
-    setError((prev) => ({
-      ...prev,
-      otp: "User not found. Please try again.",
-    }));
-    return;
-  }
-
-  setLoadingVerify(true);
-  setError((prev) => ({ ...prev, otp: "" }));
-
-  try {
-    const payload = {
-      userId,
-      otp: Number(enteredOtp),
-      otp_type: 2,
-    };
-    const response = await verifyOtpApi(payload);
-    console.log("otp api response", response);
-    if (!response.success) {
+    if (enteredOtp.length !== 6) {
       setError((prev) => ({
         ...prev,
-        otp: response.message || "Invalid OTP",
+        otp: "Please enter a valid 6-digit OTP",
       }));
       return;
     }
-    toast.success(response.message);
-    setVerifiedPatients(response.patients || []);
-    setOpenOtpDialog(false);
-    setOtp(["", "", "", "", "", ""]);
-    setShowOtp(false);
-    setContact("");
-
-  } catch (err) {
-    setError((prev) => ({
-      ...prev,
-      otp: "Something went wrong while verifying OTP",
-    }));
-  } finally {
-    setLoadingVerify(false);
-  }
-};
-
+    if (!userId) {
+      setError((prev) => ({
+        ...prev,
+        otp: "User not found. Please try again.",
+      }));
+      return;
+    }
+    setLoadingVerify(true);
+    setError((prev) => ({ ...prev, otp: "" }));
+    try {
+      const payload = {
+        userId,
+        otp: Number(enteredOtp),
+        otp_type: 2,
+      };
+      const response = await verifyOtpApi(payload);
+      if (!response.success) {
+        setError((prev) => ({
+          ...prev,
+          otp: response.message || "Invalid OTP",
+        }));
+        return;
+      }
+      setVerifiedPatients(response.patients || []);
+      setOpenOtpDialog(false);
+      setOpenPdf(true);
+      setOtp(["", "", "", "", "", ""]);
+      setShowOtp(false);
+      setContact("");
+    } catch (err) {
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong while verifying OTP",
+      }));
+    } finally {
+      setLoadingVerify(false);
+    }
+  };
 
 
   const handleOtpChange = (value: string, index: number) => {
@@ -234,32 +239,62 @@ const handleVerifyOtp = async () => {
       otpRefs.current[index - 1]?.focus();
   };
 
-  /* ================= COMPLETE ================= */
- const handleCompletebtnClick = async () => {
-    if (!selectedRow || updating) return;
-    const prevRows = rows;
+  /* ================= Processing ================= */
+  const startPharmacyProcess = async (row: PharmacyRecord) => {
+    if (updating) return;
     try {
       setUpdating(true);
+      const res = await updatePharmaPatientStatus(
+        pharmaId,
+        userID,
+        row.prescriptionid,
+        "Processing",
+      );
+      if (!res?.success) {
+        throw new Error("Failed to start processing");
+      }
       setRows((prev) =>
         prev.map((r) =>
-          r.patient_id === selectedRow.patient_id &&
-          r.created_date === selectedRow.created_date
-            ? { ...r, status: "Complete" }
+          r.prescriptionid === row.prescriptionid &&
+          r.created_date === row.created_date
+            ? { ...r, status: "Processing" }
             : r,
         ),
       );
+      toast.success("Prescription moved to Processing");
+    } catch (error) {
+      console.error("Start processing failed", error);
+      toast.error("Failed to start prescription processing");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  /* ================= COMPLETE ================= */
+  const handleCompletebtnClick = async () => {
+    if (!selectedRow || updating) return;
+    try {
+      setUpdating(true);
       const res = await updatePharmaPatientStatus(
         pharmaId,
-        selectedRow.patient_id,
+        userID,
+        selectedRow.prescriptionid,
+        "Complete",
       );
       if (!res?.success) {
         throw new Error("Status update failed");
       }
-      toast.success("Prescription marked as complete");
+      setRows((prev) =>
+        prev.filter(
+          (r) =>!(
+              r.prescriptionid === selectedRow.prescriptionid &&
+              r.created_date === selectedRow.created_date
+            ),),);
+      toast.success("Prescription Sattus Completed");
       setOpenPdf(false);
+      setSelectedRow(null);
     } catch (error) {
       console.error("Update failed", error);
-      setRows(prevRows);
       toast.error("Failed to update prescription status");
     } finally {
       setUpdating(false);
@@ -280,22 +315,8 @@ const handleVerifyOtp = async () => {
       otp: "",
     });
   };
-
-  /* ================= TABLE ================= */
+  /* =================GRID TABLE ================= */
   const columns: GridColDef[] = [
-     {
-      field: "__srno__",
-      headerName: "Sr No",
-      width: 60,
-      sortable: false,
-      filterable: false,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params) => {
-        const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
-        return (currentPage - 1) * PAGE_SIZE + rowIndex + 1;
-      },
-    },
     {
       field: "patient_id",
       headerName: "Patient ID",
@@ -305,7 +326,6 @@ const handleVerifyOtp = async () => {
       field: "patient_name",
       headerName: "Patient Name",
       flex: 1.5,
-      width: 120,
       renderCell: (p) => (
         <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
@@ -316,21 +336,17 @@ const handleVerifyOtp = async () => {
       ),
     },
     {
-      field: "age",
-      headerName: "Age",
-      width: 100,
-    },
-    {
-      field: "gender",
-      headerName: "Gender",
-      width: 80,
+      field: "phone",
+      headerName: "Contact Number",
+      flex: 1,
+      renderCell: (p) => <span>{p.row.phone}</span>,
     },
     {
       field: "clinic_name",
       headerName: "Clinic Name",
       flex: 1,
     },
-     {
+    {
       field: "doctor_name",
       headerName: "Doctor Name",
       flex: 1,
@@ -341,47 +357,35 @@ const handleVerifyOtp = async () => {
       width: 130,
       renderCell: (p) => formatDateDDMMYYYY(p.row.created_date),
     },
-
     {
-      field: "prescription",
-      headerName: "Prescription",
-      width: 150,
+      field: "action_or_prescription",
+      headerName: "Action",
+      width: 160,
       sortable: false,
-      renderCell: (p) => (
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={() => openPrescription(p.row)}
-        >
-          View
-        </Button>
-      ),
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 150,
       renderCell: (p) => {
-        const meta: Record<string, { bg: string; color: string }> = {
-          Pending: { bg: "#FFE8B2", color: "#92400E" },
-          Complete: { bg: "#B2DDFF", color: "#1E40AF" },
-        };
-
-        const cfg = meta[p.row.status] ?? meta.Pending;
-
-        return (
-          <Chip
-            size="small"
-            label={p.row.status}
-            sx={{
-              backgroundColor: cfg.bg,
-              color: cfg.color,
-              fontWeight: 600,
-              fontSize: 12,
-              height: 26,
-            }}
-          />
-        );
+        if (p.row.status === "Pending") {
+          return (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => startPharmacyProcess(p.row)}
+            >
+              Start
+            </Button>
+          );
+        }
+        if (p.row.status === "Processing") {
+          return (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => openPrescription(p.row)}
+            >
+              View
+            </Button>
+          );
+        }
+        return null;
       },
     },
   ];
@@ -391,7 +395,6 @@ const handleVerifyOtp = async () => {
 
   return (
     <>
-    
       <DataGrid
         rows={paginatedRows}
         columns={columns}
@@ -407,39 +410,39 @@ const handleVerifyOtp = async () => {
         }}
         onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
         density="compact"
-          sx={{
-            width: "100%",
-            backgroundColor: "var(--color-white)",
-            overflow: "hidden",
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "transparent",
-              color: "var(--color-primary)",
-              textTransform: "uppercase",
-              fontSize: 12,
-              letterSpacing: "0.06em",
-              fontWeight: 600,
+        sx={{
+          width: "100%",
+          backgroundColor: "var(--color-white)",
+          overflow: "hidden",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "transparent",
+            color: "var(--color-primary)",
+            textTransform: "uppercase",
+            fontSize: 12,
+            letterSpacing: "0.06em",
+            fontWeight: 600,
+          },
+          "& .MuiDataGrid-columnSeparator": {
+            display: "none",
+          },
+          "& .MuiDataGrid-row": {
+            fontSize: 13,
+          },
+          "& .MuiDataGrid-row:hover": {
+            backgroundColor: "rgba(0,0,0,0.02)",
+          },
+          "& .MuiDataGrid-virtualScrollerRenderZone": {
+            "& .MuiDataGrid-row:nth-of-type(odd)": {
+              backgroundColor: "rgba(15,23,42,0.02)",
             },
-            "& .MuiDataGrid-columnSeparator": {
-              display: "none",
-            },
-            "& .MuiDataGrid-row": {
-              fontSize: 13,
-            },
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "rgba(0,0,0,0.02)",
-            },
-            "& .MuiDataGrid-virtualScrollerRenderZone": {
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "rgba(15,23,42,0.02)",
-              },
-            },
-            "& .MuiDataGrid-cell:focus": {
-              outline: "none",
-            },
-            "& .MuiDataGrid-footerContainer": {
-              borderTop: "none",
-            },
-          }}
+          },
+          "& .MuiDataGrid-cell:focus": {
+            outline: "none",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+          },
+        }}
       />
       <Dialog
         open={openOtpDialog}
@@ -470,10 +473,10 @@ const handleVerifyOtp = async () => {
           <button
             onClick={handleClose}
             className="w-8 h-8 flex justify-center items-center rounded-full
-                 bg-[var(--color-primary)] text-white
-                 hover:bg-[var(--color-surface)]
-                 hover:text-[var(--color-primary)]
-                 transition"
+                  bg-[var(--color-primary)] text-white
+                  hover:bg-[var(--color-surface)]
+                  hover:text-[var(--color-primary)]
+                  transition"
           >
             <FaTimes />
           </button>
@@ -482,54 +485,12 @@ const handleVerifyOtp = async () => {
         <p className="mb-2" style={{ fontSize: "var(--font-small)" }}>
           We'll verify your contact
         </p>
-        {!showOtp && (
+
+        {false && !showOtp && (
           <div className="mt-2">
-            <div className="flex gap-4 items-center">
-              <FormControl fullWidth>
-                <TextField
-                  size="small"
-                  placeholder="Enter 10-digit number"
-                  value={contact}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
-                      setContact(val);
-                      setError({ mobile: "", otp: "" });
-                    }
-                  }}
-                  error={!!error.mobile}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <span style={{ fontWeight: 600 }}>+91</span>
-                        </InputAdornment>
-                      ),
-                      inputProps: { maxLength: 10 },
-                    },
-                  }}
-                />
-              </FormControl>
-
-              <Button
-                onClick={handleSendOtp}
-                disabled={contact.length !== 10 || loadingGenerate}
-                variant="contained"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  minWidth: "120px",
-                }}
-              >
-                Send OTP
-              </Button>
-            </div>
-
-            {error.mobile && (
-              <p className="mt-1 text-xs text-[var(--color-error)]">
-                {error.mobile}
-              </p>
-            )}
+            <FormControl fullWidth>
+              <TextField size="small" />
+            </FormControl>
           </div>
         )}
 
@@ -615,7 +576,6 @@ const handleVerifyOtp = async () => {
             <Close />
           </IconButton>
         </Box>
-
         <iframe
           src={`${DUMMY_PDF}#toolbar=0`}
           width="100%"
@@ -623,7 +583,7 @@ const handleVerifyOtp = async () => {
           style={{ border: "none" }}
         />
 
-        {selectedRow?.status === "Pending" && (
+        {selectedRow?.status === "Processing" && (
           <Box p={2} textAlign="right">
             <Button
               variant="contained"

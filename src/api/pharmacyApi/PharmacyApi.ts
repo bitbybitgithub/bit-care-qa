@@ -15,19 +15,29 @@ export async function getPharmaPatientRecords(
 
 export async function updatePharmaPatientStatus(
   pharmaId: number | null,
-  patientId: string
+  userID: number | null,
+  prescriptionId: number | string | null,
+  status: "Processing" | "Complete"
 ): Promise<{ success: boolean }> {
   if (!pharmaId) {
     throw new Error("Pharmacy ID missing");
   }
-  const response = await emrAPI.post<{ success: boolean }>(
+
+  const numericPrescriptionId =
+    prescriptionId !== null ? Number(prescriptionId) : null;
+
+  if (numericPrescriptionId !== null && Number.isNaN(numericPrescriptionId)) {
+    throw new Error("Invalid prescriptionId");
+  }
+ const response = await emrAPI.post<{ success: boolean }>(
     "/pharmacy/update-prescription-status",
     {
       pharmacy_id: pharmaId,
-      patient_id: patientId,
-      status: "Complete",
+      user_id: userID,
+      prescription_id: numericPrescriptionId,
+      status,
     }
   );
+
   return response;
 };
-

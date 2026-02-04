@@ -24,7 +24,7 @@ const PharmacyDashboard = () => {
   const [activeTab, setActiveTab] = useState("pendingQueue");
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
-    { key: "completedQueue", label: "Completed" },
+    { key: "processingQueue", label: "Processing" },
   ];
 
   const ActionButton = ({
@@ -189,7 +189,7 @@ const PharmacyDashboard = () => {
 
         <div className="mt-4">
           <PharmacyQueues
-            mode={activeTab === "pendingQueue" ? "pending" : "completed"}
+            mode={activeTab === "pendingQueue" ? "pending" : "processing"}
             searchTerm={queueSearch}
           />
         </div>

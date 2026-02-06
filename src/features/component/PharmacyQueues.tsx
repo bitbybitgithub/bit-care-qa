@@ -290,7 +290,7 @@ export default function PharmacyQueues({
               r.prescriptionid === selectedRow.prescriptionid &&
               r.created_date === selectedRow.created_date
             ),),);
-      toast.success("Prescription Sattus Completed");
+      toast.success("Prescription Status Completed");
       setOpenPdf(false);
       setSelectedRow(null);
     } catch (error) {

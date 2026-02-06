@@ -17,7 +17,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 pb-110 z-00 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 pb-110 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
         <p className="text-gray-800 mb-5">{message}</p>
 

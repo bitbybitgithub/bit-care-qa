@@ -39,9 +39,7 @@ export const SIDEBAR_MENUS: Record<
       // { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],
     Staff: [
-     { title: "Pending Queue", link: "/lab/pending-queue", icon: FaHome },
-  { title: "Processing Queue", link: "/lab/processing-queue", icon: FaUsers },
-  { title: "Completed Queue", link: "/lab/completed-queue", icon: FaCog },
+      { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
     ],
   },
 

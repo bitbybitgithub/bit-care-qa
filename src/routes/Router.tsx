@@ -12,7 +12,6 @@ import Staffdashboard from "../features/component/StaffDashboard";
 // import ComingSoon from "../components/common/ComingSoon";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
-import LabQueues from "../features/component/LabQueues";
 import LabDashboard from "../features/component/LabDashboard";
 import PharmacyDashboard from "../features/component/PharmacyDashboard";
 import ServiceManagement from "../features/lab/ServiceManagement";
@@ -51,9 +50,6 @@ const Router = [
       { path: "/lab/appsetting", element: <LabProfile /> },
       // { path: "/lab/service-management", element: <ServiceManagement /> },
 
-      { path: "/lab/pending-queue", element: <LabQueues /> },
-      { path: "/lab/processing-queue", element: <LabQueues /> },
-      { path: "/lab/completed-queue", element: <LabQueues /> },
 
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },

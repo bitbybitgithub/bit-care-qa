@@ -294,7 +294,7 @@ const RegistrationForm = () => {
           Create Account
         </h1>
         <h3 className="text-[var(--color-text)] ">
-          Register your Centre below
+          Register your Center below
         </h3>
       </div>
 

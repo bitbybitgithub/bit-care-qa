@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
@@ -33,24 +33,31 @@ const Users: React.FC = () => {
     return 0;
   }, [entity_name, clinic_id, lab_id, pharmacy_id]);
 
-  useEffect(() => {
-    const entity_id = getEntityId();
-    if (!entity_name || !entity_id) return;
+const hasShownToast = useRef(false);
 
-    setLoading(true);
+useEffect(() => {
+  const entity_id = getEntityId();
+  if (!entity_name || !entity_id) return;
+  setLoading(true);
+  getUsersList(entity_name, entity_id)
+    .then(({ data, message }) => {
+      setUsers(data);
 
-    getUsersList(entity_name, entity_id)
-      .then(setUsers)
-      .catch((error: unknown) => {
-        let message = "Failed to load users";
+      if (message && !hasShownToast.current) {
+        toast.info(message);
+        hasShownToast.current = true;
+      }
+    })
+    .catch((error: unknown) => {
+      let message = "Failed to load users";
 
-        if (error instanceof AxiosError) {
-          message = error.response?.data?.message || error.message;
-        }
-        toast.error(message);
-      })
-      .finally(() => setLoading(false));
-  }, [entity_name, getEntityId]);
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || error.message;
+      }
+      toast.error(message);
+    })
+    .finally(() => setLoading(false));
+}, [entity_name, getEntityId]);
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())

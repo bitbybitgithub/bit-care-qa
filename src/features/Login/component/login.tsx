@@ -297,7 +297,7 @@ const Login = () => {
                         to="/register"
                         className="text-[var(--color-info)] hover:underline cursor-pointer font-semibold"
                       >
-                        Register Centre
+                        Register Center
                       </Link>
                     </p>
                   </footer>
@@ -453,7 +453,7 @@ const Login = () => {
                 className="flex flex-col items-center justify-center h-full px-10 space-y-5"
               >
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
-                  Centre Login
+                  Center Login
                 </h1>
                 <FormControl fullWidth>
                   <TextField

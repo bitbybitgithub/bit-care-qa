@@ -4,7 +4,7 @@ import {
   FaCog,
 } from "react-icons/fa";
 import { GrDocumentText } from "react-icons/gr";
-import  { EntityType } from "./enum";
+import { EntityType } from "./enum";
 import type { MenuItem, Role } from "../../types/common/sidebarTypes";
 
 export const SIDEBAR_MENUS: Record<
@@ -15,6 +15,8 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
       { title: "Users", link: "/clinic/users", icon: FaUsers },
+      { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: FaUsers },
+      { title: "Pharma Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaUsers },
       { title: "Clinic App Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [

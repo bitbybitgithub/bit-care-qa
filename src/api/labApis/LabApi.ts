@@ -11,7 +11,7 @@ import type {
 export const getlabtestserviceApi = async (lab_Id: number) => {
   try {
     const response = await emrAPI.get<LabTestApiResponse[]>(
-      `/lab/get-lab-test-service?lab_id=${lab_Id}` 
+      `/lab/get-lab-test-service?lab_id=${lab_Id}`
     );
     return response;
   } catch (error) {
@@ -51,7 +51,7 @@ export const fetchLabProfile = async (
 };
 
 export const uploadLabLogo = (formData: FormData) => {
-  const response= axios.post(
+  const response = axios.post(
     `${BASE_URL}/lab/upload-logo`,
     formData,
     {
@@ -60,7 +60,7 @@ export const uploadLabLogo = (formData: FormData) => {
       },
     }
   );
-   return response;
+  return response;
 };
 
 export const saveLabShift = async (
@@ -82,17 +82,15 @@ export const saveLabShift = async (
   }
 };
 
-export const getLabTestListApi = async (
-  labid: number
-): Promise<any> => {
+export const getActiveLabListApi = async () => {
   try {
-    const response = await emrAPI.post<any>(
-      "/lab/get-lab-testList",
-      { lab_id: labid }
+    const response = await emrAPI.get(
+      "/lab/get-lab-list"
     );
     return response;
   } catch (error) {
-    console.error("fetchLabProfile error:", error);
+    console.error("getActiveLabListApi error:", error);
     throw error;
   }
 };
+

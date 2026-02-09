@@ -41,3 +41,14 @@ export async function updatePharmaPatientStatus(
 
   return response;
 };
+export const getActivePharmaListApi = async () => {
+  try {
+    const response = await emrAPI.get(
+      "/pharmacy/get-pharma-list"
+    );
+    return response;
+  } catch (error) {
+    console.error("getActivePharmaListApi error:", error);
+    throw error;
+  }
+};

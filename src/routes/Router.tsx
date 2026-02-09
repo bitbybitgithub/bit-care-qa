@@ -13,9 +13,13 @@ import Staffdashboard from "../features/component/StaffDashboard";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
 import LabDashboard from "../features/component/LabDashboard";
-import PharmacyDashboard from "../features/component/PharmacyDashboard";
-import ServiceManagement from "../features/lab/ServiceManagement";
+import PharmacyDashboard from "../features/pharma/PharmacyDashboard";
+// import ServiceManagement from "../features/lab/ServiceManagement";
 import LabProfile from "../features/lab/LabProfile";
+import LabEmpanelment from "../features/lab/LabEmpanelment";
+import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
+
+
 
 const Router = [
   {
@@ -34,6 +38,9 @@ const Router = [
       // clinic admin routes
       { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
+      { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
+      { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
+
       { path: "/clinic/settings", element: <Profile /> },
 
       // clinic doctor routes

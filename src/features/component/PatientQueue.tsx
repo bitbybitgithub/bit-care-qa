@@ -472,8 +472,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       {loading
         ? "Loading appointments..."
         : error
-        ? error
-        : "No patients found."}
+          ? error
+          : "No patients found."}
     </Box>
   );
 
@@ -485,11 +485,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${
-        classProp || ""
-      }`}
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${classProp || ""
+        }`}
     >
-    
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         {mode !== "staff" ? (
           <h2

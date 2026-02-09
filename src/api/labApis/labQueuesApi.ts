@@ -1,8 +1,14 @@
 import { emrAPI } from "../../services/EmrApi";
 import type { PendingQueueDto } from "../../types/labType/pendingQueueTypes";
+import type { ApiResponse } from "../../types/types";
 
 export interface PendingQueueResponse{
   response: PendingQueueDto[];
+}
+export interface SaveReportResponse {
+  report_id: string;
+  success: boolean;
+  message: string;
 }
 
 export const savereportAsync = async (payload: {
@@ -12,28 +18,32 @@ export const savereportAsync = async (payload: {
   test_date: string;
   file_guid_name: string;
   file_path: string;
-  created_by: string;
+  created_by: number;
   file_name: string;
-  report_id: string;
-}) => {
-  const respone = await emrAPI.post("/lab/save-report",payload);
-  return respone;
-}
+}): Promise<SaveReportResponse> => {
+  const response = await emrAPI.post<SaveReportResponse>("/lab/save-report",payload);
+  return response;
+};
+
 
 
 export async function getPendingQueueAsync(
   labId: number | null
 ): Promise<PendingQueueDto[]> {
-  const response = await emrAPI.post("/lab/get-lab-test-record", {
-    lab_id: labId,
-    days: 15,
-  });
-  return response.data;
+  const response = await emrAPI.post<ApiResponse<PendingQueueDto[]>>(
+    "/lab/get-lab-test-record",
+    {
+      lab_id: labId,
+      days: 15,
+    }
+  );
+
+  return response.data; 
 }
 
 
 export const updateLabTestStatusAsync = async (payload: {
-  lab_id: string;
+  lab_id: number;
   status: string;
   user_id: number;
   appointment_id: number; 

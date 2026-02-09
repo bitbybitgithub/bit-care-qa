@@ -69,52 +69,53 @@ useEffect(() => {
   };
 
   const confirmStatusChange = async () => {
-    if (!selectedUser) return;
+  if (!selectedUser) return;
 
-    const user = selectedUser;
-    const isActive = user.status === "Active";
-    const previousStatus = user.status;
+  const user = selectedUser;
+  const isActive = user.status === "Active";
+  const previousStatus = user.status;
 
-    setConfirmOpen(false);
-    setUpdatingId(user.userid);
+  setConfirmOpen(false);
+  setUpdatingId(user.userid); 
 
+  setUsers((prev) =>
+    prev.map((u) =>
+      u.userid === user.userid
+        ? { ...u, status: isActive ? "Inactive" : "Active" }
+        : u
+    )
+  );
+
+  try {
+    const result = await updateUsers({
+      user_id: user.userid,
+      status: !isActive,
+      phone: user.phone,
+    });
+
+    if (result.success) {
+      toast.success(result.message);
+    }
+  } catch (error: unknown) {
     setUsers((prev) =>
       prev.map((u) =>
-        u.userid === user.userid
-          ? { ...u, status: isActive ? "Inactive" : "Active" }
-          : u
+        u.userid === user.userid ? { ...u, status: previousStatus } : u
       )
     );
 
-    try {
-      const result = await updateUsers({
-        user_id: user.userid,
-        status: !isActive,
-        phone: user.phone,
-      });
-
-      if (result.success) {
-        toast.success(result.message);
-      }
-    } catch (error: unknown) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.userid === user.userid ? { ...u, status: previousStatus } : u
-        )
+    if (error instanceof AxiosError) {
+      toast.error(
+        error.response?.data?.message || "Failed to update user status"
       );
-
-      if (error instanceof AxiosError) {
-        toast.error(
-          error.response?.data?.message || "Failed to update user status"
-        );
-      } else {
-        toast.error("Failed to update user status");
-      }
-    } finally {
-      setUpdatingId(null);
-      setSelectedUser(null);
+    } else {
+      toast.error("Failed to update user status");
     }
-  };
+  } finally {
+    setUpdatingId(null); 
+    setSelectedUser(null);
+  }
+};
+
 
   return (
     <div>

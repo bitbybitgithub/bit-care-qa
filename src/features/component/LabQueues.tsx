@@ -6,9 +6,11 @@ import {
   getPendingQueueAsync,
   updateLabTestStatusAsync,
   getLabReportsByLabId,
+  savereportAsync,
 } from "../../api/labApis/labQueuesApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReport } from "../../api/CommonApi/uploadFileApi";
+import { toast } from "react-toastify";
 
 const PAGE_SIZE = 10;
 
@@ -112,6 +114,12 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     setPrescriptionRow(null);
   };
 
+  const hasUploadedReport = (row: any) => {
+    return row.tests?.some(
+      (t: any) => reportMap[t.test_id] && reportMap[t.test_id].length > 0,
+    );
+  };
+
   /* ---------------- FILTER ---------------- */
   const filteredRows = useMemo(() => {
     const q = searchTerm.toLowerCase();
@@ -120,7 +128,10 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         return false;
       if (resolvedMode === "processing" && r.result_status !== "Processing")
         return false;
-      if (resolvedMode === "reporting" && r.result_status !== "Reporting Pending")
+      if (
+        resolvedMode === "reporting" &&
+        r.result_status !== "Reporting Pending"
+      )
         return false;
       if (!q) return true;
       return (
@@ -137,29 +148,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   }, [filteredRows, currentPage]);
 
   /* ---------------- ACTIONS ---------------- */
-const updateStatus = async (
-  row: any,
-  status: "Processing" | "Reporting Pending" | "Completed"
-) => {
-  await updateLabTestStatusAsync({
-    appointment_id: row.appointment_id,
-    lab_id: row.lab_id,
-    status,
-    user_id: userId,
-    tests: row.tests.map((t: any) => ({
-      lab_record_id: t.lab_record_id,
-      test_id: t.test_id,
-      patient_id: row.patient_id,
-    })),
-  });
-  setRows((prev) =>
-    prev.map((r) =>
-      r === row ? { ...r, result_status: status } : r
-    )
-  );
-};
+  const updateStatus = async (
+    row: any,
+    status: "Processing" | "Reporting Pending" | "Completed",
+  ) => {
+    await updateLabTestStatusAsync({
+      appointment_id: row.appointment_id,
+      lab_id: row.lab_id,
+      status,
+      user_id: userId,
+      tests: row.tests.map((t: any) => ({
+        lab_record_id: t.lab_record_id,
+        test_id: t.test_id,
+        patient_id: row.patient_id,
+      })),
+    });
 
+    toast.success("Status updated successfully");
 
+    setRows((prev) =>
+      prev.map((r) => (r === row ? { ...r, result_status: status } : r)),
+    );
+  };
 
   const openUpload = (_: any, row: any) => {
     setActiveRow(row);
@@ -194,53 +204,94 @@ const updateStatus = async (
   const uploadTestFile = async (testId: string, file: File) => {
     if (!activeRow) return;
     const uploadRes = await uploadReport({ folder: "reports", file });
+    console.log("upload file response", uploadRes);
     const uploaded = uploadRes.files[0];
-    const reportId = Number(uploaded.filename.split("-")[0]);
 
     setReportMap((prev) => ({
       ...prev,
       [testId]: [
         ...(prev[testId] || []),
         {
-          reportId,
           guid: uploaded.filename,
           originalName: uploaded.originalName,
+          filePath: uploaded.path,
         },
       ],
     }));
   };
 
-  const handleSubmitReports = async () => {
-    if (!activeRow) return;
+const handleSubmitReports = async () => {
+  if (!activeRow) return;
+
+  if (!hasUploadedReport(activeRow)) {
+    toast.error("Please upload at least one report before submitting");
+    return;
+  }
+
+  try {
+    const completedTestsMap: Record<number, number> = {};
+
+    for (const test of activeRow.tests) {
+      const reports = reportMap[test.test_id];
+      if (!reports?.length) continue;
+
+      const r = reports[0];
+
+      const saveResponse = await savereportAsync({
+        lab_record_id: Number(test.lab_record_id),
+        test_id: Number(test.test_id),
+        lab_id: Number(activeRow.lab_id),
+        test_date: new Date().toISOString(),
+        file_guid_name: r.guid,
+        file_path: r.filePath,
+        file_name: r.originalName,
+        created_by: userId,
+      });
+
+      const dbReportId = Number(saveResponse.report_id);
+      if (Number.isNaN(dbReportId)) {
+        throw new Error("Invalid report_id returned from save-report API");
+      }
+
+      completedTestsMap[test.test_id] = dbReportId;
+    }
 
     const completedTests = activeRow.tests
-      .filter((t: any) => reportMap[t.test_id]?.length > 0)
-      .map((t: any) => ({
-        lab_record_id: t.lab_record_id,
-        test_id: t.test_id,
-        patient_id: activeRow.patient_id,
-        report_id:
-          reportMap[t.test_id].length === 1
-            ? reportMap[t.test_id][0].reportId
-            : reportMap[t.test_id].map((r: any) => r.reportId),
+      .filter(t => completedTestsMap[t.test_id])
+      .map(t => ({
+        lab_record_id: Number(t.lab_record_id),
+        test_id: Number(t.test_id),
+        patient_id: Number(activeRow.patient_id),
+        report_id: completedTestsMap[t.test_id],
       }));
 
-    if (!completedTests.length)
-      return alert("Please upload at least one report");
+    if (!completedTests.length) {
+      toast.error("No completed tests to update");
+      return;
+    }
 
-    await updateLabTestStatusAsync({
-      lab_id: activeRow.lab_id,
+    const updateResponse = await updateLabTestStatusAsync({
+      lab_id: Number(activeRow.lab_id),
       status: "Completed",
+      appointment_id: Number(activeRow.appointment_id),
       tests: completedTests,
     } as any);
 
-    setRows((prev) =>
-      prev.map((r) =>
-        r === activeRow ? { ...r, result_status: "Completed" } : r,
-      ),
+    console.log("update status response", updateResponse);
+
+    setRows(prev =>
+      prev.map(r =>
+        r === activeRow ? { ...r, result_status: "Completed" } : r
+      )
     );
+
     closeUpload();
-  };
+  } catch (error) {
+    console.error("Submit reports failed:", error);
+    toast.error("Failed to submit reports. Please try again.");
+  }
+};
+
 
   const commonColumns: GridColDef[] = [
     { field: "patient_id", headerName: "Patient ID", width: 120 },
@@ -263,39 +314,71 @@ const updateStatus = async (
   ];
 
   const columns: GridColDef[] = useMemo(() => {
-  if (resolvedMode === "pending")
-    return [
-      ...commonColumns,
-      {
-        field: "action",
-        headerName: "Action",
-        flex: 1,
-        renderCell: (p) => (
-          <Button
-            size="small"
-            variant="contained"
-            onClick={() => updateStatus(p.row, "Processing")}
-          >
-            Start
-          </Button>
-        ),
-      },
-    ];
+    if (resolvedMode === "pending")
+      return [
+        ...commonColumns,
+        {
+          field: "action",
+          headerName: "Action",
+          flex: 1,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => updateStatus(p.row, "Processing")}
+            >
+              Start
+            </Button>
+          ),
+        },
+      ];
 
-  if (resolvedMode === "processing")
+    if (resolvedMode === "processing")
+      return [
+        ...commonColumns,
+        {
+          field: "action",
+          headerName: "Action",
+          width: 200,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => openViewPrescription(p.row)}
+            >
+              View Prescription
+            </Button>
+          ),
+        },
+        {
+          field: "complete",
+          headerName: "Complete Test",
+          width: 160,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => updateStatus(p.row, "Reporting Pending")}
+            >
+              Complete Test
+            </Button>
+          ),
+        },
+      ];
+
     return [
       ...commonColumns,
       {
         field: "action",
         headerName: "Action",
-        width: 200,
+        width: 180,
         renderCell: (p) => (
           <Button
             size="small"
-            variant="contained"
-            onClick={() => openViewPrescription(p.row)}
+            variant="outlined"
+            onClick={(e) => openUpload(e, p.row)}
           >
-            View Prescription
+            Upload Test
           </Button>
         ),
       },
@@ -303,52 +386,23 @@ const updateStatus = async (
         field: "complete",
         headerName: "Complete Test",
         width: 160,
-        renderCell: (p) => (
-          <Button
-            size="small"
-            variant="contained"
-            onClick={() =>
-              updateStatus(p.row, "Reporting Pending")
-            }
-          >
-            Complete Test
-          </Button>
-        ),
+        renderCell: (p) => {
+          const disabled = !hasUploadedReport(p.row);
+
+          return (
+            <Button
+              size="small"
+              variant="contained"
+              disabled={disabled}
+              onClick={() => updateStatus(p.row, "Completed")}
+            >
+              Report Complete
+            </Button>
+          );
+        },
       },
     ];
-
-  return [
-    ...commonColumns,
-    {
-      field: "action",
-      headerName: "Action",
-      width: 180,
-      renderCell: (p) => (
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={(e) => openUpload(e, p.row)}
-        >
-          Upload Test
-        </Button>
-      ),
-    },
-    {
-      field: "complete",
-      headerName: "Complete Test",
-      width: 160,
-      renderCell: (p) => (
-        <Button
-          size="small"
-          variant="contained"
-          onClick={() => updateStatus(p.row, "Completed")}
-        >
-          Report Complete
-        </Button>
-      ),
-    },
-  ];
-}, [resolvedMode]);
+  }, [resolvedMode]);
 
   return (
     <>

@@ -23,6 +23,7 @@ export interface SavePatientVitalRequest {
   created_by: string;
   modified_by: string;
   is_active: boolean;
+  user_id:string;
 }
 
 export const GetPatientVital = async (

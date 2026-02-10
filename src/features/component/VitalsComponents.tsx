@@ -54,10 +54,11 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     onStatusUpdate,
   }) => {
     const clinicId = getSessionItem("user", "clinic_id");
+    const userId = getSessionItem("user", "user_id");
     const [formData, setFormData] = useState<PatientVitalsData>({
       height_cm: 0,
       weight_kg: 0,
-      temperature_c: 36.5,
+      temperature_c: 0,
       blood_pressure_systolic: 0,
       blood_pressure_diastolic: 0,
       pulse_rate: 0,
@@ -71,6 +72,44 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     });
 
     const [loading, setLoading] = useState(false);
+    type VitalField = keyof PatientVitalsData;
+    const [errors, setErrors] = useState<Partial<Record<VitalField, string>>>({});
+
+    const REQUIRED_FIELDS: VitalField[] = [
+      "height_cm",
+      "weight_kg",
+      "temperature_c",
+      "blood_pressure_systolic",
+      "blood_pressure_diastolic",
+      "pulse_rate",
+      "respiration_rate",
+      "oxygen_saturation",
+      "chief_complaint",
+      "notes",
+      "allergies",
+      "current_medications",
+    ];
+
+    const validateForm = (): boolean => {
+      const newErrors: Partial<Record<VitalField, string>> = {};
+
+      REQUIRED_FIELDS.forEach((field) => {
+        const value = formData[field];
+
+        // number fields
+        if (typeof value === "number" && value <= 0) {
+          newErrors[field] = "This field is required";
+        }
+
+        // string fields
+        if (typeof value === "string" && value.trim() === "") {
+          newErrors[field] = "This field is required";
+        }
+      });
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
 
     useEffect(() => {
       const { height_cm, weight_kg } = formData;
@@ -86,10 +125,24 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     ) => {
       const numValue =
         typeof value === "string" ? Number.parseFloat(value) || 0 : value;
+
       setFormData((prev) => ({ ...prev, [field]: numValue }));
+
+      setErrors((prev) => {
+        if (!prev[field]) return prev;
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
     };
 
+
     const handleSubmit = async () => {
+      if (!validateForm()) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
       setLoading(true);
       try {
         const payload = {
@@ -101,6 +154,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           created_by: createdBy,
           modified_by: createdBy,
           is_active: true,
+          user_id:userId
         };
 
         await SavePatientVital(payload);
@@ -124,7 +178,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       setFormData({
         height_cm: 0,
         weight_kg: 0,
-        temperature_c: 36.5,
+        temperature_c: 0,
         blood_pressure_systolic: 0,
         blood_pressure_diastolic: 0,
         pulse_rate: 0,
@@ -136,7 +190,9 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
         allergies: "",
         current_medications: "",
       });
+      setErrors({});
     };
+
 
     const renderDivider = (label: string) => (
       <div className="flex items-center gap-3 pt-2">
@@ -149,14 +205,14 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     );
 
     const fields = [
-      { field: "height_cm", label: "Height (cm)", placeholder: "170", icon: <GiBodyHeight />,},
+      { field: "height_cm", label: "Height (cm)", placeholder: "170", icon: <GiBodyHeight />, },
       {
         field: "weight_kg",
         label: "Weight (kg)",
         placeholder: "70",
         icon: <FaWeightScale />,
       },
-      { field: "bmi", label: "BMI", placeholder: "Auto",icon: <IoBody />, },
+      { field: "bmi", label: "BMI", placeholder: "Auto", icon: <IoBody />, },
       {
         field: "temperature_c",
         label: "Temp (°C)",
@@ -225,14 +281,14 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   placeholder={placeholder}
                   value={formData[field] || ""}
                   onChange={(e) =>
-                    handleInputChange(
-                      field as keyof PatientVitalsData,
-                      e.target.value
-                    )
+                    handleInputChange(field as keyof PatientVitalsData, e.target.value)
                   }
                   size="small"
                   fullWidth
+                  error={Boolean(errors[field as VitalField])}
+                  // helperText={errors[field as VitalField]}
                 />
+
               </div>
             ))}
           </div>
@@ -255,7 +311,10 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   chief_complaint: e.target.value,
                 }))
               }
+              error={Boolean(errors.chief_complaint)}
+              // helperText={errors.chief_complaint}
             />
+
           </div>
 
           <div>
@@ -271,6 +330,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, notes: e.target.value }))
               }
+               error={Boolean(errors.notes)}
+              // helperText={errors.notes}
             />
           </div>
           <div>
@@ -286,6 +347,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, allergies: e.target.value }))
               }
+               error={Boolean(errors.allergies)}
+              // helperText={errors.allergies}
             />
           </div>
           <div>
@@ -304,6 +367,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   current_medications: e.target.value,
                 }))
               }
+               error={Boolean(errors.current_medications)}
+              // helperText={errors.current_medications}
             />
           </div>
         </div>

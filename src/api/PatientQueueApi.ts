@@ -8,7 +8,6 @@ export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
   user_id: string;
   status: string;
-  clinic_id: number;
 }
 interface UpdateAppointmentStatusResponse {
   success: boolean;

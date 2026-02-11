@@ -12,7 +12,7 @@ import Staffdashboard from "../features/component/StaffDashboard";
 // import ComingSoon from "../components/common/ComingSoon";
 import PatientDocManagementPage from "../features/patient-document-management/pages/PatientDocManagementPage";
 
-import LabDashboard from "../features/component/LabDashboard";
+import LabDashboard from "../features/lab/LabDashboard";
 import PharmacyDashboard from "../features/pharma/PharmacyDashboard";
 // import ServiceManagement from "../features/lab/ServiceManagement";
 import LabProfile from "../features/lab/LabProfile";

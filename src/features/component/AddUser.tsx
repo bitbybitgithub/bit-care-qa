@@ -19,6 +19,7 @@ import { saveUserAPI } from "../../api/SaveLabPharmacyUserApi";
 interface AddUserProps {
   onClose: () => void;
   module: string;
+  onSuccess?: () => void;
 }
 
 interface Form {
@@ -30,7 +31,7 @@ interface Form {
   password: string;
 }
 
-const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
+const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [formData, setFormData] = useState<Form>({
     name: "",
@@ -152,6 +153,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module }) => {
       const data = (response as any)?.data ?? response;
       if (data?.success) {
         toast.success(data.message || "User added successfully");
+        onSuccess?.();
         handleClose();
       } else {
         toast.error(data?.message || "Failed to add user");

@@ -1,12 +1,12 @@
-import { FaUserPlus } from "react-icons/fa";
+import { FaSearch, FaUserPlus } from "react-icons/fa";
 import { useState, type JSX } from "react";
-import AddUser from "./AddUser";
+import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { Module } from "../../Helper/Enums";
-import PharmacyQueues from "./PharmacyQueues";
-import { TextField } from "@mui/material";
-import { TfiAnnouncement } from "react-icons/tfi";
+import LabQueues from "./LabQueues";
+import { Roles } from "../../context/constant/enum";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -15,16 +15,18 @@ export interface DashboardCard {
   icon?: JSX.Element;
 }
 
-const PharmacyDashboard = () => {
-  const module = Module.PHARMACY;
+const LabDashboard = () => {
   const user = getSessionItem("user", "role");
   const username = getSessionItem("user", "full_name");
+  const module = Module.LAB;
   const [queueSearch, setQueueSearch] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
   const [activeTab, setActiveTab] = useState("pendingQueue");
+
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
     { key: "processingQueue", label: "Processing" },
+    { key: "ReportingQueue", label: "Reporting" },
   ];
 
   const ActionButton = ({
@@ -38,9 +40,9 @@ const PharmacyDashboard = () => {
   }) => (
     <button
       onClick={onClick}
-      className="flex items-center justify-center w-auto gap-x-2 
+      className="flex items-center justify-center w-auto gap-x-2
                  bg-[var(--color-surface)] text-[var(--color-text)] border-2 border-transparent shadow-[var(--shadow-md)]
-                 px-2 py-2  rounded-[var(--radius-lg)] hover:bg-[var(--color-white)] hover:border-2 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-lg)] transition cursor-pointer normal-case"
+                 px-2 py-2 rounded-[var(--radius-lg)] hover:bg-[var(--color-white)] hover:border-2 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-lg)] transition cursor-pointer normal-case"
     >
       {icon} {label}
     </button>
@@ -95,14 +97,14 @@ const PharmacyDashboard = () => {
             className="text-[var(--color-text)] opacity-70 "
             style={{ fontSize: "var(--font-body)" }}
           >
-            Your pharmacy is running smoothly today.
+            Your lab is running smoothly today.
             <h3 className="opacity-60">
               Check your daily stats and announcements below.
             </h3>
           </p>
         </div>
       </div>
-      {user === "Admin" && (
+      {user === Roles.Admin && (
         <>
           <div className="md:flex gap-x-4 ">
             <div className="md:w-[25%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
@@ -124,14 +126,14 @@ const PharmacyDashboard = () => {
                 ))}
               </div>
             </div>
-
+            
             <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
               <div
                 className="flex items-center gap-x-2 mb-2"
                 style={{ fontSize: "var(--font-h4)" }}
               >
                 <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-                  Pharmacy Announcements
+                  Lab Announcements
                 </h2>
               </div>
 
@@ -141,7 +143,7 @@ const PharmacyDashboard = () => {
                   style={{ fontSize: "var(--font-h4)" }}
                 />
                 <h1>
-                  The pharmacy will be closed for the holiday on December 25th.
+                  The lab will be closed for the holiday on December 25th.
                 </h1>
               </div>
             </div>
@@ -151,7 +153,7 @@ const PharmacyDashboard = () => {
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] mt-5">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div
-            className="flex p-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] gap-x-1"
+            className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
             style={{ background: "var(--color-primary)" }}
           >
             {tabs.map((t) => (
@@ -161,35 +163,40 @@ const PharmacyDashboard = () => {
                 aria-selected={activeTab === t.key}
                 onClick={() => setActiveTab(t.key)}
                 className={`
-        flex-1 flex items-center justify-center
-        px-2 py-1 text-sm font-semibold cursor-pointer
-        rounded-[var(--radius-md)] transition
-        border border-transparent
-        
-        w-[33%]
-        ${
-          activeTab === t.key
-            ? "bg-[var(--color-white)] text-[var(--color-primary)] border-transparent"
-            : "text-[var(--color-white)] hover:border-[var(--color-white)]"
-        }
-      `}
+          px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition w-[33%]
+          ${
+            activeTab === t.key
+              ? "bg-white text-[var(--color-primary)]"
+              : "text-white hover:bg-[var(--color-hover)]"
+          }
+        `}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          <TextField
-            size="small"
-            placeholder="Search by Patient Name"
-            value={queueSearch}
-            onChange={(e) => setQueueSearch(e.target.value)}
-          />
+          <div className="relative w-full sm:w-74">
+            <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
+            <input
+              value={queueSearch}
+              onChange={(e) => setQueueSearch(e.target.value)}
+              placeholder="Search by Patient Name/Patient ID"
+              className="w-full pl-10 pr-3 py-2 rounded-lg
+                      border border-[var(--color-primary)]"
+            />
+          </div>
         </div>
 
         <div className="mt-4">
-          <PharmacyQueues
-            mode={activeTab === "pendingQueue" ? "pending" : "processing"}
+          <LabQueues
+            mode={
+              activeTab === "processingQueue"
+                ? "processing"
+                : activeTab === "ReportingQueue"
+                  ? "reporting"
+                  : "pending"
+            }
             searchTerm={queueSearch}
           />
         </div>
@@ -202,4 +209,4 @@ const PharmacyDashboard = () => {
   );
 };
 
-export default PharmacyDashboard;
+export default LabDashboard;

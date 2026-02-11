@@ -35,29 +35,58 @@ const Users: React.FC = () => {
 
 const hasShownToast = useRef(false);
 
-useEffect(() => {
+// useEffect(() => {
+//   const entity_id = getEntityId();
+//   if (!entity_name || !entity_id) return;
+//   setLoading(true);
+//   getUsersList(entity_name, entity_id)
+//     .then(({ data, message }) => {
+//       setUsers(data);
+
+//       if (message && !hasShownToast.current) {
+//         toast.info(message);
+//         hasShownToast.current = true;
+//       }
+//     })
+//     .catch((error: unknown) => {
+//       let message = "Failed to load users";
+
+//       if (error instanceof AxiosError) {
+//         message = error.response?.data?.message || error.message;
+//       }
+//       toast.error(message);
+//     })
+//     .finally(() => setLoading(false));
+// }, [entity_name, getEntityId]);
+
+const fetchUsers = useCallback(async () => {
   const entity_id = getEntityId();
   if (!entity_name || !entity_id) return;
+
   setLoading(true);
-  getUsersList(entity_name, entity_id)
-    .then(({ data, message }) => {
-      setUsers(data);
+  try {
+    const { data, message } = await getUsersList(entity_name, entity_id);
+    setUsers(data);
 
-      if (message && !hasShownToast.current) {
-        toast.info(message);
-        hasShownToast.current = true;
-      }
-    })
-    .catch((error: unknown) => {
-      let message = "Failed to load users";
+    if (message && !hasShownToast.current) {
+      toast.info(message);
+      hasShownToast.current = true;
+    }
+  } catch (error: unknown) {
+    let message = "Failed to load users";
 
-      if (error instanceof AxiosError) {
-        message = error.response?.data?.message || error.message;
-      }
-      toast.error(message);
-    })
-    .finally(() => setLoading(false));
+    if (error instanceof AxiosError) {
+      message = error.response?.data?.message || error.message;
+    }
+    toast.error(message);
+  } finally {
+    setLoading(false);
+  }
 }, [entity_name, getEntityId]);
+
+useEffect(() => {
+  fetchUsers();
+}, [fetchUsers]);
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -157,12 +186,14 @@ useEffect(() => {
         </div>
       )}
 
-      {showAddUser && (
-        <AddUser
-          module={entity_name?.toUpperCase()}
-          onClose={() => setShowAddUser(false)}
-        />
-      )}
+{showAddUser && (
+  <AddUser
+    module={entity_name?.toUpperCase()}
+    onClose={() => setShowAddUser(false)}
+    onSuccess={fetchUsers} 
+  />
+)}
+
       <ConfirmModal
         open={confirmOpen}
         loading={updatingId !== null}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Chip, Drawer } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Box, Button, Chip, Dialog, Drawer, FormControl, TextField } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -11,6 +11,10 @@ import {
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReport } from "../../api/CommonApi/uploadFileApi";
 import { toast } from "react-toastify";
+import { generateOtpApi, verifyOtpApi } from "../../api";
+import { FaPeopleLine } from "react-icons/fa6";
+import { FaTimes } from "react-icons/fa";
+import Regex from "../../Helper/Regex";
 
 const PAGE_SIZE = 10;
 
@@ -75,13 +79,28 @@ interface Props {
 export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const location = useLocation();
   const labId = getSessionItem("user", "lab_id");
-  const userId = getSessionItem("user", "user_id");
+  const user_id = getSessionItem("user", "user_id");
 
   const [rows, setRows] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<any>(null);
   const [reportMap, setReportMap] = useState<Record<string, any[]>>({});
   const [prescriptionRow, setPrescriptionRow] = useState<any>(null);
+
+  /*----------------OTP----------------*/
+const [openOtpDialog, setOpenOtpDialog] = useState(false);
+const [selectedRow, setSelectedRow] = useState<any>(null);
+const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+const [showOtp, setShowOtp] = useState(true);
+const [contact, setContact] = useState("");
+const [loadingVerify, setLoadingVerify] = useState(false);
+const [error, setError] = useState<{ mobile?: string; otp?: string }>({});
+const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+const [loadingGenerate, setLoadingGenerate] = useState(false);
+const [userId, setUserId] = useState<number | null>(null);
+const [editedAfterOtp, setEditedAfterOtp] = useState(false);
+const [otpSent, setOtpSent] = useState(false);
+const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
 
   /* ---------------- FETCH ---------------- */
   useEffect(() => {
@@ -106,9 +125,144 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return "pending";
   }, [mode, location.pathname]);
 
-  const openViewPrescription = (row: any) => {
-    setPrescriptionRow(row);
+
+
+const openViewPrescription = async (row: any) => {
+    setSelectedRow(row);
+    setContact(row.contact_no);
+    setOpenOtpDialog(true);
+    resetOtpFlow
+
+};
+  const resetOtpFlow = () => {
+    setContact("");
+    setOtp(["", "", "", "", "", ""]);
+    setShowOtp(false);
+    setOtpSent(false);
+    setVerifiedPatients(null);
+    setError({});
   };
+    useEffect(() => {
+      if (openOtpDialog && contact) {
+        handleSendOtp();
+      }
+    }, [openOtpDialog, contact]);
+
+  const handleSendOtp = async () => {
+    if (!contact) return;
+
+    setShowOtp(true);
+    if (!Regex.MOBILEREGEX.test(contact.trim())) {
+      setError((prev) => ({
+        ...prev,
+        otp: "Invalid mobile number",
+      }));
+      return;
+    }
+
+    setError((prev) => ({ ...prev, otp: "" }));
+    setLoadingGenerate(true);
+
+    try {
+      const res = await generateOtpApi({
+        mobile_number: contact.trim(),
+        otp_type: 2,
+      });
+      console.log("otp response",res)
+      if (res.success) {
+        setUserId(res.userId ?? null);
+        setEditedAfterOtp(false);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+      } else {
+        setError((prev) => ({
+          ...prev,
+          otp: res.message || "Failed to send OTP",
+        }));
+      }
+    } catch {
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong. Please try again later.",
+      }));
+    } finally {
+      setLoadingGenerate(false);
+    }
+  };
+
+
+const handleOtpChange = (value: string, index: number) => {
+  if (!/^\d?$/.test(value)) return;
+
+  const newOtp = [...otp];
+  newOtp[index] = value;
+  setOtp(newOtp);
+
+  if (value && index < 5) {
+    otpRefs.current[index + 1]?.focus();
+  }
+};
+
+const handleOtpKeyDown = (e: any, index: number) => {
+  if (e.key === "Backspace" && !otp[index] && index > 0) {
+    otpRefs.current[index - 1]?.focus();
+  }
+};
+
+  const handleVerifyOtp = async () => {
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 6) {
+      setError((prev) => ({
+        ...prev,
+        otp: "Please enter a valid 6-digit OTP",
+      }));
+      return;
+    }
+    if (!userId) {
+      setError((prev) => ({
+        ...prev,
+        otp: "User not found. Please try again.",
+      }));
+      return;
+    }
+    setLoadingVerify(true);
+    setError((prev) => ({ ...prev, otp: "" }));
+    try {
+      const payload = {
+        userId,
+        otp: Number(enteredOtp),
+        otp_type: 2,
+      };
+      const response = await verifyOtpApi(payload);
+      if (!response.success) {
+        setError((prev) => ({
+          ...prev,
+          otp: response.message || "Invalid OTP",
+        }));
+        return;
+      }
+      setVerifiedPatients(response.patients || []);
+      setOpenOtpDialog(false);
+      
+      setOtp(["", "", "", "", "", ""]);
+      setShowOtp(false);
+      setContact("");
+      setPrescriptionRow(selectedRow);
+      setSelectedRow(null);
+    } catch (err) {
+      setError((prev) => ({
+        ...prev,
+        otp: "Something went wrong while verifying OTP",
+      }));
+    } finally {
+      setLoadingVerify(false);
+    }
+  };
+
+const handleClose = () => {
+  setOpenOtpDialog(false);
+  setOtp(["", "", "", "", "", ""]);
+};
+
 
   const closePrescription = () => {
     setPrescriptionRow(null);
@@ -156,7 +310,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       appointment_id: row.appointment_id,
       lab_id: row.lab_id,
       status,
-      user_id: userId,
+      user_id: user_id,
       tests: row.tests.map((t: any) => ({
         lab_record_id: t.lab_record_id,
         test_id: t.test_id,
@@ -245,7 +399,7 @@ const handleSubmitReports = async () => {
         file_guid_name: r.guid,
         file_path: r.filePath,
         file_name: r.originalName,
-        created_by: userId,
+        created_by: user_id,
       });
 
       const dbReportId = Number(saveResponse.report_id);
@@ -382,25 +536,7 @@ const handleSubmitReports = async () => {
           </Button>
         ),
       },
-      {
-        field: "complete",
-        headerName: "Complete Test",
-        width: 160,
-        renderCell: (p) => {
-          const disabled = !hasUploadedReport(p.row);
 
-          return (
-            <Button
-              size="small"
-              variant="contained"
-              disabled={disabled}
-              onClick={() => updateStatus(p.row, "Completed")}
-            >
-              Report Complete
-            </Button>
-          );
-        },
-      },
     ];
   }, [resolvedMode]);
 
@@ -451,6 +587,249 @@ const handleSubmitReports = async () => {
           }}
         />
       </Box>
+
+      <Dialog
+        open={openOtpDialog}
+        onClose={handleClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            p: 3,
+            borderRadius: 1,
+          },
+        }}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-2">
+            <FaPeopleLine
+              className="text-[var(--color-primary)]"
+              style={{ fontSize: "var(--font-h3)" }}
+            />
+            <h3
+              className="font-semibold text-[var(--color-primary)]"
+              style={{ fontSize: "var(--font-h3)" }}
+            >
+              View Prescription
+            </h3>
+          </div>
+
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 flex justify-center items-center rounded-full
+                  bg-[var(--color-primary)] text-white
+                  hover:bg-[var(--color-surface)]
+                  hover:text-[var(--color-primary)]
+                  transition"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <p className="mb-2" style={{ fontSize: "var(--font-small)" }}>
+          We'll verify your contact
+        </p>
+
+        {false && !showOtp && (
+          <div className="mt-2">
+            <FormControl fullWidth>
+              <TextField size="small" />
+            </FormControl>
+          </div>
+        )}
+
+        {showOtp && (
+          <div className="mt-2 text-center">
+            <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
+              Enter 6-digit OTP sent to +91 {contact}
+            </p>
+
+            <div className="flex justify-center gap-3">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  maxLength={1}
+                  value={digit}
+                  ref={(el) => {
+                    otpRefs.current[index] = el;
+                  }}
+                  onChange={(e) => handleOtpChange(e.target.value, index)}
+                  onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                  className="text-center outline-none"
+                  style={{
+                    width: "2rem",
+                    height: "2rem",
+                    borderRadius: "8px",
+                    boxShadow: "var(--shadow-md)",
+                    fontSize: "1.1rem",
+                    border: error.otp
+                      ? "1px solid var(--color-error)"
+                      : "1px solid var(--color-border)",
+                  }}
+                />
+              ))}
+            </div>
+
+            <Button
+              onClick={handleVerifyOtp}
+              disabled={loadingVerify}
+              variant="contained"
+              sx={{
+                mt: 3,
+                px: 5,
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              Confirm OTP
+            </Button>
+
+            {loadingVerify && (
+              <div className="mt-3 flex justify-center">
+                <div className="w-5 h-5 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin" />
+              </div>
+            )}
+
+            {error.otp && (
+              <p className="mt-2 text-xs text-[var(--color-error)]">
+                {error.otp}
+              </p>
+            )}
+            {/* 
+      <button
+        onClick={handleResendOtp}
+        className="mt-3 text-sm font-semibold text-[var(--color-primary)]"
+      >
+        Resend OTP
+      </button> */}
+          </div>
+        )}
+      </Dialog>
+
+      <Drawer
+        anchor="right"
+        open={Boolean(prescriptionRow)}
+        onClose={closePrescription}
+        PaperProps={{
+          sx: {
+            width: 520,
+            backgroundColor: "var(--color-bg)",
+            boxShadow: "var(--shadow-lg)",
+          },
+        }}
+      >
+        <div className="flex flex-col h-full">
+          <div
+            className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
+            style={{ backgroundColor: "var(--color-primary)" }}
+          >
+            <div>
+              <h2
+                style={{
+                  color: "var(--color-white)",
+                  fontSize: "var(--font-h3)",
+                  fontWeight: "var(--font-weight-medium)",
+                }}
+              >
+                Prescription
+              </h2>
+              <p
+                style={{
+                  color: "var(--color-primary-light)",
+                  fontSize: "var(--font-small)",
+                }}
+              >
+                Patient medical prescription
+              </p>
+            </div>
+
+            <button
+              onClick={closePrescription}
+              className="p-2 rounded-full"
+              style={{
+                backgroundColor: "var(--color-bg)",
+                color: "var(--color-primary)",
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+            <div
+              className="p-4 rounded-[var(--radius-md)]"
+              style={{ backgroundColor: "var(--color-surface)" }}
+            >
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <b>Patient ID:</b> {prescriptionRow?.patient_id}
+                </div>
+                <div>
+                  <b>Name:</b> {prescriptionRow?.patient_name}
+                </div>
+                <div>
+                  <b>Gender:</b> {prescriptionRow?.gender}
+                </div>
+                <div>
+                  <b>Doctor:</b> {prescriptionRow?.doctor_name}
+                </div>
+                <div className="col-span-2">
+                  <b>Date:</b>{" "}
+                  {new Date(prescriptionRow?.test_date).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="p-4 space-y-4 rounded-[var(--radius-md)]"
+              style={{
+                backgroundColor: "white",
+                border: "1px solid var(--color-border)",
+              }}
+            >
+              <h3 className="font-semibold text-sm">
+                🧾 Laboratory Prescription
+              </h3>
+              <ul className="list-disc pl-5 text-sm space-y-1">
+                {prescriptionRow?.tests?.map((t: any) => (
+                  <li key={t.test_id}>{t.test_name}</li>
+                ))}
+              </ul>
+
+              <div className="pt-4 text-xs">
+                <p>
+                  <b>Notes:</b>
+                </p>
+                <p>
+                  Patient advised to come fasting for 10–12 hours before sample
+                  collection. Reports will be available within 24–48 hours.
+                </p>
+              </div>
+
+              <div className="pt-6 text-right text-xs">
+                <p>
+                  <b>Dr. {prescriptionRow?.doctor_name}</b>
+                </p>
+                <p>MBBS, MD</p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="p-4 border-t sticky bottom-0"
+            style={{
+              backgroundColor: "var(--color-surface)",
+              borderColor: "var(--color-primary)",
+            }}
+          >
+            <Button variant="contained" fullWidth onClick={closePrescription}>
+              Close
+            </Button>
+          </div>
+        </div>
+      </Drawer>
 
       <Drawer
         anchor="right"
@@ -713,128 +1092,8 @@ const handleSubmitReports = async () => {
           </div>
         </div>
       </Drawer>
-      <Drawer
-        anchor="right"
-        open={Boolean(prescriptionRow)}
-        onClose={closePrescription}
-        PaperProps={{
-          sx: {
-            width: 520,
-            backgroundColor: "var(--color-bg)",
-            boxShadow: "var(--shadow-lg)",
-          },
-        }}
-      >
-        <div className="flex flex-col h-full">
-          <div
-            className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            <div>
-              <h2
-                style={{
-                  color: "var(--color-white)",
-                  fontSize: "var(--font-h3)",
-                  fontWeight: "var(--font-weight-medium)",
-                }}
-              >
-                Prescription
-              </h2>
-              <p
-                style={{
-                  color: "var(--color-primary-light)",
-                  fontSize: "var(--font-small)",
-                }}
-              >
-                Patient medical prescription
-              </p>
-            </div>
 
-            <button
-              onClick={closePrescription}
-              className="p-2 rounded-full"
-              style={{
-                backgroundColor: "var(--color-bg)",
-                color: "var(--color-primary)",
-              }}
-            >
-              ×
-            </button>
-          </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            <div
-              className="p-4 rounded-[var(--radius-md)]"
-              style={{ backgroundColor: "var(--color-surface)" }}
-            >
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <b>Patient ID:</b> {prescriptionRow?.patient_id}
-                </div>
-                <div>
-                  <b>Name:</b> {prescriptionRow?.patient_name}
-                </div>
-                <div>
-                  <b>Gender:</b> {prescriptionRow?.gender}
-                </div>
-                <div>
-                  <b>Doctor:</b> {prescriptionRow?.doctor_name}
-                </div>
-                <div className="col-span-2">
-                  <b>Date:</b>{" "}
-                  {new Date(prescriptionRow?.test_date).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="p-4 space-y-4 rounded-[var(--radius-md)]"
-              style={{
-                backgroundColor: "white",
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <h3 className="font-semibold text-sm">
-                🧾 Laboratory Prescription
-              </h3>
-              <ul className="list-disc pl-5 text-sm space-y-1">
-                {prescriptionRow?.tests?.map((t: any) => (
-                  <li key={t.test_id}>{t.test_name}</li>
-                ))}
-              </ul>
-
-              <div className="pt-4 text-xs">
-                <p>
-                  <b>Notes:</b>
-                </p>
-                <p>
-                  Patient advised to come fasting for 10–12 hours before sample
-                  collection. Reports will be available within 24–48 hours.
-                </p>
-              </div>
-
-              <div className="pt-6 text-right text-xs">
-                <p>
-                  <b>Dr. {prescriptionRow?.doctor_name}</b>
-                </p>
-                <p>MBBS, MD</p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="p-4 border-t sticky bottom-0"
-            style={{
-              backgroundColor: "var(--color-surface)",
-              borderColor: "var(--color-primary)",
-            }}
-          >
-            <Button variant="contained" fullWidth onClick={closePrescription}>
-              Close
-            </Button>
-          </div>
-        </div>
-      </Drawer>
     </>
   );
 }

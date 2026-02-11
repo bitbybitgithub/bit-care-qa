@@ -1,10 +1,10 @@
 import { FaUserPlus } from "react-icons/fa";
 import { useState, type JSX } from "react";
-import AddUser from "../../features/component/AddUser";
+import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
 import SidebarBg from "../../assets/SidebarBg.png";
 import { Module } from "../../Helper/Enums";
-import PharmacyQueues from "../../features/pharma/PharmacyQueues";
+import PharmacyQueues from "./PharmacyQueues";
 import { TextField } from "@mui/material";
 import { TfiAnnouncement } from "react-icons/tfi";
 export interface DashboardCard {
@@ -24,7 +24,7 @@ const PharmacyDashboard = () => {
   const [activeTab, setActiveTab] = useState("pendingQueue");
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
-    { key: "completedQueue", label: "Completed" },
+    { key: "processingQueue", label: "Processing" },
   ];
 
   const ActionButton = ({
@@ -189,7 +189,7 @@ const PharmacyDashboard = () => {
 
         <div className="mt-4">
           <PharmacyQueues
-            mode={activeTab === "pendingQueue" ? "pending" : "completed"}
+            mode={activeTab === "pendingQueue" ? "pending" : "processing"}
             searchTerm={queueSearch}
           />
         </div>

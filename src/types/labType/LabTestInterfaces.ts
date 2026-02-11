@@ -48,10 +48,6 @@ export interface SaveLabShiftPayload {
   operations: any[]; 
 }
 
-/* 
-   Lab List API
- */
-
 export interface LabListItem {
   lab_id: string;
   lab_name: string;
@@ -61,20 +57,18 @@ export interface LabListItem {
   is_active: "0" | "1";
 }
 
-export interface LabListApiResponse {
-  success: boolean;
-  data: LabListItem[];
-}
+export interface MappedLab {
+  lab_id: number;
+  lab_code: string;
+  lab_name: string;
 
-/* =======================
-   Frontend Lab Model
-======================= */
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  state?: string;
 
-export interface LabFrontendModel {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  logo: string | null;
-  status: "active" | "inactive";
+  status?: "Active" | "Inactive";
 }
+  
+

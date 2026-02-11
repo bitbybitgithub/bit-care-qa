@@ -1,24 +1,34 @@
 import axios from "axios";
 import { BASE_URL, emrAPI } from "../../services/EmrApi";
+
 import type {
   LabProfileData,
   LabTestApiResponse,
   LabTestItemRequest,
   SaveLabShiftPayload,
   SaveLabTestItem,
+  MappedLab, 
 } from "../../types/labType/LabTestInterfaces";
 
-export const getlabtestserviceApi = async (lab_Id: number) => {
+/* ===================== */
+
+export const getlabtestserviceApi = async (
+  lab_Id: number
+): Promise<LabTestApiResponse[]> => {
   try {
     const response = await emrAPI.get<LabTestApiResponse[]>(
       `/lab/get-lab-test-service?lab_id=${lab_Id}`
     );
+
     return response;
+
   } catch (error) {
     console.error("getlabtestserviceApi error:", error);
     throw error;
   }
 };
+
+/* ===================== */
 
 export const saveAvailableLabApi = async (
   payload: LabTestItemRequest
@@ -28,12 +38,16 @@ export const saveAvailableLabApi = async (
       "/lab/save-available-lab-test",
       payload
     );
+
     return response;
+
   } catch (error) {
     console.error("saveAvailableLabApi error:", error);
     throw error;
   }
 };
+
+/* ===================== */
 
 export const fetchLabProfile = async (
   labid: number
@@ -43,14 +57,20 @@ export const fetchLabProfile = async (
       "/lab/get-lab-profile",
       { lab_id: labid }
     );
+
     return response;
+
   } catch (error) {
     console.error("fetchLabProfile error:", error);
     throw error;
   }
 };
 
-export const uploadLabLogo = (formData: FormData) => {
+/* ===================== */
+
+export const uploadLabLogo = (
+  formData: FormData
+): Promise<any> => {
   const response = axios.post(
     `${BASE_URL}/lab/upload-logo`,
     formData,
@@ -60,8 +80,11 @@ export const uploadLabLogo = (formData: FormData) => {
       },
     }
   );
+
   return response;
 };
+
+/* ===================== */
 
 export const saveLabShift = async (
   labid: number | string,
@@ -75,22 +98,40 @@ export const saveLabShift = async (
         operations,
       }
     );
+
     return response;
+
   } catch (error) {
     console.error("saveLabShift error:", error);
     throw error;
   }
 };
 
+/* ===================== */
+
 export const getActiveLabListApi = async () => {
   try {
     const response = await emrAPI.get(
       "/lab/get-lab-list"
     );
+
     return response;
+
   } catch (error) {
     console.error("getActiveLabListApi error:", error);
     throw error;
   }
 };
 
+/* ===================== */
+
+export async function getMappedLabsApi(
+  clinicId: number
+): Promise<MappedLab[]> {
+  return emrAPI.post<MappedLab[]>(
+    "/clinics/mapped-labs",
+    {
+      clinic_id: clinicId,
+    }
+  );
+}

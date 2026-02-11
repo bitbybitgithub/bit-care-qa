@@ -1,5 +1,9 @@
 import { emrAPI } from "../../services/EmrApi";
-import type { PharmaPatientRecordResponse } from "../../types/pharmacyType/pharmacyInterfaceType";
+import type {
+  PharmaPatientRecordResponse,
+  MappedPharmacy,
+} from "../../types/pharmacyType/pharmacyInterfaceType";
+
 
 export async function getPharmaPatientRecords(
   pharmaId: number | null
@@ -43,7 +47,7 @@ export async function updatePharmaPatientStatus(
 };
 export const getActivePharmaListApi = async () => {
   try {
-    const response = await emrAPI.get(
+    const response = await emrAPI.get( 
       "/pharmacy/get-pharma-list"
     );
     return response;
@@ -52,3 +56,15 @@ export const getActivePharmaListApi = async () => {
     throw error;
   }
 };
+
+export async function getMappedPharmaciesApi(
+  clinicId: number
+): Promise<MappedPharmacy[]> {
+  return emrAPI.post<MappedPharmacy[]>(
+    "/clinics/mapped-pharmacies",
+    {
+      clinic_id: clinicId,
+    }
+  );
+}
+

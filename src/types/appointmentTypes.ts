@@ -80,6 +80,53 @@ export interface AppointmentDto {
   age?: number;
 }
 
+export interface CompletedPrescriptionDto {
+  appointment_id: number;
+  prescription_id: number;
+  prescription_url: string;
+  prescription_file_name: string;
+}
+
+export interface CompletedAppointmentDto {
+  appointment_id: string;             
+  appointment_date: string;
+
+  patient_id: number;
+  patient_name: string;
+  dob: string | null;
+  contact: string | null;
+  gender: string | null;
+  doctor_id: number;
+  doctor_name: string;
+  date_of_birth: string | null;
+  followup: "TRUE" | "FALSE" | "true" | "false";
+  duration: string | null;
+
+  prescriptions: CompletedPrescriptionDto[];
+  age?: number;
+}
+export interface CompletedQueueUiDto {
+  appointment_id: number;
+  appointment_date: string;
+
+  patient_id: number;
+  patient_name: string;
+  gender: string | null;
+
+  doctor_id: number;
+  doctor_name: string;
+
+  date_of_birth: string | null;
+  mobile_number: string | null;
+
+  status: "Completed";
+  source: "Follow-up" | "New";
+  duration: string | null;
+
+  prescriptions: CompletedPrescriptionDto[];
+  age?: number;
+}
+
 
 export interface PatientAppointment {
   appointment_id: number;

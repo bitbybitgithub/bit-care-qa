@@ -10,8 +10,8 @@ import {
   TextField,
   Drawer,
   Box,
-  Chip,
   Typography,
+  IconButton,
 } from "@mui/material";
 import {
   DataGrid,
@@ -30,51 +30,11 @@ import type {
   PatientQueueProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
-
-const statusMap: Record<
-  string,
-  { label: string; color: string; bg: string; icon?: React.ReactNode }
-> = {
-  waiting: { label: "Waiting", color: "#92400E", bg: "#FFFBEB" },
-  pending_vitals: { label: "Pending Vitals", color: "#3730A3", bg: "#EEF2FF" },
-  checked_in: { label: "Checked In", color: "#0EA5A4", bg: "#ECFEFF" },
-  in_progress: { label: "In Progress", color: "#1D4ED8", bg: "#EFF6FF" },
-  in_consultation: {
-    label: "In Consultation",
-    color: "#7C3AED",
-    bg: "#F5EEFF",
-  },
-  started: { label: "Started", color: "#3730A3", bg: "#EEF2FF" },
-  on_hold: { label: "On Hold", color: "#374151", bg: "#F3F4F6" },
-  completed: { label: "Completed", color: "#059669", bg: "#ECFDF5" },
-  scheduled: { label: "Scheduled", color: "#0EA5A4", bg: "#ECFEFF" },
-  cancelled: { label: "Cancelled", color: "#B91C1C", bg: "#FEF2F2" },
-};
-
-const normalize = (s?: string) =>
-  s ? String(s).trim().toLowerCase().replace(/\s+/g, "_") : "";
-const getStatusChip = (status?: string) => {
-  const key = normalize(status);
-  const meta = statusMap[key] || {
-    label: status || "Unknown",
-    color: "#374151",
-    bg: "#F3F4F6",
-  };
-  return (
-    <Chip
-      size="small"
-      label={meta.label}
-      sx={{
-        backgroundColor: meta.bg,
-        color: meta.color,
-        fontWeight: 600,
-        fontSize: 12,
-        height: 28,
-        px: 1,
-      }}
-    />
-  );
-};
+import { Close } from "@mui/icons-material";
+import LabPharmacyReferral from "../clinic/components/LabPharmacyReferral";
+import { FaFlask } from "react-icons/fa";
+import { RiChatFollowUpFill } from "react-icons/ri";
+import { FaClinicMedical } from "react-icons/fa";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -84,12 +44,13 @@ const getActionsForStatus = (status: string): string[] => {
       return ["Cancel Appointment", "Hold Appointment"];
     case "on_hold":
       return ["Add Vitals", "Cancel Appointment"];
+    case "completed":
+      return ["Send to Lab", "Send to Pharmacy", "Set Follow Up"];
     default:
       return [];
   }
 };
-
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
@@ -100,28 +61,39 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   onStartConsultation,
   handleUpdatePatientStatus,
   searchQuery,
-  onSearchChange,
+  queueType
 }) => {
-
-  const [localSearch, setLocalSearch] = useState("");
-  const search = typeof searchQuery === "string" ? searchQuery : localSearch;
-  const setSearch = onSearchChange ?? setLocalSearch;
+  const search = searchQuery;
+  const closeAllMenus = () => {
+    setAnchorEl({});
+  };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>(
-    {}
-  );
+  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>({});
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
   const [cancelReason, setCancelReason] = useState("");
   const [patientToCancel, setPatientToCancel] = useState<Patient | null>(null);
 
+  const [openPdf, setOpenPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   const shouldShowSelectButton = (status: string): boolean => {
-    const allowedStatuses = ["scheduled", "checked_in", "on_hold"];
+    const allowedStatuses = ["scheduled", "checked_in", "on_hold", "completed"];
     return allowedStatuses.includes(status.toLowerCase());
   };
 
   const [vitalsDrawerOpen, setVitalsDrawerOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [serviceDrawer, setServiceDrawer] = useState<{
+    open: boolean;
+    type: "lab" | "pharmacy" | null;
+  }>({ open: false, type: null });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").toString().trim().toLowerCase();
@@ -142,10 +114,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     });
   }, [patientsData, search]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
   const totalPages = Math.max(
     1,
     Math.ceil(filteredPatients.length / PAGE_SIZE)
@@ -154,14 +122,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredPatients.slice(start, start + PAGE_SIZE);
   }, [filteredPatients, currentPage]);
-
-  const handlePageChange = useCallback(
-    (page: number) => {
-      if (page < 1 || page > totalPages) return;
-      setCurrentPage(page);
-    },
-    [totalPages]
-  );
 
   const handleMenuOpen = useCallback(
     (e: React.MouseEvent<HTMLElement>, patientId: number) => {
@@ -177,14 +137,22 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const handleAction = useCallback(
     async (action: string, patient: Patient) => {
-      handleMenuClose(patient.patient_id);
+      closeAllMenus();
       if (action === "Cancel Appointment") {
         setPatientToCancel(patient);
         setCancelDialogOpen(true);
       } else if (action === "Add Vitals") {
         setSelectedPatient(patient);
         setVitalsDrawerOpen(true);
-      } else if (action === "Hold Appointment") {
+      }
+      else if (action === "Send to Lab") {
+        setSelectedPatient(patient);
+        setServiceDrawer({ open: true, type: "lab" });
+      } else if (action === "Send to Pharmacy") {
+        setSelectedPatient(patient);
+        setServiceDrawer({ open: true, type: "pharmacy" });
+      }
+      else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
         setAnchorEl({});
       }
@@ -199,6 +167,53 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setCancelReason("");
     setPatientToCancel(null);
   }, [patientToCancel, handleUpdatePatientStatus]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page < 1 || page > totalPages) return;
+      setCurrentPage(page);
+    },
+    [totalPages]
+  );
+
+  const getPdfFromServer = async (filePath: string, fileName: string) => {
+    const response = await fetch(
+      "http://localhost:8989/api/common/downloadFile",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filePath, fileName }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to download PDF");
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  };
+
+  const openPrescription = async (row: Patient) => {
+    try {
+      setSelectedPatient(row);
+      setPdfLoading(true);
+      setOpenPdf(true);
+      const filePath = "D:\\Prescriptions\\";
+      const fileName =
+        row.raw?.prescriptions?.[0]?.file_name ??
+        "Dummy_Patient_Prescription.pdf";
+
+      const url = await getPdfFromServer(filePath, fileName);
+      setPdfUrl(url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const rows = useMemo(() => currentPatients, [currentPatients]);
 
@@ -292,6 +307,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           },
         },
         {
+          field: "status",
+          headerName: "Status",
+          flex: 0.8,
+          minWidth: 120,
+          renderCell: (params: GridRenderCellParams<any, Patient>) => {
+            const row = params?.row as Patient;
+            return row?.status ? formatEnumText(row.status) : "—";
+          },
+        },
+        {
           field: "action",
           headerName: "Action",
           flex: 0.9,
@@ -354,25 +379,34 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           return row?.doctor ?? "—";
         },
       },
-      {
-        field: "source",
-        headerName: "Source",
-        flex: 0.8,
-        minWidth: 120,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          return row?.source ? formatEnumText(row.source) : "—";
-        },
-      },
+      ...(queueType === "completed"
+        ? [
+          {
+            field: "prescription",
+            headerName: "Prescription",
+            width: 150,
+            sortable: false,
+            filterable: false,
+            renderCell: (p) => (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => openPrescription(p.row)}
+              >
+                View
+              </Button>
+            ),
+          } as GridColDef,
+        ]
+        : []),
       {
         field: "status",
         headerName: "Status",
         flex: 0.8,
-        minWidth: 140,
+        minWidth: 120,
         renderCell: (params: GridRenderCellParams<any, Patient>) => {
           const row = params?.row as Patient;
-          if (!row) return "";
-          return getStatusChip(row?.status);
+          return row?.status ? formatEnumText(row.status) : "—";
         },
       },
       {
@@ -417,30 +451,49 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   anchorEl={anchorEl[pid]}
                   open={Boolean(anchorEl[pid])}
                   onClose={() => handleMenuClose(pid)}
+
                 >
-                  {getActionsForStatus(p.status).map((a) => (
-                    <MenuItem key={a} onClick={() => handleAction(a, p)}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          fontSize: 13,
-                        }}
-                      >
-                        {a === "Add Vitals" && (
-                          <RiHeartAdd2Line style={{ color: "#2563EB" }} />
-                        )}
-                        {a === "Cancel Appointment" && (
-                          <AiOutlineUserDelete style={{ color: "#DC2626" }} />
-                        )}
-                        {a === "Hold Appointment" && (
-                          <IoClose style={{ color: "#F97316" }} />
-                        )}
-                        <span>{a}</span>
-                      </Box>
-                    </MenuItem>
-                  ))}
+                  <Box
+                    sx={{
+                      border: "1px solid",
+                      borderRadius: "var(--radius-lg)",
+                      borderColor: "var(--color-primary)"
+                    }}
+                  >
+
+                    {getActionsForStatus(p.status).map((a) => (
+                      <MenuItem key={a} onClick={() => handleAction(a, p)}  >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            fontSize: 13,
+                          }}
+                        >
+                          {a === "Add Vitals" && (
+                            <RiHeartAdd2Line style={{ color: "#2563EB" }} />
+                          )}
+                          {a === "Cancel Appointment" && (
+                            <AiOutlineUserDelete style={{ color: "#DC2626" }} />
+                          )}
+                          {a === "Hold Appointment" && (
+                            <IoClose style={{ color: "#F97316" }} />
+                          )}
+                          {a === "Send to Lab" && (
+                            <FaFlask size={16} style={{ color: "var(--color-info)" }} />
+                          )}
+                          {a === "Send to Pharmacy" && (
+                            <FaClinicMedical size={16} style={{ color: "var(--color-success)" }} />
+                          )}
+                          {a === "Set Follow Up" && (
+                            <RiChatFollowUpFill size={16} style={{ color: "var(--color-warning)" }} />
+                          )}
+                          <span>{a}</span>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Box>
                 </Menu>
               </>
             </Box>
@@ -452,12 +505,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     return staffColumns;
   }, [
     mode,
+    queueType,
     anchorEl,
     handleMenuOpen,
     handleMenuClose,
     handleAction,
     handleUpdatePatientStatus,
     onStartConsultation,
+
   ]);
 
   const CustomNoRowsOverlay: React.FC = () => (
@@ -490,20 +545,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     >
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
-        {mode !== "staff" ? (
-          <h2
-            className="truncate"
-            style={{
-              fontSize: "var(--font-h3)",
-              fontWeight: "var(--font-weight-semibold)",
-              color: "var(--color-text)",
-            }}
-          >
-            Patient Queue
-          </h2>
-        ) : (
-          <h1> </h1>
-        )}
         <div className="flex items-center gap-3"></div>
       </div>
 
@@ -557,6 +598,35 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           }}
         />
       </Box>
+
+      <Dialog
+        open={openPdf}
+        onClose={() => setOpenPdf(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Box p={2} display="flex" justifyContent="space-between">
+          <Typography fontWeight={700}>Patient Prescription</Typography>
+          <IconButton onClick={() => setOpenPdf(false)}>
+            <Close />
+          </IconButton>
+        </Box>
+
+        {pdfLoading && (
+          <Box p={4} textAlign="center">
+            <Typography>Loading prescription...</Typography>
+          </Box>
+        )}
+
+        {!pdfLoading && pdfUrl && (
+          <iframe
+            src={`${pdfUrl}#toolbar=0`}
+            width="100%"
+            height="600px"
+            style={{ border: "none" }}
+          />
+        )}
+      </Dialog>
 
       <Dialog
         open={cancelDialogOpen}
@@ -617,6 +687,31 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           />
         )}
       </Drawer>
+      {serviceDrawer.open && serviceDrawer.type && (
+        <Drawer
+          anchor="right"
+          open={true}
+          onClose={() => setServiceDrawer({ open: false, type: null })}
+          PaperProps={{
+            sx: {
+              width: { xs: "100%", sm: "500px", md: "30%" },
+              backgroundColor: "var(--color-bg)",
+            },
+          }}
+        >
+          <LabPharmacyReferral
+            patient={selectedPatient}
+            type={serviceDrawer.type}
+            onAdd={() => {
+              setServiceDrawer({ open: false, type: null });
+            }}
+            onClose={() =>
+              setServiceDrawer({ open: false, type: null })
+            }
+          />
+        </Drawer>
+      )}
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { emrAPI } from "../services/EmrApi";
-import type { AppointmentDto } from "../types/appointmentTypes";
+import type { AppointmentDto, CompletedAppointmentDto } from "../types/appointmentTypes";
 export interface TodayAppointmentsResponse {
   success: boolean;
   records: AppointmentDto[];
@@ -79,6 +79,10 @@ export interface GetPrescriptionRequest {
   doctor_id:number;
 }
 
+interface CompletedAppointmentsResponse {
+  appointments: CompletedAppointmentDto[];
+}
+
 export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
@@ -145,3 +149,17 @@ export const getPrescriptionDetails = async (
   }
 };
 
+export async function getCompletedQueue(
+  clinic_id: number | null
+): Promise<CompletedAppointmentDto[]> {
+  const response = await emrAPI.post<CompletedAppointmentsResponse>(
+    "/appointments/completed",
+    { clinic_id }
+  );
+
+  if (!response) {
+    throw new Error("Failed to fetch Completed Queue");
+  }
+
+  return response.appointments ?? [];
+}

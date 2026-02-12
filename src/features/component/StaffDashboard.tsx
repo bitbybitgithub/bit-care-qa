@@ -20,10 +20,9 @@ import PatientQueue from "../../features/component/PatientQueue";
 import Regex from "../../Helper/Regex";
 import {
   fetchTodayAppointments,
+  getCompletedQueue,
   updatePatientStatus,
-  type UpdateAppointmentStatusRequest,
-  getMedicalDispensingAsync,
-  getfollowUpAsync,
+  type UpdateAppointmentStatusRequest
 } from "../../api/PatientQueueApi";
 import { verifyPatientpApi } from "../../api/VerifyPatientApi";
 import WalkInRegisterForm from "../../features/component/WalkInRegisterForm";
@@ -31,8 +30,6 @@ import { useSocket } from "../../context/SocketContext";
 import { IoCall } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
-import MedicalDispensing from "./MedicalDispensing";
-import FollowUpAppointment from "../appointment/components/FollowUpAppointment";
 import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
 import { generateOtpApi } from "../../api/GenerateAndVerifyOtpApi";
 import { fetchDashboardStats } from "../../api/DashboardApi";
@@ -46,7 +43,7 @@ import type {
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 
 const StaffDashboard: React.FC = () => {
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState<ActiveTab>("queue");
 
   const [open, setOpen] = useState(false);
@@ -65,25 +62,25 @@ const StaffDashboard: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [pendingPatients, setPendingPatients] = useState<Patient[]>([]);
+  const [completedPatients, setCompletedPatients] = useState<Patient[]>([]);
+  const visiblePatients =
+    activeTab === "queue" ? pendingPatients : completedPatients;
   const [loadingQueue, setLoadingQueue] = useState<boolean>(false);
   const [errorQueue, setErrorQueue] = useState<string | null>(null);
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
     null
   );
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [dispensingData, setDispensingData] = useState([]);
-  const [loadingDispense, setLoadingDispense] = useState(false);
-  const [followUpData, setfollowUpData] = useState([]);
   const [stats, setStats] = useState([]);
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
-  const docId = getSessionItem("docId", "doctor_id");
   const [sharedSearch, setSharedSearch] = useState("");
+
+
   const tabs = [
-    { key: "queue", label: "Patient Queue" },
-    { key: "dispensing", label: "Medical Dispensing" },
-    { key: "followUp", label: "Set Follow Up" },
+    { key: "queue", label: "Pending Queue" },
+    { key: "completed", label: "Completed Queue" },
   ];
   const searchConfigByTab = {
     queue: {
@@ -99,13 +96,31 @@ const StaffDashboard: React.FC = () => {
       inputProps: { maxLength: 50 },
     },
   };
+
+  const calculateAge = (dob?: string | number | Date): number => {
+    if (!dob) return 0;
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age;
+  };
+
+
   const currentSearchConfig =
     searchConfigByTab[activeTab] ?? searchConfigByTab.queue;
 
   useEffect(() => {
     if (!socket) return;
     const handleUpdate = (data: Appointment) => {
-      setPatients((prev) =>
+      if (activeTab !== "queue") return;
+      setPendingPatients((prev) =>
         prev.map((p) =>
           p?.raw.appointment_id === data.appointment_id
             ? { ...p, status: data.status }
@@ -113,9 +128,10 @@ const StaffDashboard: React.FC = () => {
         )
       );
     };
+
     socket.on("appointmentUpdate", handleUpdate);
     return () => socket.off("appointmentUpdate", handleUpdate);
-  }, [socket]);
+  }, [socket, activeTab]);
 
   const resetModalState = () => {
     setOpen(false);
@@ -133,37 +149,94 @@ const StaffDashboard: React.FC = () => {
     setEditedAfterOtp(false);
   };
 
-  const fetchQueue = () => {
+  const fetchPendingQueue = async () => {
     setLoadingQueue(true);
     setErrorQueue(null);
-    fetchTodayAppointments(null)
-      .then((appointments) => {
-        const mapped: Patient[] = appointments.map((a) => ({
-          appointment_id: a.appointment_id,
-          time:
-            a.start_time && a.end_time
-              ? `${a.start_time} - ${a.end_time}`
-              : undefined,
-          name: a.patient_name,
-          gender: a.gender,
-          status: a.status,
-          doctor: a.doctor_name,
-          source: a.source,
-          date_of_birth: a.date_of_birth,
-          mobile_number: a.mobile_number,
-          raw: a,
-        }));
-        setPatients(mapped);
-      })
-      .catch((err) => setErrorQueue(err.message || "Failed to load patients"))
-      .finally(() => setLoadingQueue(false));
+
+    try {
+      const appointments = await fetchTodayAppointments(null);
+      const mapped: Patient[] = appointments.map((a) => ({
+        patient_id: a.patient_id,
+        patientId: a.patient_id,
+        appointment_id: a.appointment_id,
+        time:
+          a.start_time && a.end_time
+            ? `${a.start_time} - ${a.end_time}`
+            : undefined,
+        name: a.patient_name,
+        gender: a.gender,
+        status: a.status,
+        doctor: a.doctor_name,
+        source: a.source,
+        date_of_birth: a.date_of_birth,
+        mobile_number: a.mobile_number,
+        raw: a,
+        age: calculateAge(a.date_of_birth),
+      }));
+
+      setPendingPatients(mapped);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorQueue(err.message);
+      } else {
+        setErrorQueue("Failed to load pending queue");
+      }
+    }
+
+    finally {
+      setLoadingQueue(false);
+    }
+  };
+
+
+  const fetchCompletedQueue = async () => {
+    setLoadingQueue(true);
+    setErrorQueue(null);
+    try {
+      const appointments = await getCompletedQueue(51);
+
+      const mapped: Patient[] = appointments.map((a) => ({
+        patient_id: a.patient_id,
+        patientId: a.patient_id,
+        appointment_id: Number(a.appointment_id),
+        name: a.patient_name,
+        gender: a.gender,
+        doctor: a.doctor_name,
+        status: "Completed",
+        source: a.followup?.toLowerCase() === "true" ? "Follow-up" : "New",
+        date_of_birth: a.dob,
+        mobile_number: a.contact,
+        time: undefined,
+        raw: {
+          appointment_id: Number(a.appointment_id),
+          patient_id: a.patient_id,
+          doctor_id: a.doctor_id,
+          prescriptions: a.prescriptions,
+        },
+        age: calculateAge(a.date_of_birth)
+      }));
+
+      setCompletedPatients(mapped);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorQueue(err.message);
+      } else {
+        setErrorQueue("Failed to load pending queue");
+      }
+    }
+    finally {
+      setLoadingQueue(false);
+    }
   };
 
   useEffect(() => {
-    if (activeTab === "queue") fetchQueue();
-    else if (activeTab === "followUp")
-      getfollowUpAsync(20).then(setfollowUpData);
-    else getMedicalDispensingAsync(20).then(setDispensingData);
+    if (activeTab === "queue") {
+      fetchPendingQueue();
+    }
+
+    if (activeTab === "completed") {
+      fetchCompletedQueue();
+    }
   }, [activeTab]);
 
   const handleAddWalkIn = () => {
@@ -365,12 +438,12 @@ const StaffDashboard: React.FC = () => {
         appointment_id: patient.raw.appointment_id,
         user_id: uId,
         status: newStatus,
-        clinic_id: clinicId,
       };
       try {
         const res = await updatePatientStatus(payload);
         if (res.success) {
-          setPatients((prev) =>
+          toast.success("Patient appointment upadted successfully");
+          setPendingPatients((prev) =>
             prev.map((p) =>
               p?.raw.appointment_id === patient.appointment_id
                 ? { ...p, status: newStatus }
@@ -426,6 +499,11 @@ const StaffDashboard: React.FC = () => {
       />
 
       <div className="bg-white p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
+        <h1
+          className="text-[var(--color-primary)] font-[var(--font-weight-bold)] mb-3"
+          style={{ fontSize: "var(--font-h4)" }}
+        >Patient Queue
+        </h1>
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex">
             <div
@@ -442,11 +520,10 @@ const StaffDashboard: React.FC = () => {
                   }}
                   className={`
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
-              ${
-                activeTab === t.key
-                  ? "bg-[var(--color-white)] text-[var(--color-primary)]"
-                  : "text-[var(--color-white)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-white)]"
-              }
+              ${activeTab === t.key
+                      ? "bg-[var(--color-white)] text-[var(--color-primary)]"
+                      : "text-[var(--color-white)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-white)]"
+                    }
             `}
                 >
                   {t.label}
@@ -487,35 +564,20 @@ const StaffDashboard: React.FC = () => {
         </div>
 
         <div className="mt-4">
-          {activeTab === "queue" ? (
+          {(activeTab === "queue" || activeTab === "completed") && (
             <PatientQueue
               mode="staff"
-              patientsData={patients}
+              queueType={activeTab} // "queue" | "completed"
+              patientsData={visiblePatients}
               loading={loadingQueue}
               error={errorQueue}
-              onAddWalkIn={handleAddWalkIn}
               handleUpdatePatientStatus={handleUpdatePatientStatus}
-              searchQuery={sharedSearch}
-              onSearchChange={setSharedSearch}
-            />
-          ) : activeTab === "followUp" ? (
-            <FollowUpAppointment
-              mode="staff"
-              data={followUpData}
-              loading={loadingDispense}
-              searchQuery={sharedSearch}
-              onSearchChange={setSharedSearch}
-            />
-          ) : (
-            <MedicalDispensing
-              mode="staff"
-              data={dispensingData}
-              loading={loadingDispense}
               searchQuery={sharedSearch}
               onSearchChange={setSharedSearch}
             />
           )}
         </div>
+
       </div>
 
       {open && !showRegistrationForm && (
@@ -576,6 +638,7 @@ const StaffDashboard: React.FC = () => {
                         size="small"
                         placeholder="Enter 10-digit number"
                         value={contact}
+                        disabled={editedAfterOtp}
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, "");
 
@@ -591,8 +654,6 @@ const StaffDashboard: React.FC = () => {
                           if (/^[6-9]\d{0,9}$/.test(val) || val === "") {
                             setContact(val);
                             setError({ mobile: "", otp: "" });
-                          } else if (val.length === 1) {
-                            setError("Contact number should start from 6");
                           } else {
                             setContact(val);
                           }
@@ -690,11 +751,10 @@ const StaffDashboard: React.FC = () => {
                             width: "2.5rem",
                             height: "2.5rem",
                             boxShadow: "var(--shadow-md)",
-                            border: `1px solid ${
-                              error.otp
-                                ? "var(--color-error)"
-                                : "var(--color-none)"
-                            }`,
+                            border: `1px solid ${error.otp
+                              ? "var(--color-error)"
+                              : "var(--color-none)"
+                              }`,
                             borderRadius: "var(--radius-lg)",
                             backgroundColor: "var(--color-surface)",
                             color: "var(--color-text)",
@@ -796,8 +856,8 @@ const StaffDashboard: React.FC = () => {
                             {p.gender.toLowerCase() === "male"
                               ? "(M)"
                               : p.gender.toLowerCase() === "female"
-                              ? "(F)"
-                              : "(O)"}
+                                ? "(F)"
+                                : "(O)"}
                           </p>
                         </div>
 
@@ -902,7 +962,7 @@ const StaffDashboard: React.FC = () => {
         <WalkInRegisterForm
           onClose={resetModalState}
           patientData={selectedPatient}
-          onSuccess={fetchQueue}
+          onSuccess={fetchPendingQueue}
           contact={contact}
         />
       )}

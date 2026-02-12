@@ -11,13 +11,14 @@ export interface ErrorState {
   otp: string;
 }
 
-export type ActiveTab = "queue" | "dispensing" | "followUp";
+export type ActiveTab = "queue" | "dispensing" | "followUp" | "completed";
 
 export interface DashboardCardItem {
   title: string;
   value: number;
   icon: React.ReactNode;
 }
+export type QueueType = "queue" | "completed";
 
 export interface PatientQueueProps {
   mode?: "doctor" | "staff";
@@ -25,6 +26,7 @@ export interface PatientQueueProps {
   doctorId?: number;
   classProp?: string;
   patientsData?: Patient[];
+  queueType?: QueueType;
   error: string | null;
   onStartConsultation?: (patient: Patient) => void;
   onAddWalkIn?: () => void;

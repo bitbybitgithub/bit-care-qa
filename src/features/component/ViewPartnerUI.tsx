@@ -1,8 +1,7 @@
 import BusinessIcon from "@mui/icons-material/Business";
 import { RiContactsFill } from "react-icons/ri";
 import { IoMail } from "react-icons/io5";
-
-
+import SidebarBg from "../../assets/SidebarBg.png";
 
 interface PartnerItem {
   id: number;
@@ -62,94 +61,120 @@ const ViewPartnerUI = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
         {data.map((item) => (
-  <div
-    key={item.id}
-    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition"
-  >
-    {/* Top Row */}
-    <div className="flex items-center justify-between">
+          <div
+            key={item.id}
+            className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition"
+          >
+            {/* Top Row */}
+            <div className="flex items-center justify-between">
 
-      {/* Left Section */}
-      <div className="flex items-center gap-3">
+              {/* Left Section */}
+              <div className="flex items-center gap-3">
 
-        {/* Logo */}
-        <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
-          {item.logo ? (
-            <img
-              src={item.logo}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <BusinessIcon className="text-gray-500" />
-          )}
-        </div>
+                {/* Logo */}
+                {/* <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
+                  {item.logo ? (
+                    <img
+                      src={item.logo}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <BusinessIcon className="text-gray-500" />
+                  )}
+                </div> */}
 
-        {/* Info */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">
-            {item.name}
-          </h3>
+                {/* Logo / Temp Image */}
+                <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
 
-          {item.address && (
-            <p className="text-xs text-gray-500">
-              {item.address}
-            </p>
-          )}
-        </div>
-      </div>
+                  {/* TEMP: Sidebar Image */}
+                  <img
+                    src={SidebarBg}
+                    alt="Partner"
+                    className="w-full h-full object-cover"
+                  />
 
-      {/* Right Section */}
-      <div className="flex items-center gap-2">
+                  {/*
+  OLD LOGO LOGIC (KEEP FOR LATER)
 
-        {/* Status */}
-        <span
-          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-            item.status === "Active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {item.status === "Active" ? "Operational" : "Inactive"}
-        </span>
-
-       
-      </div>
-    </div>
-
-    {/* Contact Info */}
-   <div className="mt-3 space-y-2 text-xs text-gray-600">
-
-  {item.phone && (
-    <div className="flex items-center gap-2">
-      <RiContactsFill className="text-gray-400 text-sm" />
-      <a
-        href={`tel:${item.phone}`}
-        onClick={(e) => e.stopPropagation()}
-        className="hover:text-blue-600 transition"
-      >
-        {item.phone}
-      </a>
-    </div>
+  {item.logo ? (
+    <img
+      src={item.logo}
+      alt={item.name}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <BusinessIcon className="text-gray-500" />
   )}
+  */}
 
-  {item.email && (
-    <div className="flex items-center gap-2">
-      <IoMail className="text-gray-400 text-sm" />
-      <a
-        href={`mailto:${item.email}`}
-        onClick={(e) => e.stopPropagation()}
-        className="truncate hover:text-blue-600 transition"
-      >
-        {item.email}
-      </a>
-    </div>
-  )}
+                </div>
 
-</div>
 
-  </div>
-))}
+                {/* Info */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    {item.name}
+                  </h3>
+
+                  {item.address && (
+                    <p className="text-xs text-gray-500">
+                      {item.address}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Section */}
+              <div className="flex items-center gap-2">
+
+                {/* Status */}
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.status === "Active"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                    }`}
+                >
+                  {item.status === "Active" ? "Operational" : "Inactive"}
+                </span>
+
+
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="mt-3 space-y-2 text-xs text-gray-600">
+
+              {item.phone && (
+                <div className="flex items-center gap-2">
+                  <RiContactsFill className="text-gray-400 text-sm" />
+                  <a
+                    href={`tel:${item.phone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-blue-600 transition"
+                  >
+                    {item.phone}
+                  </a>
+                </div>
+              )}
+
+              {item.email && (
+                <div className="flex items-center gap-2">
+                  <IoMail className="text-gray-400 text-sm" />
+                  <a
+                    href={`mailto:${item.email}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="truncate hover:text-blue-600 transition"
+                  >
+                    {item.email}
+                  </a>
+                </div>
+              )}
+
+            </div>
+
+          </div>
+        ))}
 
 
       </div>

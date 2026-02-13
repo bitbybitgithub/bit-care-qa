@@ -3,7 +3,7 @@ import { useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { RiContactsFill } from "react-icons/ri";
 import { IoMail } from "react-icons/io5";
-
+import DrBgReg from "../../assets/DrBgReg.png";
 interface PartnerItem {
   id: number;
   name: string;
@@ -111,29 +111,29 @@ const AddPartner = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
 
-      {filtered.map((item) => {
+        {filtered.map((item) => {
 
-  const isSelected = selected.includes(item.id);
+          const isSelected = selected.includes(item.id);
 
-  return (
-    <div
-      key={item.id}
-      onClick={() => toggleSelect(item.id)}
-      className={`bg-white border rounded-xl p-4 cursor-pointer transition
+          return (
+            <div
+              key={item.id}
+              onClick={() => toggleSelect(item.id)}
+              className={`bg-white border rounded-xl p-4 cursor-pointer transition
 
         ${isSelected
-          ? "border-green-400 ring-1 ring-green-200"
-          : "border-gray-200"
-        }
+                  ? "border-green-400 ring-1 ring-green-200"
+                  : "border-gray-200"
+                }
 
         hover:shadow-sm
       `}
-    >
-      {/* Header */}
-      <div className="flex gap-3">
+            >
+              {/* Header */}
+              <div className="flex gap-3">
 
-        {/* Logo */}
-        <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                {/* Logo */}
+                {/* <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
 
           {item.logo ? (
             <img
@@ -144,82 +144,106 @@ const AddPartner = ({
             icon
           )}
 
-        </div>
+        </div> */}
 
-        {/* Main Info */}
-        <div className="flex-1">
-
-          <p className="text-sm font-semibold text-gray-900 leading-tight">
-            {item.name}
-          </p>
-
-          {item.address && (
-            <p className="text-xs text-gray-500 mt-0.5">
-              {item.address}
-            </p>
-          )}
-
-        </div>
-
-      </div>
+                <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
 
 
-      {/* Contact Info */}
-      {/* Contact Info */}
-<div className="mt-3 space-y-2 text-xs text-gray-600">
+                  <img
+                    src={DrBgReg}
+                    alt="Partner"
+                    className="w-full h-full object-cover"
+                  />
 
-  {item.email && (
-    <div className="flex items-center gap-2">
-      <IoMail className="text-gray-400 text-sm" />
+                  {/*
 
-      <a
-        href={`mailto:${item.email}`}
-        onClick={(e) => e.stopPropagation()}
-        className="truncate hover:text-blue-600 transition"
-      >
-        {item.email}
-      </a>
-    </div>
+  {item.logo ? (
+    <img
+      src={item.logo}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    icon
   )}
+  */}
 
-  {item.mobile && (
-    <div className="flex items-center gap-2">
-      <RiContactsFill className="text-gray-400 text-sm" />
-
-      <a
-        href={`tel:${item.mobile}`}
-        onClick={(e) => e.stopPropagation()}
-        className="hover:text-blue-600 transition"
-      >
-        {item.mobile}
-      </a>
-    </div>
-  )}
-
-</div>
+                </div>
 
 
+                {/* Main Info */}
+                <div className="flex-1">
 
-      {/* Status */}
-      <div className="mt-2">
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">
+                    {item.name}
+                  </p>
 
-        <span
-          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium
+                  {item.address && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {item.address}
+                    </p>
+                  )}
+
+                </div>
+
+              </div>
+
+
+              {/* Contact Info */}
+              {/* Contact Info */}
+              <div className="mt-3 space-y-2 text-xs text-gray-600">
+
+                {item.email && (
+                  <div className="flex items-center gap-2">
+                    <IoMail className="text-gray-400 text-sm" />
+
+                    <a
+                      href={`mailto:${item.email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="truncate hover:text-blue-600 transition"
+                    >
+                      {item.email}
+                    </a>
+                  </div>
+                )}
+
+                {item.mobile && (
+                  <div className="flex items-center gap-2">
+                    <RiContactsFill className="text-gray-400 text-sm" />
+
+                    <a
+                      href={`tel:${item.mobile}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-blue-600 transition"
+                    >
+                      {item.mobile}
+                    </a>
+                  </div>
+                )}
+
+              </div>
+
+
+
+              {/* Status */}
+              <div className="mt-2">
+
+                <span
+                  className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium
 
             ${isSelected
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-600"
-            }
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-600"
+                    }
           `}
-        >
-          {isSelected ? "Selected" : "Available"}
-        </span>
+                >
+                  {isSelected ? "Selected" : "Available"}
+                </span>
 
-      </div>
+              </div>
 
-    </div>
-  );
-})}
+            </div>
+          );
+        })}
 
 
       </div>
@@ -248,7 +272,7 @@ const AddPartner = ({
       </div>
 
 
-      
+
 
     </div>
   );

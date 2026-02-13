@@ -14,7 +14,11 @@ import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import {
   getMappedLabsListApi,
   getMappedPharmacyListApi,
+  ReferralEntityType,
+  sendReferralsApi,
+  type SendReferralPayload,
 } from "../../../api/clinic/LabPharmaReferralApi";
+import { getSessionItem } from "../../../context/sessions/userSession";
 
 interface Props {
   patient: Patient | null;
@@ -32,15 +36,17 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     const [searchTerm, setSearchTerm] = useState("");
     const isLab = type === "lab";
     const title = isLab ? "Send to Lab" : "Send to Pharmacy";
+    const clinic_id = getSessionItem("user", "clinic_id");
+    const user = getSessionItem("user", "user_id");
+    const prescriptionId =
+      patient?.raw?.prescriptions?.[0]?.prescription_id ?? null;
 
     useEffect(() => {
       const fetchItems = async () => {
         setLoading(true);
-        console.log(type);
         try {
           if (type === "lab") {
             const res = await getMappedLabsListApi(51);
-            console.log(res);
             if (res.success) {
               setItems(res.data);
             }
@@ -100,16 +106,58 @@ const LabPharmacyReferral: React.FC<Props> = memo(
       );
     };
 
-    const handleAdd = () => {
-      if (!selected.length) return;
+    const handleAdd = async () => {
+      if (!selected.length || !patient) return;
 
-      const selectedItems = normalizedItems
-        .filter((i) => selected.includes(i.id))
-        .map((i) => i.raw);
+      const patientId = patient.patient_id;
+      const appointmentId = patient.appointment_id;
 
-      onAdd(selectedItems, type);
-      console.log(selectedItems);
-      setSelected([]);
+      const doctorId = patient?.raw?.doctor_id;
+      const prescriptionId = patient?.raw?.prescriptions?.[0]?.prescription_id;
+      try {
+        setLoading(true);
+
+        const selectedItems = normalizedItems
+          .filter((i) => selected.includes(i.id))
+          .map((i) => i.raw);
+
+        const payload: SendReferralPayload = isLab
+          ? {
+              entity_type: ReferralEntityType.Lab,
+              lab_ids: selectedItems.map((i) => i.lab_id),
+              clinic_id: clinic_id,
+              patient_id: patientId,
+              doctor_id: doctorId,
+              prescription_id: prescriptionId,
+              appointment_id: appointmentId!,
+              remarks: "",
+              created_by: user,
+            }
+          : {
+              entity_type: ReferralEntityType.Pharmacy,
+              pharmacy_ids: selectedItems.map((i) => i.pharma_id),
+              clinic_id: clinic_id,
+              patient_id: patientId,
+              doctor_id: doctorId,
+              prescription_id: prescriptionId,
+              remarks: "",
+              created_by: user,
+            };
+
+        const response = await sendReferralsApi(payload);
+
+        if (response.success) {
+          console.log("Referral Sent Successfully", response.data);
+
+          onAdd(selectedItems, type);
+          setSelected([]);
+          onClose?.();
+        }
+      } catch (error) {
+        console.error("Failed to send referral", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     return (
@@ -148,7 +196,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
 
           {filteredItems.length === 0 && (
             <div className="text-center text-xs text-gray-500 py-6">
-              No results found.
+              Binding Data.....
             </div>
           )}
 
@@ -287,7 +335,6 @@ const LabPharmacyReferral: React.FC<Props> = memo(
             {title} ({selected.length})
           </Button>
         </div>
-        {loading && <div className="text-center text-xs py-6">Loading...</div>}
       </div>
     );
   },

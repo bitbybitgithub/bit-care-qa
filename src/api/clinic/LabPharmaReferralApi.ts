@@ -5,6 +5,41 @@ export interface ApiResponse<T> {
   data: any;
 }
 
+export enum ReferralEntityType {
+  Lab = 2,
+  Pharmacy = 3,
+}
+
+interface BaseReferralPayload {
+  clinic_id: number;
+  patient_id?: number;
+  doctor_id: number;
+  prescription_id: number;
+  remarks?: string | null;
+  created_by: number;
+}
+
+export interface LabReferralPayload extends BaseReferralPayload {
+  entity_type: ReferralEntityType.Lab;
+  lab_ids: number[];
+  appointment_id: number; // required for labs
+}
+
+export interface PharmacyReferralPayload extends BaseReferralPayload {
+  entity_type: ReferralEntityType.Pharmacy;
+  pharmacy_ids: number[];
+  appointment_id?: number; // optional for pharmacy
+}
+export type SendReferralPayload =
+  | LabReferralPayload
+  | PharmacyReferralPayload;
+
+  export interface SendReferralResponse {
+  referral_id: number;
+  entity_type: number;
+  created_at: string;
+}
+
 export const getMappedLabsListApi = async (
   clinic_id: number
 ): Promise<ApiResponse<any[]>> => {
@@ -25,4 +60,16 @@ export const getMappedPharmacyListApi = async (
   );
 
   return response; 
+};
+
+export const sendReferralsApi = async (
+  payload: SendReferralPayload
+): Promise<ApiResponse<SendReferralResponse>> => {
+
+  const response = await emrAPI.post<ApiResponse<SendReferralResponse>>(
+    "/clinics/send-referrals",
+    payload
+  );
+
+  return response.data;
 };

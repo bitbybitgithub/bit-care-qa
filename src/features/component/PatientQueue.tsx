@@ -35,6 +35,7 @@ import LabPharmacyReferral from "../clinic/components/LabPharmacyReferral";
 import { FaFlask } from "react-icons/fa";
 import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaClinicMedical } from "react-icons/fa";
+import FollowUpCalendarDrawer from "../clinic/components/FollowUpForm";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -90,6 +91,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     open: boolean;
     type: "lab" | "pharmacy" | null;
   }>({ open: false, type: null });
+
+  const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
+
 
   useEffect(() => {
     setCurrentPage(1);
@@ -152,6 +156,11 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setSelectedPatient(patient);
         setServiceDrawer({ open: true, type: "pharmacy" });
       }
+      else if (action === "Set Follow Up") {
+  setSelectedPatient(patient);
+  setFollowupDrawerOpen(true);
+}
+
       else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
         setAnchorEl({});
@@ -711,6 +720,33 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           />
         </Drawer>
       )}
+
+<Drawer
+  anchor="right"
+  open={followupDrawerOpen}
+  onClose={() => setFollowupDrawerOpen(false)}
+  PaperProps={{
+    sx: {
+      width: { xs: "100%", sm: "500px", md: "30%" },
+      backgroundColor: "var(--color-bg)",
+    },
+  }}
+>
+  {selectedPatient && (
+    <FollowUpCalendarDrawer
+      patient={selectedPatient}
+      onClose={() => setFollowupDrawerOpen(false)}
+      onSave={(data) => {
+        handleUpdatePatientStatus?.(
+          selectedPatient,
+          "Completed"
+        );
+
+        setFollowupDrawerOpen(false);
+      }}
+    />
+  )}
+</Drawer>
 
     </div>
   );

@@ -2,8 +2,7 @@ export interface PharmaPrescription {
   doc_url: string;
   file_name: string;
   remarks: string;
-}
-
+};
 export interface PharmaPatientRecordResponse {
   patient_id: string;
   patient_name: string;
@@ -16,8 +15,7 @@ export interface PharmaPatientRecordResponse {
   status: "Pending" | "Processing" | "Complete";
   created_date: string;
   prescriptions: PharmaPrescription[];
-}
-
+};
 
 
 export type PharmacyRecord = {
@@ -38,7 +36,7 @@ export type PharmacyRecord = {
 export interface PharmacyRecordProps {
   mode?: "pending" | "processing";
   searchTerm?: string;
-}
+};
 
 export interface MapPartnersPayload {
   clinic_id: number;
@@ -63,3 +61,16 @@ export interface MappedPharmacy {
   status: "Active" | "Inactive";
 }
 
+export interface PharmaProfileInfoResponse {
+  pharma_id: number;
+  pharma_name: string,
+  phone: string;
+  email: string;
+  address: string;
+  pincode: string;
+  city: string;
+  district: string;
+  state: string;
+  pharma_logo: string | null;
+  password_hash: string;
+};

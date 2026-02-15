@@ -18,6 +18,7 @@ import PharmacyDashboard from "../features/pharma/PharmacyDashboard";
 import LabProfile from "../features/lab/LabProfile";
 import LabEmpanelment from "../features/lab/LabEmpanelment";
 import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
+import PharmaSetting from "../features/pharma/PharmaSetting";
 
 
 
@@ -61,7 +62,7 @@ const Router = [
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
-      { path: "/pharmacy/settings", element: <Profile /> },
+      { path: "/pharmacy/settings", element: <PharmaSetting /> },
 
       // { path: "/patients-records", element: <ComingSoon /> },
       // { path: "/add-diagnosis", element: <ComingSoon /> },

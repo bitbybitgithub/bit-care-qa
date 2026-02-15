@@ -49,7 +49,7 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
       { title: "Users", link: "/pharmacy/users", icon: FaUsers },
-      // { title: "Profile", link: "/pharmacy/settings", icon: FaCog },
+      { title: "Setting", link: "/pharmacy/settings", icon: FaCog },
     ],
     Staff: [
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },

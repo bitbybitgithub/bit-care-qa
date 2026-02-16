@@ -4,6 +4,7 @@ import { type PharmaProfileInfoResponse } from "../../types/pharmacyType/pharmac
 import { savePharmaProfileInfo } from "../../api/pharmacyApi/PharmacyApi";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { TextField } from "@mui/material";
 
 interface GeneralSettingProps {
   profile: PharmaProfileInfoResponse;
@@ -22,7 +23,6 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const pharmacy_id = Number(getSessionItem("user", "pharmacy_id"));
 
-  console.log("profile data",profile)
   useEffect(() => {
     if (profile?.pharma_logo) {
       setPreview(
@@ -92,11 +92,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
 
   return (
     <>
-    <div className="bg-white w-full rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4">
-        General Information
-      </h2>
-
+    <div className="p-3">
       <section className="mb-4">
         <h3 className="font-semibold text-blue-600 mb-2">
           Pharmacy Branding
@@ -140,11 +136,11 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
         <label className="block font-medium mb-1">
           Pharmacy Name
         </label>
-        <input
+        <TextField
           type="text"
           disabled
           value={profile.pharma_name}
-          className="w-full border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+          className="w-96 border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
         />
       </div>
 
@@ -153,7 +149,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
           <label className="block font-medium mb-1">
             Email Address
           </label>
-          <input
+          <TextField
             type="email"
             disabled
             value={profile.email}
@@ -165,7 +161,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
           <label className="block font-medium mb-1">
             Phone Number
           </label>
-          <input
+          <TextField
             type="text"
             disabled
             value={profile.phone}
@@ -178,11 +174,11 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
         <label className="block font-medium mb-1">
           Address
         </label>
-        <input
-          type="text"
+        <TextField
+          multiline
           disabled
           value={fullAddress}
-          className="w-full border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+          className="w-3/5 border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
         />
       </div>
       <div>

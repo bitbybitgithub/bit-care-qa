@@ -25,8 +25,6 @@ const UpdatePassword: React.FC<UpdatePasswordProps> = ({ profile }) => {
 
   const userID = getSessionItem("user", "user_id");
 
-  console.log("user id",userID)
-  console.log("profile", profile);
   const handleVerifyPassword = async () => {
     if (!currentPassword) {
       toast.error("Enter current password");
@@ -69,145 +67,163 @@ const UpdatePassword: React.FC<UpdatePasswordProps> = ({ profile }) => {
     }
   };
 
-const handleUpdatePassword = async () => {
-  if (!isVerified) {
-    toast.error("Please verify current password first");
-    return;
-  }
-
-  if (!newPassword || !confirmPassword) {
-    toast.error("Enter new password");
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    toast.error("Passwords do not match");
-    return;
-  }
-
-  try {
-    const response = await updatePassword(
-      profile.pharma_id,
-      newPassword
-    );
-
-    if (response.success) {
-      toast.success(response.message);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsVerified(false);
-    } else {
-      toast.error(response.message);
+  const handleUpdatePassword = async () => {
+    if (!isVerified) {
+      toast.error("Please verify current password first");
+      return;
     }
 
-  } catch (error) {
-    toast.error("Error updating password");
-  }
-};
+    if (!newPassword || !confirmPassword) {
+      toast.error("Enter new password");
+      return;
+    }
 
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await updatePassword(profile.pharma_id, newPassword);
+
+      if (response.success) {
+        toast.success(response.message);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsVerified(false);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error("Error updating password");
+    }
+  };
 
   return (
     <>
-      <div className="bg-white w-full rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-6">
-          Security & Change Password
-        </h2>
 
-        <div className="justify-between">
-          <div>
-            <TextField
-              placeholder="Current Password"
-              type={showPassword ? "text" : "password"}
-              className="max-w-2xl"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              fullWidth
-              size="small"
-              sx={{ mb: 2 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaLock />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleVerifyPassword}
-              disabled={verifying}
+  <div className="p-6 ">
+  <h2 className="text-xl font-semibold mb-8">
+    Change Password
+  </h2>
+
+  {/* Current Password + Verify */}
+  <div className="flex items-end gap-4 mb-6 max-w-3xl">
+    <TextField
+      placeholder="Current Password"
+      type={showPassword ? "text" : "password"}
+      value={currentPassword}
+      onChange={(e) => setCurrentPassword(e.target.value)}
+      fullWidth
+      size="small"
+      sx={{ flex: 1 }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <FaLock />
+          </InputAdornment>
+        ),
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton
+              onClick={() =>
+                setShowPassword((prev) => !prev)
+              }
             >
-              {verifying ? "Verifying..." : "Verify Password"}
-            </Button>
-          </div>
-        </div>
+              {showPassword ? (
+                <VisibilityOff />
+              ) : (
+                <Visibility />
+              )}
+            </IconButton>
+          </InputAdornment>
+        ),
+      }}
+    />
 
-        <div>
-          <TextField
-            placeholder="New Password"
-            type="password"
-            className="max-w-2xl"
-            value={newPassword}
-            onChange={(e) => handleNewPasswordChange(e.target.value)}
-            fullWidth
-            size="small"
-            disabled={!isVerified}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FaLock />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </div>
-        <div>
-          <TextField
-            placeholder="Confirm Password"
-            type="password"
-            className="max-w-2xl"
-            value={confirmPassword}
-            onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-            fullWidth
-            size="small"
-            disabled={!isVerified}
-            error={!isNewMatch && confirmPassword.length > 0}
-            helperText={
-              !isNewMatch && confirmPassword.length > 0
-                ? "Passwords do not match"
-                : ""
-            }
-            sx={{ mb: 3 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FaLock />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </div>
+    <Button
+      variant="contained"
+      onClick={handleVerifyPassword}
+      disabled={verifying || !currentPassword}
+      sx={{
+        height: "40px",
+        minWidth: "160px",
+        borderRadius: "10px",
+      }}
+    >
+      {verifying ? "Verifying..." : "Verify Password"}
+    </Button>
+  </div>
 
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={!isVerified || !isNewMatch}
-          onClick={handleUpdatePassword}
-        >
-          Update Password
-        </Button>
-      </div>
+<div className="max-w-3xl">
+  <TextField
+    placeholder="New Password"
+    type="password"
+    value={newPassword}
+    onChange={(e) =>
+      handleNewPasswordChange(e.target.value)
+    }
+    fullWidth
+    size="small"
+    disabled={!isVerified}
+    sx={{ mb: 3 }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <FaLock />
+        </InputAdornment>
+      ),
+    }}
+  />
+</div>
+
+<div className="max-w-3xl">
+  <TextField
+    placeholder="Confirm Password"
+    type="password"
+    value={confirmPassword}
+    onChange={(e) =>
+      handleConfirmPasswordChange(e.target.value)
+    }
+    fullWidth
+    size="small"
+    disabled={!isVerified}
+    error={!isNewMatch && confirmPassword.length > 0}
+    helperText={
+      !isNewMatch && confirmPassword.length > 0
+        ? "Passwords do not match"
+        : ""
+    }
+    sx={{ mb: 5 }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <FaLock />
+        </InputAdornment>
+      ),
+    }}
+  />
+  </div>
+
+  {/* Update Button */}
+  <div className="flex justify-start">
+    <Button
+      variant="contained"
+      color="primary"
+      disabled={!isVerified || !isNewMatch}
+      onClick={handleUpdatePassword}
+      sx={{
+        minWidth: "180px",
+        borderRadius: "10px",
+        height: "42px",
+      }}
+    >
+      Update Password
+    </Button>
+  </div>
+</div>
+
     </>
   );
 };

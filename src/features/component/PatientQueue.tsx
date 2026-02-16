@@ -107,13 +107,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       const contact = String(p.mobile_number || "").trim();
       const last4 = contact.length >= 4 ? contact.slice(-4).toLowerCase() : "";
       return (
-        last4.includes(q) ||
-        String(p.name || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(p.appointment_id ?? p.patient_id ?? "")
-          .toLowerCase()
-          .includes(q)
+        // last4.includes(q) ||
+        // String(p.name || "")
+        //   .toLowerCase()
+        //   .includes(q) ||
+        // String(p.appointment_id ?? p.patient_id ?? "")
+        //   .toLowerCase()
+        //   .includes(q)
+          last4.includes(q)
       );
     });
   }, [patientsData, search]);
@@ -408,16 +409,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           } as GridColDef,
         ]
         : []),
-      {
-        field: "status",
-        headerName: "Status",
-        flex: 0.8,
-        minWidth: 120,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          return row?.status ? formatEnumText(row.status) : "—";
-        },
-      },
+      // {
+      //   field: "status",
+      //   headerName: "Status",
+      //   flex: 0.8,
+      //   minWidth: 120,
+      //   renderCell: (params: GridRenderCellParams<any, Patient>) => {
+      //     const row = params?.row as Patient;
+      //     return row?.status ? formatEnumText(row.status) : "—";
+      //   },
+      // },
       {
         field: "action",
         headerName: "Action",
@@ -541,11 +542,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     </Box>
   );
 
-  const getRowId: GridRowIdGetter = (row: any) =>
-    row?.raw?.patient_id ??
-    row?.patient_id ??
-    row?.appointment_id ??
-    Math.random();
+const getRowId: GridRowIdGetter = (row: any) =>
+  row.appointment_id;
+
 
   return (
     <div

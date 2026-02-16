@@ -19,6 +19,7 @@ import {
   type SendReferralPayload,
 } from "../../../api/clinic/LabPharmaReferralApi";
 import { getSessionItem } from "../../../context/sessions/userSession";
+import { toast } from "react-toastify";
 
 interface Props {
   patient: Patient | null;
@@ -38,8 +39,6 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     const title = isLab ? "Send to Lab" : "Send to Pharmacy";
     const clinic_id = getSessionItem("user", "clinic_id");
     const user = getSessionItem("user", "user_id");
-    const prescriptionId =
-      patient?.raw?.prescriptions?.[0]?.prescription_id ?? null;
 
     useEffect(() => {
       const fetchItems = async () => {
@@ -148,13 +147,14 @@ const LabPharmacyReferral: React.FC<Props> = memo(
 
         if (response.success) {
           console.log("Referral Sent Successfully", response.data);
-
+          toast.success("Referral Sent Successfully");
           onAdd(selectedItems, type);
           setSelected([]);
           onClose?.();
         }
       } catch (error) {
         console.error("Failed to send referral", error);
+        toast.error("Failed to send referral");
       } finally {
         setLoading(false);
       }
@@ -194,7 +194,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
             />
           </div>
 
-          {filteredItems.length === 0 && (
+          {loading && (
             <div className="text-center text-xs text-gray-500 py-6">
               Binding Data.....
             </div>

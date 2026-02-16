@@ -7,7 +7,7 @@ import type {
   LabTestItemRequest,
   SaveLabShiftPayload,
   SaveLabTestItem,
-  MappedLab, 
+  MappedLab,
 } from "../../types/labType/LabTestInterfaces";
 
 /* ===================== */

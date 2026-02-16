@@ -1,132 +1,10 @@
-// import { useEffect, useState } from "react";
-
-// import AddLabs from "../../features/lab/AddLabs";
-// import ViewLabs from "../../features/lab/ViewLabs";
-// import { getSession } from "../../context/sessions/userSession";
-// import { getActiveLabListApi } from "../../api/labApis/LabApi";
-
-// export interface LabApiItem {
-//   lab_id: number;
-//   lab_name: string;
-//   lab_logo?: string;
-
-//   email?: string;
-//   mobile?: string;
-//   address?: string;
-
-//   status: "Active" | "Inactive";
-// }
-
-// const session = getSession("user");
-// const clinicId = session?.clinic_id ?? null;
-
-// const LabEmpanelment = () => {
-//   const [activeTab, setActiveTab] =
-//     useState<"view" | "add">("view");
-
-//   const [labs, setLabs] = useState<LabApiItem[]>([]);
-//   const [loading, setLoading] = useState(false);
-
-//   const fetchLabs = async () => {
-//     try {
-//       setLoading(true);
-
-//       const res = await getActiveLabListApi();
-//       setLabs(res.data);
-
-//     } catch (err) {
-//       console.error("Lab list error", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchLabs();
-//   }, []);
-
-//   const handleAddLabs = (newLabs: LabApiItem[]) => {
-//     setLabs((prev) => [...prev, ...newLabs]);
-//     setActiveTab("view");
-//   };
-
-//   return (
-//     <div className="w-full bg-white rounded-md shadow">
-
-//       {/* Tabs */}
-//       <div className="flex border-b">
-
-//         <button
-//           onClick={() => setActiveTab("view")}
-//           className={`px-4 py-2 border-b-2
-//             ${
-//               activeTab === "view"
-//                 ? "border-blue-500 text-blue-600"
-//                 : "border-transparent text-gray-500"
-//             }`}
-//         >
-//           View Labs
-//         </button>
-
-//         <button
-//           onClick={() => setActiveTab("add")}
-//           className={`px-4 py-2 border-b-2
-//             ${
-//               activeTab === "add"
-//                 ? "border-blue-500 text-blue-600"
-//                 : "border-transparent text-gray-500"
-//             }`}
-//         >
-//           Add Labs
-//         </button>
-
-//       </div>
-
-//       {/* Loading */}
-//       {loading && (
-//         <div className="p-3 text-sm text-blue-600">
-//           Loading...
-//         </div>
-//       )}
-
-//       {/* Content */}
-//       <div>
-
-//         {activeTab === "view" && (
-//           <ViewLabs labs={labs} />
-//         )}
-
-//         {activeTab === "add" && (
-//           <AddLabs
-//             labs={labs}
-//             onAdd={handleAddLabs}
-//           />
-//         )}
-
-//       </div>
-
-//     </div>
-//   );
-// };
-
-// export default LabEmpanelment;
-
 import { useEffect, useState } from "react";
-
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
-
 import ScienceIcon from "@mui/icons-material/Science";
-
 import { getSession } from "../../context/sessions/userSession";
-
-import { getActiveLabListApi } from "../../api/labApis/LabApi";
+import { getActiveLabListApi, getMappedLabsApi } from "../../api/labApis/LabApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
-
-
-/* =======================
-   Types
-======================= */
 
 export interface LabApiItem {
   lab_id: number;
@@ -140,18 +18,8 @@ export interface LabApiItem {
   status: "Active" | "Inactive";
 }
 
-
-/* =======================
-   Session
-======================= */
-
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
-
-
-/* =======================
-   Component
-======================= */
 
 const LabEmpanelment = () => {
 
@@ -160,14 +28,12 @@ const LabEmpanelment = () => {
 
   const [labs, setLabs] =
     useState<LabApiItem[]>([]);
+  const [mappedLabs, setMappedLabs] =
+    useState<LabApiItem[]>([]);
 
   const [loading, setLoading] =
     useState(false);
 
-
-  /* =======================
-     Fetch
-  ======================= */
 
   const fetchLabs = async () => {
 
@@ -176,8 +42,27 @@ const LabEmpanelment = () => {
 
       const res = await getActiveLabListApi();
 
-      // Keep res naming
       setLabs(res.data);
+
+    } catch (err) {
+
+      console.error("Lab list error", err);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  const fetchMappedLabByClinicId = async () => {
+
+    try {
+      setLoading(true);
+
+      const res = await getMappedLabsApi(clinicId);
+
+      setMappedLabs(res.data);
 
     } catch (err) {
 
@@ -195,75 +80,60 @@ const LabEmpanelment = () => {
     fetchLabs();
   }, []);
 
+  useEffect(() => {
+    fetchMappedLabByClinicId();
+  }, [clinicId]);
 
-  /* =======================
-     After Add
-  ======================= */
-
-  const handleAddLabs = (
-    newLabs: LabApiItem[]
-  ) => {
-
-    setLabs((prev) => [
-      ...prev,
-      ...newLabs,
-    ]);
-
-    setActiveTab("view");
-  };
-
-
-  /* =======================
-     Submit Handler
-  ======================= */
-
-  const handleSubmitLabs = async (
-    ids: number[]
-  ) => {
+  const handleSubmitLabs = async (ids: number[]) => {
 
     if (!clinicId) {
-      alert("Session expired. Please login again.");
+      alert("Session expired");
       return;
     }
 
-    const res = await mapClinicPartnersApi({
-      clinic_id: clinicId,
-      lab_ids: ids,
-      pharmacy_ids: [],
-    });
+    try {
 
-    if (!res.success) {
-      throw new Error(
-        res.message || "Failed to map labs"
-      );
+      await mapClinicPartnersApi({
+        clinic_id: clinicId,
+        lab_ids: ids,
+        pharmacy_ids: [],
+      });
+
+      await fetchLabs();
+
+      setActiveTab("view");
+
+    } catch (err) {
+
+      console.error(err);
+      alert("Failed to map labs");
+
     }
-
-    const selected = labs.filter((l) =>
-      ids.includes(l.lab_id)
-    );
-
-    handleAddLabs(selected);
   };
 
+  const viewItems = mappedLabs?.map((l) => ({
+    id: l.lab_id,
+    name: l.lab_name,
 
-  /* =======================
-     Render
-  ======================= */
+    logo: l.lab_logo,
+    phone: l.phone,
+    email: l.email,
+    address: l.address,
+
+    status: l.status,
+  }))
 
   return (
     <div className="w-full bg-white rounded-md shadow">
 
-
-      {/* Tabs */}
       <div className="flex border-b">
 
         <button
           onClick={() => setActiveTab("view")}
           className={`px-4 py-2 border-b-2
-            ${
-              activeTab === "view"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500"
+            ${activeTab === "view"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500"
             }`}
         >
           View Labs
@@ -272,10 +142,9 @@ const LabEmpanelment = () => {
         <button
           onClick={() => setActiveTab("add")}
           className={`px-4 py-2 border-b-2
-            ${
-              activeTab === "add"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500"
+            ${activeTab === "add"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500"
             }`}
         >
           Add Labs
@@ -283,20 +152,15 @@ const LabEmpanelment = () => {
 
       </div>
 
-
-      {/* Loading */}
       {loading && (
         <div className="p-3 text-sm text-blue-600">
           Loading...
         </div>
       )}
 
-
-      {/* Content */}
       <div>
 
 
-        {/* View */}
         {activeTab === "view" && (
 
           <ViewPartnerUI
@@ -309,24 +173,12 @@ const LabEmpanelment = () => {
 
             clinicId={clinicId}
 
-            data={labs.map((l) => ({
-  id: l.lab_id,
-  name: l.lab_name,
-
-  logo: l.lab_logo,
-  phone: l.phone,
-  email: l.email,
-  address: l.address,
-
-  status: l.status,
-}))}
+            data={viewItems}
 
           />
 
         )}
 
-
-        {/* Add */}
         {activeTab === "add" && (
 
           <AddPartnerUI
@@ -362,5 +214,5 @@ const LabEmpanelment = () => {
 };
 
 export default LabEmpanelment;
- 
+
 

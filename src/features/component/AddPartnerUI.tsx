@@ -39,11 +39,6 @@ const AddPartner = ({
 
   const [loading, setLoading] = useState(false);
 
-
-
-
-  /* ================= Toggle ================= */
-
   const toggleSelect = (id: number) => {
     setSelected((prev) =>
       prev.includes(id)
@@ -51,9 +46,6 @@ const AddPartner = ({
         : [...prev, id]
     );
   };
-
-
-  /* ================= Submit ================= */
 
   const handleAdd = async () => {
 
@@ -71,9 +63,6 @@ const AddPartner = ({
     }
   };
 
-
-  /* ================= Filter ================= */
-
   const filtered = data.filter((item) =>
     item.name
       .toLowerCase()
@@ -84,8 +73,6 @@ const AddPartner = ({
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
 
-
-      {/* Search */}
       <div className="mb-5 relative max-w-md">
 
         <SearchIcon
@@ -106,8 +93,6 @@ const AddPartner = ({
 
       </div>
 
-
-      {/* List */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
 
@@ -131,20 +116,6 @@ const AddPartner = ({
             >
               {/* Header */}
               <div className="flex gap-3">
-
-                {/* Logo */}
-                {/* <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
-
-          {item.logo ? (
-            <img
-              src={item.logo}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            icon
-          )}
-
-        </div> */}
 
                 <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
 

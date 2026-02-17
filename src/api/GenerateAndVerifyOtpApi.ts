@@ -17,7 +17,6 @@ export const generateOtpApi = async (
 
     return data;
   } catch (error: any) {
-    console.error("Generate OTP API Error:", error);
 
     return {
       success: false,
@@ -40,7 +39,6 @@ export const verifyOtpApi = async (
     );
     return data;
   } catch (err: any) {
-    console.error("Verify OTP API error:", err);
 
     return {
       success: false,

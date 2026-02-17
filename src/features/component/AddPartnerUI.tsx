@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import SearchIcon from "@mui/icons-material/Search";
 import { RiContactsFill } from "react-icons/ri";
 import { IoMail } from "react-icons/io5";
@@ -8,7 +7,6 @@ interface PartnerItem {
   id: number;
   name: string;
   logo?: string;
-
   email?: string;
   mobile?: string;
   address?: string;
@@ -16,13 +14,9 @@ interface PartnerItem {
 
 interface Props {
   data: PartnerItem[];
-
   icon: React.ReactNode;
-
   placeholder: string;
-
   buttonText: string;
-
   onSubmit: (ids: number[]) => Promise<void>;
 }
 
@@ -140,8 +134,6 @@ const AddPartner = ({
 
                 </div>
 
-
-                {/* Main Info */}
                 <div className="flex-1">
 
                   <p className="text-sm font-semibold text-gray-900 leading-tight">
@@ -158,9 +150,6 @@ const AddPartner = ({
 
               </div>
 
-
-              {/* Contact Info */}
-              {/* Contact Info */}
               <div className="mt-3 space-y-2 text-xs text-gray-600">
 
                 {item.email && (
@@ -193,9 +182,6 @@ const AddPartner = ({
 
               </div>
 
-
-
-              {/* Status */}
               <div className="mt-2">
 
                 <span
@@ -220,7 +206,6 @@ const AddPartner = ({
       </div>
 
 
-      {/* Footer */}
       <div className="flex justify-end">
 
         <button
@@ -241,9 +226,6 @@ const AddPartner = ({
         </button>
 
       </div>
-
-
-
 
     </div>
   );

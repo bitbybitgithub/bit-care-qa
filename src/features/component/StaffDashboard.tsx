@@ -58,7 +58,7 @@ const StaffDashboard: React.FC = () => {
   const [editedAfterOtp, setEditedAfterOtp] = useState(false);
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
   const [userId, setUserId] = useState<number | null>(null);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
@@ -139,7 +139,7 @@ const StaffDashboard: React.FC = () => {
     setError({ mobile: "", otp: "" });
     setShowOtp(false);
     setOtpSent(false);
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(["", "", "", ""]);
     setUserId(null);
     setLoadingGenerate(false);
     setLoadingVerify(false);
@@ -248,7 +248,7 @@ const StaffDashboard: React.FC = () => {
 
   useEffect(() => {
     if (contact.trim() === "") {
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       setShowOtp(false);
       setOtpSent(false);
       setEditedAfterOtp(false);
@@ -272,7 +272,7 @@ const StaffDashboard: React.FC = () => {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-
+      console.log("generate otp res", res)
       if (res.success) {
         setUserId(res.userId ?? null);
         setShowOtp(true);
@@ -316,7 +316,7 @@ const StaffDashboard: React.FC = () => {
         setUserId(res.userId ?? null);
         setShowOtp(true);
         setEditedAfterOtp(false);
-        setOtp(["", "", "", "", "", ""]);
+        setOtp(["", "", "", ""]);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
         setError((prev) => ({
@@ -352,10 +352,10 @@ const StaffDashboard: React.FC = () => {
 
   const handleConfirm = async () => {
     const finalOtp = otp.join("");
-    if (finalOtp.length !== 6) {
+    if (finalOtp.length !== 4) {
       setError((prev) => ({
         ...prev,
-        otp: "Please enter all 6 digits of the OTP",
+        otp: "Please enter all 4 digits of the OTP",
       }));
       return;
     }
@@ -377,7 +377,7 @@ const StaffDashboard: React.FC = () => {
         otp_type: 2,
         mobile_number: contact,
       });
-
+      console.log("rponse", res)
       if (!res.isOtpValid) {
         setError((prev) => ({ ...prev, otp: "Please enter valid OTP" }));
         setEditedAfterOtp(true);
@@ -645,7 +645,7 @@ const StaffDashboard: React.FC = () => {
                           if (val.length === 1 && /[0-5]/.test(val)) return;
 
                           if (showOtp && val !== contact) {
-                            setOtp(["", "", "", "", "", ""]);
+                            setOtp(["", "", "", ""]);
                             setShowOtp(false);
                             setOtpSent(false);
                             setEditedAfterOtp(false);
@@ -732,7 +732,7 @@ const StaffDashboard: React.FC = () => {
                         fontSize: "var(--font-small)",
                       }}
                     >
-                      Enter 6-digit OTP
+                      Enter 4-digit OTP
                     </p>
                     <div className="flex justify-center gap-2 sm:gap-2.5">
                       {otp.map((digit, index) => (
@@ -745,7 +745,7 @@ const StaffDashboard: React.FC = () => {
                           }
                           onKeyDown={(e) => handleOtpKeyDown(e, index)}
                           maxLength={1}
-                          ref={(el) => (otpRefs.current[index] = el)}
+                          ref={(el) => { (otpRefs.current[index] = el) }}
                           className="text-center outline-none transition-all transform"
                           style={{
                             width: "2.5rem",
@@ -779,7 +779,7 @@ const StaffDashboard: React.FC = () => {
                     {otpSent && !loadingGenerate && (
                       <button
                         onClick={() => {
-                          setOtp(["", "", "", "", "", ""]);
+                          setOtp(["", "", "", ""]);
                           handleResendOtp();
                         }}
                         className="mt-2 font-semibold transition-all"

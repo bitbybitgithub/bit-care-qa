@@ -1,4 +1,3 @@
-import BusinessIcon from "@mui/icons-material/Business";
 import { RiContactsFill } from "react-icons/ri";
 import { IoMail } from "react-icons/io5";
 import SidebarBg from "../../assets/SidebarBg.png";
@@ -6,13 +5,11 @@ import SidebarBg from "../../assets/SidebarBg.png";
 interface PartnerItem {
   id: number;
   name: string;
-
   logo?: string;
   phone?: string;
   email?: string;
   address?: string;
-
-  status: "Active" | "Inactive";
+  // status: "Active" | "Inactive";
 }
 
 interface Props {
@@ -62,7 +59,7 @@ const ViewPartnerUI = ({
             key={item.id}
             className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition"
           >
-            
+
             <div className="flex items-center justify-between">
 
               <div className="flex items-center gap-3">
@@ -104,9 +101,9 @@ const ViewPartnerUI = ({
                 </div>
               </div>
 
-             
-              <div className="flex items-center gap-2">
 
+              <div className="flex items-center gap-2">
+                {/* 
                 
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.status === "Active"
@@ -116,7 +113,7 @@ const ViewPartnerUI = ({
                 >
                   {item.status === "Active" ? "Operational" : "Inactive"}
                 </span>
-
+ */}
 
               </div>
             </div>

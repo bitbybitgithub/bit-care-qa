@@ -27,7 +27,7 @@ export const verifyPatientpApi = async (
       "/patients/verify",
       payload
     );
-
+    
     // Basic sanity validation
     if (!data || typeof data.message !== "string") {
       throw new Error("Invalid API response format");
@@ -42,7 +42,6 @@ export const verifyPatientpApi = async (
     };
 
   } catch (err: any) {
-    console.error("Verify OTP API error:", err.response?.data || err.message);
 
     return {
       success: false,

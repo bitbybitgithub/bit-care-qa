@@ -272,7 +272,6 @@ const StaffDashboard: React.FC = () => {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-      console.log("generate otp res", res)
       if (res.success) {
         setUserId(res.userId ?? null);
         setShowOtp(true);
@@ -377,7 +376,6 @@ const StaffDashboard: React.FC = () => {
         otp_type: 2,
         mobile_number: contact,
       });
-      console.log("rponse", res)
       if (!res.isOtpValid) {
         setError((prev) => ({ ...prev, otp: "Please enter valid OTP" }));
         setEditedAfterOtp(true);
@@ -424,7 +422,6 @@ const StaffDashboard: React.FC = () => {
         setStats(mapped);
       })
       .catch((err) => {
-        console.error("Dashboard fetch failed:", err);
       });
   }, []);
 

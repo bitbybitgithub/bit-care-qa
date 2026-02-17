@@ -1,22 +1,23 @@
-export const getPdfFromServer = async (filePath: string, fileName: string) => {
-    console.log(filePath)
-    console.log(fileName)
-  const response = await fetch(
-    "http://localhost:8989/api/common/downloadFile",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ filePath, fileName }),
-    }
-  );
+import axios from "axios";
 
-  if (!response.ok) {
+export const getPdfFromServer = async (
+  filePath: string,
+  fileName: string
+): Promise<string> => {
+  try {
+    const response = await axios.post(
+      "https://cliniccareapi.bitbybitsolutions.co.in/api/common/downloadFile",
+      { filePath, fileName },
+      {
+        responseType: "blob", 
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+
+    return URL.createObjectURL(blob);
+  } catch (error: any) {
+    console.error("Download failed:", error?.response || error);
     throw new Error("Failed to download PDF");
   }
-
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
 };
-

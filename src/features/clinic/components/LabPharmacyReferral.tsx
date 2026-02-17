@@ -45,12 +45,12 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         setLoading(true);
         try {
           if (type === "lab") {
-            const res = await getMappedLabsListApi(51);
+            const res = await getMappedLabsListApi(clinic_id);
             if (res.success) {
               setItems(res.data);
             }
           } else {
-            const res = await getMappedPharmacyListApi(51);
+            const res = await getMappedPharmacyListApi(clinic_id);
             if (res.success) {
               setItems(res.data);
             }

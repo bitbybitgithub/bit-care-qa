@@ -75,41 +75,41 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     type VitalField = keyof PatientVitalsData;
     const [errors, setErrors] = useState<Partial<Record<VitalField, string>>>({});
 
-    const REQUIRED_FIELDS: VitalField[] = [
-      "height_cm",
-      "weight_kg",
-      "temperature_c",
-      "blood_pressure_systolic",
-      "blood_pressure_diastolic",
-      "pulse_rate",
-      "respiration_rate",
-      "oxygen_saturation",
-      "chief_complaint",
-      "notes",
-      "allergies",
-      "current_medications",
-    ];
+    // const REQUIRED_FIELDS: VitalField[] = [
+      // "height_cm",
+      // "weight_kg",
+      // "temperature_c",
+      // "blood_pressure_systolic",
+      // "blood_pressure_diastolic",
+      // "pulse_rate",
+      // "respiration_rate",
+      // "oxygen_saturation",
+      // "chief_complaint",
+      // "notes",
+      // "allergies",
+    //   "current_medications",
+    // ];
 
-    const validateForm = (): boolean => {
-      const newErrors: Partial<Record<VitalField, string>> = {};
+    // const validateForm = (): boolean => {
+    //   const newErrors: Partial<Record<VitalField, string>> = {};
 
-      REQUIRED_FIELDS.forEach((field) => {
-        const value = formData[field];
+    //   REQUIRED_FIELDS.forEach((field) => {
+    //     const value = formData[field];
 
-        // number fields
-        if (typeof value === "number" && value <= 0) {
-          newErrors[field] = "This field is required";
-        }
+    //     // number fields
+    //     if (typeof value === "number" && value <= 0) {
+    //       newErrors[field] = "This field is required";
+    //     }
 
-        // string fields
-        if (typeof value === "string" && value.trim() === "") {
-          newErrors[field] = "This field is required";
-        }
-      });
+    //     // string fields
+    //     if (typeof value === "string" && value.trim() === "") {
+    //       newErrors[field] = "This field is required";
+    //     }
+    //   });
 
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
+    //   setErrors(newErrors);
+    //   return Object.keys(newErrors).length === 0;
+    // };
 
     useEffect(() => {
       const { height_cm, weight_kg } = formData;
@@ -138,10 +138,10 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
 
 
     const handleSubmit = async () => {
-      if (!validateForm()) {
-        toast.error("Please fill all required fields");
-        return;
-      }
+      // if (!validateForm()) {
+      //   toast.error("Please fill all required fields");
+      //   return;
+      // }
 
       setLoading(true);
       try {
@@ -156,7 +156,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           is_active: true,
           user_id:userId
         };
-
         await SavePatientVital(payload);
         toast.success("Vitals saved successfully!");
         try {

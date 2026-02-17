@@ -88,10 +88,10 @@ const RegistrationForm = () => {
 
         setEntityList(formattedEntities);
       } else {
-        toast.error(res.error || "Failed to load centre types");
+        toast.error(res.error || "Failed to load Center types");
       }
     } catch {
-      toast.error("Unable to load centre types");
+      toast.error("Unable to load Center types");
     } finally {
       setEntityLoading(false);
     }
@@ -106,11 +106,11 @@ const RegistrationForm = () => {
 
     if (name === "name") {
       let error = "";
-      if (!value.trim()) error = "Centre name is required";
+      if (!value.trim()) error = "Center name is required";
       else if (value.trim().length < 5)
-        error = "Centre name must be at least 5 characters long";
+        error = "Center name must be at least 5 characters long";
       else if (value.trim().length > 50)
-        error = "Centre name cannot exceed 50 characters";
+        error = "Center name cannot exceed 50 characters";
       else if (!Regex.name.test(value.trim()))
         error = "Only alphabets and spaces are allowed";
 
@@ -319,7 +319,7 @@ const RegistrationForm = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Centre Type"
+                  placeholder="Center Type"
                   size="small"
                   error={!!errors.entityType}
                   slotProps={{
@@ -349,7 +349,7 @@ const RegistrationForm = () => {
 
           <FormControl fullWidth>
             <TextField
-              placeholder="Centre Name"
+              placeholder="Center Name"
               name="name"
               size="small"
               value={formData.name}

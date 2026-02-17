@@ -7,15 +7,15 @@ export const validateRegistration = (form: FormDataBase): Errors => {
   const errors: Errors = {};
 
 if (!form.entityType) {
-  errors.entityType = "Centre Type is required";
+  errors.entityType = "Center Type is required";
 }
 
   if (!form.name?.trim()) {
-    errors.name = "Centre name is required";
+    errors.name = "Center name is required";
   } else if (form.name.trim().length < 2) {
-    errors.name = "Centre name must be at least 5 characters long";
+    errors.name = "Center name must be at least 5 characters long";
   } else if (form.name.trim().length > 50) {
-    errors.name = "Centre name cannot exceed 50 characters";
+    errors.name = "Center name cannot exceed 50 characters";
   } else if (!regex.name.test(form.name.trim())) {
     errors.name = "Only alphabets and spaces are allowed";
   }

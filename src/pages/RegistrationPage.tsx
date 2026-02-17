@@ -39,7 +39,7 @@ const Registration = () => {
             style={{ fontSize: "var(--font-h1)" }}
           >
             Register Your{" "}
-            <span className="text-[var(--color-primary)]">Centre</span>
+            <span className="text-[var(--color-primary)]">Center</span>
           </h1>
 
           <p className="text-center lg:text-start">

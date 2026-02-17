@@ -12,6 +12,10 @@ import {
   Box,
   Typography,
   IconButton,
+  Backdrop,
+  CircularProgress,
+  Fade,
+  Skeleton
 } from "@mui/material";
 import {
   DataGrid,
@@ -36,6 +40,7 @@ import { FaFlask } from "react-icons/fa";
 import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaClinicMedical } from "react-icons/fa";
 import FollowUpCalendarDrawer from "../clinic/components/FollowUpForm";
+import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -94,7 +99,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
 
-
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
@@ -107,14 +111,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       const contact = String(p.mobile_number || "").trim();
       const last4 = contact.length >= 4 ? contact.slice(-4).toLowerCase() : "";
       return (
-        // last4.includes(q) ||
-        // String(p.name || "")
-        //   .toLowerCase()
-        //   .includes(q) ||
-        // String(p.appointment_id ?? p.patient_id ?? "")
-        //   .toLowerCase()
-        //   .includes(q)
-          last4.includes(q)
+        last4.includes(q)
       );
     });
   }, [patientsData, search]);
@@ -158,9 +155,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setServiceDrawer({ open: true, type: "pharmacy" });
       }
       else if (action === "Set Follow Up") {
-  setSelectedPatient(patient);
-  setFollowupDrawerOpen(true);
-}
+        setSelectedPatient(patient);
+        setFollowupDrawerOpen(true);
+      }
 
       else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
@@ -186,44 +183,32 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     [totalPages]
   );
 
-  const getPdfFromServer = async (filePath: string, fileName: string) => {
-    const response = await fetch(
-      "http://localhost:8989/api/common/downloadFile",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ filePath, fileName }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to download PDF");
-    }
-
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  };
-
   const openPrescription = async (row: Patient) => {
     try {
       setSelectedPatient(row);
+      setPdfUrl(null);
+      setOpenPdf(true);            
       setPdfLoading(true);
-      setOpenPdf(true);
-      const filePath = "D:\\Prescriptions\\";
-      const fileName =
-        row.raw?.prescriptions?.[0]?.file_name ??
-        "Dummy_Patient_Prescription.pdf";
+
+      const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
+      // const fileName =
+      //   row.raw?.prescriptions?.[0]?.prescription_file_name ??
+      //   "Dummy_Patient_Prescription.pdf"
+      const fileName = "Dummy_Patient_Prescription.pdf";
 
       const url = await getPdfFromServer(filePath, fileName);
-      setPdfUrl(url);
-    } catch (err) {
-      console.error(err);
-    } finally {
+
+      setTimeout(() => {
+        setPdfUrl(url);
+        setPdfLoading(false);
+      }, 300);
+
+    } catch (error) {
+      console.error("PDF Load Error:", error);
       setPdfLoading(false);
     }
   };
+
 
   const rows = useMemo(() => currentPatients, [currentPatients]);
 
@@ -409,16 +394,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           } as GridColDef,
         ]
         : []),
-      // {
-      //   field: "status",
-      //   headerName: "Status",
-      //   flex: 0.8,
-      //   minWidth: 120,
-      //   renderCell: (params: GridRenderCellParams<any, Patient>) => {
-      //     const row = params?.row as Patient;
-      //     return row?.status ? formatEnumText(row.status) : "—";
-      //   },
-      // },
+      {
+        field: "status",
+        headerName: "Status",
+        flex: 0.8,
+        minWidth: 120,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params?.row as Patient;
+          return row?.status ? formatEnumText(row.status) : "—";
+        },
+      },
       {
         field: "action",
         headerName: "Action",
@@ -542,8 +527,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     </Box>
   );
 
-const getRowId: GridRowIdGetter = (row: any) =>
-  row.appointment_id;
+  const getRowId: GridRowIdGetter = (row: any) =>
+    row.appointment_id;
 
 
   return (
@@ -609,32 +594,63 @@ const getRowId: GridRowIdGetter = (row: any) =>
 
       <Dialog
         open={openPdf}
-        onClose={() => setOpenPdf(false)}
+        onClose={() => {
+          setOpenPdf(false);
+          setPdfUrl(null);
+        }}
         maxWidth="md"
         fullWidth
+        TransitionComponent={Fade}
+        transitionDuration={300}
       >
-        <Box p={2} display="flex" justifyContent="space-between">
-          <Typography fontWeight={700}>Patient Prescription</Typography>
+        <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
+          <Typography fontWeight={700}>
+            Patient Prescription
+          </Typography>
           <IconButton onClick={() => setOpenPdf(false)}>
             <Close />
           </IconButton>
         </Box>
 
-        {pdfLoading && (
-          <Box p={4} textAlign="center">
-            <Typography>Loading prescription...</Typography>
-          </Box>
-        )}
+        <Box position="relative" height="600px">
 
-        {!pdfLoading && pdfUrl && (
-          <iframe
-            src={`${pdfUrl}#toolbar=0`}
-            width="100%"
-            height="600px"
-            style={{ border: "none" }}
-          />
-        )}
+          <Backdrop
+            open={pdfLoading}
+            sx={{
+              position: "absolute",
+              zIndex: 2,
+              color: "#fff",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            }}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
+
+          {pdfLoading && (
+            <Box p={3}>
+              <Skeleton variant="rectangular" height={550} />
+            </Box>
+          )}
+
+          <Fade in={!pdfLoading && Boolean(pdfUrl)} timeout={400}>
+            <Box height="100%">
+              {pdfUrl && (
+                <iframe
+                  src={`${pdfUrl}#toolbar=0`}
+                  width="100%"
+                  height="100%"
+                  style={{
+                    border: "none",
+                    borderRadius: 8,
+                    transition: "opacity 0.4s ease-in-out",
+                  }}
+                />
+              )}
+            </Box>
+          </Fade>
+        </Box>
       </Dialog>
+
 
       <Dialog
         open={cancelDialogOpen}
@@ -720,32 +736,32 @@ const getRowId: GridRowIdGetter = (row: any) =>
         </Drawer>
       )}
 
-<Drawer
-  anchor="right"
-  open={followupDrawerOpen}
-  onClose={() => setFollowupDrawerOpen(false)}
-  PaperProps={{
-    sx: {
-      width: { xs: "100%", sm: "500px", md: "30%" },
-      backgroundColor: "var(--color-bg)",
-    },
-  }}
->
-  {selectedPatient && (
-    <FollowUpCalendarDrawer
-      patient={selectedPatient}
-      onClose={() => setFollowupDrawerOpen(false)}
-      onSave={(data) => {
-        handleUpdatePatientStatus?.(
-          selectedPatient,
-          "Completed"
-        );
+      <Drawer
+        anchor="right"
+        open={followupDrawerOpen}
+        onClose={() => setFollowupDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "500px", md: "30%" },
+            backgroundColor: "var(--color-bg)",
+          },
+        }}
+      >
+        {selectedPatient && (
+          <FollowUpCalendarDrawer
+            patient={selectedPatient}
+            onClose={() => setFollowupDrawerOpen(false)}
+            onSave={(data) => {
+              handleUpdatePatientStatus?.(
+                selectedPatient,
+                "Completed"
+              );
 
-        setFollowupDrawerOpen(false);
-      }}
-    />
-  )}
-</Drawer>
+              setFollowupDrawerOpen(false);
+            }}
+          />
+        )}
+      </Drawer>
 
     </div>
   );

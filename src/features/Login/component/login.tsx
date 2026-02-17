@@ -567,7 +567,7 @@ const Login = () => {
                         to="/register"
                         className="text-[var(--color-info)] hover:underline cursor-pointer"
                       >
-                        Register Centre
+                        Register Center
                       </Link>
                     </span>
                   </p>

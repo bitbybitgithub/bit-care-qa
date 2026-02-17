@@ -5,10 +5,8 @@ import {
   Typography,
   Dialog,
   IconButton,
-  Chip,
   TextField,
   FormControl,
-  InputAdornment,
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
@@ -58,7 +56,7 @@ export default function PharmacyQueues({
   /* OTP STATES */
 const [openOtpDialog, setOpenOtpDialog] = useState(false);
 const [selectedRow, setSelectedRow] = useState<any>(null);
-const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+const [otp, setOtp] = useState(["", "", "", ""]);
 const [showOtp, setShowOtp] = useState(true);
 const [contact, setContact] = useState("");
 const [loadingVerify, setLoadingVerify] = useState(false);
@@ -119,7 +117,7 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
 
   const resetOtpFlow = () => {
     setContact("");
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(["", "", "", ""]);
     setShowOtp(false);
     setOtpSent(false);
     setVerifiedPatients(null);
@@ -223,7 +221,7 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
       }
       setVerifiedPatients(response.patients || []);
       setOpenOtpDialog(false);
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       setShowOtp(false);
       setContact("");
       setOpenPdf(true);
@@ -304,7 +302,7 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   const handleClose = () => {
     setOpenOtpDialog(false);
     setContact("");
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(["", "", "", ""]);
     setShowOtp(false);
     setOtpSent(false);
     setLoadingGenerate(false);
@@ -317,11 +315,6 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   };
   /* =================GRID TABLE ================= */
   const columns: GridColDef[] = [
-    {
-      field: "patient_id",
-      headerName: "Patient ID",
-      width: 120,
-    },
     {
       field: "patient_name",
       headerName: "Patient Name",
@@ -498,7 +491,7 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
         {showOtp && (
           <div className="mt-2 text-center">
             <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
-              Enter 6-digit OTP sent to +91 {contact}
+              Enter 4-digit OTP sent to +91 {contact}
             </p>
 
             <div className="flex justify-center gap-3">

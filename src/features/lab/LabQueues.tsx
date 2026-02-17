@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Chip, Dialog, Drawer, FormControl, TextField } from "@mui/material";
+import { Box, Button,Dialog, Drawer, FormControl, TextField } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
   updateLabTestStatusAsync,
-  getLabReportsByLabId,
   savereportAsync,
 } from "../../api/labApis/labQueuesApi";
 import { getSessionItem } from "../../context/sessions/userSession";
@@ -33,43 +32,6 @@ const normalizeStatus = (s: string) => {
   }
 };
 
-/* ---------------- GROUP BY PATIENT + APPOINTMENT ---------------- */
-const groupByPatientAppointment = (data: any[]) => {
-  const map: Record<string, any> = {};
-
-  data.forEach((row) => {
-    const key = `${row.appointment_id}_${row.patient_id}`;
-
-    if (!map[key]) {
-      map[key] = {
-        appointment_id: row.appointment_id,
-        patient_id: row.patient_id,
-        patient_name: row.patient_name,
-        contact_no: row.contact_no,
-        gender: row.gender,
-        lab_id: row.lab_id,
-        doctor_id: row.doctor_id,
-        doctor_name: row.doctor_name,
-        clinic_id: row.clinic_id,
-        clinic_name: row.clinic_name,
-        test_date: row.test_date,
-        result_status: row.result_status,
-        created_date: row.created_date,
-        tests: [],
-      };
-    }
-
-    row.tests.forEach((t: any) => {
-      if (
-        !map[key].tests.some((x: any) => x.lab_record_id === t.lab_record_id)
-      ) {
-        map[key].tests.push(t);
-      }
-    });
-  });
-
-  return Object.values(map);
-};
 
 interface Props {
   mode?: "pending" | "processing" | "reporting";
@@ -90,7 +52,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   /*----------------OTP----------------*/
 const [openOtpDialog, setOpenOtpDialog] = useState(false);
 const [selectedRow, setSelectedRow] = useState<any>(null);
-const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+const [otp, setOtp] = useState(["", "", "", ""]);
 const [showOtp, setShowOtp] = useState(true);
 const [contact, setContact] = useState("");
 const [loadingVerify, setLoadingVerify] = useState(false);
@@ -103,18 +65,18 @@ const [otpSent, setOtpSent] = useState(false);
 const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
 
   /* ---------------- FETCH ---------------- */
-  useEffect(() => {
-    const fetchData = async () => {
-      const apiData = await getPendingQueueAsync(labId);
-      console.log("lab records", apiData);
-      const normalized = apiData.map((r: any) => ({
-        ...r,
-        result_status: normalizeStatus(r.result_status),
-      }));
-      setRows(groupByPatientAppointment(normalized));
-    };
-    fetchData();
-  }, [labId]);
+useEffect(() => {
+  const fetchData = async () => {
+    const apiData = await getPendingQueueAsync(labId);
+    const normalized = apiData.map((r: any) => ({
+      ...r,
+      result_status: normalizeStatus(r.result_status),
+    }));
+    setRows(normalized);
+  };
+  fetchData();
+}, [labId]);
+
 
   /* ---------------- MODE ---------------- */
   const resolvedMode = useMemo(() => {
@@ -136,7 +98,7 @@ const openViewPrescription = async (row: any) => {
 };
   const resetOtpFlow = () => {
     setContact("");
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(["", "", "", ""]);
     setShowOtp(false);
     setOtpSent(false);
     setVerifiedPatients(null);
@@ -197,7 +159,7 @@ const handleOtpChange = (value: string, index: number) => {
   newOtp[index] = value;
   setOtp(newOtp);
 
-  if (value && index < 5) {
+  if (value && index < 3) {
     otpRefs.current[index + 1]?.focus();
   }
 };
@@ -210,10 +172,10 @@ const handleOtpKeyDown = (e: any, index: number) => {
 
   const handleVerifyOtp = async () => {
     const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 6) {
+    if (enteredOtp.length !== 4) {
       setError((prev) => ({
         ...prev,
-        otp: "Please enter a valid 6-digit OTP",
+        otp: "Please enter a valid 4-digit OTP",
       }));
       return;
     }
@@ -243,7 +205,7 @@ const handleOtpKeyDown = (e: any, index: number) => {
       setVerifiedPatients(response.patients || []);
       setOpenOtpDialog(false);
       
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       setShowOtp(false);
       setContact("");
       setPrescriptionRow(selectedRow);
@@ -260,7 +222,7 @@ const handleOtpKeyDown = (e: any, index: number) => {
 
 const handleClose = () => {
   setOpenOtpDialog(false);
-  setOtp(["", "", "", "", "", ""]);
+  setOtp(["", "", "", ""]);
 };
 
 
@@ -307,15 +269,11 @@ const handleClose = () => {
     status: "Processing" | "Reporting Pending" | "Completed",
   ) => {
     await updateLabTestStatusAsync({
-      appointment_id: row.appointment_id,
       lab_id: row.lab_id,
       status,
       user_id: user_id,
-      tests: row.tests.map((t: any) => ({
-        lab_record_id: t.lab_record_id,
-        test_id: t.test_id,
-        patient_id: row.patient_id,
-      })),
+      lab_record_id: row.lab_record_id,
+      report_id:row.report_id,
     });
 
     toast.success("Status updated successfully");
@@ -448,7 +406,6 @@ const handleSubmitReports = async () => {
 
 
   const commonColumns: GridColDef[] = [
-    { field: "patient_id", headerName: "Patient ID", width: 120 },
     {
       field: "patient_name",
       headerName: "Patient",
@@ -641,7 +598,7 @@ const handleSubmitReports = async () => {
         {showOtp && (
           <div className="mt-2 text-center">
             <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
-              Enter 6-digit OTP sent to +91 {contact}
+              Enter 4-digit OTP sent to +91 {contact}
             </p>
 
             <div className="flex justify-center gap-3">

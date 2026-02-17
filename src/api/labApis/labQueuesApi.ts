@@ -9,8 +9,7 @@ export interface SaveReportResponse {
   report_id: string;
   success: boolean;
   message: string;
-}
-
+};
 export const savereportAsync = async (payload: {
   lab_record_id: number;
   test_id: number;
@@ -25,8 +24,6 @@ export const savereportAsync = async (payload: {
   return response;
 };
 
-
-
 export async function getPendingQueueAsync(
   labId: number | null
 ): Promise<PendingQueueDto[]> {
@@ -37,22 +34,15 @@ export async function getPendingQueueAsync(
       days: 15,
     }
   );
-
   return response.data; 
-}
-
+};
 
 export const updateLabTestStatusAsync = async (payload: {
   lab_id: number;
   status: string;
   user_id: number;
-  appointment_id: number; 
-  tests: {
-    lab_record_id:string;
-    test_id: string;
-    patient_id: string;
-    report_id: number | number[];
-  }[];
+  lab_record_id:number;
+  report_id:number | number[];
 }) => {
   const respone = await emrAPI.post("/lab/update-lab-test-status",payload);
   return respone;

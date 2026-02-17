@@ -11,11 +11,5 @@ export interface PendingQueueDto {
   test_date: string; 
   result_status: "Pending" | "Processing" | "Completed";
   created_date: string; 
-  tests: {
-    lab_record_id: number;
-    patient_id: number;
-    test_id: number;
-    test_name: string;
-    report_id: string | null;
-  }[];
+  report_id: string | null;
 }

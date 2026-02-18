@@ -17,14 +17,14 @@ import { GiBodyHeight } from "react-icons/gi";
 import { IoBody } from "react-icons/io5";
 
 interface PatientVitalsData {
-  height_cm: number;
-  weight_kg: number;
-  temperature_c: number;
-  blood_pressure_systolic: number;
-  blood_pressure_diastolic: number;
-  pulse_rate: number;
-  respiration_rate: number;
-  oxygen_saturation: number;
+  height_cm: number | "";
+  weight_kg: number | "";
+  temperature_c: number | "";
+  blood_pressure_systolic: number | "";
+  blood_pressure_diastolic: number | "";
+  pulse_rate: number | "";
+  respiration_rate: number | "";
+  oxygen_saturation: number | "";
   bmi: number;
   notes: string;
   chief_complaint: string;
@@ -123,8 +123,10 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       field: keyof PatientVitalsData,
       value: string | number
     ) => {
+      // const numValue =
+      //   typeof value === "string" ? Number.parseFloat(value) || 0 : value;
       const numValue =
-        typeof value === "string" ? Number.parseFloat(value) || 0 : value;
+        value === "" ? "" : Number.parseFloat(value as string);
 
       setFormData((prev) => ({ ...prev, [field]: numValue }));
 
@@ -154,7 +156,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           created_by: createdBy,
           modified_by: createdBy,
           is_active: true,
-          user_id:userId
+          user_id: userId
         };
         await SavePatientVital(payload);
         toast.success("Vitals saved successfully!");
@@ -285,7 +287,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   size="small"
                   fullWidth
                   error={Boolean(errors[field as VitalField])}
-                  // helperText={errors[field as VitalField]}
+                // helperText={errors[field as VitalField]}
                 />
 
               </div>
@@ -311,7 +313,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                 }))
               }
               error={Boolean(errors.chief_complaint)}
-              // helperText={errors.chief_complaint}
+            // helperText={errors.chief_complaint}
             />
 
           </div>
@@ -329,8 +331,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, notes: e.target.value }))
               }
-               error={Boolean(errors.notes)}
-              // helperText={errors.notes}
+              error={Boolean(errors.notes)}
+            // helperText={errors.notes}
             />
           </div>
           <div>
@@ -346,8 +348,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, allergies: e.target.value }))
               }
-               error={Boolean(errors.allergies)}
-              // helperText={errors.allergies}
+              error={Boolean(errors.allergies)}
+            // helperText={errors.allergies}
             />
           </div>
           <div>
@@ -366,8 +368,8 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                   current_medications: e.target.value,
                 }))
               }
-               error={Boolean(errors.current_medications)}
-              // helperText={errors.current_medications}
+              error={Boolean(errors.current_medications)}
+            // helperText={errors.current_medications}
             />
           </div>
         </div>

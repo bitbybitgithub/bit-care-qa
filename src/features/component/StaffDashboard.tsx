@@ -439,7 +439,7 @@ const StaffDashboard: React.FC = () => {
       try {
         const res = await updatePatientStatus(payload);
         if (res.success) {
-          toast.success("Patient appointment upadted successfully");
+          toast.success("Patient appointment upadated successfully");
           setPendingPatients((prev) =>
             prev.map((p) =>
               p?.raw.appointment_id === patient.appointment_id

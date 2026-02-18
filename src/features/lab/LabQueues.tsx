@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button,Dialog, Drawer, FormControl, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  Drawer,
+  FormControl,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -14,6 +23,8 @@ import { generateOtpApi, verifyOtpApi } from "../../api";
 import { FaPeopleLine } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import Regex from "../../Helper/Regex";
+import Dummy_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
+import { Close } from "@mui/icons-material";
 
 const PAGE_SIZE = 10;
 
@@ -32,7 +43,6 @@ const normalizeStatus = (s: string) => {
   }
 };
 
-
 interface Props {
   mode?: "pending" | "processing" | "reporting";
   searchTerm?: string;
@@ -50,33 +60,34 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [prescriptionRow, setPrescriptionRow] = useState<any>(null);
 
   /*----------------OTP----------------*/
-const [openOtpDialog, setOpenOtpDialog] = useState(false);
-const [selectedRow, setSelectedRow] = useState<any>(null);
-const [otp, setOtp] = useState(["", "", "", ""]);
-const [showOtp, setShowOtp] = useState(true);
-const [contact, setContact] = useState("");
-const [loadingVerify, setLoadingVerify] = useState(false);
-const [error, setError] = useState<{ mobile?: string; otp?: string }>({});
-const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-const [loadingGenerate, setLoadingGenerate] = useState(false);
-const [userId, setUserId] = useState<number | null>(null);
-const [editedAfterOtp, setEditedAfterOtp] = useState(false);
-const [otpSent, setOtpSent] = useState(false);
-const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
+  const [openOtpDialog, setOpenOtpDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [showOtp, setShowOtp] = useState(true);
+  const [contact, setContact] = useState("");
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [error, setError] = useState<{ mobile?: string; otp?: string }>({});
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [editedAfterOtp, setEditedAfterOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
+  const [openPdf, setOpenPdf] = useState(false);
 
   /* ---------------- FETCH ---------------- */
-useEffect(() => {
-  const fetchData = async () => {
-    const apiData = await getPendingQueueAsync(labId);
-    const normalized = apiData.map((r: any) => ({
-      ...r,
-      result_status: normalizeStatus(r.result_status),
-    }));
-    setRows(normalized);
-  };
-  fetchData();
-}, [labId]);
-
+  useEffect(() => {
+    const fetchData = async () => {
+      const apiData = await getPendingQueueAsync(labId);
+      console.log("api response", apiData);
+      const normalized = apiData.map((r: any) => ({
+        ...r,
+        result_status: normalizeStatus(r.result_status),
+      }));
+      setRows(normalized);
+    };
+    fetchData();
+  }, [labId]);
 
   /* ---------------- MODE ---------------- */
   const resolvedMode = useMemo(() => {
@@ -87,15 +98,12 @@ useEffect(() => {
     return "pending";
   }, [mode, location.pathname]);
 
-
-
-const openViewPrescription = async (row: any) => {
+  const openViewPrescription = async (row: any) => {
     setSelectedRow(row);
     setContact(row.contact_no);
     setOpenOtpDialog(true);
-    resetOtpFlow
-
-};
+    resetOtpFlow;
+  };
   const resetOtpFlow = () => {
     setContact("");
     setOtp(["", "", "", ""]);
@@ -104,11 +112,11 @@ const openViewPrescription = async (row: any) => {
     setVerifiedPatients(null);
     setError({});
   };
-    useEffect(() => {
-      if (openOtpDialog && contact) {
-        handleSendOtp();
-      }
-    }, [openOtpDialog, contact]);
+  useEffect(() => {
+    if (openOtpDialog && contact) {
+      handleSendOtp();
+    }
+  }, [openOtpDialog, contact]);
 
   const handleSendOtp = async () => {
     if (!contact) return;
@@ -130,7 +138,7 @@ const openViewPrescription = async (row: any) => {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-      console.log("otp response",res)
+      console.log("otp response", res);
       if (res.success) {
         setUserId(res.userId ?? null);
         setEditedAfterOtp(false);
@@ -151,24 +159,23 @@ const openViewPrescription = async (row: any) => {
     }
   };
 
+  const handleOtpChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return;
 
-const handleOtpChange = (value: string, index: number) => {
-  if (!/^\d?$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
 
-  const newOtp = [...otp];
-  newOtp[index] = value;
-  setOtp(newOtp);
+    if (value && index < 3) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
 
-  if (value && index < 3) {
-    otpRefs.current[index + 1]?.focus();
-  }
-};
-
-const handleOtpKeyDown = (e: any, index: number) => {
-  if (e.key === "Backspace" && !otp[index] && index > 0) {
-    otpRefs.current[index - 1]?.focus();
-  }
-};
+  const handleOtpKeyDown = (e: any, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
 
   const handleVerifyOtp = async () => {
     const enteredOtp = otp.join("");
@@ -204,11 +211,13 @@ const handleOtpKeyDown = (e: any, index: number) => {
       }
       setVerifiedPatients(response.patients || []);
       setOpenOtpDialog(false);
-      
+
       setOtp(["", "", "", ""]);
       setShowOtp(false);
       setContact("");
-      setPrescriptionRow(selectedRow);
+      // setPrescriptionRow(selectedRow);
+      setContact("");
+      setOpenPdf(true);
       setSelectedRow(null);
     } catch (err) {
       setError((prev) => ({
@@ -220,11 +229,10 @@ const handleOtpKeyDown = (e: any, index: number) => {
     }
   };
 
-const handleClose = () => {
-  setOpenOtpDialog(false);
-  setOtp(["", "", "", ""]);
-};
-
+  const handleClose = () => {
+    setOpenOtpDialog(false);
+    setOtp(["", "", "", ""]);
+  };
 
   const closePrescription = () => {
     setPrescriptionRow(null);
@@ -273,7 +281,7 @@ const handleClose = () => {
       status,
       user_id: user_id,
       lab_record_id: row.lab_record_id,
-      report_id:row.report_id,
+      report_id: row.report_id,
     });
 
     toast.success("Status updated successfully");
@@ -283,10 +291,19 @@ const handleClose = () => {
     );
   };
 
+  // const openUpload = (_: any, row: any) => {
+  //   setActiveRow(row);
+  //   const init: any = {};
+  //   row.tests.forEach((t: any) => (init[t.test_id] = []));
+  //   setReportMap(init);
+  // };
+
   const openUpload = (_: any, row: any) => {
     setActiveRow(row);
+
     const init: any = {};
-    row.tests.forEach((t: any) => (init[t.test_id] = []));
+    init[row.lab_record_id] = [];
+
     setReportMap(init);
   };
 
@@ -332,78 +349,77 @@ const handleClose = () => {
     }));
   };
 
-const handleSubmitReports = async () => {
-  if (!activeRow) return;
+  const handleSubmitReports = async () => {
+    if (!activeRow) return;
 
-  if (!hasUploadedReport(activeRow)) {
-    toast.error("Please upload at least one report before submitting");
-    return;
-  }
-
-  try {
-    const completedTestsMap: Record<number, number> = {};
-
-    for (const test of activeRow.tests) {
-      const reports = reportMap[test.test_id];
-      if (!reports?.length) continue;
-
-      const r = reports[0];
-
-      const saveResponse = await savereportAsync({
-        lab_record_id: Number(test.lab_record_id),
-        test_id: Number(test.test_id),
-        lab_id: Number(activeRow.lab_id),
-        test_date: new Date().toISOString(),
-        file_guid_name: r.guid,
-        file_path: r.filePath,
-        file_name: r.originalName,
-        created_by: user_id,
-      });
-
-      const dbReportId = Number(saveResponse.report_id);
-      if (Number.isNaN(dbReportId)) {
-        throw new Error("Invalid report_id returned from save-report API");
-      }
-
-      completedTestsMap[test.test_id] = dbReportId;
-    }
-
-    const completedTests = activeRow.tests
-      .filter(t => completedTestsMap[t.test_id])
-      .map(t => ({
-        lab_record_id: Number(t.lab_record_id),
-        test_id: Number(t.test_id),
-        patient_id: Number(activeRow.patient_id),
-        report_id: completedTestsMap[t.test_id],
-      }));
-
-    if (!completedTests.length) {
-      toast.error("No completed tests to update");
+    if (!hasUploadedReport(activeRow)) {
+      toast.error("Please upload at least one report before submitting");
       return;
     }
 
-    const updateResponse = await updateLabTestStatusAsync({
-      lab_id: Number(activeRow.lab_id),
-      status: "Completed",
-      appointment_id: Number(activeRow.appointment_id),
-      tests: completedTests,
-    } as any);
+    try {
+      const completedTestsMap: Record<number, number> = {};
 
-    console.log("update status response", updateResponse);
+      for (const test of activeRow.tests) {
+        const reports = reportMap[test.test_id];
+        if (!reports?.length) continue;
 
-    setRows(prev =>
-      prev.map(r =>
-        r === activeRow ? { ...r, result_status: "Completed" } : r
-      )
-    );
+        const r = reports[0];
 
-    closeUpload();
-  } catch (error) {
-    console.error("Submit reports failed:", error);
-    toast.error("Failed to submit reports. Please try again.");
-  }
-};
+        const saveResponse = await savereportAsync({
+          lab_record_id: Number(test.lab_record_id),
+          test_id: Number(test.test_id),
+          lab_id: Number(activeRow.lab_id),
+          test_date: new Date().toISOString(),
+          file_guid_name: r.guid,
+          file_path: r.filePath,
+          file_name: r.originalName,
+          created_by: user_id,
+        });
 
+        const dbReportId = Number(saveResponse.report_id);
+        if (Number.isNaN(dbReportId)) {
+          throw new Error("Invalid report_id returned from save-report API");
+        }
+
+        completedTestsMap[test.test_id] = dbReportId;
+      }
+
+      const completedTests = activeRow.tests
+        .filter((t) => completedTestsMap[t.test_id])
+        .map((t) => ({
+          lab_record_id: Number(t.lab_record_id),
+          test_id: Number(t.test_id),
+          patient_id: Number(activeRow.patient_id),
+          report_id: completedTestsMap[t.test_id],
+        }));
+
+      if (!completedTests.length) {
+        toast.error("No completed tests to update");
+        return;
+      }
+
+      const updateResponse = await updateLabTestStatusAsync({
+        lab_id: Number(activeRow.lab_id),
+        status: "Completed",
+        appointment_id: Number(activeRow.appointment_id),
+        tests: completedTests,
+      } as any);
+
+      console.log("update status response", updateResponse);
+
+      setRows((prev) =>
+        prev.map((r) =>
+          r === activeRow ? { ...r, result_status: "Completed" } : r,
+        ),
+      );
+
+      closeUpload();
+    } catch (error) {
+      console.error("Submit reports failed:", error);
+      toast.error("Failed to submit reports. Please try again.");
+    }
+  };
 
   const commonColumns: GridColDef[] = [
     {
@@ -493,7 +509,6 @@ const handleSubmitReports = async () => {
           </Button>
         ),
       },
-
     ];
   }, [resolvedMode]);
 
@@ -654,139 +669,40 @@ const handleSubmitReports = async () => {
                 {error.otp}
               </p>
             )}
-            {/* 
-      <button
-        onClick={handleResendOtp}
-        className="mt-3 text-sm font-semibold text-[var(--color-primary)]"
-      >
-        Resend OTP
-      </button> */}
           </div>
         )}
       </Dialog>
-
-      <Drawer
-        anchor="right"
-        open={Boolean(prescriptionRow)}
-        onClose={closePrescription}
-        PaperProps={{
-          sx: {
-            width: 520,
-            backgroundColor: "var(--color-bg)",
-            boxShadow: "var(--shadow-lg)",
-          },
-        }}
+      <Dialog
+        open={openPdf}
+        onClose={() => setOpenPdf(false)}
+        maxWidth="md"
+        fullWidth
       >
-        <div className="flex flex-col h-full">
-          <div
-            className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            <div>
-              <h2
-                style={{
-                  color: "var(--color-white)",
-                  fontSize: "var(--font-h3)",
-                  fontWeight: "var(--font-weight-medium)",
-                }}
-              >
-                Prescription
-              </h2>
-              <p
-                style={{
-                  color: "var(--color-primary-light)",
-                  fontSize: "var(--font-small)",
-                }}
-              >
-                Patient medical prescription
-              </p>
-            </div>
+        <Box p={2} display="flex" justifyContent="space-between">
+          <Typography fontWeight={700}>Patient Prescription</Typography>
+          <IconButton onClick={() => setOpenPdf(false)}>
+            <Close />
+          </IconButton>
+        </Box>
+        <iframe
+          src={`${Dummy_PDF}#toolbar=0`}
+          width="100%"
+          height="600px"
+          style={{ border: "none" }}
+        />
 
-            <button
-              onClick={closePrescription}
-              className="p-2 rounded-full"
-              style={{
-                backgroundColor: "var(--color-bg)",
-                color: "var(--color-primary)",
-              }}
+        {/* {selectedRow?.status === "Processing" && (
+          <Box p={2} textAlign="right">
+            <Button
+              variant="contained"
+              color="success"
+              disabled={updating}
             >
-              ×
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            <div
-              className="p-4 rounded-[var(--radius-md)]"
-              style={{ backgroundColor: "var(--color-surface)" }}
-            >
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <b>Patient ID:</b> {prescriptionRow?.patient_id}
-                </div>
-                <div>
-                  <b>Name:</b> {prescriptionRow?.patient_name}
-                </div>
-                <div>
-                  <b>Gender:</b> {prescriptionRow?.gender}
-                </div>
-                <div>
-                  <b>Doctor:</b> {prescriptionRow?.doctor_name}
-                </div>
-                <div className="col-span-2">
-                  <b>Date:</b>{" "}
-                  {new Date(prescriptionRow?.test_date).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="p-4 space-y-4 rounded-[var(--radius-md)]"
-              style={{
-                backgroundColor: "white",
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <h3 className="font-semibold text-sm">
-                🧾 Laboratory Prescription
-              </h3>
-              <ul className="list-disc pl-5 text-sm space-y-1">
-                {prescriptionRow?.tests?.map((t: any) => (
-                  <li key={t.test_id}>{t.test_name}</li>
-                ))}
-              </ul>
-
-              <div className="pt-4 text-xs">
-                <p>
-                  <b>Notes:</b>
-                </p>
-                <p>
-                  Patient advised to come fasting for 10–12 hours before sample
-                  collection. Reports will be available within 24–48 hours.
-                </p>
-              </div>
-
-              <div className="pt-6 text-right text-xs">
-                <p>
-                  <b>Dr. {prescriptionRow?.doctor_name}</b>
-                </p>
-                <p>MBBS, MD</p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="p-4 border-t sticky bottom-0"
-            style={{
-              backgroundColor: "var(--color-surface)",
-              borderColor: "var(--color-primary)",
-            }}
-          >
-            <Button variant="contained" fullWidth onClick={closePrescription}>
-              Close
+              Complete
             </Button>
-          </div>
-        </div>
-      </Drawer>
+          </Box>
+        )} */}
+      </Dialog>
 
       <Drawer
         anchor="right"
@@ -888,9 +804,8 @@ const handleSubmitReports = async () => {
               </div>
 
               <div className="flex flex-col gap-3">
-                {activeRow?.tests.map((t) => (
+                {activeRow && (
                   <div
-                    key={t.test_id}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={async (e) => {
                       e.preventDefault();
@@ -900,7 +815,7 @@ const handleSubmitReports = async () => {
                       );
 
                       for (const file of pdfs) {
-                        await uploadTestFile(t.test_id, file);
+                        await uploadTestFile(activeRow.lab_record_id, file);
                       }
                     }}
                     className="flex flex-col gap-2 p-3"
@@ -911,15 +826,15 @@ const handleSubmitReports = async () => {
                     }}
                   >
                     <div className="flex justify-between items-center">
-                      <span
-                        className="uppercase"
-                        style={{
-                          fontSize: "var(--font-small)",
-                          fontWeight: "var(--font-weight-semibold)",
-                        }}
-                      >
-                        {t.test_name}
-                      </span>
+
+                    <span
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      Drag & drop PDFs here
+                    </span>
 
                       <label
                         className="cursor-pointer"
@@ -938,7 +853,7 @@ const handleSubmitReports = async () => {
                           onChange={(e) => {
                             const files = Array.from(e.target.files || []);
                             files.forEach((file) => {
-                              uploadTestFile(t.test_id, file);
+                              uploadTestFile(activeRow.lab_record_id, file);
                             });
                             e.target.value = "";
                           }}
@@ -946,79 +861,8 @@ const handleSubmitReports = async () => {
                       </label>
                     </div>
 
-                    <span
-                      style={{
-                        fontSize: "var(--font-xs)",
-                        color: "var(--color-text-secondary)",
-                      }}
-                    >
-                      Drag & drop PDFs here
-                    </span>
-                    {resolvedMode === "processing" &&
-                      reportMap[t.test_id]?.length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {reportMap[t.test_id].map((file, idx) => (
-                            <span
-                              key={idx}
-                              className="flex items-center gap-1 px-2 py-[2px]"
-                              style={{
-                                backgroundColor: "var(--color-primary-light)",
-                                color: "var(--color-primary-dark)",
-                                borderRadius: "var(--radius-full)",
-                                fontSize: "var(--font-xs)",
-                              }}
-                            >
-                              {file.originalName}
-                              <button
-                                onClick={() =>
-                                  setReportMap((prev) => ({
-                                    ...prev,
-                                    [t.test_id]: prev[t.test_id].filter(
-                                      (_, i) => i !== idx,
-                                    ),
-                                  }))
-                                }
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                    {resolvedMode === "reporting" &&
-                      reportMap[t.test_id]?.length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {reportMap[t.test_id].map((file, idx) => (
-                            <span
-                              key={idx}
-                              className="flex items-center gap-1 px-2 py-[2px]"
-                              style={{
-                                backgroundColor: "var(--color-primary-light)",
-                                color: "var(--color-primary-dark)",
-                                borderRadius: "var(--radius-full)",
-                                fontSize: "var(--font-xs)",
-                              }}
-                            >
-                              {file.originalName}
-                              <button
-                                onClick={() =>
-                                  setReportMap((prev) => ({
-                                    ...prev,
-                                    [t.test_id]: prev[t.test_id].filter(
-                                      (_, i) => i !== idx,
-                                    ),
-                                  }))
-                                }
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -1049,8 +893,6 @@ const handleSubmitReports = async () => {
           </div>
         </div>
       </Drawer>
-
-
     </>
   );
 }

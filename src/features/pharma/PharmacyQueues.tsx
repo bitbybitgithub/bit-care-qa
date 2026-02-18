@@ -189,10 +189,10 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   const handleVerifyOtp = async () => {
     const enteredOtp = otp.join("");
 
-    if (enteredOtp.length !== 6) {
+    if (enteredOtp.length !== 4) {
       setError((prev) => ({
         ...prev,
-        otp: "Please enter a valid 6-digit OTP",
+        otp: "Please enter a valid 4-digit OTP",
       }));
       return;
     }

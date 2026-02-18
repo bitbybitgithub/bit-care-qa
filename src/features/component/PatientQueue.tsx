@@ -41,6 +41,7 @@ import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaClinicMedical } from "react-icons/fa";
 import FollowUpCalendarDrawer from "../clinic/components/FollowUpForm";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
+import { toast } from "react-toastify";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -74,7 +75,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setAnchorEl({});
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
   const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>({});
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
@@ -99,9 +99,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [search]);
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").toString().trim().toLowerCase();
@@ -115,15 +115,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       );
     });
   }, [patientsData, search]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredPatients.length / PAGE_SIZE)
-  );
-  const currentPatients = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredPatients.slice(start, start + PAGE_SIZE);
-  }, [filteredPatients, currentPage]);
 
   const handleMenuOpen = useCallback(
     (e: React.MouseEvent<HTMLElement>, patientId: number) => {
@@ -175,25 +166,19 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setPatientToCancel(null);
   }, [patientToCancel, handleUpdatePatientStatus]);
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      if (page < 1 || page > totalPages) return;
-      setCurrentPage(page);
-    },
-    [totalPages]
-  );
 
   const openPrescription = async (row: Patient) => {
     try {
       setSelectedPatient(row);
       setPdfUrl(null);
-      setOpenPdf(true);            
+      setOpenPdf(true);
       setPdfLoading(true);
 
-      const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
+      // const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
       // const fileName =
       //   row.raw?.prescriptions?.[0]?.prescription_file_name ??
       //   "Dummy_Patient_Prescription.pdf"
+      const filePath = "E:\\Prescriptions\\";
       const fileName = "Dummy_Patient_Prescription.pdf";
 
       const url = await getPdfFromServer(filePath, fileName);
@@ -205,12 +190,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
     } catch (error) {
       console.error("PDF Load Error:", error);
+      toast.error("PDF Load Error:", error);
       setPdfLoading(false);
     }
   };
 
+  const rows = filteredPatients;
 
-  const rows = useMemo(() => currentPatients, [currentPatients]);
 
   const columns: GridColDef[] = useMemo(() => {
     const common: GridColDef[] = [
@@ -530,7 +516,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const getRowId: GridRowIdGetter = (row: any) =>
     row.appointment_id;
 
-
   return (
     <div
       className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${classProp || ""
@@ -549,16 +534,15 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           loading={loading}
           rowHeight={64}
           disableRowSelectionOnClick
-          paginationMode="server"
           rowCount={filteredPatients.length}
-          pageSizeOptions={[PAGE_SIZE]}
-          paginationModel={{
-            page: currentPage - 1,
-            pageSize: PAGE_SIZE,
-          }}
-          onPaginationModelChange={(model) => {
-            const newPage = model.page + 1;
-            if (newPage !== currentPage) handlePageChange(newPage);
+          pageSizeOptions={[10]}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 10,
+                page: 0,
+              },
+            },
           }}
           getRowClassName={(params) =>
             params.row.status === AppointmentStatus.OnHold

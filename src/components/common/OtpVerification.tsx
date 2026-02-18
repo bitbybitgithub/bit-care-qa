@@ -101,7 +101,7 @@ const OtpVerification: React.FC<Props> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value.replace(/[^0-9]/g, "");
     setOtp(v);
-    if (v.length === 6) verifyOtp(v);
+    if (v.length === 4) verifyOtp(v);
   };
 
   useEffect(() => {
@@ -122,7 +122,7 @@ const OtpVerification: React.FC<Props> = ({
           value={otp}
           onChange={handleChange}
           fullWidth
-          inputProps={{ maxLength: 6 }}
+          inputProps={{ maxLength: 4 }}
         />
 
         {(sending || verifying) && (

@@ -200,14 +200,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         )
       : "";
 
-  const handleBackdropClick = () => {
-    if (!loading) onClose();
-  };
-
   return (
     <div
       className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-white)]/40 backdrop-blur-md"
-      onClick={handleBackdropClick}
     >
       <form
         onClick={(e) => e.stopPropagation()}

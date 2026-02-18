@@ -71,5 +71,5 @@ export const sendReferralsApi = async (
     payload
   );
 
-  return response.data;
+  return response;
 };

@@ -69,6 +69,20 @@ export interface MappedLab {
   state?: string;
 
   status?: "Active" | "Inactive";
+
 }
+
+export interface LabApiItem {
+  lab_id: number;
+  lab_name: string;
+  lab_logo?: string;
+
+  email?: string;
+  mobile?: string;
+  address?: string;
+
+  status: "Active" | "Inactive";
+}
+
   
 

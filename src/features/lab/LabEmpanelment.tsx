@@ -5,18 +5,7 @@ import ScienceIcon from "@mui/icons-material/Science";
 import { getSession } from "../../context/sessions/userSession";
 import { getActiveLabListApi, getMappedLabsApi } from "../../api/labApis/LabApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
-
-export interface LabApiItem {
-  lab_id: number;
-  lab_name: string;
-  lab_logo?: string;
-
-  email?: string;
-  mobile?: string;
-  address?: string;
-
-  status: "Active" | "Inactive";
-}
+import type { LabApiItem } from "../../types/labType/LabTestInterfaces"; 
 
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;

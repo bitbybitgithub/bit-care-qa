@@ -5,18 +5,8 @@ import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import { getSession } from "../../context/sessions/userSession";
 import { getActivePharmaListApi, getMappedPharmaciesApi } from "../../api/pharmacyApi/PharmacyApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
+import type{PharmaApiItem} from "../../types/pharmacyType/pharmacyInterfaceType";
 
-export interface PharmaApiItem {
-  pharma_id: number;
-  pharma_name: string;
-  pharma_logo?: string;
-
-  email?: string;
-  mobile?: string;
-  address?: string;
-
-  status: "Active" | "Inactive";
-}
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
 

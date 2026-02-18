@@ -74,3 +74,15 @@ export interface PharmaProfileInfoResponse {
   pharma_logo: string | null;
   password_hash: string;
 };
+
+export interface PharmaApiItem {
+  pharma_id: number;
+  pharma_name: string;
+  pharma_logo?: string;
+
+  email?: string;
+  mobile?: string;
+  address?: string;
+
+  status: "Active" | "Inactive";
+}

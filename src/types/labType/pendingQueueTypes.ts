@@ -12,4 +12,5 @@ export interface PendingQueueDto {
   result_status: "Pending" | "Processing" | "Completed";
   created_date: string; 
   report_id: string | null;
+  prescription_id:number | null
 }

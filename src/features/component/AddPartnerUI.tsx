@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import SearchIcon from "@mui/icons-material/Search";
 import { RiContactsFill } from "react-icons/ri";
 import { IoMail } from "react-icons/io5";
@@ -7,6 +8,7 @@ interface PartnerItem {
   id: number;
   name: string;
   logo?: string;
+
   email?: string;
   mobile?: string;
   address?: string;
@@ -14,9 +16,13 @@ interface PartnerItem {
 
 interface Props {
   data: PartnerItem[];
+
   icon: React.ReactNode;
+
   placeholder: string;
+
   buttonText: string;
+
   onSubmit: (ids: number[]) => Promise<void>;
 }
 
@@ -67,7 +73,7 @@ const AddPartner = ({
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
 
-      <div className="mb-5 relative max-w-md">
+      {/* <div className="mb-5 relative max-w-md">
 
         <SearchIcon
           className="absolute left-3 top-2.5 text-gray-400"
@@ -85,7 +91,47 @@ const AddPartner = ({
                      focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
 
-      </div>
+      </div> */}
+
+      {/* Search + Button Row */}
+<div className="mb-6 flex items-center justify-between gap-4">
+
+  {/* Search */}
+  <div className="relative w-full max-w-md">
+
+    <SearchIcon
+      className="absolute left-3 top-4 text-gray-400"
+      fontSize="small"
+    />
+
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="w-full pl-9 pr-3 py-2 h-12 border rounded-lg text-sm
+                 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    />
+
+  </div>
+
+  {/* Button */}
+  <button
+    onClick={handleAdd}
+    disabled={!selected.length || loading}
+    className={`px-4 py-3 rounded-xl text-md text-white whitespace-nowrap
+
+      ${!selected.length || loading
+        ? "bg-blue-300"
+        : "bg-blue-600 hover:bg-blue-700"
+      }
+    `}
+  >
+    {loading ? "Processing..." : buttonText}
+  </button>
+
+</div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
@@ -134,6 +180,8 @@ const AddPartner = ({
 
                 </div>
 
+
+                {/* Main Info */}
                 <div className="flex-1">
 
                   <p className="text-sm font-semibold text-gray-900 leading-tight">
@@ -182,6 +230,7 @@ const AddPartner = ({
 
               </div>
 
+
               <div className="mt-2">
 
                 <span
@@ -202,28 +251,6 @@ const AddPartner = ({
           );
         })}
 
-
-      </div>
-
-
-      <div className="flex justify-end">
-
-        <button
-          onClick={handleAdd}
-          disabled={!selected.length || loading}
-
-          className={`px-4 py-2 rounded text-sm text-white
-
-            ${!selected.length || loading
-              ? "bg-blue-300"
-              : "bg-blue-600 hover:bg-blue-700"
-            }
-          `}
-        >
-
-          {loading ? "Processing..." : buttonText}
-
-        </button>
 
       </div>
 

@@ -35,11 +35,11 @@ const ViewPartnerUI = ({
           {title}
         </h2>
 
-        {clinicId && (
+        {/* {clinicId && (
           <p className="text-xs text-gray-400 mt-1">
             Clinic ID: {clinicId}
           </p>
-        )}
+        )} */}
 
         <p className="text-sm text-gray-500 mt-1">
           {data?.length} {countLabel}
@@ -52,12 +52,12 @@ const ViewPartnerUI = ({
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
         {data?.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition"
+            className="bg-white rounded-lg border border-gray-200 w-72 p-4 hover:shadow-sm transition"
           >
 
             <div className="flex items-center justify-between">

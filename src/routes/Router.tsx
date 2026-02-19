@@ -55,14 +55,14 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
-      { path: "/lab/appsetting", element: <LabProfile /> },
+      { path: "/lab/labsetting", element: <LabProfile /> },
       // { path: "/lab/service-management", element: <ServiceManagement /> },
 
 
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
-      { path: "/pharmacy/settings", element: <PharmaSetting /> },
+      { path: "/pharmacy/pharmacysettings", element: <PharmaSetting /> },
 
       // { path: "/patients-records", element: <ComingSoon /> },
       // { path: "/add-diagnosis", element: <ComingSoon /> },

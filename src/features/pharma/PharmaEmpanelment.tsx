@@ -64,33 +64,6 @@ const PharmaEmpanelment = () => {
     fetchPharmas();
   }, []);
 
-  // const handleSubmitPharma = async (ids: number[]) => {
-
-  //   if (!clinicId) {
-  //     alert("Session expired");
-  //     return;
-  //   }
-
-  //   try {
-
-  //     await mapClinicPartnersApi({
-  //       clinic_id: clinicId,
-  //       lab_ids: [],
-  //       pharmacy_ids: ids,
-  //     });
-
-  //     await fetchPharmas();
-
-  //     setActiveTab("view");
-
-  //   } catch (err) {
-
-  //     console.error(err);
-  //     alert("Failed to map pharmacy");
-
-  //   }
-  // };
-
   const handleSubmitPharma = async (ids: number[]) => {
     if (!clinicId) {
       toast.error("Session expired. Please login again.");
@@ -132,7 +105,7 @@ const PharmaEmpanelment = () => {
   return (
     <div className="w-full bg-white rounded-md shadow">
 
-      <div className="flex border-b">
+      {/* <div className="flex border-b">
 
         <button
           onClick={() => setActiveTab("view")}
@@ -156,7 +129,42 @@ const PharmaEmpanelment = () => {
           Add Pharma
         </button>
 
+      </div> */}
+      <div className="p-4 ">
+        <div className="inline-flex bg-gray-100 rounded-xl p-1 w-fit shadow-inner">
+
+          <button
+            onClick={() => setActiveTab("view")}
+            className={`relative px-6 py-2 text-sm font-medium rounded-full transition-all duration-200
+        ${activeTab === "view"
+                ? "bg-white shadow text-black"
+                : "text-gray-500 hover:text-black"
+              }`}
+          >
+            View {/** Change label accordingly in each file */}
+
+            {/* Optional Count Badge */}
+            {/* {activeTab === "view" && (
+        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
+          {viewItems?.length ?? 0}
+        </span>
+      )} */}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("add")}
+            className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-200
+        ${activeTab === "add"
+                ? "bg-white shadow text-black"
+                : "text-gray-500 hover:text-black"
+              }`}
+          >
+            Add
+          </button>
+
+        </div>
       </div>
+
 
       {loading && (
         <div className="p-3 text-sm text-blue-600">

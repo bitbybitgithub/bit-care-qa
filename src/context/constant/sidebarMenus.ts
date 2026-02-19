@@ -37,7 +37,7 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
-      { title: "Setting", link: "/lab/appsetting", icon: FaCog },
+      { title: "Lab Setting", link: "/lab/labsetting", icon: FaCog },
       // { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],
     Staff: [
@@ -49,7 +49,7 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
       { title: "Users", link: "/pharmacy/users", icon: FaUsers },
-      { title: "Setting", link: "/pharmacy/settings", icon: FaCog },
+      { title: "Pharma Setting", link: "/pharmacy/pharmacysettings", icon: FaCog },
     ],
     Staff: [
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },

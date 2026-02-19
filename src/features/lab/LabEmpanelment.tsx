@@ -5,7 +5,8 @@ import ScienceIcon from "@mui/icons-material/Science";
 import { getSession } from "../../context/sessions/userSession";
 import { getActiveLabListApi, getMappedLabsApi } from "../../api/labApis/LabApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
-import type { LabApiItem } from "../../types/labType/LabTestInterfaces"; 
+import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
+import { toast } from "react-toastify";
 
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
@@ -73,32 +74,58 @@ const LabEmpanelment = () => {
     fetchMappedLabByClinicId();
   }, [clinicId]);
 
-  const handleSubmitLabs = async (ids: number[]) => {
+  // const handleSubmitLabs = async (ids: number[]) => {
 
+  //   if (!clinicId) {
+  //     alert("Session expired");
+  //     return;
+  //   }
+
+  //   try {
+
+  //     await mapClinicPartnersApi({
+  //       clinic_id: clinicId,
+  //       lab_ids: ids,
+  //       pharmacy_ids: [],
+  //     });
+
+  //     await fetchLabs();
+
+  //     setActiveTab("view");
+
+  //   } catch (err) {
+
+  //     console.error(err);
+  //     alert("Failed to map labs");
+
+  //   }
+  // };
+
+  const handleSubmitLabs = async (ids: number[]) => {
     if (!clinicId) {
-      alert("Session expired");
+      toast.error("Session expired. Please login again.");
       return;
     }
 
     try {
-
       await mapClinicPartnersApi({
         clinic_id: clinicId,
         lab_ids: ids,
         pharmacy_ids: [],
       });
 
-      await fetchLabs();
+      toast.success("Lab Added Successfully.");
+
+      await fetchMappedLabByClinicId();
 
       setActiveTab("view");
 
     } catch (err) {
-
       console.error(err);
-      alert("Failed to map labs");
-
+      toast.error("Failed to map labs.");
     }
   };
+
 
   const viewItems = mappedLabs?.map((l) => ({
     id: l.lab_id,

@@ -5,7 +5,8 @@ import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import { getSession } from "../../context/sessions/userSession";
 import { getActivePharmaListApi, getMappedPharmaciesApi } from "../../api/pharmacyApi/PharmacyApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
-import type{PharmaApiItem} from "../../types/pharmacyType/pharmacyInterfaceType";
+import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
+import { toast } from "react-toastify";
 
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
@@ -63,32 +64,58 @@ const PharmaEmpanelment = () => {
     fetchPharmas();
   }, []);
 
-  const handleSubmitPharma = async (ids: number[]) => {
+  // const handleSubmitPharma = async (ids: number[]) => {
 
+  //   if (!clinicId) {
+  //     alert("Session expired");
+  //     return;
+  //   }
+
+  //   try {
+
+  //     await mapClinicPartnersApi({
+  //       clinic_id: clinicId,
+  //       lab_ids: [],
+  //       pharmacy_ids: ids,
+  //     });
+
+  //     await fetchPharmas();
+
+  //     setActiveTab("view");
+
+  //   } catch (err) {
+
+  //     console.error(err);
+  //     alert("Failed to map pharmacy");
+
+  //   }
+  // };
+
+  const handleSubmitPharma = async (ids: number[]) => {
     if (!clinicId) {
-      alert("Session expired");
+      toast.error("Session expired. Please login again.");
       return;
     }
 
     try {
-
       await mapClinicPartnersApi({
         clinic_id: clinicId,
         lab_ids: [],
         pharmacy_ids: ids,
       });
 
-      await fetchPharmas();
+      toast.success("Pharmacy Added Successfully.");
+
+      await fetchPharmaByClinicId();
 
       setActiveTab("view");
 
     } catch (err) {
-
       console.error(err);
-      alert("Failed to map pharmacy");
-
+      toast.error("Failed to map pharmacy.");
     }
   };
+
 
   const viewItems = mappedPharmas?.map((p) => ({
     id: p.pharma_id,

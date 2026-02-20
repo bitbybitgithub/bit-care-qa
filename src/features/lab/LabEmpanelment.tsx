@@ -74,30 +74,79 @@ const LabEmpanelment = () => {
     fetchMappedLabByClinicId();
   }, [clinicId]);
 
-  const handleSubmitLabs = async (ids: number[]) => {
-    if (!clinicId) {
-      toast.error("Session expired. Please login again.");
-      return;
-    }
+  // const handleSubmitLabs = async (ids: number[]) => {
+  //   if (!clinicId) {
+  //     toast.error("Session expired. Please login again.");
+  //     return;
+  //   }
 
-    try {
-      await mapClinicPartnersApi({
-        clinic_id: clinicId,
-        lab_ids: ids,
-        pharmacy_ids: [],
-      });
+  //   try {
+  //     await mapClinicPartnersApi({
+  //       clinic_id: clinicId,
+  //       lab_ids: ids,
+  //       pharmacy_ids: [],
+  //     });
 
-      toast.success("Lab Added Successfully.");
+  //     toast.success("Lab Added Successfully.");
 
-      await fetchMappedLabByClinicId();
+  //     await fetchMappedLabByClinicId();
 
-      setActiveTab("view");
+  //     setActiveTab("view");
 
-    } catch (err) {
-      console.error(err);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to map labs.");
+  //   }
+  // };
+
+const handleSubmitLabs = async (ids: number[]) => {
+  if (!clinicId) {
+    toast.error("Session expired. Please login again.");
+    return;
+  }
+
+  const existingIds = mappedLabs.map(
+    (l) => l.lab_id
+  );
+
+  const duplicates = ids.filter((id) =>
+    existingIds.includes(id)
+  );
+
+  if (duplicates.length) {
+    toast.warning(
+      "Some selected labs are already registered."
+    );
+    return;
+  }
+
+  try {
+    await mapClinicPartnersApi({
+      clinic_id: clinicId,
+      lab_ids: ids,
+      pharmacy_ids: [],
+    });
+
+    toast.success("Lab Added Successfully.");
+
+    await fetchMappedLabByClinicId();
+
+    setActiveTab("view");
+  } catch (err: any) {
+
+    if (err?.response?.status === 409) {
+      toast.error("Lab already registered.");
+    } else {
       toast.error("Failed to map labs.");
     }
-  };
+
+    console.error(err);
+  }
+};
+
+  const mappedLabIds = new Set(
+  mappedLabs.map((l) => l.lab_id)
+);
 
 
   const viewItems = mappedLabs?.map((l) => ({
@@ -211,10 +260,10 @@ const LabEmpanelment = () => {
               id: l.lab_id,
               name: l.lab_name,
               logo: l.lab_logo,
-
               email: l.email,
               mobile: l.mobile,
               address: l.address,
+               alreadyMapped: mappedLabIds.has(l.lab_id),
             }))}
 
             icon={

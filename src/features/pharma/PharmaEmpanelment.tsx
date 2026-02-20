@@ -55,6 +55,9 @@ const PharmaEmpanelment = () => {
     }
   }
 
+const mappedIds = new Set(
+  mappedPharmas.map((p) => p.pharma_id)
+);
 
   useEffect(() => {
     fetchPharmaByClinicId();
@@ -64,31 +67,75 @@ const PharmaEmpanelment = () => {
     fetchPharmas();
   }, []);
 
-  const handleSubmitPharma = async (ids: number[]) => {
-    if (!clinicId) {
-      toast.error("Session expired. Please login again.");
-      return;
-    }
+  // const handleSubmitPharma = async (ids: number[]) => {
+  //   if (!clinicId) {
+  //     toast.error("Session expired. Please login again.");
+  //     return;
+  //   }
 
-    try {
-      await mapClinicPartnersApi({
-        clinic_id: clinicId,
-        lab_ids: [],
-        pharmacy_ids: ids,
-      });
+  //   try {
+  //     await mapClinicPartnersApi({
+  //       clinic_id: clinicId,
+  //       lab_ids: [],
+  //       pharmacy_ids: ids,
+  //     });
 
-      toast.success("Pharmacy Added Successfully.");
+  //     toast.success("Pharmacy Added Successfully.");
 
-      await fetchPharmaByClinicId();
+  //     await fetchPharmaByClinicId();
 
-      setActiveTab("view");
+  //     setActiveTab("view");
 
-    } catch (err) {
-      console.error(err);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to map pharmacy.");
+  //   }
+  // };
+
+const handleSubmitPharma = async (ids: number[]) => {
+  if (!clinicId) {
+    toast.error("Session expired. Please login again.");
+    return;
+  }
+
+  const existingIds = mappedPharmas.map(
+    (p) => p.pharma_id
+  );
+
+  const duplicates = ids.filter((id) =>
+    existingIds.includes(id)
+  );
+
+  if (duplicates.length) {
+    toast.warning(
+      "Some selected pharmacies are already registered."
+    );
+    return;
+  }
+
+  try {
+    await mapClinicPartnersApi({
+      clinic_id: clinicId,
+      lab_ids: [],
+      pharmacy_ids: ids,
+    });
+
+    toast.success("Pharmacy Added Successfully.");
+
+    await fetchPharmaByClinicId();
+
+    setActiveTab("view");
+  } catch (err: any) {
+
+    if (err?.response?.status === 409) {
+      toast.error("Pharmacy already registered.");
+    } else {
       toast.error("Failed to map pharmacy.");
     }
-  };
 
+    console.error(err);
+  }
+};
 
   const viewItems = mappedPharmas?.map((p) => ({
     id: p.pharma_id,
@@ -204,6 +251,7 @@ const PharmaEmpanelment = () => {
               email: p.email,
               mobile: p.mobile,
               address: p.address,
+             alreadyMapped: mappedIds.has(p.pharma_id),
             }))}
 
             icon={

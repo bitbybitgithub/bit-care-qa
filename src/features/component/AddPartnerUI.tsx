@@ -12,6 +12,7 @@ interface PartnerItem {
   email?: string;
   mobile?: string;
   address?: string;
+  alreadyMapped?: boolean;
 }
 
 interface Props {
@@ -39,13 +40,24 @@ const AddPartner = ({
 
   const [loading, setLoading] = useState(false);
 
-  const toggleSelect = (id: number) => {
-    setSelected((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id]
-    );
-  };
+  // const toggleSelect = (id: number) => {
+  //   setSelected((prev) =>
+  //     prev.includes(id)
+  //       ? prev.filter((x) => x !== id)
+  //       : [...prev, id]
+  //   );
+  // };
+
+const toggleSelect = (id: number, disabled?: boolean) => {
+  if (disabled) return;
+
+  setSelected((prev) =>
+    prev.includes(id)
+      ? prev.filter((x) => x !== id)
+      : [...prev, id]
+  );
+};
+
 
   const handleAdd = async () => {
 
@@ -143,7 +155,10 @@ const AddPartner = ({
           return (
             <div
               key={item.id}
-              onClick={() => toggleSelect(item.id)}
+              onClick={() =>
+  toggleSelect(item.id, item.alreadyMapped)
+}
+
               className={`bg-white border rounded-xl p-4 cursor-pointer transition
 
         ${isSelected
@@ -233,7 +248,7 @@ const AddPartner = ({
 
               <div className="mt-2">
 
-                <span
+                {/* <span
                   className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium
 
             ${isSelected
@@ -243,7 +258,27 @@ const AddPartner = ({
           `}
                 >
                   {isSelected ? "Selected" : "Available"}
-                </span>
+                </span> */}
+
+<span
+  className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium
+
+  ${
+    item.alreadyMapped
+      ? "bg-red-100 text-red-700"
+      : isSelected
+      ? "bg-green-100 text-green-700"
+      : "bg-gray-100 text-gray-600"
+  }
+`}
+>
+  {item.alreadyMapped
+    ? "Already Added"
+    : isSelected
+    ? "Selected"
+    : "Available"}
+</span>
+
 
               </div>
 

@@ -1,6 +1,4 @@
-import { useDispatch } from "react-redux";
-import { FaClipboardList, FaIdCard, FaUserPlus } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { FaUserPlus } from "react-icons/fa";
 import { useState, useEffect, type JSX } from "react";
 import AddUser from "./AddUser";
 import Cards from "../../components/common/Cards";
@@ -10,12 +8,11 @@ import { FaPeopleGroup } from "react-icons/fa6";
 import { FaCalendarDays } from "react-icons/fa6";
 import { FaUserNurse } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
-
 import { TfiAnnouncement } from "react-icons/tfi";
-import SidebarBg from "../../assets/SidebarBg.png";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import { useLoader } from "../../context/LoaderContext";
 import { Module } from "../../Helper/Enums";
+import WelcomeBanner from "../../components/common/WelcomeBanner";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -35,7 +32,6 @@ const Dashboard = () => {
   const [stats, setStats] = useState<DashboardCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
-  const username = getSessionItem("user", "full_name");
 
   const { data, isFetched } = useQuery<DashboardCard[]>({
     queryKey: ["dashboardStats", userId],
@@ -95,97 +91,51 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col relative">
 
-      <div
-        className="
-          h-[10vh] 
-          relative 
-          mb-4
-          shadow-[var(--shadow-lg)] 
-          px-6
-          flex items-center justify-between 
-          py-12
-          rounded-[var(--radius-md)]
-          overflow-hidden
-        "
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, 
-              rgba(255,255,255,1) 0%,
-              rgba(255,255,255,0.85) 70%,
-              rgba(255,255,255,0.3) 80%,
-              rgba(255,255,255,0) 100%
-            ),
-            url(${SidebarBg})
-          `,
-          backgroundSize: "cover",
-          backgroundPosition: "left center",
-        }}
-      >
-        <div>
-          <h1
-            className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
-            style={{ fontSize: "var(--font-h4)" }}
-          >
-            Welcome,{" "}
-            <span className="text-[var(--color-primary)]">{username}</span>
-          </h1>
-
-          <p
-            className="text-[var(--color-text)] opacity-70 "
-            style={{ fontSize: "var(--font-body)" }}
-          >
-            Your clinic is running smoothly today.
-            <h3 className="opacity-60">
-              Check your daily stats and announcements below.
-            </h3>
-          </p>
-        </div>
-      </div>
-
+      <WelcomeBanner />
       <Cards items={stats} loading={loading} error={error} />
 
       <div className="md:flex gap-x-4 ">
-            <div className="md:w-[25%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
-              <h2
-                className="font-semibold mb-4 text-[var(--color-primary)]"
-                style={{ fontSize: "var(--font-h4)" }}
-              >
-                Quick Actions
-              </h2>
+        <div className="md:w-[25%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
+          <h2
+            className="font-semibold mb-4 text-[var(--color-primary)]"
+            style={{ fontSize: "var(--font-h4)" }}
+          >
+            Quick Actions
+          </h2>
 
-              <div className="flex flex-col flex-wrap gap-3">
-                {quickActions.map((btn, i) => (
-                  <ActionButton
-                    key={i}
-                    icon={btn.icon}
-                    label={btn.label}
-                    onClick={btn.onClick}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
-              <div
-                className="flex items-center gap-x-2 mb-2"
-                style={{ fontSize: "var(--font-h4)" }}
-              >
-                <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-                  Clinic Announcements
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-x-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-2">
-                <TfiAnnouncement
-                  className="text-[var(--color-error)] "
-                  style={{ fontSize: "var(--font-h4)" }}
-                />
-                <h1>
-                  The clinic will be closed for the holiday on December 25th.
-                </h1>
-              </div>
-            </div>
+          <div className="flex flex-col flex-wrap gap-3">
+            {quickActions.map((btn, i) => (
+              <ActionButton
+                key={i}
+                icon={btn.icon}
+                label={btn.label}
+                onClick={btn.onClick}
+              />
+            ))}
           </div>
+        </div>
+
+        <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
+          <div
+            className="flex items-center gap-x-2 mb-2"
+            style={{ fontSize: "var(--font-h4)" }}
+          >
+            <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
+              Clinic Announcements
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-x-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-2">
+            <TfiAnnouncement
+              className="text-[var(--color-error)] "
+              style={{ fontSize: "var(--font-h4)" }}
+            />
+            <h1>
+              The clinic will be closed for the holiday on December 25th.
+            </h1>
+          </div>
+        </div>
+      </div>
 
       {showAddUser && <AddUser module={module} onClose={() => setShowAddUser(false)} />}
     </div>

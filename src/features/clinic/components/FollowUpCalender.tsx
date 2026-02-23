@@ -19,7 +19,7 @@ interface Props {
   onSave?: (data: any) => void;
 }
 
-const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
+const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
   const today = dayjs();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
@@ -59,7 +59,7 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
 
     try {
       const now = new Date();
-      const endTime = new Date(now.getTime() + 30 * 60000); // +30 mins
+      const endTime = new Date(now.getTime() + 30 * 60000);
 
       const appointmentData = {
         patient_id: patient.patient_id,
@@ -75,14 +75,11 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
         reason: "Follow Up Visit",
         date_of_birth: patient.date_of_birth,
         mobile_number: patient.mobile_number,
-        user_id: user, // get from session
+        user_id: user,
       };
 
       await saveAppointment(appointmentData);
-
       toast.success("Patient Next Appointment saved successfully!");
-
-      //     onSave?.(); // refresh parent list
       onClose?.();
     } catch (error) {
       console.error(error);
@@ -109,11 +106,8 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
         </button>
       </div>
 
-      {/* BODY */}
       <div className="flex-1 py-2 px-5 space-y-3 overflow-y-auto">
-        {/* CALENDAR CARD */}
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40 transition hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
-          {/* MONTH SWITCH */}
           <div className="flex items-center justify-between mb-6">
             <button
               disabled={isPrevDisabled}
@@ -124,11 +118,10 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
               className={`
     h-10 w-10 rounded-full flex items-center justify-center
     text-white shadow-md transition-all duration-300 cursor-pointer
-    ${
-      isPrevDisabled
-        ? "bg-gray-300 cursor-not-allowed opacity-60"
-        : "hover:scale-110"
-    }
+    ${isPrevDisabled
+                  ? "bg-gray-300 cursor-not-allowed opacity-60"
+                  : "hover:scale-110"
+                }
   `}
               style={
                 !isPrevDisabled
@@ -152,14 +145,12 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
             </button>
           </div>
 
-          {/* WEEK LABELS */}
           <div className="grid grid-cols-7 text-xs font-semibold text-center text-gray-400 mb-4">
             {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
               <div key={d}>{d}</div>
             ))}
           </div>
 
-          {/* DATE GRID */}
           <div className="grid grid-cols-7 gap-4">
             {days.map((date, index) => {
               if (!date) return <div key={index}></div>;
@@ -178,20 +169,17 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
                     h-11 w-11 rounded-full flex items-center justify-center cursor-pointer
                     text-sm font-medium
                     transition-all duration-300 
-                    ${
-                      isPast
-                        ? "text-gray-300 cursor-none"
-                        : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-white)] "
+                    ${isPast
+                      ? "text-gray-300 cursor-none"
+                      : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-white)] "
                     }
-                    ${
-                      isSelected
-                        ? "bg-[var(--color-primary)] text-[var(--color-white)] scale-110 shadow-[var(--shadow-lg)]"
-                        : "bg-blue-50"
+                    ${isSelected
+                      ? "bg-[var(--color-primary)] text-[var(--color-white)] scale-110 shadow-[var(--shadow-lg)]"
+                      : "bg-blue-50"
                     }
-                    ${
-                      !isSelected && isToday
-                        ? "border-2 border-[var(--color-primary)]"
-                        : ""
+                    ${!isSelected && isToday
+                      ? "border-2 border-[var(--color-primary)]"
+                      : ""
                     }
                   `}
                 >
@@ -202,8 +190,6 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
           </div>
         </div>
       </div>
-
-      {/* FOOTER */}
 
       <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-surface)] sticky bottom-0">
         <Button variant="outlined" size="small" fullWidth onClick={onClose}>
@@ -224,4 +210,4 @@ const FollowUpDrawer: React.FC<Props> = ({ patient, onClose, onSave }) => {
   );
 };
 
-export default FollowUpDrawer;
+export default FollowUpCalender;

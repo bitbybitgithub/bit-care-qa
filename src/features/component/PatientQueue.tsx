@@ -1,21 +1,14 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Button,
-  Menu,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  Drawer,
   Box,
   Typography,
-  IconButton,
-  Backdrop,
-  CircularProgress,
   Fade,
-  Skeleton
 } from "@mui/material";
 import {
   DataGrid,
@@ -23,25 +16,16 @@ import {
   type GridRenderCellParams,
   type GridRowIdGetter,
 } from "@mui/x-data-grid";
-import { RiHeartAdd2Line } from "react-icons/ri";
-import { AiOutlineUserDelete } from "react-icons/ai";
-import { IoClose } from "react-icons/io5";
 import { AppointmentStatus } from "../../context/constant/enum";
-import PatientVitals from "../component/VitalsComponents";
 import { getAge } from "../../utils/CalculateAge";
 import { formatEnumText } from "../../utils/FormatText";
-import type {
-  PatientQueueProps,
-} from "../../types/staffdashboardtype/StaffDashboardInterfaces";
+import type { PatientQueueProps } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
-import { Close } from "@mui/icons-material";
-import LabPharmacyReferral from "../clinic/components/LabPharmacyReferral";
-import { FaFlask } from "react-icons/fa";
-import { RiChatFollowUpFill } from "react-icons/ri";
-import { FaClinicMedical } from "react-icons/fa";
-import FollowUpCalendarDrawer from "../clinic/components/FollowUpForm";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import { toast } from "react-toastify";
+import PdfViewerDialog from "../../components/common/PdfViewerDialog";
+import PatientActionMenu from "../clinic/components/PatientActionMenu";
+import PatientActionDrawers from "../clinic/components/PatientActionDrawers";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -57,7 +41,6 @@ const getActionsForStatus = (status: string): string[] => {
       return [];
   }
 };
-const PAGE_SIZE = 10;
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
@@ -68,14 +51,10 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   onStartConsultation,
   handleUpdatePatientStatus,
   searchQuery,
-  queueType
+  queueType,
 }) => {
   const search = searchQuery;
-  const closeAllMenus = () => {
-    setAnchorEl({});
-  };
 
-  const [anchorEl, setAnchorEl] = useState<Record<number, HTMLElement | null>>({});
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const [cancelReason, setCancelReason] = useState("");
@@ -99,10 +78,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
 
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  // }, [search]);
-
   const filteredPatients = useMemo(() => {
     const q = (search || "").toString().trim().toLowerCase();
     if (!q) return patientsData;
@@ -110,52 +85,32 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     return patientsData.filter((p) => {
       const contact = String(p.mobile_number || "").trim();
       const last4 = contact.length >= 4 ? contact.slice(-4).toLowerCase() : "";
-      return (
-        last4.includes(q)
-      );
+      return last4.includes(q);
     });
   }, [patientsData, search]);
 
-  const handleMenuOpen = useCallback(
-    (e: React.MouseEvent<HTMLElement>, patientId: number) => {
-      e.stopPropagation();
-      setAnchorEl((prev) => ({ ...prev, [patientId]: e.currentTarget }));
-    },
-    []
-  );
-
-  const handleMenuClose = useCallback((patientId: number) => {
-    setAnchorEl((prev) => ({ ...prev, [patientId]: null }));
-  }, []);
-
   const handleAction = useCallback(
     async (action: string, patient: Patient) => {
-      closeAllMenus();
       if (action === "Cancel Appointment") {
         setPatientToCancel(patient);
         setCancelDialogOpen(true);
       } else if (action === "Add Vitals") {
         setSelectedPatient(patient);
         setVitalsDrawerOpen(true);
-      }
-      else if (action === "Send to Lab") {
+      } else if (action === "Send to Lab") {
         setSelectedPatient(patient);
         setServiceDrawer({ open: true, type: "lab" });
       } else if (action === "Send to Pharmacy") {
         setSelectedPatient(patient);
         setServiceDrawer({ open: true, type: "pharmacy" });
-      }
-      else if (action === "Set Follow Up") {
+      } else if (action === "Set Follow Up") {
         setSelectedPatient(patient);
         setFollowupDrawerOpen(true);
-      }
-
-      else if (action === "Hold Appointment") {
+      } else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
-        setAnchorEl({});
       }
     },
-    [handleMenuClose, handleUpdatePatientStatus]
+    [handleUpdatePatientStatus],
   );
 
   const handleConfirmCancel = useCallback(() => {
@@ -165,7 +120,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     setCancelReason("");
     setPatientToCancel(null);
   }, [patientToCancel, handleUpdatePatientStatus]);
-
 
   const openPrescription = async (row: Patient) => {
     try {
@@ -178,7 +132,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       // const fileName =
       //   row.raw?.prescriptions?.[0]?.prescription_file_name ??
       //   "Dummy_Patient_Prescription.pdf"
-      const filePath = "E:\\Prescriptions\\";
+      const filePath = "E:\\Documents\\Prescriptions\\";
       const fileName = "Dummy_Patient_Prescription.pdf";
 
       const url = await getPdfFromServer(filePath, fileName);
@@ -187,7 +141,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setPdfUrl(url);
         setPdfLoading(false);
       }, 300);
-
     } catch (error) {
       console.error("PDF Load Error:", error);
       toast.error("PDF Load Error:", error);
@@ -196,8 +149,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   };
 
   const rows = filteredPatients;
-
-
   const columns: GridColDef[] = useMemo(() => {
     const common: GridColDef[] = [
       {
@@ -320,7 +271,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   onClick={() => {
                     handleUpdatePatientStatus?.(
                       p,
-                      AppointmentStatus.InProgress
+                      AppointmentStatus.InProgress,
                     );
                     onStartConsultation?.(p);
                   }}
@@ -397,89 +348,22 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         minWidth: 150,
         sortable: false,
         filterable: false,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const p = params?.row as Patient;
+
+        renderCell: (params) => {
+          const p = params.row as Patient;
           if (!p) return null;
-          const pid = p.raw?.patient_id ?? p.patient_id;
           if (!shouldShowSelectButton(p.status)) return null;
+          const actions = getActionsForStatus(p.status);
 
           return (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    borderRadius: "8px",
-                    textTransform: "none",
-                    fontWeight: 600,
-                    my: "auto",
-                    px: 1.5,
-                    py: 0.5,
-                  }}
-                  onClick={(e) => handleMenuOpen(e, pid)}
-                >
-                  Take action
-                </Button>
-                <Menu
-                  anchorEl={anchorEl[pid]}
-                  open={Boolean(anchorEl[pid])}
-                  onClose={() => handleMenuClose(pid)}
-
-                >
-                  <Box
-                    sx={{
-                      border: "1px solid",
-                      borderRadius: "var(--radius-lg)",
-                      borderColor: "var(--color-primary)"
-                    }}
-                  >
-
-                    {getActionsForStatus(p.status).map((a) => (
-                      <MenuItem key={a} onClick={() => handleAction(a, p)}  >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            fontSize: 13,
-                          }}
-                        >
-                          {a === "Add Vitals" && (
-                            <RiHeartAdd2Line style={{ color: "#2563EB" }} />
-                          )}
-                          {a === "Cancel Appointment" && (
-                            <AiOutlineUserDelete style={{ color: "#DC2626" }} />
-                          )}
-                          {a === "Hold Appointment" && (
-                            <IoClose style={{ color: "#F97316" }} />
-                          )}
-                          {a === "Send to Lab" && (
-                            <FaFlask size={16} style={{ color: "var(--color-info)" }} />
-                          )}
-                          {a === "Send to Pharmacy" && (
-                            <FaClinicMedical size={16} style={{ color: "var(--color-success)" }} />
-                          )}
-                          {a === "Set Follow Up" && (
-                            <RiChatFollowUpFill size={16} style={{ color: "var(--color-warning)" }} />
-                          )}
-                          <span>{a}</span>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Box>
-                </Menu>
-              </>
-            </Box>
+            <PatientActionMenu
+              patient={p}
+              actions={actions}
+              onAction={handleAction}
+            />
           );
-        },
+        }
+
       },
     ];
 
@@ -487,13 +371,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   }, [
     mode,
     queueType,
-    anchorEl,
-    handleMenuOpen,
-    handleMenuClose,
     handleAction,
     handleUpdatePatientStatus,
     onStartConsultation,
-
   ]);
 
   const CustomNoRowsOverlay: React.FC = () => (
@@ -513,15 +393,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
     </Box>
   );
 
-  const getRowId: GridRowIdGetter = (row: any) =>
-    row.appointment_id;
+  const getRowId: GridRowIdGetter = (row: any) => row.appointment_id;
 
   return (
     <div
       className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${classProp || ""
         }`}
     >
-
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         <div className="flex items-center gap-3"></div>
       </div>
@@ -587,54 +465,16 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         TransitionComponent={Fade}
         transitionDuration={300}
       >
-        <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
-          <Typography fontWeight={700}>
-            Patient Prescription
-          </Typography>
-          <IconButton onClick={() => setOpenPdf(false)}>
-            <Close />
-          </IconButton>
-        </Box>
-
-        <Box position="relative" height="600px">
-
-          <Backdrop
-            open={pdfLoading}
-            sx={{
-              position: "absolute",
-              zIndex: 2,
-              color: "#fff",
-              backgroundColor: "rgba(0,0,0,0.5)",
-            }}
-          >
-            <CircularProgress color="inherit" />
-          </Backdrop>
-
-          {pdfLoading && (
-            <Box p={3}>
-              <Skeleton variant="rectangular" height={550} />
-            </Box>
-          )}
-
-          <Fade in={!pdfLoading && Boolean(pdfUrl)} timeout={400}>
-            <Box height="100%">
-              {pdfUrl && (
-                <iframe
-                  src={`${pdfUrl}#toolbar=0`}
-                  width="100%"
-                  height="100%"
-                  style={{
-                    border: "none",
-                    borderRadius: 8,
-                    transition: "opacity 0.4s ease-in-out",
-                  }}
-                />
-              )}
-            </Box>
-          </Fade>
-        </Box>
+        <PdfViewerDialog
+          open={openPdf}
+          pdfUrl={pdfUrl}
+          loading={pdfLoading}
+          onClose={() => {
+            setOpenPdf(false);
+            setPdfUrl(null);
+          }}
+        />
       </Dialog>
-
 
       <Dialog
         open={cancelDialogOpen}
@@ -664,88 +504,18 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         </DialogActions>
       </Dialog>
 
-      <Drawer
-        anchor="right"
-        open={vitalsDrawerOpen}
-        onClose={() => setVitalsDrawerOpen(false)}
-        transitionDuration={350}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "500px", md: "30%" },
-            backgroundColor: "var(--color-bg)",
-            overflow: "hidden",
-          },
-        }}
-      >
-        {selectedPatient && (
-          <PatientVitals
-            isOpen={vitalsDrawerOpen}
-            onClose={() => setVitalsDrawerOpen(false)}
-            patientId={selectedPatient?.raw.patient_id}
-            doctorId={selectedPatient.raw?.doctor_id}
-            appointmentId={selectedPatient.appointment_id}
-            patientName={selectedPatient.name}
-            createdBy="SystemUser"
-            onStatusUpdate={() =>
-              handleUpdatePatientStatus?.(
-                selectedPatient,
-                AppointmentStatus.CheckedIn
-              )
-            }
-          />
-        )}
-      </Drawer>
-      {serviceDrawer.open && serviceDrawer.type && (
-        <Drawer
-          anchor="right"
-          open={true}
-          onClose={() => setServiceDrawer({ open: false, type: null })}
-          PaperProps={{
-            sx: {
-              width: { xs: "100%", sm: "500px", md: "30%" },
-              backgroundColor: "var(--color-bg)",
-            },
-          }}
-        >
-          <LabPharmacyReferral
-            patient={selectedPatient}
-            type={serviceDrawer.type}
-            onAdd={() => {
-              setServiceDrawer({ open: false, type: null });
-            }}
-            onClose={() =>
-              setServiceDrawer({ open: false, type: null })
-            }
-          />
-        </Drawer>
-      )}
-
-      <Drawer
-        anchor="right"
-        open={followupDrawerOpen}
-        onClose={() => setFollowupDrawerOpen(false)}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "500px", md: "30%" },
-            backgroundColor: "var(--color-bg)",
-          },
-        }}
-      >
-        {selectedPatient && (
-          <FollowUpCalendarDrawer
-            patient={selectedPatient}
-            onClose={() => setFollowupDrawerOpen(false)}
-            onSave={(data) => {
-              handleUpdatePatientStatus?.(
-                selectedPatient,
-                "Completed"
-              );
-
-              setFollowupDrawerOpen(false);
-            }}
-          />
-        )}
-      </Drawer>
+      <PatientActionDrawers
+        selectedPatient={selectedPatient}
+        vitalsOpen={vitalsDrawerOpen}
+        serviceDrawer={serviceDrawer}
+        followupOpen={followupDrawerOpen}
+        onCloseVitals={() => setVitalsDrawerOpen(false)}
+        onCloseService={() =>
+          setServiceDrawer({ open: false, type: null })
+        }
+        onCloseFollowup={() => setFollowupDrawerOpen(false)}
+        onStatusUpdate={handleUpdatePatientStatus}
+      />
 
     </div>
   );

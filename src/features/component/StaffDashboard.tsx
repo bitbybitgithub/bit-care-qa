@@ -173,7 +173,7 @@ const StaffDashboard: React.FC = () => {
     setLoadingQueue(true);
     setErrorQueue(null);
     try {
-      const appointments = await getCompletedQueue(51);
+      const appointments = await getCompletedQueue(clinicId);
 
       const mapped: Patient[] = appointments.map((a) => ({
         patient_id: a.patient_id,

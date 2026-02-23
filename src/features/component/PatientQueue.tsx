@@ -41,6 +41,21 @@ const getActionsForStatus = (status: string): string[] => {
       return [];
   }
 };
+const badgeClasses = (status: string): string => {
+  const colors: Record<string, string> = {
+    waiting: "bg-amber-200 text-amber-800 border-[0.5px] border-amber-800",
+    pending_vitals: "bg-indigo-200 text-indigo-800 border border-indigo-800",
+    checked_in: "bg-sky-200 text-sky-800 border border-sky-800",
+    in_progress: "bg-blue-200 text-blue-800 border border-blue-800",
+    in_consultation: "bg-violet-200 text-violet-800 border border-violet-800",
+    started: "bg-indigo-200 text-indigo-800 border border-indigo-800",
+    on_hold: "bg-gray-200 text-gray-700 border border-gray-700",
+    completed: "bg-emerald-200 text-emerald-800 border border-emerald-800",
+    scheduled: "bg-cyan-200 text-cyan-800 border border-cyan-800",
+    cancelled: "bg-rose-200 text-rose-800 border border-rose-800",
+  };
+  return colors[status.toLowerCase()] || "bg-gray-100 border text-gray-800";
+};
 
 const PatientQueue: React.FC<PatientQueueProps> = ({
   mode = "doctor",
@@ -128,12 +143,14 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       setOpenPdf(true);
       setPdfLoading(true);
 
-      // const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
+      const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
       // const fileName =
       //   row.raw?.prescriptions?.[0]?.prescription_file_name ??
-      //   "Dummy_Patient_Prescription.pdf"
-      const filePath = "E:\\Documents\\Prescriptions\\";
-      const fileName = "Dummy_Patient_Prescription.pdf";
+      //   "Dummy_Patient_Prescription.pdf";
+      const fileName = row.raw?.prescriptions?.[0]?.prescription_guid_name;
+      // console.log(guidName)
+      // const filePath = "E:\\Documents\\Prescriptions\\";
+      // const fileName = "Dummy_Patient_Prescription.pdf";
 
       const url = await getPdfFromServer(filePath, fileName);
 
@@ -145,6 +162,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       console.error("PDF Load Error:", error);
       toast.error("PDF Load Error:", error);
       setPdfLoading(false);
+      setOpenPdf(false);
     }
   };
 
@@ -245,7 +263,19 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           minWidth: 120,
           renderCell: (params: GridRenderCellParams<any, Patient>) => {
             const row = params?.row as Patient;
-            return row?.status ? formatEnumText(row.status) : "—";
+            // return row?.status ? formatEnumText(row.status) : "—";
+            return (
+              <div
+                className={`flex justify-center items-center p-5 ${badgeClasses(
+                  row.status
+                )}`}
+                style={{
+                  fontSize: "var(--font-xs)",
+                }}
+              >
+                {formatEnumText(row.status)}
+              </div>
+            );
           },
         },
         {
@@ -331,16 +361,44 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           } as GridColDef,
         ]
         : []),
-      {
-        field: "status",
-        headerName: "Status",
-        flex: 0.8,
-        minWidth: 120,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          return row?.status ? formatEnumText(row.status) : "—";
-        },
-      },
+      ...(queueType === "pending"
+        ? [
+          {
+            field: "status",
+            headerName: "Status",
+            flex: 0.8,
+            minWidth: 120,
+            renderCell: (params: GridRenderCellParams<any, Patient>) => {
+              const row = params.row as Patient;
+
+              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "start",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <div
+                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                      row.status
+                    )}`}
+                    style={{
+                      fontSize: "var(--font-xs)",
+                      height: 36,          // 👈 force visual parity
+                      padding: "0 16px",   // 👈 match button horizontal padding
+                    }}
+                  >
+                    {formatEnumText(row.status)}
+                  </div>
+                </Box>
+              );
+            },
+          } as GridColDef,
+        ]
+        : []),
       {
         field: "action",
         headerName: "Action",

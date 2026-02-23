@@ -11,14 +11,14 @@ export interface ErrorState {
   otp: string;
 }
 
-export type ActiveTab = "queue" | "dispensing" | "followUp" | "completed";
+export type ActiveTab = "pending" | "completed";
 
 export interface DashboardCardItem {
   title: string;
   value: number;
   icon: React.ReactNode;
 }
-export type QueueType = "queue" | "completed";
+export type QueueType = "pending" | "completed";
 
 export interface PatientQueueProps {
   mode?: "doctor" | "staff";

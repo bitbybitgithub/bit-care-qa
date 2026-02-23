@@ -34,7 +34,7 @@ const StaffDashboard: React.FC = () => {
   const uId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("queue");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("pending");
 
   const [pendingPatients, setPendingPatients] = useState<Patient[]>([]);
   const [completedPatients, setCompletedPatients] = useState<Patient[]>([]);
@@ -51,10 +51,10 @@ const StaffDashboard: React.FC = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   const visiblePatients =
-    activeTab === "queue" ? pendingPatients : completedPatients;
+    activeTab === "pending" ? pendingPatients : completedPatients;
 
   const tabs = [
-    { key: "queue", label: "Pending Queue" },
+    { key: "pending", label: "Pending Queue" },
     { key: "completed", label: "Completed Queue" },
   ];
 
@@ -92,7 +92,7 @@ const StaffDashboard: React.FC = () => {
     if (!socket) return;
 
     const handleUpdate = (data: Appointment) => {
-      if (activeTab !== "queue") return;
+      if (activeTab !== "pending") return;
 
       setPendingPatients((prev) =>
         prev.map((p) =>
@@ -123,7 +123,7 @@ const StaffDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "queue") {
+    if (activeTab === "pending") {
       fetchPendingQueue();
     }
 
@@ -294,7 +294,7 @@ const StaffDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-x-2">
-            {activeTab === "queue" && (
+            {activeTab === "pending" && (
               <button
                 onClick={() => setOpenWalkIn(true)}
                 className="flex items-center gap-2 text-white px-3 py-2 rounded-lg 
@@ -327,7 +327,7 @@ const StaffDashboard: React.FC = () => {
         </div>
 
         <div className="mt-4">
-          {(activeTab === "queue" || activeTab === "completed") && (
+          {(activeTab === "pending" || activeTab === "completed") && (
             <PatientQueue
               mode="staff"
               queueType={activeTab}

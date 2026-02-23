@@ -33,18 +33,6 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
     }
   }, [profile]);
 
-  const fullAddress = profile
-    ? [
-      profile.address,
-      profile.city,
-      profile.district,
-      profile.state,
-      profile.pincode,
-    ]
-      .filter(Boolean)
-      .join(", ")
-    : "";
-
   const handleFileChange = (file: File | null) => {
     if (file) {
       setPharmaLogoFile(file);
@@ -177,7 +165,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
           <TextField
             multiline
             disabled
-            value={fullAddress}
+            value={profile.address}
             className="w-2/4 border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
           />
         </div>

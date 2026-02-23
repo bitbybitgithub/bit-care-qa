@@ -33,7 +33,6 @@ const UpdatePassword: React.FC<UpdatePasswordProps> = ({ profile }) => {
 
     try {
       const result = await verifyPharmaPassword(userID, currentPassword);
-      console.log("password response", result);
       if (result.success) {
         setIsVerified(true);
         toast.success(result.message);

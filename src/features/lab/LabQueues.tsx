@@ -79,7 +79,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
-      console.log("api response", apiData);
+      console.log("api data",apiData)
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -138,7 +138,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         mobile_number: contact.trim(),
         otp_type: 2,
       });
-      console.log("otp response", res);
       if (res.success) {
         setUserId(res.userId ?? null);
         setEditedAfterOtp(false);
@@ -291,39 +290,13 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     );
   };
 
-  // const openUpload = (_: any, row: any) => {
-  //   setActiveRow(row);
-  //   const init: any = {};
-  //   row.tests.forEach((t: any) => (init[t.test_id] = []));
-  //   setReportMap(init);
-  // };
-
   const openUpload = (_: any, row: any) => {
     setActiveRow(row);
-
     const init: any = {};
     init[row.lab_record_id] = [];
 
     setReportMap(init);
   };
-
-  // const openReUpload = async (_: any, row: any) => {
-  //   setActiveRow(row);
-  //   const resp = await getLabReportsByLabId({
-  //     lab_record_id: row.tests[0].lab_record_id,
-  //   });
-
-  //   const map: any = {};
-  //   (Array.isArray(resp) ? resp : []).forEach((r: any) => {
-  //     if (!map[r.test_id]) map[r.test_id] = [];
-  //     map[r.test_id].push({
-  //       reportId: r.report_id,
-  //       guid: r.file_guid_name,
-  //       originalName: r.file_name,
-  //     });
-  //   });
-  //   setReportMap(map);
-  // };
 
   const closeUpload = () => {
     setActiveRow(null);
@@ -331,6 +304,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   };
 
   const uploadTestFile = async (testId: string, file: File) => {
+    debugger;
     if (!activeRow) return;
     const uploadRes = await uploadReport({ folder: "reports", file });
     console.log("upload file response", uploadRes);

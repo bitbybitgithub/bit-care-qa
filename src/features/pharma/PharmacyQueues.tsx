@@ -29,6 +29,9 @@ import { generateOtpApi, verifyOtpApi } from "../../api";
 import Regex from "../../Helper/Regex";
 import { formatDateDDMMYYYY } from "../../utils/DateUtils";
 import { FaPeopleLine } from "react-icons/fa6";
+import PdfViewerDialog from "../../components/common/PdfViewerDialog";
+import type { Patient } from "../patient-document-management/types/patient";
+import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 
 const PAGE_SIZE = 10;
 
@@ -67,6 +70,9 @@ const [userId, setUserId] = useState<number | null>(null);
 const [editedAfterOtp, setEditedAfterOtp] = useState(false);
 const [otpSent, setOtpSent] = useState(false);
 const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   const pharmaId = getSessionItem("user", "pharmacy_id");
   const userID = getSessionItem("user", "user_id");
@@ -108,11 +114,38 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   }, [filteredRows, currentPage]);
 
   /* ================= HANDLERS ================= */
-  const openPrescription = (row: PharmacyRecord) => {
-    setSelectedRow(row);
-    resetOtpFlow();
-    setContact(row.phone);
-    setOpenOtpDialog(true);
+  // const openPrescription = (row: PharmacyRecord) => {
+  //   setSelectedRow(row);
+  //   resetOtpFlow();
+  //   setContact(row.phone);
+  //   setOpenOtpDialog(true);
+  // };
+
+  const openPrescription = async (row: any) => {
+    try {
+      setSelectedPatient(row);
+      setPdfUrl(null);
+      setOpenPdf(true);
+      setPdfLoading(true);
+  
+      const filePath = row.prescription_url;
+      const fileName = row.guid_name;
+  
+      if (!filePath || !fileName) {
+        throw new Error("Prescription file not found");
+      }
+  
+      const url = await getPdfFromServer(filePath, fileName);
+  
+      setPdfUrl(url);
+      setPdfLoading(false);
+  
+    } catch (error) {
+      console.error("PDF Load Error:", error);
+      toast.error("Failed to load prescription PDF");
+      setPdfLoading(false);
+      setOpenPdf(false);
+    }
   };
 
   const resetOtpFlow = () => {
@@ -437,147 +470,24 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
           },
         }}
       />
-
-      <Dialog
-        open={openOtpDialog}
-        onClose={handleClose}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            p: 3,
-            borderRadius: 1,
-          },
-        }}
-      >
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <FaPeopleLine
-              className="text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h3)" }}
-            />
-            <h3
-              className="font-semibold text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h3)" }}
-            >
-              View Prescription
-            </h3>
-          </div>
-
-          <button
-            onClick={handleClose}
-            className="w-8 h-8 flex justify-center items-center rounded-full
-                  bg-[var(--color-primary)] text-white
-                  hover:bg-[var(--color-surface)]
-                  hover:text-[var(--color-primary)]
-                  transition"
-          >
-            <FaTimes />
-          </button>
-        </div>
-
-        <p className="mb-2" style={{ fontSize: "var(--font-small)" }}>
-          We'll verify your contact
-        </p>
-
-        {false && !showOtp && (
-          <div className="mt-2">
-            <FormControl fullWidth>
-              <TextField size="small" />
-            </FormControl>
-          </div>
-        )}
-
-        {showOtp && (
-          <div className="mt-2 text-center">
-            <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
-              Enter 4-digit OTP sent to +91 {contact}
-            </p>
-
-            <div className="flex justify-center gap-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  ref={(el) => {
-                    otpRefs.current[index] = el;
-                  }}
-                  onChange={(e) => handleOtpChange(e.target.value, index)}
-                  onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                  className="text-center outline-none"
-                  style={{
-                    width: "2rem",
-                    height: "2rem",
-                    borderRadius: "8px",
-                    boxShadow: "var(--shadow-md)",
-                    fontSize: "1.1rem",
-                    border: error.otp
-                      ? "1px solid var(--color-error)"
-                      : "1px solid var(--color-border)",
-                  }}
-                />
-              ))}
-            </div>
-
-            <Button
-              onClick={handleVerifyOtp}
-              disabled={loadingVerify}
-              variant="contained"
-              sx={{
-                mt: 3,
-                px: 5,
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              Confirm OTP
-            </Button>
-
-            {loadingVerify && (
-              <div className="mt-3 flex justify-center">
-                <div className="w-5 h-5 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin" />
-              </div>
-            )}
-
-            {error.otp && (
-              <p className="mt-2 text-xs text-[var(--color-error)]">
-                {error.otp}
-              </p>
-            )}
-            {/* 
-      <button
-        onClick={handleResendOtp}
-        className="mt-3 text-sm font-semibold text-[var(--color-primary)]"
-      >
-        Resend OTP
-      </button> */}
-          </div>
-        )}
-      </Dialog>
-
       <Dialog
         open={openPdf}
         onClose={() => setOpenPdf(false)}
         maxWidth="md"
         fullWidth
       >
-        <Box p={2} display="flex" justifyContent="space-between">
-          <Typography fontWeight={700}>Patient Prescription</Typography>
-          <IconButton onClick={() => setOpenPdf(false)}>
-            <Close />
-          </IconButton>
-        </Box>
-        <iframe
-          src={`${DUMMY_PDF}#toolbar=0`}
-          width="100%"
-          height="600px"
-          style={{ border: "none" }}
+        <PdfViewerDialog
+          open={openPdf}
+          pdfUrl={pdfUrl}
+          loading={pdfLoading}
+          onClose={() => {
+            setOpenPdf(false);
+            setPdfUrl(null);
+          }}
         />
+      </Dialog>
 
-        {selectedRow?.status === "Processing" && (
+              {/* {selectedRow?.status === "Processing" && (
           <Box p={2} textAlign="right">
             <Button
               variant="contained"
@@ -588,8 +498,7 @@ const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
               Complete
             </Button>
           </Box>
-        )}
-      </Dialog>
+        )} */}
     </>
   );
 }

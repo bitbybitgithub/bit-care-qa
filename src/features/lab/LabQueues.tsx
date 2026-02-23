@@ -25,6 +25,9 @@ import { FaTimes } from "react-icons/fa";
 import Regex from "../../Helper/Regex";
 import Dummy_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
 import { Close } from "@mui/icons-material";
+import PdfViewerDialog from "../../components/common/PdfViewerDialog";
+import { getPdfFromServer } from "../../hooks/DownloadFileHook";
+import type { Patient } from "../patient-document-management/types/patient";
 
 const PAGE_SIZE = 10;
 
@@ -74,12 +77,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [otpSent, setOtpSent] = useState(false);
   const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   const [openPdf, setOpenPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   /* ---------------- FETCH ---------------- */
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
-      console.log("api data",apiData)
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -98,144 +103,32 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return "pending";
   }, [mode, location.pathname]);
 
-  const openViewPrescription = async (row: any) => {
-    setSelectedRow(row);
-    setContact(row.contact_no);
-    setOpenOtpDialog(true);
-    resetOtpFlow;
-  };
-  const resetOtpFlow = () => {
-    setContact("");
-    setOtp(["", "", "", ""]);
-    setShowOtp(false);
-    setOtpSent(false);
-    setVerifiedPatients(null);
-    setError({});
-  };
-  useEffect(() => {
-    if (openOtpDialog && contact) {
-      handleSendOtp();
-    }
-  }, [openOtpDialog, contact]);
+const openViewPrescription = async (row: any) => {
+  try {
+    setSelectedPatient(row);
+    setPdfUrl(null);
+    setOpenPdf(true);
+    setPdfLoading(true);
 
-  const handleSendOtp = async () => {
-    if (!contact) return;
+    const filePath = row.prescription_url;
+    const fileName = row.guid_name;
 
-    setShowOtp(true);
-    if (!Regex.MOBILEREGEX.test(contact.trim())) {
-      setError((prev) => ({
-        ...prev,
-        otp: "Invalid mobile number",
-      }));
-      return;
+    if (!filePath || !fileName) {
+      throw new Error("Prescription file not found");
     }
 
-    setError((prev) => ({ ...prev, otp: "" }));
-    setLoadingGenerate(true);
+    const url = await getPdfFromServer(filePath, fileName);
 
-    try {
-      const res = await generateOtpApi({
-        mobile_number: contact.trim(),
-        otp_type: 2,
-      });
-      if (res.success) {
-        setUserId(res.userId ?? null);
-        setEditedAfterOtp(false);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
-      } else {
-        setError((prev) => ({
-          ...prev,
-          otp: res.message || "Failed to send OTP",
-        }));
-      }
-    } catch {
-      setError((prev) => ({
-        ...prev,
-        otp: "Something went wrong. Please try again later.",
-      }));
-    } finally {
-      setLoadingGenerate(false);
-    }
-  };
+    setPdfUrl(url);
+    setPdfLoading(false);
 
-  const handleOtpChange = (value: string, index: number) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 3) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e: any, index: number) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 4) {
-      setError((prev) => ({
-        ...prev,
-        otp: "Please enter a valid 4-digit OTP",
-      }));
-      return;
-    }
-    if (!userId) {
-      setError((prev) => ({
-        ...prev,
-        otp: "User not found. Please try again.",
-      }));
-      return;
-    }
-    setLoadingVerify(true);
-    setError((prev) => ({ ...prev, otp: "" }));
-    try {
-      const payload = {
-        userId,
-        otp: Number(enteredOtp),
-        otp_type: 2,
-      };
-      const response = await verifyOtpApi(payload);
-      if (!response.success) {
-        setError((prev) => ({
-          ...prev,
-          otp: response.message || "Invalid OTP",
-        }));
-        return;
-      }
-      setVerifiedPatients(response.patients || []);
-      setOpenOtpDialog(false);
-
-      setOtp(["", "", "", ""]);
-      setShowOtp(false);
-      setContact("");
-      // setPrescriptionRow(selectedRow);
-      setContact("");
-      setOpenPdf(true);
-      setSelectedRow(null);
-    } catch (err) {
-      setError((prev) => ({
-        ...prev,
-        otp: "Something went wrong while verifying OTP",
-      }));
-    } finally {
-      setLoadingVerify(false);
-    }
-  };
-
-  const handleClose = () => {
-    setOpenOtpDialog(false);
-    setOtp(["", "", "", ""]);
-  };
-
-  const closePrescription = () => {
-    setPrescriptionRow(null);
-  };
+  } catch (error) {
+    console.error("PDF Load Error:", error);
+    toast.error("Failed to load prescription PDF");
+    setPdfLoading(false);
+    setOpenPdf(false);
+  }
+};
 
   const hasUploadedReport = (row: any) => {
     return row.tests?.some(
@@ -304,7 +197,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   };
 
   const uploadTestFile = async (testId: string, file: File) => {
-    debugger;
     if (!activeRow) return;
     const uploadRes = await uploadReport({ folder: "reports", file });
     console.log("upload file response", uploadRes);
@@ -330,7 +222,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       toast.error("Please upload at least one report before submitting");
       return;
     }
-
     try {
       const completedTestsMap: Record<number, number> = {};
 
@@ -535,147 +426,20 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       </Box>
 
       <Dialog
-        open={openOtpDialog}
-        onClose={handleClose}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            p: 3,
-            borderRadius: 1,
-          },
-        }}
-      >
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <FaPeopleLine
-              className="text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h3)" }}
-            />
-            <h3
-              className="font-semibold text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h3)" }}
-            >
-              View Prescription
-            </h3>
-          </div>
-
-          <button
-            onClick={handleClose}
-            className="w-8 h-8 flex justify-center items-center rounded-full
-                  bg-[var(--color-primary)] text-white
-                  hover:bg-[var(--color-surface)]
-                  hover:text-[var(--color-primary)]
-                  transition"
-          >
-            <FaTimes />
-          </button>
-        </div>
-
-        <p className="mb-2" style={{ fontSize: "var(--font-small)" }}>
-          We'll verify your contact
-        </p>
-
-        {false && !showOtp && (
-          <div className="mt-2">
-            <FormControl fullWidth>
-              <TextField size="small" />
-            </FormControl>
-          </div>
-        )}
-
-        {showOtp && (
-          <div className="mt-2 text-center">
-            <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
-              Enter 4-digit OTP sent to +91 {contact}
-            </p>
-
-            <div className="flex justify-center gap-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  ref={(el) => {
-                    otpRefs.current[index] = el;
-                  }}
-                  onChange={(e) => handleOtpChange(e.target.value, index)}
-                  onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                  className="text-center outline-none"
-                  style={{
-                    width: "2rem",
-                    height: "2rem",
-                    borderRadius: "8px",
-                    boxShadow: "var(--shadow-md)",
-                    fontSize: "1.1rem",
-                    border: error.otp
-                      ? "1px solid var(--color-error)"
-                      : "1px solid var(--color-border)",
-                  }}
-                />
-              ))}
-            </div>
-
-            <Button
-              onClick={handleVerifyOtp}
-              disabled={loadingVerify}
-              variant="contained"
-              sx={{
-                mt: 3,
-                px: 5,
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              Confirm OTP
-            </Button>
-
-            {loadingVerify && (
-              <div className="mt-3 flex justify-center">
-                <div className="w-5 h-5 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin" />
-              </div>
-            )}
-
-            {error.otp && (
-              <p className="mt-2 text-xs text-[var(--color-error)]">
-                {error.otp}
-              </p>
-            )}
-          </div>
-        )}
-      </Dialog>
-      <Dialog
         open={openPdf}
         onClose={() => setOpenPdf(false)}
         maxWidth="md"
         fullWidth
       >
-        <Box p={2} display="flex" justifyContent="space-between">
-          <Typography fontWeight={700}>Patient Prescription</Typography>
-          <IconButton onClick={() => setOpenPdf(false)}>
-            <Close />
-          </IconButton>
-        </Box>
-        <iframe
-          src={`${Dummy_PDF}#toolbar=0`}
-          width="100%"
-          height="600px"
-          style={{ border: "none" }}
+        <PdfViewerDialog
+          open={openPdf}
+          pdfUrl={pdfUrl}
+          loading={pdfLoading}
+          onClose={() => {
+            setOpenPdf(false);
+            setPdfUrl(null);
+          }}
         />
-
-        {/* {selectedRow?.status === "Processing" && (
-          <Box p={2} textAlign="right">
-            <Button
-              variant="contained"
-              color="success"
-              disabled={updating}
-            >
-              Complete
-            </Button>
-          </Box>
-        )} */}
       </Dialog>
 
       <Drawer

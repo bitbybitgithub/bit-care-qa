@@ -27,3 +27,29 @@ export async function uploadReport(
 console.log("response",response)
   return response.data; 
 }
+
+export interface UploadPrescriptionResponse {
+  guid: string;
+  original_file_name: string;
+  stored_file_name: string;
+}
+
+export async function uploadPrescriptionReport(
+  file: File
+): Promise<UploadPrescriptionResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("document_type", "prescription");
+
+  const response = await axios.post<UploadPrescriptionResponse>(
+    "http://localhost:8989/api/doctors/upload-prescription",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+}

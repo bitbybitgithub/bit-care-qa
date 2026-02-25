@@ -12,11 +12,9 @@ export interface SaveReportResponse {
 };
 export const savereportAsync = async (payload: {
   lab_record_id: number;
-  test_id: number;
   lab_id: number;
   test_date: string;
   file_guid_name: string;
-  file_path: string;
   created_by: number;
   file_name: string;
 }): Promise<SaveReportResponse> => {

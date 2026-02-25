@@ -20,8 +20,8 @@ export async function getPharmaPatientRecords(
 
 export async function updatePharmaPatientStatus(
   pharmaId: number | null,
+  prescription_id: number | string | null,
   userID: number | null,
-  prescriptionId: number | string | null,
   status: "Processing" | "Complete",
 ): Promise<{ success: boolean }> {
   if (!pharmaId) {
@@ -29,8 +29,7 @@ export async function updatePharmaPatientStatus(
   }
 
   const numericPrescriptionId =
-    prescriptionId !== null ? Number(prescriptionId) : null;
-
+    prescription_id !== null ? Number(prescription_id) : null;
   if (numericPrescriptionId !== null && Number.isNaN(numericPrescriptionId)) {
     throw new Error("Invalid prescriptionId");
   }
@@ -38,8 +37,8 @@ export async function updatePharmaPatientStatus(
     "/pharmacy/update-prescription-status",
     {
       pharmacy_id: pharmaId,
-      user_id: userID,
       prescription_id: numericPrescriptionId,
+      user_id: userID,
       status,
     },
   );

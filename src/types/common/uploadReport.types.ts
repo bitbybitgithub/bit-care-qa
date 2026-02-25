@@ -6,9 +6,8 @@ export type UploadFolder =
   | "others";
 
 export interface UploadReportRequest {
-  folder?: UploadFolder;
-  file?: File;          // single file
-  files?: File[];       // multiple files
+  file?: File;
+  document_type:"report"          // single file
 }
 
 export interface UploadedFile {
@@ -24,4 +23,10 @@ export interface UploadReportResponse {
   message: string;
   folder: UploadFolder;
   files: UploadedFile[];
+}
+
+export interface UploadPrescriptionResponse {
+  guid: string;
+  original_file_name: string;
+  stored_file_name: string;
 }

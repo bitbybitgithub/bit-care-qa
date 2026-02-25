@@ -1,14 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Box,
-  Button,
-  Dialog,
-  Drawer,
-  FormControl,
-  IconButton,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Dialog, Drawer } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -17,12 +8,8 @@ import {
   savereportAsync,
 } from "../../api/labApis/labQueuesApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { uploadReport } from "../../api/CommonApi/uploadFileApi";
+import { uploadPrescriptionReport } from "../../api/CommonApi/uploadFileApi";
 import { toast } from "react-toastify";
-import { generateOtpApi, verifyOtpApi } from "../../api";
-import { FaPeopleLine } from "react-icons/fa6";
-import { FaTimes } from "react-icons/fa";
-import { Close } from "@mui/icons-material";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import type { Patient } from "../patient-document-management/types/patient";
@@ -58,26 +45,12 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<any>(null);
   const [reportMap, setReportMap] = useState<Record<string, any[]>>({});
-  const [prescriptionRow, setPrescriptionRow] = useState<any>(null);
 
-  /*----------------OTP----------------*/
-  const [openOtpDialog, setOpenOtpDialog] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
-  const [otp, setOtp] = useState(["", "", "", ""]);
-  const [showOtp, setShowOtp] = useState(true);
-  const [contact, setContact] = useState("");
-  const [loadingVerify, setLoadingVerify] = useState(false);
-  const [error, setError] = useState<{ mobile?: string; otp?: string }>({});
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [loadingGenerate, setLoadingGenerate] = useState(false);
-  const [userId, setUserId] = useState<number | null>(null);
-  const [editedAfterOtp, setEditedAfterOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [verifiedPatients, setVerifiedPatients] = useState<any[] | null>(null);
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   /* ---------------- FETCH ---------------- */
   useEffect(() => {
@@ -101,38 +74,30 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return "pending";
   }, [mode, location.pathname]);
 
-const openViewPrescription = async (row: any) => {
-  try {
-    setSelectedPatient(row);
-    setPdfUrl(null);
-    setOpenPdf(true);
-    setPdfLoading(true);
+  const openViewPrescription = async (row: any) => {
+    try {
+      setSelectedPatient(row);
+      setPdfUrl(null);
+      setOpenPdf(true);
+      setPdfLoading(true);
 
-    const filePath = row.prescription_url;
-    const fileName = row.guid_name;
+      const filePath = row.prescription_url;
+      const fileName = row.guid_name;
 
-    if (!filePath || !fileName) {
-      throw new Error("Prescription file not found");
+      if (!filePath || !fileName) {
+        throw new Error("Prescription file not found");
+      }
+      const url = await getPdfFromServer(filePath, fileName);
+      setPdfUrl(url);
+      setPdfLoading(false);
+    } catch (error) {
+      console.error("PDF Load Error:", error);
+      toast.error("Failed to load prescription PDF");
+      setPdfLoading(false);
+      setOpenPdf(false);
     }
-
-    const url = await getPdfFromServer(filePath, fileName);
-
-    setPdfUrl(url);
-    setPdfLoading(false);
-
-  } catch (error) {
-    console.error("PDF Load Error:", error);
-    toast.error("Failed to load prescription PDF");
-    setPdfLoading(false);
-    setOpenPdf(false);
-  }
-};
-
-  const hasUploadedReport = (row: any) => {
-    return row.tests?.some(
-      (t: any) => reportMap[t.test_id] && reportMap[t.test_id].length > 0,
-    );
   };
+
 
   /* ---------------- FILTER ---------------- */
   const filteredRows = useMemo(() => {
@@ -194,86 +159,66 @@ const openViewPrescription = async (row: any) => {
     setReportMap({});
   };
 
-  const uploadTestFile = async (testId: string, file: File) => {
+  const uploadTestFile = async (appointment_id: string, file: File) => {
     if (!activeRow) return;
-    const uploadRes = await uploadReport({ folder: "reports", file });
-    console.log("upload file response", uploadRes);
-    const uploaded = uploadRes.files[0];
-
-    setReportMap((prev) => ({
-      ...prev,
-      [testId]: [
-        ...(prev[testId] || []),
-        {
-          guid: uploaded.filename,
-          originalName: uploaded.originalName,
-          filePath: uploaded.path,
-        },
-      ],
-    }));
+    try {
+      setUploading(true);
+      const uploadRes = await uploadPrescriptionReport(file);
+      setReportMap((prev) => ({
+        ...prev,
+        [appointment_id]: [
+          ...(prev[appointment_id] || []),
+          {
+            guid: uploadRes.stored_file_name,
+            originalName: uploadRes.original_file_name,
+            filePath: uploadRes.guid,
+          },
+        ],
+      }));
+      toast.success(`${uploadRes.original_file_name} uploaded`);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error("File upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmitReports = async () => {
     if (!activeRow) return;
-
-    if (!hasUploadedReport(activeRow)) {
-      toast.error("Please upload at least one report before submitting");
+    const reports = reportMap[activeRow.lab_record_id];
+    if (!reports?.length) {
+      toast.error("Please upload a report before submitting");
       return;
     }
     try {
-      const completedTestsMap: Record<number, number> = {};
+      const r = reports[0];
 
-      for (const test of activeRow.tests) {
-        const reports = reportMap[test.test_id];
-        if (!reports?.length) continue;
-
-        const r = reports[0];
-
-        const saveResponse = await savereportAsync({
-          lab_record_id: Number(test.lab_record_id),
-          test_id: Number(test.test_id),
-          lab_id: Number(activeRow.lab_id),
-          test_date: new Date().toISOString(),
-          file_guid_name: r.guid,
-          file_path: r.filePath,
-          file_name: r.originalName,
-          created_by: user_id,
-        });
-
-        const dbReportId = Number(saveResponse.report_id);
-        if (Number.isNaN(dbReportId)) {
-          throw new Error("Invalid report_id returned from save-report API");
-        }
-
-        completedTestsMap[test.test_id] = dbReportId;
+      const saveResponse = await savereportAsync({
+        lab_record_id: Number(activeRow.lab_record_id),
+        lab_id: Number(activeRow.lab_id),
+        test_date: new Date().toISOString(),
+        file_guid_name: r.guid,
+        file_name: r.originalName,
+        created_by: user_id,
+      });
+      const dbReportId = Number(saveResponse.report_id);
+      if (Number.isNaN(dbReportId)) {
+        throw new Error("Invalid report_id returned from save-report API");
       }
-
-      const completedTests = activeRow.tests
-        .filter((t) => completedTestsMap[t.test_id])
-        .map((t) => ({
-          lab_record_id: Number(t.lab_record_id),
-          test_id: Number(t.test_id),
-          patient_id: Number(activeRow.patient_id),
-          report_id: completedTestsMap[t.test_id],
-        }));
-
-      if (!completedTests.length) {
-        toast.error("No completed tests to update");
-        return;
-      }
-
       const updateResponse = await updateLabTestStatusAsync({
         lab_id: Number(activeRow.lab_id),
         status: "Completed",
-        appointment_id: Number(activeRow.appointment_id),
-        tests: completedTests,
+        user_id,
+        lab_record_id: Number(activeRow.lab_record_id),
+        report_id: dbReportId,
       } as any);
-
-      console.log("update status response", updateResponse);
 
       setRows((prev) =>
         prev.map((r) =>
-          r === activeRow ? { ...r, result_status: "Completed" } : r,
+          r.lab_record_id === activeRow.lab_record_id
+            ? { ...r, result_status: "Completed" }
+            : r,
         ),
       );
 
@@ -457,26 +402,16 @@ const openViewPrescription = async (row: any) => {
             className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
             style={{ backgroundColor: "var(--color-primary)" }}
           >
-            <div>
-              <h2
-                className="flex items-center gap-2"
-                style={{
-                  color: "var(--color-white)",
-                  fontSize: "var(--font-h3)",
-                  fontWeight: "var(--font-weight-medium)",
-                }}
-              >
-                Upload Reports
-              </h2>
-              <p
-                style={{
-                  color: "var(--color-primary-light)",
-                  fontSize: "var(--font-small)",
-                }}
-              >
-                Test-wise PDF upload
-              </p>
-            </div>
+            <h2
+              className="flex items-center gap-2"
+              style={{
+                color: "var(--color-white)",
+                fontSize: "var(--font-h3)",
+                fontWeight: "var(--font-weight-medium)",
+              }}
+            >
+              Upload Reports
+            </h2>
 
             <button
               onClick={closeUpload}
@@ -539,30 +474,28 @@ const openViewPrescription = async (row: any) => {
                 <div className="flex-1 h-px bg-[var(--color-primary)]" />
               </div>
 
-              <div className="flex flex-col gap-3">
-                {activeRow && (
-                  <div
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={async (e) => {
-                      e.preventDefault();
+              {activeRow && (
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={async (e) => {
+                    e.preventDefault();
 
-                      const pdfs = Array.from(e.dataTransfer.files).filter(
-                        (f) => f.type === "application/pdf",
-                      );
+                    const pdfs = Array.from(e.dataTransfer.files).filter(
+                      (f) => f.type === "application/pdf",
+                    );
 
-                      for (const file of pdfs) {
-                        await uploadTestFile(activeRow.lab_record_id, file);
-                      }
-                    }}
-                    className="flex flex-col gap-2 p-3"
-                    style={{
-                      backgroundColor: "var(--color-surface)",
-                      borderRadius: "var(--radius-md)",
-                      border: `1px dashed var(--color-border)`,
-                    }}
-                  >
-                    <div className="flex justify-between items-center">
-
+                    for (const file of pdfs) {
+                      await uploadTestFile(activeRow.lab_record_id, file);
+                    }
+                  }}
+                  className="flex flex-col gap-2 p-3"
+                  style={{
+                    backgroundColor: "var(--color-surface)",
+                    borderRadius: "var(--radius-md)",
+                    border: `1px dashed var(--color-border)`,
+                  }}
+                >
+                  <div className="flex justify-between items-center">
                     <span
                       style={{
                         fontSize: "var(--font-xs)",
@@ -572,34 +505,62 @@ const openViewPrescription = async (row: any) => {
                       Drag & drop PDFs here
                     </span>
 
-                      <label
-                        className="cursor-pointer"
-                        style={{
-                          fontSize: "var(--font-xs)",
-                          color: "var(--color-primary)",
-                          fontWeight: "var(--font-weight-medium)",
+                    <label
+                      className="cursor-pointer"
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-primary)",
+                        fontWeight: "var(--font-weight-medium)",
+                      }}
+                    >
+                      + Add PDF
+                      <input
+                        type="file"
+                        hidden
+                        multiple
+                        accept="application/pdf"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          files.forEach((file) => {
+                            uploadTestFile(activeRow.lab_record_id, file);
+                          });
+                          e.target.value = "";
                         }}
-                      >
-                        + Add PDF
-                        <input
-                          type="file"
-                          hidden
-                          multiple
-                          accept="application/pdf"
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            files.forEach((file) => {
-                              uploadTestFile(activeRow.lab_record_id, file);
-                            });
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                    </div>
-
+                      />
+                    </label>
                   </div>
-                )}
-              </div>
+                  {reportMap[activeRow.lab_record_id]?.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {reportMap[activeRow.lab_record_id].map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center text-xs px-2 py-1 rounded"
+                          style={{
+                            backgroundColor: "var(--color-bg)",
+                            border: "1px solid var(--color-border)",
+                          }}
+                        >
+                          <span className="truncate">{file.originalName}</span>
+
+                          <button
+                            onClick={() => {
+                              setReportMap((prev) => ({
+                                ...prev,
+                                [activeRow.lab_record_id]: prev[
+                                  activeRow.lab_record_id
+                                ].filter((_, i) => i !== index),
+                              }));
+                            }}
+                            className="text-red-500"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -618,13 +579,16 @@ const openViewPrescription = async (row: any) => {
             >
               Cancel
             </Button>
+
             <Button
               variant="contained"
               fullWidth
-              disabled={!Object.values(reportMap).some((arr) => arr.length > 0)}
+              disabled={
+                uploading || !reportMap[activeRow?.lab_record_id]?.length
+              }
               onClick={handleSubmitReports}
             >
-              Submit Reports
+              {uploading ? "Uploading..." : "Submit Reports"}
             </Button>
           </div>
         </div>

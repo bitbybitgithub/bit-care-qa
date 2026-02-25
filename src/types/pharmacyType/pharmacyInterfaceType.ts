@@ -25,7 +25,7 @@ export type PharmacyRecord = {
   age: number;
   phone: string;
   gender: string;
-  prescriptionid:number;
+  prescription_id:number;
   status: "Pending" | "Processing";
   doc_url: string;
   file_name: string;

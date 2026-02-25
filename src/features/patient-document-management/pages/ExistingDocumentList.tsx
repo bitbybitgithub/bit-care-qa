@@ -204,7 +204,7 @@ export default function ExistingDocumentsGrid() {
               color: "var(--color-text)",
             },
             "& .MuiDataGrid-row:hover": {
-              background: "var(--color-surface-alt)",
+              background: "var(--color-bg)",
             },
             "& .MuiDataGrid-virtualScroller": {
               overflowX: "auto",

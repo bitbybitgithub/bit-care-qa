@@ -329,7 +329,7 @@ const ServiceManagement: React.FC = () => {
                 setExpandedAccordion(isExpanded ? group.category : false)
               }
               sx={{
-                backgroundColor: count !== 0 ? "var(--color-surface-alt)" : "var(--color-lg)",
+                backgroundColor: count !== 0 ? "var(--color-surface)" : "var(--color-lg)",
                 borderRadius: "var(--radius-lg)",
               }}
               disableGutters
@@ -381,7 +381,7 @@ const ServiceManagement: React.FC = () => {
                       key={test.id}
                       className={`flex items-center gap-0 p-0 rounded-[var(--radius-lg)] cursor-pointer border transition-all ${isChecked(test.id)
                         ? "border-blue-500  shadow-sm bg-pink-100"
-                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-[var(--color-surface-alt)] hover:shadow-sm"
+                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-[var(--color-surface)] hover:shadow-sm"
                         }`}
                     >
                       <Checkbox

@@ -214,7 +214,7 @@ const Profile: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div
-            className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)] overflow-hidden"
+            className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] overflow-hidden"
             aria-hidden={!!(preview || logoImg) ? "false" : "true"}
           >
             {preview || logoImg ? (
@@ -302,7 +302,7 @@ const Profile: React.FC = () => {
       </section>
 
       <section className="mb-6">
-        <div className="flex items-center justify-between bg-[var(--color-surface-alt)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
+        <div className="flex items-center justify-between bg-[var(--color-surface)] hover:bg-[var(--color-surface)] transition rounded-[var(--radius-lg)] px-4 py-3 border border-[var(--color-border)] shadow-[var(--shadow-md)]">
           <span className="font-medium text-[var(--color-text)]">
             Send follow-ups and reminders?
           </span>

@@ -1,26 +1,17 @@
-trigger:
-- main
+trigger: none
 
 pool:
-  name: Default   # Your self-hosted agent pool
+  name: Default
 
 steps:
 
-- script: npm install
+- script: npm ci --legacy-peer-deps
   displayName: Install Dependencies
 
 - script: npm run build
-  displayName: Build React App
+  displayName: Build Vite App
 
 - script: |
-    echo Removing old files...
-    rmdir /s /q E:\testDeployment 2>nul
-    mkdir E:\testDeployment
-  displayName: Clean IIS Folder
-
-- script: |
-    xcopy build E:\testDeployment\ /E /I /Y
-  displayName: Copy Build Files
-
-# - script: iisreset
-#   displayName: Restart IIS
+    robocopy dist E:\testDeployment\dist /E /MIR
+    exit 0
+  displayName: Deploy Dist Folder

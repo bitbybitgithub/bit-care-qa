@@ -146,7 +146,6 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         const response = await sendReferralsApi(payload);
 
         if (response.success) {
-          console.log("Referral Sent Successfully", response.data);
           toast.success("Referral Sent Successfully");
           onAdd(selectedItems, type);
           setSelected([]);

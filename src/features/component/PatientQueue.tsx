@@ -144,14 +144,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       setPdfLoading(true);
 
       const filePath = row.raw?.prescriptions?.[0]?.prescription_url;
-      // const fileName =
-      //   row.raw?.prescriptions?.[0]?.prescription_file_name ??
-      //   "Dummy_Patient_Prescription.pdf";
       const fileName = row.raw?.prescriptions?.[0]?.prescription_guid_name;
-      // console.log(guidName)
-      // const filePath = "E:\\Documents\\Prescriptions\\";
-      // const fileName = "Dummy_Patient_Prescription.pdf";
-
       const url = await getPdfFromServer(filePath, fileName);
 
       setTimeout(() => {
@@ -159,7 +152,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setPdfLoading(false);
       }, 300);
     } catch (error) {
-      console.error("PDF Load Error:", error);
       toast.error("PDF Load Error:", error);
       setPdfLoading(false);
       setOpenPdf(false);

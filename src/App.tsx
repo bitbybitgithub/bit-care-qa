@@ -2,13 +2,12 @@ import { useNavigate, useRoutes } from "react-router-dom";
 import Router from "./routes/Router";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { ApiInterceptor } from "./services/EmrApi";
 import { logoutApi } from "./api/auth/LogoutApi";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
 import { clearSession } from "./context/sessions/userSession";
-import { useEffect } from "react";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -22,7 +21,7 @@ export default function App() {
         clearSession("user");
         navigate("/login");
       } else {
-        alert(res.error || "Logout failed");
+        toast.error(res.error || "Logout failed");
       }
       // window.location.href = "/login";
     },

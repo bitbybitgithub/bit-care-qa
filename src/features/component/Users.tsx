@@ -69,7 +69,7 @@ const fetchUsers = useCallback(async () => {
     setUsers(data);
 
     if (message && !hasShownToast.current) {
-      toast.info(message);
+      // toast.info(message);
       hasShownToast.current = true;
     }
   } catch (error: unknown) {

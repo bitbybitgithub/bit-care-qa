@@ -7,6 +7,7 @@ import { logoutApi } from "../../api/auth/LogoutApi";
 import { clearSession } from "../../context/sessions/userSession";
 import { logout } from "../../redux";
 import { FaSignOutAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -53,10 +54,10 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
         clearSession("user");
         navigate("/login");
       } else {
-        alert(res.error || "Logout failed");
+        toast.error(res.error || "Logout failed");
       }
     } catch (err) {
-      alert("Network error");
+      toast.error("Network error");
     } finally {
       setShowConfirm(false);
       setAnimatingOut(false);

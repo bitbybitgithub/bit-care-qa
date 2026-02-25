@@ -186,7 +186,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       onClose();
     } catch (err: any) {
       console.error("Error in save flow:", err);
-      alert(err?.message || "Something went wrong.");
+      toast.error(err?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }

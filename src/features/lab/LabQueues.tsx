@@ -23,7 +23,6 @@ import { generateOtpApi, verifyOtpApi } from "../../api";
 import { FaPeopleLine } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import Regex from "../../Helper/Regex";
-import Dummy_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
 import { Close } from "@mui/icons-material";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";

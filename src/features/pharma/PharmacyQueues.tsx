@@ -14,7 +14,6 @@ import { Close } from "@mui/icons-material";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-import DUMMY_PDF from "../../assets/Dummy_Patient_Prescription.pdf";
 import {
   getPharmaPatientRecords,
   updatePharmaPatientStatus,

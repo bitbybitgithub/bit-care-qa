@@ -11,8 +11,8 @@ import { FaUserDoctor } from "react-icons/fa6";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { fetchDashboardStats } from "../../api/DashboardApi";
 import { useLoader } from "../../context/LoaderContext";
-import { Module } from "../../Helper/Enums";
 import WelcomeBanner from "../../components/common/WelcomeBanner";
+import { Module } from "../../context/constant/enum";
 export interface DashboardCard {
   id: number;
   title: string;

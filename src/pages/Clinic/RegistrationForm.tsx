@@ -16,20 +16,20 @@ import { MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import Regex from "../../Helper/Regex";
 import {
   getEntityTypes,
   getPincodeDetails,
   registerApi,
   type Entity,
 } from "../../api";
-import { validateRegistration } from "../../Helper/ErrorHandler";
 import type {
   FormDataBase,
   LocationItem,
   ValidationErrors,
 } from "../../types/types";
 import OtpVerification from "../../components/common/OtpVerification";
+import { validateRegistration } from "../../context/constant/ErrorHandler";
+import Regex from "../../context/constant/Regex";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({

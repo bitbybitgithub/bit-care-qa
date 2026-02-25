@@ -3,10 +3,10 @@ import { useState, type JSX } from "react";
 import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
 import SidebarBg from "../../assets/SidebarBg.png";
-import { Module } from "../../Helper/Enums";
 import PharmacyQueues from "./PharmacyQueues";
 import { TextField } from "@mui/material";
 import { TfiAnnouncement } from "react-icons/tfi";
+import { Module } from "../../context/constant/enum";
 export interface DashboardCard {
   id: number;
   title: string;

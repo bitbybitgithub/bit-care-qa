@@ -10,11 +10,11 @@ import {
   FaKey,
 } from "react-icons/fa";
 import { VscPersonAdd } from "react-icons/vsc";
-import Regex from "../../Helper/Regex";
 import { saveDocAPI } from "../../api/SaveDocApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { getRoles, type Role } from "../../api/MasterApi";
 import { saveUserAPI } from "../../api/SaveLabPharmacyUserApi";
+import Regex from "../../context/constant/Regex";
 
 interface AddUserProps {
   onClose: () => void;

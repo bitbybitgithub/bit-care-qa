@@ -1,5 +1,5 @@
-import Regex, { regex } from "./Regex";
-import type { FormDataBase } from "../types/types";
+import type { FormDataBase } from "../../types/types";
+import Regex, { regex } from "./Regex";;
 
 export type Errors = Partial<Record<keyof FormDataBase, string>>;
 

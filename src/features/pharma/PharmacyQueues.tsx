@@ -25,12 +25,12 @@ import type {
 } from "../../types/pharmacyType/pharmacyInterfaceType";
 import type { GridRowIdGetter } from "@mui/x-data-grid";
 import { generateOtpApi, verifyOtpApi } from "../../api";
-import Regex from "../../Helper/Regex";
 import { formatDateDDMMYYYY } from "../../utils/DateUtils";
 import { FaPeopleLine } from "react-icons/fa6";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import type { Patient } from "../patient-document-management/types/patient";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
+import Regex from "../../context/constant/Regex";
 
 const PAGE_SIZE = 10;
 

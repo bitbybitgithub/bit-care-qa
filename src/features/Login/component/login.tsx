@@ -16,10 +16,10 @@ import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { TokenManager, loginApi } from "../../../api";
-import Regex from "../../../Helper/Regex";
 import { setSession } from "../../../context/sessions/userSession";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import Regex from "../../../context/constant/Regex";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();

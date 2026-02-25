@@ -4,9 +4,8 @@ import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
-import { Module } from "../../Helper/Enums";
 import LabQueues from "./LabQueues";
-import { Roles } from "../../context/constant/enum";
+import { Module, Roles } from "../../context/constant/enum";
 export interface DashboardCard {
   id: number;
   title: string;

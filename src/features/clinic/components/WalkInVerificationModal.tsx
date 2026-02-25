@@ -3,10 +3,10 @@ import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
 import { FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { FaPeopleLine } from "react-icons/fa6";
 import { IoCall } from "react-icons/io5";
-import Regex from "../../../Helper/Regex";
 import { generateOtpApi } from "../../../api/GenerateAndVerifyOtpApi";
 import { verifyPatientpApi } from "../../../api/VerifyPatientApi";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
+import Regex from "../../../context/constant/Regex";
 
 interface Props {
   open: boolean;

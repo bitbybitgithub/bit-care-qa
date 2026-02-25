@@ -22,7 +22,6 @@ import { toast } from "react-toastify";
 import { generateOtpApi, verifyOtpApi } from "../../api";
 import { FaPeopleLine } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
-import Regex from "../../Helper/Regex";
 import { Close } from "@mui/icons-material";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";

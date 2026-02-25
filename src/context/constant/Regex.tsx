@@ -1,4 +1,4 @@
-import type { RegexCollection } from "../types/types";
+import type { RegexCollection } from "../../types/types";
 
 export const regex: RegexCollection = {
   mobile: /^[6-9][0-9]{9}$/,

@@ -5,7 +5,7 @@ pool:
 
 steps:
 
-- script: npm ci --legacy-peer-deps
+- script: npm install --legacy-peer-deps
   displayName: Install Dependencies
 
 - script: npm run build

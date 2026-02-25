@@ -1,0 +1,26 @@
+trigger:
+- main
+
+pool:
+  name: Default   # Your self-hosted agent pool
+
+steps:
+
+- script: npm install
+  displayName: Install Dependencies
+
+- script: npm run build
+  displayName: Build React App
+
+- script: |
+    echo Removing old files...
+    rmdir /s /q E:\testDeployment 2>nul
+    mkdir E:\testDeployment
+  displayName: Clean IIS Folder
+
+- script: |
+    xcopy build E:\testDeployment\ /E /I /Y
+  displayName: Copy Build Files
+
+# - script: iisreset
+#   displayName: Restart IIS

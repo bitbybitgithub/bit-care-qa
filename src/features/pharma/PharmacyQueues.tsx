@@ -241,7 +241,8 @@ export default function PharmacyQueues({
         {
           field: "action",
           headerName: "Action",
-          width: 200,
+          width: 160,
+          flex: 1,
           renderCell: (p) => (
             <Button
               size="small"
@@ -255,7 +256,8 @@ export default function PharmacyQueues({
         {
           field: "complete_action",
           headerName: "Complete",
-          width: 150,
+          width: 100,
+          flex: 1,
           sortable: false,
           renderCell: (p) => {
             if (p.row.status === "Processing") {

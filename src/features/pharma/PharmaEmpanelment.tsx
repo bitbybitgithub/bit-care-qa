@@ -3,7 +3,10 @@ import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import { getSession } from "../../context/sessions/userSession";
-import { getActivePharmaListApi, getMappedPharmaciesApi } from "../../api/pharmacyApi/PharmacyApi";
+import {
+  getActivePharmaListApi,
+  getMappedPharmaciesApi,
+} from "../../api/pharmacyApi/PharmacyApi";
 import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
 import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
@@ -12,37 +15,20 @@ const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
 
 const PharmaEmpanelment = () => {
-
-  const [activeTab, setActiveTab] =
-    useState<"view" | "add">("view");
-
-  const [pharmas, setPharmas] =
-    useState<PharmaApiItem[]>([]);
-
-  const [mappedPharmas, setMappedPharmas] =
-    useState<PharmaApiItem[]>([]);
-
-  const [loading, setLoading] =
-    useState(false);
+  const [activeTab, setActiveTab] = useState<"view" | "add">("view");
+  const [pharmas, setPharmas] = useState<PharmaApiItem[]>([]);
+  const [mappedPharmas, setMappedPharmas] = useState<PharmaApiItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchPharmas = async () => {
-
     try {
       setLoading(true);
-
       const res = await getActivePharmaListApi();
-
-
       setPharmas(res.data);
-
     } catch (err) {
-
       console.error("Pharma list error", err);
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -53,11 +39,9 @@ const PharmaEmpanelment = () => {
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 
-const mappedIds = new Set(
-  mappedPharmas.map((p) => p.pharma_id)
-);
+  const mappedIds = new Set(mappedPharmas.map((p) => p.pharma_id));
 
   useEffect(() => {
     fetchPharmaByClinicId();
@@ -67,209 +51,136 @@ const mappedIds = new Set(
     fetchPharmas();
   }, []);
 
-  // const handleSubmitPharma = async (ids: number[]) => {
-  //   if (!clinicId) {
-  //     toast.error("Session expired. Please login again.");
-  //     return;
-  //   }
-
-  //   try {
-  //     await mapClinicPartnersApi({
-  //       clinic_id: clinicId,
-  //       lab_ids: [],
-  //       pharmacy_ids: ids,
-  //     });
-
-  //     toast.success("Pharmacy Added Successfully.");
-
-  //     await fetchPharmaByClinicId();
-
-  //     setActiveTab("view");
-
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to map pharmacy.");
-  //   }
-  // };
-
-const handleSubmitPharma = async (ids: number[]) => {
-  if (!clinicId) {
-    toast.error("Session expired. Please login again.");
-    return;
-  }
-
-  const existingIds = mappedPharmas.map(
-    (p) => p.pharma_id
-  );
-
-  const duplicates = ids.filter((id) =>
-    existingIds.includes(id)
-  );
-
-  if (duplicates.length) {
-    toast.warning(
-      "Some selected pharmacies are already registered."
-    );
-    return;
-  }
-
-  try {
-    await mapClinicPartnersApi({
-      clinic_id: clinicId,
-      lab_ids: [],
-      pharmacy_ids: ids,
-    });
-
-    toast.success("Pharmacy Added Successfully.");
-
-    await fetchPharmaByClinicId();
-
-    setActiveTab("view");
-  } catch (err: any) {
-
-    if (err?.response?.status === 409) {
-      toast.error("Pharmacy already registered.");
-    } else {
-      toast.error("Failed to map pharmacy.");
+  const handleSubmitPharma = async (ids: number[]) => {
+    if (!clinicId) {
+      toast.error("Session expired. Please login again.");
+      return;
     }
 
-    console.error(err);
-  }
-};
+    const existingIds = mappedPharmas.map((p) => p.pharma_id);
+    const duplicates = ids.filter((id) => existingIds.includes(id));
+
+    if (duplicates.length) {
+      toast.warning("Some selected pharmacies are already registered.");
+      return;
+    }
+
+    try {
+      await mapClinicPartnersApi({
+        clinic_id: clinicId,
+        lab_ids: [],
+        pharmacy_ids: ids,
+      });
+
+      toast.success("Pharmacy Added Successfully.");
+
+      await fetchPharmaByClinicId();
+
+      setActiveTab("view");
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        toast.error("Pharmacy already registered.");
+      } else {
+        toast.error("Failed to map pharmacy.");
+      }
+
+      console.error(err);
+    }
+  };
 
   const viewItems = mappedPharmas?.map((p) => ({
     id: p.pharma_id,
     name: p.pharma_name,
-
     logo: p.pharma_logo,
     phone: p.mobile,
     email: p.email,
     address: p.address,
-
-
-  }))
-
+  }));
   return (
-    <div className="w-full bg-white rounded-md shadow">
-
-      {/* <div className="flex border-b">
-
-        <button
-          onClick={() => setActiveTab("view")}
-          className={`px-4 py-2 border-b-2
-            ${activeTab === "view"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500"
-            }`}
+    <div className="w-full bg-[var(--color-white)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
+      <div className="flex p-4 border-b border-b-[var(--color-primary)]">
+        <div
+          className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
+          style={{ background: "var(--color-primary)" }}
         >
-          View Pharma
-        </button>
-
-        <button
-          onClick={() => setActiveTab("add")}
-          className={`px-4 py-2 border-b-2
-            ${activeTab === "add"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500"
-            }`}
-        >
-          Add Pharma
-        </button>
-
-      </div> */}
-      <div className="p-4 ">
-        <div className="inline-flex bg-gray-100 rounded-xl p-1 w-fit shadow-inner">
-
-          <button
-            onClick={() => setActiveTab("view")}
-            className={`relative px-6 py-2 text-sm font-medium rounded-full transition-all duration-200
-        ${activeTab === "view"
-                ? "bg-white shadow text-black"
-                : "text-gray-500 hover:text-black"
-              }`}
-          >
-            View {/** Change label accordingly in each file */}
-
-            {/* Optional Count Badge */}
-            {/* {activeTab === "view" && (
-        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
-          {viewItems?.length ?? 0}
-        </span>
-      )} */}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("add")}
-            className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-200
-        ${activeTab === "add"
-                ? "bg-white shadow text-black"
-                : "text-gray-500 hover:text-black"
-              }`}
-          >
-            Add
-          </button>
-
+          {[
+            { key: "view", label: "View" },
+            { key: "add", label: "Add" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={activeTab === t.key}
+              onClick={() => setActiveTab(t.key as "view" | "add")}
+              className="px-4 py-1.5 text-sm font-semibold cursor-pointer
+                     rounded-[var(--radius-md)]
+                     transition border-2"
+              style={{
+                background:
+                  activeTab === t.key ? "var(--color-white)" : "transparent",
+                color:
+                  activeTab === t.key
+                    ? "var(--color-primary)"
+                    : "var(--color-white)",
+                borderColor:
+                  activeTab === t.key ? "var(--color-primary)" : "transparent",
+                transition: "var(--transition-fast)",
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== t.key) {
+                  e.currentTarget.style.borderColor = "var(--color-white)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== t.key) {
+                  e.currentTarget.style.borderColor = "transparent";
+                }
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
-
       {loading && (
-        <div className="p-3 text-sm text-blue-600">
+        <div
+          className="p-3 text-[var(--color-info)]"
+          style={{ fontSize: "var(--font-xs)" }}
+        >
           Loading...
         </div>
       )}
 
       <div>
         {activeTab === "view" && (
-
           <ViewPartnerUI
-
             title="Registered Pharmacies"
-
             countLabel="pharmacies connected to your clinic"
-
             emptyText="No pharmacies mapped yet."
-
             clinicId={clinicId}
-
             data={viewItems}
-
-
           />
-
         )}
 
         {activeTab === "add" && (
-
           <AddPartnerUI
-
             data={pharmas.map((p) => ({
               id: p.pharma_id,
               name: p.pharma_name,
               logo: p.pharma_logo,
-
               email: p.email,
               mobile: p.mobile,
               address: p.address,
-             alreadyMapped: mappedIds.has(p.pharma_id),
+              alreadyMapped: mappedIds.has(p.pharma_id),
             }))}
-
-            icon={
-              <LocalPharmacyIcon className="text-blue-500" />
-            }
-
+            icon={<LocalPharmacyIcon className="text-[var(--color-info)]" />}
             placeholder="Search pharmacy..."
-
             buttonText="Add Selected Pharmacy"
-
             onSubmit={handleSubmitPharma}
-
           />
-
         )}
-
       </div>
-
     </div>
   );
 };

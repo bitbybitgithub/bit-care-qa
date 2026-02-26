@@ -1,6 +1,6 @@
-import { RiContactsFill } from "react-icons/ri";
-import { IoMail } from "react-icons/io5";
-import SidebarBg from "../../assets/SidebarBg.png";
+import ScienceIcon from "@mui/icons-material/Science";
+import { FaClinicMedical } from "react-icons/fa";
+import { MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
 
 interface PartnerItem {
   id: number;
@@ -9,7 +9,6 @@ interface PartnerItem {
   phone?: string;
   email?: string;
   address?: string;
-  // status: "Active" | "Inactive";
 }
 
 interface Props {
@@ -24,137 +23,108 @@ const ViewPartnerUI = ({
   title,
   countLabel,
   emptyText,
-  clinicId,
   data,
 }: Props) => {
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-
+    <div className="p-6 rounded-[var(--radius-lg)] bg-gray-50 ">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2
+          className="text-[var(--color-primary)] font-[var(--font-weight-bold)]"
+          style={{ fontSize: "var(--font-h4)" }}
+        >
           {title}
         </h2>
 
-        {/* {clinicId && (
-          <p className="text-xs text-gray-400 mt-1">
-            Clinic ID: {clinicId}
-          </p>
-        )} */}
-
-        <p className="text-sm text-gray-500 mt-1">
+        <p
+          className="text-[var(--color-text)] opacity-70"
+          style={{ fontSize: "var(--font-sx)" }}
+        >
           {data?.length} {countLabel}
         </p>
       </div>
 
       {!data?.length && (
-        <p className="text-gray-500 text-sm">
+        <p
+          className="text-[var(--color-text)] opacity-70"
+          style={{ fontSize: "var(--font-sx)" }}
+        >
           {emptyText}
         </p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
         {data?.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-lg border border-gray-200 w-72 p-4 hover:shadow-sm transition"
+            className="w-72 rounded-[var(--radius-lg)] overflow-hidden
+               shadow-[var(--shadow-md)]
+               bg-[var(--color-surface)]
+               transition-all duration-300
+               hover:shadow-[var(--shadow-lg)]"
           >
-
-            <div className="flex items-center justify-between">
-
-              <div className="flex items-center gap-3">
-
-                <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
-
+            <div
+              className="flex items-center gap-3 px-3 py-2
+                    bg-[var(--color-primary)] text-white"
+            >
+              <div
+                className="w-10 h-10 flex items-center justify-center
+                      rounded-xl bg-[var(--color-bg)]
+                      border border-white shadow-sm overflow-hidden shrink-0"
+              >
+                {item.logo ? (
                   <img
-                    src={SidebarBg}
-                    alt="Partner"
-                    className="w-full h-full object-cover"
+                    src={`data:image/png;base64,${item.logo}`}
+                    alt={item.name}
+                    className="w-full h-full object-fill rounded-2xl"
                   />
-
-                  {/*
-  OLD LOGO LOGIC (KEEP FOR LATER)
-
-  {item.logo ? (
-    <img
-      src={item.logo}
-      alt={item.name}
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    <BusinessIcon className="text-gray-500" />
-  )}
-  */}
-
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    {item.name}
-                  </h3>
-
-                  {item.address && (
-                    <p className="text-xs text-gray-500">
-                      {item.address}
-                    </p>
-                  )}
-                </div>
+                ) : title === "Registered Labs" ? (
+                  <ScienceIcon
+                    fontSize="medium"
+                    className="text-[var(--color-primary)]"
+                  />
+                ) : (
+                  <FaClinicMedical
+                    size={24}
+                    className="text-[var(--color-primary)]"
+                  />
+                )}
               </div>
 
-
-              <div className="flex items-center gap-2">
-                {/* 
-                
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.status === "Active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                    }`}
-                >
-                  {item.status === "Active" ? "Operational" : "Inactive"}
-                </span>
- */}
-
-              </div>
+              <h3 className="font-semibold text-sm truncate">{item.name}</h3>
             </div>
 
-            <div className="mt-3 space-y-2 text-xs text-gray-600">
-
+            <div
+              className="px-4 py-3 space-y-3 text-xs
+                    text-[var(--color-text-secondary)]
+                    bg-[var(--color-white)]"
+            >
               {item.phone && (
                 <div className="flex items-center gap-2">
-                  <RiContactsFill className="text-gray-400 text-sm" />
-                  <a
-                    href={`tel:${item.phone}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="hover:text-blue-600 transition"
-                  >
-                    {item.phone}
-                  </a>
+                  <MdPhone className="text-[var(--color-primary)] text-sm shrink-0" />
+                  <span className="truncate">{item.phone}</span>
                 </div>
               )}
 
               {item.email && (
                 <div className="flex items-center gap-2">
-                  <IoMail className="text-gray-400 text-sm" />
-                  <a
-                    href={`mailto:${item.email}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="truncate hover:text-blue-600 transition"
-                  >
-                    {item.email}
-                  </a>
+                  <MdEmail className="text-[var(--color-primary)] text-sm shrink-0" />
+                  <span className="truncate">{item.email}</span>
                 </div>
               )}
 
+              {item.address && (
+                <div className="flex items-start gap-2">
+                  <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
+                  <span className="leading-relaxed">{item.address}</span>
+                </div>
+              )}
             </div>
-
           </div>
         ))}
-
-
       </div>
     </div>
   );
 };
 
 export default ViewPartnerUI;
+

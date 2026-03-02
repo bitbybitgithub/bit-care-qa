@@ -44,7 +44,7 @@ const PatientHistory: React.FC<Props> = ({
   ];
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm mt-6 ">
+    <div className="bg-[var(--color-surface-alt)] p-4 rounded-2xl shadow-sm mt-6 ">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Patient History</h2>
 
       <Tabs

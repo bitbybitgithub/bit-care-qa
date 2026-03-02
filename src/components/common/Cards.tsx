@@ -18,7 +18,7 @@ const Cards: React.FC<CardsProps> = ({ items, loading, error }) => {
       {items.map((item) => (
         <div
           key={item.id}
-          className="rounded-l-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-white)]
+          className="rounded-l-[var(--radius-lg)] shadow-[var(--shadow-md)] bg-[var(--color-surface-alt)]
                      border-l-4 border-[var(--color-primary)] p-3 flex items-center gap-4"
         >
           {loading ? (
@@ -29,7 +29,7 @@ const Cards: React.FC<CardsProps> = ({ items, loading, error }) => {
             <p className="text-sm text-red-500 text-center w-full">{error}</p>
           ) : (
             <div className="flex items-center w-full gap-x-4">
-              <div className="flex items-center justify-center bg-white p-3 text-3xl">
+              <div className="flex items-center justify-center bg-[var(--color-surface-alt)] p-3 text-3xl">
                 {item.icon}
               </div>
 

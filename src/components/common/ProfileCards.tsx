@@ -25,7 +25,7 @@ const MiniSwitch = styled(Switch)(() => ({
     transitionDuration: "200ms",
     "&.Mui-checked": {
       transform: "translateX(14px)",
-      color: "var(--color-white)",
+      color: "var(--color-surface-alt)",
       "& + .MuiSwitch-track": {
         backgroundColor: "var(--color-success)",
         opacity: 1,
@@ -58,7 +58,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   return (
     <article
       className={`
-        relative bg-[var(--color-white)] text-[var(--color-text)]
+        relative bg-[var(--color-surface-alt)] text-[var(--color-text)]
         rounded-[var(--radius-lg)] overflow-hidden
         transform transition hover:-translate-y-2
         border-t-4 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]

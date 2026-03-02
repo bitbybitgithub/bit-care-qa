@@ -97,7 +97,7 @@ const PharmaEmpanelment = () => {
     address: p.address,
   }));
   return (
-    <div className="w-full bg-[var(--color-white)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
+    <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
       <div className="flex p-4 border-b border-b-[var(--color-primary)]">
         <div
           className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
@@ -117,18 +117,18 @@ const PharmaEmpanelment = () => {
                      transition border-2"
               style={{
                 background:
-                  activeTab === t.key ? "var(--color-white)" : "transparent",
+                  activeTab === t.key ? "var(--color-surface-alt)" : "transparent",
                 color:
                   activeTab === t.key
                     ? "var(--color-primary)"
-                    : "var(--color-white)",
+                    : "var(--color-surface-alt)",
                 borderColor:
                   activeTab === t.key ? "var(--color-primary)" : "transparent",
                 transition: "var(--transition-fast)",
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== t.key) {
-                  e.currentTarget.style.borderColor = "var(--color-white)";
+                  e.currentTarget.style.borderColor = "var(--color-surface-alt)";
                 }
               }}
               onMouseLeave={(e) => {

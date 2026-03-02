@@ -203,7 +203,7 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="p-5 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all overflow-y-scroll h-[82vh]">
+    <div className="p-5 bg-[var(--color-surface-alt)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all overflow-y-scroll h-[82vh]">
       <section className="mb-6">
         <h3
           className="font-[var(--font-weight-semibold)] text-[var(--color-primary)] mb-3 "

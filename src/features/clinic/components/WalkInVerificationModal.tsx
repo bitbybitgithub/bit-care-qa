@@ -202,7 +202,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
                   onClose();
                   resetState();
                 }}
-                className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
+                className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
               >
                 <FaTimes />
               </button>
@@ -272,7 +272,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
                   sx={{
                     fontWeight: 600,
                     fontSize: "var(--font-small)",
-                    color: "var(--color-white)",
+                    color: "var(--color-surface-alt)",
                     boxShadow: "var(--shadow-md)",
                     textTransform: "none",
                     backgroundColor: "var(--color-info)",
@@ -400,7 +400,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
               <div
                 key={i}
                 onClick={() => onPatientSelect(p, contact)}
-                className="flex items-center justify-between bg-white border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
+                className="flex items-center justify-between bg-[var(--color-surface-alt)] border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
               >
                 <div className="flex flex-col gap-2 flex-1">
                   <div className="flex items-center gap-3">

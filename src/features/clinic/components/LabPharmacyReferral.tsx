@@ -208,7 +208,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                 onClick={() => toggleSelect(item.id)}
                 className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)]  ${
                   isSelected
-                    ? "border-transparent bg-[var(--color-primary-light)] text-[var(--color-white)] "
+                    ? "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)] "
                     : " border-transparent bg-[var(--color-surface)]"
                 }`}
               >
@@ -228,7 +228,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                         },
                         tooltip: {
                           sx: {
-                            backgroundColor: "var(--color-white)",
+                            backgroundColor: "var(--color-surface-alt)",
                             color: "var(--color-text)",
                             borderRadius: "12px",
                             padding: 0,
@@ -238,7 +238,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                         },
                         arrow: {
                           sx: {
-                            color: "var(--color-white)",
+                            color: "var(--color-surface-alt)",
                             fontSize: 22,
                           },
                         },
@@ -246,7 +246,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                       title={
                         <div className="w-full text-xs">
                           <div className="flex items-center gap-2 px-2 py-2 bg-[var(--color-primary)] text-white rounded-t-[12px]">
-                            <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--color-bg)] border border-[var(--color-white)] transition-all duration-200">
+                            <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--color-bg)] border border-[var(--color-surface-alt)] transition-all duration-200">
                               {item.logo ? (
                                 <img
                                   src={`data:image/png;base64,${item.logo}`}

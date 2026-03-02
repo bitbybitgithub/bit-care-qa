@@ -299,7 +299,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                   }}
                   sx={{
                     backgroundColor: "var(--color-primary)",
-                    color: "var(--color-white)",
+                    color: "var(--color-surface-alt)",
                     fontWeight: 600,
                     borderRadius: "8px",
                     padding: "6px 14px",
@@ -483,7 +483,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           density="compact"
           sx={{
             minWidth: 900,
-            backgroundColor: "var(--color-white)",
+            backgroundColor: "var(--color-surface-alt)",
             overflow: "hidden",
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "transparent",

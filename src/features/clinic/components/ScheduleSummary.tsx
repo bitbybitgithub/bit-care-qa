@@ -98,7 +98,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
   };
 
   return (
-    <Card className="p-5 shadow-md rounded-2xl bg-white">
+    <Card className="p-5 shadow-md rounded-2xl bg-[var(--color-surface-alt)]">
       <Typography variant="h6" className="font-semibold mb-3">
         Schedule Summary
       </Typography>

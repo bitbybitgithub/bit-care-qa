@@ -255,10 +255,10 @@ const ServiceManagement: React.FC = () => {
     setIsOn(event.target.checked);
   };
   return (
-    <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
+    <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-surface-alt)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-3  p-2 bg-[var(--color-white)]">
+        <div className="mb-3  p-2 bg-[var(--color-surface-alt)]">
           <div className="flex flex-col md:ml-3 md:flex-row md:items-center md:justify-between gap-4">
 
             <FormControlLabel
@@ -381,7 +381,7 @@ const ServiceManagement: React.FC = () => {
                       key={test.id}
                       className={`flex items-center gap-0 p-0 rounded-[var(--radius-lg)] cursor-pointer border transition-all ${isChecked(test.id)
                         ? "border-blue-500  shadow-sm bg-pink-100"
-                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-[var(--color-surface)] hover:shadow-sm"
+                        : "border-slate-200 bg-[var(--color-surface-alt)] hover:border-blue-300 hover:bg-[var(--color-surface)] hover:shadow-sm"
                         }`}
                     >
                       <Checkbox
@@ -410,7 +410,7 @@ const ServiceManagement: React.FC = () => {
           );
         })}
 
-        <div className="mt-2  bg-[var(--color-white)]  rounded-[var(--radius-lg)]  transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
+        <div className="mt-2  bg-[var(--color-surface-alt)]  rounded-[var(--radius-lg)]  transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <Typography className="text-slate-600">
             {selectedTests.length === 0
               ? "No tests selected"

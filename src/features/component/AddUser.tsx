@@ -179,7 +179,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur">
       <div
-        className={`bg-white rounded-xl w-full max-w-md p-6 transition ${isClosing ? "animate-slide-out" : "animate-slide-in"
+        className={`bg-[var(--color-surface-alt)] rounded-xl w-full max-w-md p-6 transition ${isClosing ? "animate-slide-out" : "animate-slide-in"
           }`}
       >
         <div className="flex justify-between items-center mb-6">

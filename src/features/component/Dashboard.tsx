@@ -74,7 +74,7 @@ const Dashboard = () => {
       onClick={onClick}
       className="flex items-center justify-center w-auto gap-x-2 
                  bg-[var(--color-surface)] text-[var(--color-text)] border-2 border-transparent shadow-[var(--shadow-md)]
-                 px-2 py-2  rounded-[var(--radius-lg)] hover:bg-[var(--color-white)] hover:border-2 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-lg)] transition cursor-pointer normal-case"
+                 px-2 py-2  rounded-[var(--radius-lg)] hover:bg-[var(--color-surface-alt)] hover:border-2 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-lg)] transition cursor-pointer normal-case"
     >
       {icon} {label}
     </button>
@@ -125,7 +125,7 @@ const Dashboard = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-x-2 bg-[var(--color-white)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-2">
+          <div className="flex items-center gap-x-2 bg-[var(--color-surface-alt)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-2">
             <TfiAnnouncement
               className="text-[var(--color-error)] "
               style={{ fontSize: "var(--font-h4)" }}

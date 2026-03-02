@@ -257,7 +257,7 @@ const StaffDashboard: React.FC = () => {
 
       <Cards items={stats} />
 
-      <div className="bg-[var(--color-white)] p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
+      <div className="bg-[var(--color-surface-alt)] p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]">
         <h1
           className="text-[var(--color-primary)] font-[var(--font-weight-bold)] mb-3"
           style={{ fontSize: "var(--font-h4)" }}
@@ -282,8 +282,8 @@ const StaffDashboard: React.FC = () => {
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
               ${
                 activeTab === t.key
-                  ? "bg-[var(--color-white)] text-[var(--color-primary)]"
-                  : "text-[var(--color-white)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-white)]"
+                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
+                  : "text-[var(--color-surface-alt)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-surface-alt)]"
               }
             `}
                 >

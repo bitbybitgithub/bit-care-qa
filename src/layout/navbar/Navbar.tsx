@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 const AppBarStyled = styled(AppBar)(() => ({
-  background: "var(--color-white)",
+  background: "var(--color-surface-alt)",
   borderBottom: "2px solid var(--color-primary)",
   boxShadow:"var(--shadow-lg)"
 }));
@@ -92,7 +92,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* -------- RIGHT: Logout Button -------- */}
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex cursor-pointer items-center bg-[var(--color-white)] gap-2 border-2 border-[var(--color-error)] text-[var(--color-error)] hover:text-[var(--color-white)] px-4 py-2 rounded-xl hover:bg-[var(--color-error)] transition"
+          className="flex cursor-pointer items-center bg-[var(--color-surface-alt)] gap-2 border-2 border-[var(--color-error)] text-[var(--color-error)] hover:text-[var(--color-surface-alt)] px-4 py-2 rounded-xl hover:bg-[var(--color-error)] transition"
         >
           <FaSignOutAlt />
           Logout
@@ -110,7 +110,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
           />
 
           <div
-            className={`relative bg-[var(--color-white)] border border-gray-200 shadow-xl rounded-xl p-6 w-[90%] max-w-md transform transition-all duration-300 ${
+            className={`relative bg-[var(--color-surface-alt)] border border-gray-200 shadow-xl rounded-xl p-6 w-[90%] max-w-md transform transition-all duration-300 ${
               animatingOut
                 ? "-translate-y-10 opacity-0"
                 : "translate-y-0 opacity-100"
@@ -121,7 +121,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
               Confirm Logout
             </h2>
 
-            <p className="text-gray-600 mt-2">
+            <p className="text-[var(--color-text)] mt-2">
               Are you sure you want to logout?
             </p>
 

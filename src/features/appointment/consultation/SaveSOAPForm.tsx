@@ -19,7 +19,7 @@ const SaveSOAPForm: React.FC<SaveSOAPProps> = ({
 
   return (
     <div className="mt-4">
-      <form  className="space-y-4 bg-white  ">
+      <form  className="space-y-4 bg-[var(--color-surface-alt)]  ">
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">
             Subjective (HPI, ROS, Complaints)

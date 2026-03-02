@@ -243,7 +243,7 @@ const DoctorProfile: React.FC = () => {
             />
           </div>
 
-          <div className="md:w-3/5 bg-white p-6">
+          <div className="md:w-3/5 bg-[var(--color-surface-alt)] p-6">
             <h2 className="text-3xl font-semibold">{doctor.doctor_name}</h2>
             <p className="text-gray-600 mb-4">{doctor.qualification}</p>
 

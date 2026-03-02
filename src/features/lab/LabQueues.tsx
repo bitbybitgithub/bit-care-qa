@@ -334,7 +334,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           density="compact"
           sx={{
             width: "100%",
-            backgroundColor: "var(--color-white)",
+            backgroundColor: "var(--color-surface-alt)",
             overflow: "hidden",
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "transparent",
@@ -405,7 +405,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <h2
               className="flex items-center gap-2"
               style={{
-                color: "var(--color-white)",
+                color: "var(--color-surface-alt)",
                 fontSize: "var(--font-h3)",
                 fontWeight: "var(--font-weight-medium)",
               }}

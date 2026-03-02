@@ -202,7 +202,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-white)]/40 backdrop-blur-md"
+      className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-md"
     >
       <form
         onClick={(e) => e.stopPropagation()}
@@ -226,7 +226,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-white)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
+            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
           >
             <FaTimes />
           </button>

@@ -127,7 +127,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
 
   return (
     <div className="p-4 space-y-4 bg-gray-50 min-h-screen transition-all duration-300">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 p-6">
+      <div className="bg-[var(--color-surface-alt)] rounded-2xl shadow-sm border border-gray-200 border-t-4 border-t-emerald-500 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -194,7 +194,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
               <PatientHeader vitals={data.PatientvitalsDetails} />
             )}
 
-            <div className="w-full p-6 bg-[var(--color-white)] rounded-2xl shadow-lg border border-gray-200">
+            <div className="w-full p-6 bg-[var(--color-surface-alt)] rounded-2xl shadow-lg border border-gray-200">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                 Consultation & Diagnosis (SOAP)
               </h2>

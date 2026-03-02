@@ -93,8 +93,8 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
     <div className="flex flex-col h-full bg-[var(--color-surface)]">
       <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
         <div>
-          <h2 className="text-[var(--color-white)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
-            <RiSparklingLine /> Patient Vitals
+          <h2 className="text-[var(--color-surface-alt)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
+            <RiSparklingLine /> Set Patient Follow Up
           </h2>
           <p className="text-blue-100 text-sm">{patient?.name}</p>
         </div>
@@ -107,7 +107,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       </div>
 
       <div className="flex-1 py-2 px-5 space-y-3 overflow-y-auto">
-        <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40 transition hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+        <div className="bg-[var(--color-surface-alt)]/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40 transition hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
           <div className="flex items-center justify-between mb-6">
             <button
               disabled={isPrevDisabled}
@@ -171,10 +171,10 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
                     transition-all duration-300 
                     ${isPast
                       ? "text-gray-300 cursor-none"
-                      : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-white)] "
+                      : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
                     }
                     ${isSelected
-                      ? "bg-[var(--color-primary)] text-[var(--color-white)] scale-110 shadow-[var(--shadow-lg)]"
+                      ? "bg-[var(--color-primary)] text-[var(--color-surface-alt)] scale-110 shadow-[var(--shadow-lg)]"
                       : "bg-blue-50"
                     }
                     ${!isSelected && isToday

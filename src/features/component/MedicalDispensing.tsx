@@ -235,7 +235,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         density="compact"
         sx={{
           minWidth: 900,
-          backgroundColor: "var(--color-white)",
+          backgroundColor: "var(--color-surface-alt)",
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "transparent",
             color: "var(--color-primary)",
@@ -258,7 +258,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
         <DialogTitle>
           <div className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-[var(--radius-full)] bg-[var(--color-primary)] text-[var(--color-white)] flex items-center justify-center font-[var(--font-weight-semibold)]">
+              <div className="w-10 h-10 rounded-[var(--radius-full)] bg-[var(--color-primary)] text-[var(--color-surface-alt)] flex items-center justify-center font-[var(--font-weight-semibold)]">
                 {selectedItem?.patient_name?.[0] ?? "P"}
               </div>
               <div className="text-sm font-semibold">
@@ -269,7 +269,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
             <span
               className={` px-3 py-1 rounded-[var(--radius-lg)] font-semibold ${
                 selectedItem?.appointment_status === "Dispensing Pending"
-                  ? "bg-[var(--color-primary)] text-[var(--color-white)] "
+                  ? "bg-[var(--color-primary)] text-[var(--color-surface-alt)] "
                   : "bg-gray-100 text-[var(--color-primary)]"
               }`}
               style={{fontSize:"var(--font-body)"}}

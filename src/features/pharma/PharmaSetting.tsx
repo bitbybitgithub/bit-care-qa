@@ -55,7 +55,7 @@ const PharmaSetting: React.FC = () => {
 
   return (
     <>
-      <div className="w-full bg-white rounded-lg shadow-md">
+      <div className="w-full bg-[var(--color-surface-alt)] rounded-lg shadow-md">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div
             className="mt-2 m-2 w-full flex p-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] gap-x-1"
@@ -74,8 +74,8 @@ const PharmaSetting: React.FC = () => {
                 border border-transparent
         ${
           activeTab === t.key
-            ? "bg-[var(--color-white)] text-[var(--color-primary)]"
-            : "text-[var(--color-white)] hover:border-[var(--color-white)]"
+            ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
+            : "text-[var(--color-surface-alt)] hover:border-[var(--color-surface-alt)]"
         }
       `}
               >

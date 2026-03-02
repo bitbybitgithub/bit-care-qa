@@ -26,7 +26,7 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-y-auto mt-10">
-      <div className="flex items-start justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="flex items-start justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 shadow-sm">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {info?.name}
@@ -48,9 +48,9 @@ const ConsultationSummary: React.FC<ConsultationSummaryProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row h-full overflow-hidden bg-white dark:bg-gray-900">
+      <div className="flex flex-col sm:flex-row h-full overflow-hidden bg-[var(--color-surface-alt)] dark:bg-gray-900">
 
-        <div className="w-full sm:w-1/3 lg:w-1/4 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 bg-white dark:bg-gray-900">
+        <div className="w-full sm:w-1/3 lg:w-1/4 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 bg-[var(--color-surface-alt)] dark:bg-gray-900">
           <SafetyContext
             allergies={data?.allergies ?? ""}
             current_medications={data?.current_medications ?? ""}

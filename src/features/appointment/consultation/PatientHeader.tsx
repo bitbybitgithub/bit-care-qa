@@ -11,7 +11,7 @@ const PatientHeader: React.FC<Props> = ({  vitals }) => {
   const temperatureF = (parseFloat(vitals?.temperature_c) * 9) / 5 + 32;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+    <div className="bg-[var(--color-surface-alt)] rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
         <VitalCard label="BP" value={bloodPressure} unit="mmHg" />

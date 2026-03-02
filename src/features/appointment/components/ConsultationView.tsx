@@ -17,7 +17,7 @@ import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import type { ConsultationSummaryResponse } from "../../../types/appointmentTypes";
 
 const DocumentationView = () => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+  <div className="p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 rounded-xl shadow-md">
     <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
       Documentation
     </h2>
@@ -28,7 +28,7 @@ const DocumentationView = () => (
 );
 
 const HistoryView = () => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+  <div className="p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 rounded-xl shadow-md">
     <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
       Patient History
     </h2>
@@ -39,7 +39,7 @@ const HistoryView = () => (
 );
 
 const ResultsView = () => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+  <div className="p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 rounded-xl shadow-md">
     <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
       Results & Labs
     </h2>
@@ -50,7 +50,7 @@ const ResultsView = () => (
 );
 
 const VitalsView = () => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+  <div className="p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 rounded-xl shadow-md">
     <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
       Vitals Log
     </h2>

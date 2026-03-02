@@ -26,7 +26,7 @@ const ViewPartnerUI = ({
   data,
 }: Props) => {
   return (
-    <div className="p-6 rounded-[var(--radius-lg)] bg-gray-50 ">
+    <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] ">
       <div className="mb-6">
         <h2
           className="text-[var(--color-primary)] font-[var(--font-weight-bold)]"
@@ -96,7 +96,7 @@ const ViewPartnerUI = ({
             <div
               className="px-4 py-3 space-y-3 text-xs
                     text-[var(--color-text-secondary)]
-                    bg-[var(--color-white)]"
+                    bg-[var(--color-surface-alt)]"
             >
               {item.phone && (
                 <div className="flex items-center gap-2">

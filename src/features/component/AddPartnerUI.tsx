@@ -56,7 +56,7 @@ const AddPartner = ({
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[var(--color-surface-alt)]">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="relative">
           <MdSearch
@@ -75,7 +75,7 @@ const AddPartner = ({
         <button
           onClick={handleAdd}
           disabled={!selected.length || loading}
-          className={`px-4 py-2 rounded-[var(--radius-lg)] whitespace-nowrap text-[var(--color-white)]
+          className={`px-4 py-2 rounded-[var(--radius-lg)] whitespace-nowrap text-[var(--color-surface-alt)]
 
       ${
         !selected.length || loading
@@ -144,7 +144,7 @@ const AddPartner = ({
               <div
                 className="px-4 py-3 space-y-3 text-xs
                       text-[var(--color-text-secondary)]
-                      bg-[var(--color-white)]"
+                      bg-[var(--color-surface-alt)]"
               >
                 {item.email && (
                   <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ const AddPartner = ({
                               )}
               </div>
 
-              <div className="px-4 pb-3 bg-[var(--color-white)]">
+              <div className="px-4 pb-3 bg-[var(--color-surface-alt)]">
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-medium
             ${

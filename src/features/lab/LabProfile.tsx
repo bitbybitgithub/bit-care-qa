@@ -158,7 +158,7 @@ const LabProfile: React.FC = () => {
   };
 
   return (
-    <div className="p-5 bg-white rounded-lg h-[82vh] overflow-y-scroll">
+    <div className="p-5 bg-[var(--color-surface-alt)] rounded-lg h-[82vh] overflow-y-scroll">
       <section className="mb-6">
         <h3 className="mb-3 font-semibold">Lab Branding</h3>
 

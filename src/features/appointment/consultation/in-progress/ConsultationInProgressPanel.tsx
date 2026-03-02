@@ -52,7 +52,7 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              className="bg-white/20 backdrop-blur-sm p-2 rounded-lg"
+              className="bg-[var(--color-surface-alt)]/20 backdrop-blur-sm p-2 rounded-lg"
             >
               <Phone className="text-white" size={18} />
             </motion.div>
@@ -68,7 +68,7 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
             className="flex items-center gap-2"
             transition={{ duration: 0.3 }}
           >
-            <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
+            <span className="bg-[var(--color-surface-alt)]/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
               {activePatients.length}
             </span>
             {isOpen ? (
@@ -87,7 +87,7 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -10, scaleY: 0.9 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="bg-white border-x border-b border-slate-200/50 rounded-b-2xl shadow-xl backdrop-blur-lg max-h-[420px] overflow-y-auto"
+            className="bg-[var(--color-surface-alt)] border-x border-b border-slate-200/50 rounded-b-2xl shadow-xl backdrop-blur-lg max-h-[420px] overflow-y-auto"
             style={{ originY: 0 }}
           >
             {activePatients.length > 0 ? (

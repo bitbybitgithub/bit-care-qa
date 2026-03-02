@@ -86,7 +86,7 @@ const AvailabilityCalendar: React.FC<
   );
 
   return (
-    <div className="rounded-lg w-2/4 border border-gray-200 bg-white shadow-sm p-4">
+    <div className="rounded-lg w-2/4 border border-gray-200 bg-[var(--color-surface-alt)] shadow-sm p-4">
       <Calendar
         localizer={localizer}
         events={events}

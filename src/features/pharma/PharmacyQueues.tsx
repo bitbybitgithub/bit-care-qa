@@ -301,7 +301,7 @@ export default function PharmacyQueues({
         density="compact"
         sx={{
           width: "100%",
-          backgroundColor: "var(--color-white)",
+          backgroundColor: "var(--color-surface-alt)",
           overflow: "hidden",
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "transparent",

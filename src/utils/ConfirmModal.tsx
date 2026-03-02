@@ -18,8 +18,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div className="fixed inset-0 pb-110 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
-        <p className="text-gray-800 mb-5">{message}</p>
+      <div className="bg-[var(--color-surface)] rounded-lg shadow-lg w-full max-w-sm p-6">
+        <p className="mb-5 text-[var(--color-text)]">{message}</p>
 
         <div className="flex justify-between gap-3">
           <button
@@ -31,7 +31,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </button>
 
           <button
-            className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded"
+            className="px-4 py-2 bg-[var(--color-secondary)] text-[var(--color-text)] rounded"
             onClick={onConfirm}
             disabled={loading}
           >

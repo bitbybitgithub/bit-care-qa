@@ -107,7 +107,7 @@ const UploadControl: React.FC<UploadControlProps> = ({
     <div className="w-full">
       {!file ? (
         <label
-          className="flex items-center justify-center w-full px-4 transition bg-white border-2 border-dashed rounded-md cursor-pointer"
+          className="flex items-center justify-center w-full px-4 transition bg-[var(--color-surface-alt)] border-2 border-dashed rounded-md cursor-pointer"
           style={{ height }}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

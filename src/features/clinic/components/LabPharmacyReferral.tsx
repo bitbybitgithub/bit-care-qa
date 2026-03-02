@@ -160,7 +160,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     };
 
     return (
-      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-bg)]">
+      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-surface)]">
         <div className="flex items-center justify-between px-4 py-2 rounded-[var(--radius-lg)] bg-[var(--color-primary)] m-2">
           <div>
             <h2 className="text-white text-sm font-medium flex items-center gap-2">
@@ -172,7 +172,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
 
           <button
             onClick={onClose}
-            className="text-[var(--color-primary)] hover:text-white p-1 rounded bg-[var(--color-bg)]"
+            className="text-[var(--color-primary)] hover:text-white p-1 rounded bg-[var(--color-surface)]"
           >
             <MdClose size={18} />
           </button>
@@ -189,7 +189,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
               placeholder={`Search ${isLab ? "lab" : "pharmacy"}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)]"
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-bg)]"
             />
           </div>
 
@@ -209,7 +209,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                 className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)]  ${
                   isSelected
                     ? "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)] "
-                    : " border-transparent bg-[var(--color-surface)]"
+                    : " border-transparent bg-[var(--color-bg)]"
                 }`}
               >
                 <div className="flex items-center justify-between px-3 py-2">
@@ -246,7 +246,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                       title={
                         <div className="w-full text-xs">
                           <div className="flex items-center gap-2 px-2 py-2 bg-[var(--color-primary)] text-white rounded-t-[12px]">
-                            <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--color-bg)] border border-[var(--color-surface-alt)] transition-all duration-200">
+                            <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--color-surface)] border border-[var(--color-surface-alt)] transition-all duration-200">
                               {item.logo ? (
                                 <img
                                   src={`data:image/png;base64,${item.logo}`}
@@ -290,7 +290,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                         </div>
                       }
                     >
-                      <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-bg)] border border-[var(--color-primary)] transition-all duration-200">
+                      <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[var(--color-surface)] border border-[var(--color-primary)] transition-all duration-200">
                         {item.logo ? (
                           <img
                             src={`data:image/png;base64,${item.logo}`}
@@ -319,7 +319,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
           })}
         </div>
 
-        <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-surface)] sticky bottom-0">
+        <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-bg)] sticky bottom-0">
           <Button variant="outlined" size="small" fullWidth onClick={onClose}>
             Cancel
           </Button>

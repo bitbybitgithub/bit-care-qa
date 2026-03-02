@@ -253,7 +253,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     ];
 
     return (
-      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-bg)]  ">
+      <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-surface)]  ">
         <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
           <div>
             <h2 className="text-[var(---color-surface-alt)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
@@ -263,7 +263,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           </div>
           <button
             onClick={onClose}
-            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-bg)] hover:bg-[var(--color-primary-light)]"
+            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-surface)] hover:bg-[var(--color-primary-light)]"
           >
             <MdClose size={22} />
           </button>
@@ -374,12 +374,12 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
           </div>
         </div>
 
-        <div className="flex gap-3 p-5 border-t border-[var(--color-primary)] bg-[var(--color-surface)] sticky bottom-0 z-10">
+        <div className="flex gap-3 p-5 border-t border-[var(--color-primary)] bg-[var(--color-bg)] sticky bottom-0 z-10">
           <Button
             variant="outlined"
             color="inherit"
             fullWidth
-            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-bg)] hover:bg-[var(--color-primary-light)]"
+            className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-surface)] hover:bg-[var(--color-primary-light)]"
             onClick={onClose || (() => resetForm())}
           >
             Cancel

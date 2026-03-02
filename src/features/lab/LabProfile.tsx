@@ -164,7 +164,7 @@ const LabProfile: React.FC = () => {
 
         <div className="flex gap-6">
           <div
-            className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] overflow-hidden"
+            className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] overflow-hidden"
             aria-hidden={!!(preview || logoImg) ? "false" : "true"}
           >
             {preview || logoImg ? (

@@ -285,7 +285,7 @@ const RegistrationForm = () => {
   );
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-2xl shadow-2xl p-5">
+    <div className="bg-[var(--color-surface)] rounded-2xl shadow-2xl p-5">
       <div className="gap-2 p-2 text-center ">
         <h1
           className="text-[var(--color-primary)] font-[var(--font-weight-semibold)]"
@@ -550,7 +550,7 @@ const RegistrationForm = () => {
           disabled={loading}
           sx={{
             backgroundColor: "var(--color-primary)",
-            color: "var(--color-bg)",
+            color: "var(--color-surface)",
             "&:hover": { backgroundColor: "var(--color-primary)" },
           }}
         >
@@ -590,7 +590,7 @@ const RegistrationForm = () => {
             onClick={handlePopupClose}
             sx={{
               backgroundColor: "var(--color-primary)",
-              color: "var(--color-white)",
+              color: "var(--color-surface-alt)",
               px: 4,
               borderRadius: "var(--radius-lg)",
               "&:hover": { backgroundColor: "var(--color-primary-dark)" },

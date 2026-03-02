@@ -29,7 +29,7 @@ const MainLayout = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="w-full h-screen overflow-hidden bg-[var(--color-surface)]">
+    <div className="w-full h-screen overflow-hidden bg-[var(--color-bg)]">
       {/* -------- Sidebar (Desktop Fixed) -------- */}
       <div
         className={`

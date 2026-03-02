@@ -207,7 +207,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="bg-[var(--color-bg)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-lg mx-4 p-6 transform transition-all"
+        className="bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-lg mx-4 p-6 transform transition-all"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -226,7 +226,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
+            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
           >
             <FaTimes />
           </button>

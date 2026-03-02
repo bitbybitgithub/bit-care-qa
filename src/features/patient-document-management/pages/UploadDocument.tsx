@@ -39,7 +39,7 @@ export default function UploadDocument() {
             height: "100px",
             border: "2px dashed var(--color-border)",
             borderRadius: "12px",
-            background: "var(--color-surface)",
+            background: "var(--color-bg)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -104,7 +104,7 @@ export default function UploadDocument() {
               defaultValue=""
               sx={{
                 fontSize: "12px",
-                background: "var(--color-surface)",
+                background: "var(--color-bg)",
                 borderRadius: "8px",
                 "& fieldset": {
                   borderColor: "var(--color-border)",
@@ -142,7 +142,7 @@ export default function UploadDocument() {
               type="date"
               fullWidth
               sx={{
-                background: "var(--color-surface)",
+                background: "var(--color-bg)",
                 borderRadius: "8px",
                 "& fieldset": {
                   borderColor: "var(--color-border)",
@@ -181,7 +181,7 @@ export default function UploadDocument() {
             placeholder="Notes..."
             sx={{
               width: "75%",
-              background: "var(--color-surface)",
+              background: "var(--color-bg)",
               borderRadius: "8px",
               "& fieldset": {
                 borderColor: "var(--color-border)",

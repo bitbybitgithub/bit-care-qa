@@ -91,7 +91,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
               text-xs font-semibold
               border
               shadow-[var(--shadow-md)]
-              bg-[var(--color-bg)]
+              bg-[var(--color-surface)]
               ${
                 isDoctor
                   ? "border-[var(--color-info)] "
@@ -108,7 +108,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
               flex items-center gap-2
               px-3 py-1 rounded-full
               border
-              bg-[var(--color-bg)]
+              bg-[var(--color-surface)]
               shadow-[var(--shadow-sm)]
               ${
                 isDoctor

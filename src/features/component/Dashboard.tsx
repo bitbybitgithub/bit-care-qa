@@ -73,7 +73,7 @@ const Dashboard = () => {
     <button
       onClick={onClick}
       className="flex items-center justify-center w-auto gap-x-2 
-                 bg-[var(--color-surface)] text-[var(--color-text)] border-2 border-transparent shadow-[var(--shadow-md)]
+                 bg-[var(--color-bg)] text-[var(--color-text)] border-2 border-transparent shadow-[var(--shadow-md)]
                  px-2 py-2  rounded-[var(--radius-lg)] hover:bg-[var(--color-surface-alt)] hover:border-2 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-lg)] transition cursor-pointer normal-case"
     >
       {icon} {label}
@@ -95,7 +95,7 @@ const Dashboard = () => {
       <Cards items={stats} loading={loading} error={error} />
 
       <div className="md:flex gap-x-4 ">
-        <div className="md:w-[25%] bg-[var(--color-bg)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
+        <div className="md:w-[25%] bg-[var(--color-surface)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
           <h2
             className="font-semibold mb-4 text-[var(--color-primary)]"
             style={{ fontSize: "var(--font-h4)" }}
@@ -115,7 +115,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-[var(--color-bg)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
+        <div className="bg-[var(--color-surface)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
           <div
             className="flex items-center gap-x-2 mb-2"
             style={{ fontSize: "var(--font-h4)" }}

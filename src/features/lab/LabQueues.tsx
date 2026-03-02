@@ -392,7 +392,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         PaperProps={{
           sx: {
             width: 520,
-            backgroundColor: "var(--color-bg)",
+            backgroundColor: "var(--color-surface)",
             boxShadow: "var(--shadow-lg)",
           },
         }}
@@ -417,7 +417,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               onClick={closeUpload}
               className="p-2 rounded-full"
               style={{
-                backgroundColor: "var(--color-bg)",
+                backgroundColor: "var(--color-surface)",
                 color: "var(--color-primary)",
               }}
             >
@@ -438,7 +438,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               <div
                 className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs p-3"
                 style={{
-                  backgroundColor: "var(--color-surface)",
+                  backgroundColor: "var(--color-bg)",
                   borderRadius: "var(--radius-md)",
                 }}
               >
@@ -490,7 +490,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                   }}
                   className="flex flex-col gap-2 p-3"
                   style={{
-                    backgroundColor: "var(--color-surface)",
+                    backgroundColor: "var(--color-bg)",
                     borderRadius: "var(--radius-md)",
                     border: `1px dashed var(--color-border)`,
                   }}
@@ -536,7 +536,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                           key={index}
                           className="flex justify-between items-center text-xs px-2 py-1 rounded"
                           style={{
-                            backgroundColor: "var(--color-bg)",
+                            backgroundColor: "var(--color-surface)",
                             border: "1px solid var(--color-border)",
                           }}
                         >
@@ -567,7 +567,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           <div
             className="flex gap-3 p-4 border-t sticky bottom-0"
             style={{
-              backgroundColor: "var(--color-surface)",
+              backgroundColor: "var(--color-bg)",
               borderColor: "var(--color-primary)",
             }}
           >

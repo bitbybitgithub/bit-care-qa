@@ -233,8 +233,8 @@ const ResetPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-[100dvh] bg-[var(--color-surface)]">
-      <div className="w-full max-w-[450px] p-6 bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border-2 border-[var(--color-primary)]">
+    <div className="flex justify-center items-center h-[100dvh] bg-[var(--color-bg)]">
+      <div className="w-full max-w-[450px] p-6 bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border-2 border-[var(--color-primary)]">
         <h2
           className="text-center font-bold mb-2"
           style={{ fontSize: "var(--font-h3)", color: "var(--color-text)" }}
@@ -466,7 +466,7 @@ const ResetPasswordPage: React.FC = () => {
             fullWidth
             sx={{
               backgroundColor: "var(--color-primary)",
-              color: "var(--color-bg)",
+              color: "var(--color-surface)",
               "&:hover": { backgroundColor: "var(--color-primary)" },
             }}
           >

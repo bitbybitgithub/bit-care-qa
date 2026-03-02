@@ -180,15 +180,15 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--color-surface)] p-7">
-      <div className="relative bg-[var(--color-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-bg)] p-7">
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
         <div className="block md:hidden">
           <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">
             <button
               className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
                 !isClinic
-                  ? "bg-[var(--color-white)] text-[var(--color-primary)]  shadow-md"
-                  : "bg-[var(--color-primary)]  text-[var(--color-white)] hover:opacity-90"
+                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
+                  : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-90"
               }`}
               onClick={() => setIsClinic(false)}
             >
@@ -197,8 +197,8 @@ const Login = () => {
             <button
               className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
                 isClinic
-                  ? "bg-[var(--color-white)] text-[var(--color-primary)]  shadow-md"
-                  : "bg-[var(--color-primary)]  text-[var(--color-white)] hover:opacity-900"
+                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
+                  : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-900"
               }`}
               onClick={() => setIsClinic(true)}
             >

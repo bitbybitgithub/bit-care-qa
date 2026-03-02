@@ -30,7 +30,7 @@ const Registration = () => {
   ];
 
   return (
-    <div className="bg-[var(--color-surface)] lg:min-h-screen min-w-full lg:flex lg:flex-row flex flex-col-reverse items-center justify-center px-2 lg:px-20 gap-x-2">
+    <div className="bg-[var(--color-bg)] lg:min-h-screen min-w-full lg:flex lg:flex-row flex flex-col-reverse items-center justify-center px-2 lg:px-20 gap-x-2">
       {/* Left Image Section */}
       <div className="relative w-full flex justify-center items-center h-auto lg:h-auto lg:w-[50%] p-2 border-b-2 border-[var(--color-primary)] ">
         <div>
@@ -51,7 +51,7 @@ const Registration = () => {
             {features.map(({ icon: Icon, title, description }, index) => (
               <div
                 key={index}
-                className="bg-[var(--color-bg)] p-4 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-t-2 border-[var(--color-primary)]"
+                className="bg-[var(--color-surface)] p-4 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border-t-2 border-[var(--color-primary)]"
               >
                 <Icon className="text-xl" />
                 <h3 className="mt-2 font-semibold text-[var(--color-primary)]">

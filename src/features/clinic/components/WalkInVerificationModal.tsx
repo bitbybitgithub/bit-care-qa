@@ -175,7 +175,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
       <div
         className="w-full max-w-md p-6 animate-fadeIn overflow-y-auto max-h-[90vh]"
         style={{
-          backgroundColor: "var(--color-bg)",
+          backgroundColor: "var(--color-surface)",
           borderRadius: "var(--radius-lg)",
           boxShadow: "var(--shadow-xl)",
           color: "var(--color-text)",
@@ -202,7 +202,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
                   onClose();
                   resetState();
                 }}
-                className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-primary)] transition"
+                className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
               >
                 <FaTimes />
               </button>
@@ -332,7 +332,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
                           error.otp ? "var(--color-error)" : "var(--color-none)"
                         }`,
                         borderRadius: "var(--radius-lg)",
-                        backgroundColor: "var(--color-surface)",
+                        backgroundColor: "var(--color-bg)",
                         color: "var(--color-text)",
                         fontWeight: "var(--font-weight-semibold)",
                       }}

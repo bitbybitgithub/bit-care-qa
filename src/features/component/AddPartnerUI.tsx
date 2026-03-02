@@ -68,7 +68,7 @@ const AddPartner = ({
             placeholder={placeholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)]"
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-bg)]"
           />
         </div>
 
@@ -112,7 +112,7 @@ const AddPartner = ({
               >
                 <div
                   className="w-10 h-10 flex items-center justify-center
-                        rounded-[var(--radius-full)] bg-[var(--color-bg)]
+                        rounded-[var(--radius-full)] bg-[var(--color-surface)]
                         border border-white shadow-sm overflow-hidden"
                 >
                   {item.logo ? (

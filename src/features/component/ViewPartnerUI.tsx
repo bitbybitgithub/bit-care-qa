@@ -58,7 +58,7 @@ const ViewPartnerUI = ({
             key={item.id}
             className="w-72 rounded-[var(--radius-lg)] overflow-hidden
                shadow-[var(--shadow-md)]
-               bg-[var(--color-surface)]
+               bg-[var(--color-bg)]
                transition-all duration-300
                hover:shadow-[var(--shadow-lg)]"
           >
@@ -68,7 +68,7 @@ const ViewPartnerUI = ({
             >
               <div
                 className="w-10 h-10 flex items-center justify-center
-                      rounded-xl bg-[var(--color-bg)]
+                      rounded-xl bg-[var(--color-surface)]
                       border border-white shadow-sm overflow-hidden shrink-0"
               >
                 {item.logo ? (

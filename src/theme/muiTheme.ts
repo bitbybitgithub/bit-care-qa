@@ -47,8 +47,8 @@ export const muiTheme = () =>
       warning: { main: getCssVar("--color-warning", "#facc15") },
       info: { main: getCssVar("--color-info", "#0284c7") },
       background: {
-        default: getCssVar("--color-bg", "#f9fafb"),
-        paper: getCssVar("--color-surface", "#ffffff"),
+        default: getCssVar("--color-surface", "#f9fafb"),
+        paper: getCssVar("--color-bg", "#ffffff"),
       },
       text: {
         primary: getCssVar("--color-text", "#1f2937"),

@@ -76,7 +76,7 @@ export const muiTheme = () =>
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: "var(--color-bg)",
+            backgroundColor: "var(--color-surface)",
             color: "var(--color-text)",
             fontFamily: "var(--font-family)",
             transition: "background var(--transition-normal), color var(--transition-normal)",
@@ -104,12 +104,12 @@ export const muiTheme = () =>
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            backgroundColor: "var(--color-surface)",
+            backgroundColor: "var(--color-bg)",
             boxShadow: "var(--shadow-md)",
             color: "var(--color-text)",
             borderRadius: "var(--radius-lg)",
             "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "var(--color-bg)",
+              borderColor: "var(--color-surface)",
             },
             "&:hover .MuiOutlinedInput-notchedOutline": {
               borderColor: "var(--color-primary)",
@@ -146,7 +146,7 @@ export const muiTheme = () =>
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: "var(--color-surface)",
+            backgroundColor: "var(--color-bg)",
             boxShadow: "var(--shadow-md)",
             borderRadius: "var(--radius-lg)",
             color: "var(--color-text)",

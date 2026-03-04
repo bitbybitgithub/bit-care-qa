@@ -19,13 +19,13 @@ import {
 
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
-import { getDoctorList, type Doctor } from "../../api/DocListApi";
 import { AppointmentStatus } from "../../context/constant/enum";
 import { getSessionItem } from "../../context/sessions/userSession";
 import type {
   WalkinFormData,
   WalkInRegisterFormProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
+import { getDoctorListApi, type DoctorList } from "../../api";
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,
@@ -44,7 +44,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctors, setDoctors] = useState<DoctorList[]>([]);
   const [doctorLoading, setDoctorLoading] = useState(false);
 
   const now = new Date();
@@ -58,8 +58,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     const fetchDoctors = async () => {
       try {
         setDoctorLoading(true);
-        const list = await getDoctorList(clinic_id);
-        setDoctors(list);
+        const list = await getDoctorListApi();
+        setDoctors(list as DoctorList[]);
       } catch (err) {
         console.error("Error fetching doctor list:", err);
         setDoctors([]);
@@ -68,7 +68,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       }
     };
     fetchDoctors();
-  }, [clinic_id]);
+  }, []);
 
   useEffect(() => {
     if (patientData) {
@@ -153,7 +153,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
       const appointmentData = {
         patient_id: patientId,
-        doctor_id: selectedDoctor?.id || 0,
+        doctor_id: selectedDoctor?.doctor_id || 0,
         patient_name: formData.name,
         doctor_name: formData.doctor,
         gender: formData.gender,
@@ -406,8 +406,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
               </MenuItem>
               {doctors.map((d) => (
-                <MenuItem key={d.id} value={d.name}>
-                  {`${d.name} (${d.specialist})`}
+                <MenuItem key={d.doctor_id} value={d.name}>
+                  {`${d.name} (${d.specialization})`}
                 </MenuItem>
               ))}
             </TextField>

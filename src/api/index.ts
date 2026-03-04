@@ -18,9 +18,9 @@ export * from "./ServiceApi";
 
 /* -------------------- OTHERS -------------------- */
 export * from "./DashboardApi";
-export * from "./DeleteDocApi";
-export * from "./DocListApi";
-export * from "./DocProfileApi";
+export * from "./DoctorApi/DeleteDocApi";
+export * from "./DoctorApi/DoctorApi";
+export * from "./DoctorApi/DocProfileApi";
 export * from "./GenerateAndVerifyOtpApi";
 export * from "./PatientApi";
 export * from "./PatientQueueApi";

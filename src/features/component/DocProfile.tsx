@@ -19,7 +19,7 @@ import { FaGraduationCap } from "react-icons/fa6";
 import docImg from "../../assets/doc.jpg";
 import { updateDoctorProfile, type UpdateDoctorProfileResponse} from "../../api/UpdateDocProfileApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { getDoctorProfile } from "../../api/DocProfileApi";
+import { getDoctorProfile } from "../../api/DoctorApi/DocProfileApi";
 
 // Doctor type matches EXACT API RESPONSE
 type Doctor = {

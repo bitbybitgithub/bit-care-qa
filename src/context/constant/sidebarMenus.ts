@@ -15,6 +15,7 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
       { title: "Users", link: "/clinic/users", icon: FaUsers },
+      { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUsers },
       { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: FaUsers },
       { title: "Pharma Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaUsers },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },

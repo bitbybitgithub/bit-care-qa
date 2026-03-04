@@ -19,6 +19,7 @@ import LabProfile from "../features/lab/LabProfile";
 import LabEmpanelment from "../features/lab/LabEmpanelment";
 import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
+import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 
 
 
@@ -39,6 +40,7 @@ const Router = [
       // clinic admin routes
       { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
+      { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
 

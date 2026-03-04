@@ -106,11 +106,11 @@ const RegistrationForm = () => {
 
     if (name === "name") {
       let error = "";
-      if (!value.trim()) error = "Center name is required";
+      if (!value.trim()) error = "Name is required";
       else if (value.trim().length < 5)
-        error = "Center name must be at least 5 characters long";
+        error = "Name must be at least 5 characters long";
       else if (value.trim().length > 50)
-        error = "Center name cannot exceed 50 characters";
+        error = "Name cannot exceed 50 characters";
       else if (!Regex.name.test(value.trim()))
         error = "Only alphabets and spaces are allowed";
 
@@ -284,6 +284,15 @@ const RegistrationForm = () => {
     </FormHelperText>
   );
 
+  const selectedEntity = entityList.find(
+  (e) => e.entity_id === formData.entityType
+);
+
+const namePlaceholder =
+  selectedEntity?.entity_name?.toLowerCase() === "doctor"
+    ? "Doctor Name"
+    : "Center Name";
+
   return (
     <div className="bg-[var(--color-surface)] rounded-2xl shadow-2xl p-5">
       <div className="gap-2 p-2 text-center ">
@@ -349,7 +358,7 @@ const RegistrationForm = () => {
 
           <FormControl fullWidth>
             <TextField
-              placeholder="Center Name"
+             placeholder={namePlaceholder}
               name="name"
               size="small"
               value={formData.name}

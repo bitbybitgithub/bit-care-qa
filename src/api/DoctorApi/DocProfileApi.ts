@@ -1,5 +1,5 @@
 // src/api/DocProfileApi.ts
-import { emrAPI } from "../services/EmrApi";
+import { emrAPI } from "../../services/EmrApi";
 
 export interface DoctorProfileResponse {
   clinic_id: number;

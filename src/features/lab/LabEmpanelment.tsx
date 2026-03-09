@@ -99,6 +99,8 @@ const LabEmpanelment = () => {
     phone: l.phone,
     email: l.email,
     address: l.address,
+    city:l.city,
+    state:l.state,
     status: l.status,
   }));
 
@@ -169,8 +171,10 @@ const LabEmpanelment = () => {
               name: l.lab_name,
               logo: l.lab_logo,
               email: l.email,
-              mobile: l.mobile,
+              mobile: l.phone,
               address: l.address,
+              city:l.city,
+              state:l.state,
               alreadyMapped: mappedLabIds.has(l.lab_id),
             }))}
             icon={<ScienceIcon className="text-[var(--color-info)]" />}

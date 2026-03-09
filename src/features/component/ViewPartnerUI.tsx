@@ -9,6 +9,8 @@ interface PartnerItem {
   phone?: string;
   email?: string;
   address?: string;
+  city?: string;
+  state?: string;
 }
 
 interface Props {
@@ -25,6 +27,7 @@ const ViewPartnerUI = ({
   emptyText,
   data,
 }: Props) => {
+  console.log(data)
   return (
     <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)] ">
       <div className="mb-6">
@@ -115,7 +118,7 @@ const ViewPartnerUI = ({
               {item.address && (
                 <div className="flex items-start gap-2">
                   <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
-                  <span className="leading-relaxed">{item.address}</span>
+                  <span className="leading-relaxed">{[item.address, item.city, item.state].filter(Boolean).join(", ")}</span>
                 </div>
               )}
             </div>

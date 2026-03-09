@@ -82,8 +82,10 @@ export interface PharmaApiItem {
   pharma_logo?: string;
 
   email?: string;
-  mobile?: string;
+  phone?: string;
   address?: string;
+  city?: string;
+  state?: string;
 
   status: "Active" | "Inactive";
 }

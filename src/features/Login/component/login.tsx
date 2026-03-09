@@ -57,6 +57,9 @@ const Login = () => {
     Admin: "/pharmacy/dashboard",
     Staff: "/pharmacy/dashboard",
   },
+  4: {
+    Doctor: "/doctor/dashboard"
+  }
 };
 
   function getDashboardRoute(
@@ -142,8 +145,8 @@ const Login = () => {
           ip_address: "192.168.1.9",
           platform: "web",
         };
-
         const data = await loginApi(requestBody);
+        console.log(data.user.entity_type, data.user.role)
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);

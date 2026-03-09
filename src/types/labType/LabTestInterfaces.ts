@@ -78,8 +78,10 @@ export interface LabApiItem {
   lab_logo?: string;
 
   email?: string;
-  mobile?: string;
+  phone?: string;
   address?: string;
+  city?: string;
+  state?: string;
 
   status: "Active" | "Inactive";
 }

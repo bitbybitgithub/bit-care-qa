@@ -4,26 +4,26 @@ import ViewPartnerUI from "../../component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
 import { getSession } from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
-import { getDoctorListApi, getMappedDoctorApi, type DoctorList } from "../../../api";
-import { mapClinicPartnersApi } from "../../../api/CommonApi/SaveLabAndPharmaApi";
+import { getDoctorListApi, type DoctorList } from "../../../api";
+import {
+  getMappedDoctorApi,
+  mapDoctorClinicApi,
+} from "../../../api/clinic/ClinicDoctorApi";
+import AddDoctorSingleUI from "./AddDoctorSingleUI";
 
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
 
-console.log("clinic ID",clinicId)
-
 const DoctorEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
-
   const [doctor, setDoctor] = useState<DoctorList[]>([]);
-  const [mappedDoctors, setMappedDoctor] = useState<DoctorList[]>([]);
+  const [mappedDoctors, setMappedDoctor] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchDoctors = async () => {
     try {
       setLoading(true);
       const res = await getDoctorListApi();
-      console.log("get all doctor list",res)
       setDoctor(res);
     } catch (err) {
       console.error("Doctor list error", err);
@@ -39,15 +39,20 @@ const DoctorEmpanelment = () => {
   const fetchMappedDoctorByClinicId = async () => {
     try {
       setLoading(true);
+
       const res = await getMappedDoctorApi(clinicId);
-      console.log("res",res)
-      setMappedDoctor(res);
+      if (Array.isArray(res)) {
+        setMappedDoctor(res);
+      } else {
+        setMappedDoctor([]);
+      }
     } catch (err) {
-      console.error("Doctor list error", err);
+      console.error("Mapped doctor list error", err);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchMappedDoctorByClinicId();
   }, [clinicId]);
@@ -58,22 +63,29 @@ const DoctorEmpanelment = () => {
       return;
     }
 
-    const existingIds = mappedDoctors.map((l) => l.doctor_id);
+    const existingIds = mappedDoctors.map((d) => d.doctor_id);
+
     const duplicates = ids.filter((id) => existingIds.includes(id));
 
     if (duplicates.length) {
       toast.warning("Some selected doctor are already registered.");
       return;
     }
+
     try {
-      await mapClinicPartnersApi({
-        clinic_id: clinicId,
-        lab_ids:[],
-        pharmacy_ids: [],
-        doctor_ids: ids,
-      });
+      for (const doctorId of ids) {
+        await mapDoctorClinicApi({
+          clinic_id: clinicId,
+          doctor_id: doctorId,
+          is_active: "1",
+          created_by: "system",
+          // created_by: session?.user_id ?? "system",
+        });
+      }
       toast.success("Doctor Added Successfully.");
+
       await fetchMappedDoctorByClinicId();
+
       setActiveTab("view");
     } catch (err: any) {
       if (err?.response?.status === 409) {
@@ -81,7 +93,6 @@ const DoctorEmpanelment = () => {
       } else {
         toast.error("Failed to map doctor.");
       }
-
       console.error(err);
     }
   };
@@ -90,16 +101,18 @@ const DoctorEmpanelment = () => {
 
   const viewItems = mappedDoctors?.map((d) => ({
     id: d.doctor_id,
-    name: d.name,
+    name: d.doctor_name,
     logo: d.profile_pic,
     phone: d.phone,
     email: d.email,
     address: d.address,
+    city: d.city,
+    state: d.state,
   }));
-console.log("view items",viewItems)
-console.log("mappedDoctorss",mappedDoctors)
+
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
+
       <div className="flex p-4 border-b border-b-[var(--color-primary)]">
         <div
           className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
@@ -114,11 +127,7 @@ console.log("mappedDoctorss",mappedDoctors)
               role="tab"
               aria-selected={activeTab === t.key}
               onClick={() => setActiveTab(t.key as "view" | "add")}
-              className={`
-          px-4 py-1.5 text-sm font-semibold cursor-pointer
-          rounded-[var(--radius-md)]
-          transition border-2
-        `}
+              className="px-4 py-1.5 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2"
               style={{
                 background:
                   activeTab === t.key
@@ -171,7 +180,8 @@ console.log("mappedDoctorss",mappedDoctors)
         )}
 
         {activeTab === "add" && (
-          <AddPartnerUI
+          <AddDoctorSingleUI
+            placeholder="Search doctor..."
             data={(doctor ?? []).map((d) => ({
               id: d.doctor_id,
               name: d.name,
@@ -181,9 +191,6 @@ console.log("mappedDoctorss",mappedDoctors)
               address: d.address,
               alreadyMapped: mappedDoctorIds.has(d.doctor_id),
             }))}
-            icon={<ScienceIcon className="text-[var(--color-info)]" />}
-            placeholder="Search doctor..."
-            buttonText="Add Selected Doctors"
             onSubmit={handleSubmitDoctors}
           />
         )}

@@ -92,9 +92,11 @@ const PharmaEmpanelment = () => {
     id: p.pharma_id,
     name: p.pharma_name,
     logo: p.pharma_logo,
-    phone: p.mobile,
+    phone: p.phone,
     email: p.email,
     address: p.address,
+    city:p.city,
+    state:p.state
   }));
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
@@ -170,8 +172,10 @@ const PharmaEmpanelment = () => {
               name: p.pharma_name,
               logo: p.pharma_logo,
               email: p.email,
-              mobile: p.mobile,
+              mobile: p.phone,
               address: p.address,
+              city:p.city,
+              state:p.state,
               alreadyMapped: mappedIds.has(p.pharma_id),
             }))}
             icon={<LocalPharmacyIcon className="text-[var(--color-info)]" />}

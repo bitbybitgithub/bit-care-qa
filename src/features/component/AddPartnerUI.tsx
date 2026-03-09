@@ -22,12 +22,7 @@ interface Props {
   onSubmit: (ids: number[]) => Promise<void>;
 }
 
-const AddPartner = ({
-  data,
-  placeholder,
-  buttonText,
-  onSubmit,
-}: Props) => {
+const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
   const [selected, setSelected] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,7 +44,7 @@ const AddPartner = ({
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   const filtered = data.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()),
@@ -146,6 +141,19 @@ const AddPartner = ({
                       text-[var(--color-text-secondary)]
                       bg-[var(--color-surface-alt)]"
               >
+                {item.mobile && (
+                  <div className="flex items-center gap-2">
+                    <MdPhone className="text-[var(--color-primary)] text-sm shrink-0" />
+
+                    <a
+                      href={`tel:${item.mobile}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-[var(--color-primary)] transition"
+                    >
+                      {item.mobile}
+                    </a>
+                  </div>
+                )}
                 {item.email && (
                   <div className="flex items-center gap-2">
                     <MdEmail className="text-[var(--color-primary)] text-sm shrink-0" />
@@ -160,25 +168,12 @@ const AddPartner = ({
                   </div>
                 )}
 
-                {item.mobile && (
-                  <div className="flex items-center gap-2">
-                    <RiContactsFill className="text-[var(--color-primary)] text-sm shrink-0" />
-
-                    <a
-                      href={`tel:${item.mobile}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="hover:text-[var(--color-primary)] transition"
-                    >
-                      {item.mobile}
-                    </a>
+                {item.address && (
+                  <div className="flex items-start gap-2">
+                    <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
+                    <span className="leading-relaxed">{[item.address, item.city, item.state].filter(Boolean).join(", ")}</span>
                   </div>
                 )}
-                  {item.address && (
-                                <div className="flex items-start gap-2">
-                                  <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
-                                  <span className="leading-relaxed">{item.address}</span>
-                                </div>
-                              )}
               </div>
 
               <div className="px-4 pb-3 bg-[var(--color-surface-alt)]">

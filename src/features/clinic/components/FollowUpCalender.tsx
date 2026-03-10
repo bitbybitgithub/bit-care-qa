@@ -30,6 +30,8 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
   const daysInMonth = currentMonth.daysInMonth();
 
   const user = getSessionItem("user", "user_id");
+  const clinic_id = getSessionItem("user", "clinic_id");
+  
 
   const isPrevDisabled =
     currentMonth.isSame(today, "month") ||
@@ -64,6 +66,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       const appointmentData = {
         patient_id: patient.patient_id,
         doctor_id: patient.raw?.doctor_id || 0,
+        clinic_id : Number(clinic_id),
         patient_name: patient.name,
         doctor_name: patient.doctor,
         gender: patient.gender,

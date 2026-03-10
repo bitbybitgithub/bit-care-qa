@@ -154,6 +154,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const appointmentData = {
         patient_id: patientId,
         doctor_id: selectedDoctor?.doctor_id || 0,
+        clinic_id : Number(clinic_id),
         patient_name: formData.name,
         doctor_name: formData.doctor,
         gender: formData.gender,

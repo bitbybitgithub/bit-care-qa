@@ -110,7 +110,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    if (name === "otp" && value.length === 6) {
+    if (name === "otp" && value.length === 4) {
       handleVerifyOtp(value);
     }
     if (name === "newPassword") evaluate(value);
@@ -290,17 +290,17 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               }}
               sx={{
                 "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
+                {
+                  borderColor: "var(--color-border)",
+                },
                 "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
+                {
+                  borderColor: "var(--color-border)",
+                },
                 "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
+                {
+                  borderColor: "var(--color-border)",
+                },
               }}
             />
 
@@ -326,11 +326,13 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                 minWidth: 90,
                 fontWeight: 600,
                 backgroundColor: "var(--color-success)",
+                color: "var(--color-white)",
                 cursor:
                   !formData.username || isOtpVerified
                     ? "not-allowed"
                     : "pointer",
                 "&.Mui-disabled": {
+                  color: "var(--color-white)",
                   backgroundColor: isOtpVerified
                     ? "var(--color-success)"
                     : "var(--color-border)",
@@ -339,7 +341,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                 },
               }}
             >
-              {isOtpVerified ? "Verified ✅" : "Verify"}
+              {isOtpVerified ? "Verified" : "Verify"}
             </Button>
           )}
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import AddPartnerUI from "../../component/AddPartnerUI";
 import ViewPartnerUI from "../../component/ViewPartnerUI";
-import ScienceIcon from "@mui/icons-material/Science";
-import { getSession } from "../../../context/sessions/userSession";
+import {
+  getSession,
+  getSessionItem,
+} from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import { getDoctorListApi, type DoctorList } from "../../../api";
 import {
@@ -19,6 +20,7 @@ const DoctorEmpanelment = () => {
   const [doctor, setDoctor] = useState<DoctorList[]>([]);
   const [mappedDoctors, setMappedDoctor] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const user = getSessionItem("user", "user_id");
 
   const fetchDoctors = async () => {
     try {
@@ -57,31 +59,33 @@ const DoctorEmpanelment = () => {
     fetchMappedDoctorByClinicId();
   }, [clinicId]);
 
-  const handleSubmitDoctors = async (ids: number[]) => {
+  const handleSubmitDoctors = async (
+    doctorId: number,
+    consultation_fees: number,
+    fees_duration: number,
+  ) => {
     if (!clinicId) {
       toast.error("Session expired. Please login again.");
       return;
     }
 
-    const existingIds = mappedDoctors.map((d) => d.doctor_id);
+    const existingIds = mappedDoctors.map((d) => Number(d.doctor_id));
 
-    const duplicates = ids.filter((id) => existingIds.includes(id));
-
-    if (duplicates.length) {
-      toast.warning("Some selected doctor are already registered.");
+    if (existingIds.includes(doctorId)) {
+      toast.warning("Doctor already registered.");
       return;
     }
 
     try {
-      for (const doctorId of ids) {
-        await mapDoctorClinicApi({
-          clinic_id: clinicId,
-          doctor_id: doctorId,
-          is_active: "1",
-          created_by: "system",
-          // created_by: session?.user_id ?? "system",
-        });
-      }
+      await mapDoctorClinicApi({
+        clinic_id: clinicId,
+        doctor_id: doctorId,
+        consultation_fees,
+        fees_duration,
+        is_active: "1",
+        created_by: user,
+      });
+
       toast.success("Doctor Added Successfully.");
 
       await fetchMappedDoctorByClinicId();
@@ -93,12 +97,13 @@ const DoctorEmpanelment = () => {
       } else {
         toast.error("Failed to map doctor.");
       }
-      console.error(err);
     }
   };
 
-  const mappedDoctorIds = new Set(mappedDoctors.map((d) => d.doctor_id));
-
+  // const mappedDoctorIds = new Set(mappedDoctors.map((d) => d.doctor_id));
+  const mappedDoctorIds = new Set(
+    mappedDoctors.map((d) => Number(d.doctor_id)),
+  );
   const viewItems = mappedDoctors?.map((d) => ({
     id: d.doctor_id,
     name: d.doctor_name,
@@ -108,11 +113,12 @@ const DoctorEmpanelment = () => {
     address: d.address,
     city: d.city,
     state: d.state,
+    consultation_fees: d.consultation_fees,
+    fees_duration: d.fees_duration,
   }));
 
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
-
       <div className="flex p-4 border-b border-b-[var(--color-primary)]">
         <div
           className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
@@ -189,7 +195,10 @@ const DoctorEmpanelment = () => {
               phone: d.phone,
               email: d.email,
               address: d.address,
-              alreadyMapped: mappedDoctorIds.has(d.doctor_id),
+              city: d.city,
+              state: d.state,
+              pincode: d.pincode,
+              alreadyMapped: mappedDoctorIds.has(Number(d.doctor_id)),
             }))}
             onSubmit={handleSubmitDoctors}
           />

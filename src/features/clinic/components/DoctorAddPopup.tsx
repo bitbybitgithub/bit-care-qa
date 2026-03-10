@@ -26,12 +26,17 @@ interface Props {
   loading: boolean;
   onSubmit: () => void;
   onClose: () => void;
+  errors?: {
+    fee?: string;
+    days?: string;
+  };
 }
 
 const DoctorAddPopup = ({
   doctor,
   fee,
   days,
+  errors,
   setFee,
   setDays,
   loading,
@@ -84,7 +89,6 @@ const DoctorAddPopup = ({
             </div>
           )}
         </div>
-        <hr className="text-[var(--color-primary)] h-2" />
         <div className="px-4 pb-4 pt-2 flex flex-col gap-y-1">
           <FormControl fullWidth>
             <TextField
@@ -93,7 +97,9 @@ const DoctorAddPopup = ({
               onChange={(e) => setFee(e.target.value)}
               size="small"
               type="number"
-              helperText=" "
+              error={!!errors?.fee}
+              helperText={errors?.fee || " "}
+              inputProps={{ min: 0, max: 5000 }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -111,7 +117,9 @@ const DoctorAddPopup = ({
               onChange={(e) => setDays(e.target.value)}
               size="small"
               type="number"
-              helperText=" "
+              error={!!errors?.days}
+              helperText={errors?.days || " "}
+              inputProps={{ min: 0, max: 30 }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

@@ -10,6 +10,8 @@ interface PartnerItem {
   logo?: string;
   email?: string;
   mobile?: string;
+  city?: string;
+  state?: string;
   address?: string;
   alreadyMapped?: boolean;
 }

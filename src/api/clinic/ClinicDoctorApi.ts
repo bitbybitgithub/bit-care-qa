@@ -1,5 +1,4 @@
 import { emrAPI } from "../../services/EmrApi";
-
 export interface MappedDoctor {
   clinic_doctor_id: number;
   clinic_id: number;
@@ -22,42 +21,32 @@ export interface MappedDoctor {
   profile_pic?: string;
   doctor_code?: string;
 }
-
-export async function getMappedDoctorApi(
-  clinicId: number
-): Promise<MappedDoctor[]> {
-
-  const response = await emrAPI.post<{ success: boolean; data: MappedDoctor[] }>(
-    "/clinics/get-doctor-by-clinicId",
-    {
-      clinic_id: clinicId,
-    }
-  );
-
-  console.log("get mapped doctor response", response);
-
-  return response.data;
-}
-
 export interface MapDoctorClinicPayload {
   clinic_doctor_id?: number;
   clinic_id?: number;
   doctor_id?: number;
   is_active: "0" | "1";
+  consultation_fees: number;
+  fees_duration: number;
   created_by?: string;
   modified_by?: string;
 }
 
-export async function mapDoctorClinicApi(
-  payload: MapDoctorClinicPayload
-) {
-        console.log(payload)
-  const response = await emrAPI.post(
-    "/clinics/map-doctor-clinic",
-    payload
-  );
+export async function getMappedDoctorApi(
+  clinicId: number,
+): Promise<MappedDoctor[]> {
+  const response = await emrAPI.post<{
+    success: boolean;
+    data: MappedDoctor[];
+  }>("/clinics/get-doctor-by-clinicId", {
+    clinic_id: clinicId,
+  });
+  console.log("get mapped doctor response", response);
+  return response.data;
+}
 
+export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
+  const response = await emrAPI.post("/clinics/map-doctor-clinic", payload);
   console.log("map doctor clinic response", response);
-
   return response.data;
 }

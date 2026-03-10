@@ -2,10 +2,13 @@ import {
   FaHome,
   FaUsers,
   FaCog,
+  FaClinicMedical,
+  FaUserMd
 } from "react-icons/fa";
 import { GrDocumentText } from "react-icons/gr";
 import { EntityType } from "./enum";
 import type { MenuItem, Role } from "../../types/common/sidebarTypes";
+import ScienceIcon from "@mui/icons-material/Science";
 
 export const SIDEBAR_MENUS: Record<
   EntityType,
@@ -15,9 +18,9 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
       { title: "Users", link: "/clinic/users", icon: FaUsers },
-      { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUsers },
-      { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: FaUsers },
-      { title: "Pharma Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaUsers },
+      { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUserMd },
+      { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: ScienceIcon },
+      { title: "Pharma Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaClinicMedical },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [

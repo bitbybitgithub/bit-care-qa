@@ -256,7 +256,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       <div className="flex flex-col h-full rounded-[var(--radius-lg)] bg-[var(--color-surface)]  ">
         <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
           <div>
-            <h2 className="text-[var(---color-surface-alt)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
+            <h2 className="text-[var(--color-surface-alt)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
               <FaStethoscope /> Patient Vitals
             </h2>
             <p className="text-blue-100 text-sm">{patientName}</p>

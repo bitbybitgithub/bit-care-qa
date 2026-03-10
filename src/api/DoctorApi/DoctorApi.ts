@@ -15,6 +15,9 @@ export interface DoctorList {
   address?: string;
   city?: string;
   state?: string;
+  pincode?: string;
+  consultation_fees?: number;
+  fees_duration?: number;
 }
 
 export interface MappedDoctor {

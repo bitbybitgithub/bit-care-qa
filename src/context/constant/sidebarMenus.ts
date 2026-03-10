@@ -59,4 +59,10 @@ export const SIDEBAR_MENUS: Record<
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
     ],
   },
+    [EntityType.Doctor]: {
+     Doctor: [
+      { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },
+      { title: "Profile", link: "/doctor/profile", icon: FaUsers },
+    ],
+  },
 };

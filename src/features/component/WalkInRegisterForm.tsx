@@ -195,9 +195,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const age =
     formData.dob
       ? Math.floor(
-          (new Date().getTime() - new Date(formData.dob).getTime()) /
-            (365.25 * 24 * 60 * 60 * 1000)
-        )
+        (new Date().getTime() - new Date(formData.dob).getTime()) /
+        (365.25 * 24 * 60 * 60 * 1000)
+      )
       : "";
 
   return (
@@ -407,7 +407,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               </MenuItem>
               {doctors.map((d) => (
                 <MenuItem key={d.doctor_id} value={d.name}>
-                  {`${d.name} (${d.specialization})`}
+                  {d.name}{d.specialization ? ` (${d.specialization})` : ""}
                 </MenuItem>
               ))}
             </TextField>

@@ -10,7 +10,7 @@ import {
   getMappedDoctorApi,
   mapDoctorClinicApi,
 } from "../../../api/clinic/ClinicDoctorApi";
-import AddDoctorSingleUI from "./AddDoctorSingleUI";
+import MapDoctorToClinic from "./MapDoctorToClinic";
 
 const session = getSession("user");
 const clinicId = session?.clinic_id ?? null;
@@ -115,6 +115,7 @@ const DoctorEmpanelment = () => {
     state: d.state,
     consultation_fees: d.consultation_fees,
     fees_duration: d.fees_duration,
+    qualification: d.qualification
   }));
 
   return (
@@ -186,7 +187,7 @@ const DoctorEmpanelment = () => {
         )}
 
         {activeTab === "add" && (
-          <AddDoctorSingleUI
+          <MapDoctorToClinic
             placeholder="Search doctor..."
             data={(doctor ?? []).map((d) => ({
               id: d.doctor_id,
@@ -198,6 +199,9 @@ const DoctorEmpanelment = () => {
               city: d.city,
               state: d.state,
               pincode: d.pincode,
+              experience:d.experience,
+              specialization:d.specialization,
+              qualification:d.qualification,
               alreadyMapped: mappedDoctorIds.has(Number(d.doctor_id)),
             }))}
             onSubmit={handleSubmitDoctors}

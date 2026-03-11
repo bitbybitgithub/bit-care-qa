@@ -26,6 +26,7 @@ import { toast } from "react-toastify";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import PatientActionMenu from "../clinic/components/PatientActionMenu";
 import PatientActionDrawers from "../clinic/components/PatientActionDrawers";
+import AppointmentPayment from "./AppointmentPayment";
 
 const getActionsForStatus = (status: string): string[] => {
   switch (status.toLowerCase()) {
@@ -36,7 +37,12 @@ const getActionsForStatus = (status: string): string[] => {
     case "on_hold":
       return ["Add Vitals", "Cancel Appointment"];
     case "completed":
-      return ["Send to Lab", "Send to Pharmacy", "Set Follow Up","Payment"];
+      return [
+        "Send to Lab",
+        "Send to Pharmacy",
+        "Set Follow Up",
+        "Make Payment",
+      ];
     default:
       return [];
   }
@@ -53,6 +59,8 @@ const badgeClasses = (status: string): string => {
     completed: "bg-emerald-200 text-emerald-800 border border-emerald-800",
     scheduled: "bg-cyan-200 text-cyan-800 border border-cyan-800",
     cancelled: "bg-rose-200 text-rose-800 border border-rose-800",
+    paid: "bg-green-200 text-green-800 border border-green-800",
+    unpaid: "bg-orange-200 text-orange-800 border border-orange-800",
   };
   return colors[status.toLowerCase()] || "bg-gray-100 border text-gray-800";
 };
@@ -122,7 +130,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       } else if (action === "Set Follow Up") {
         setSelectedPatient(patient);
         setFollowupDrawerOpen(true);
-      } else if (action === "Payment") {
+      } else if (action === "Make Payment") {
         setSelectedPatient(patient);
         setPaymentDrawerOpen(true);
       } else if (action === "Hold Appointment") {
@@ -263,7 +271,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
             return (
               <div
                 className={`flex justify-center items-center p-5 ${badgeClasses(
-                  row.status
+                  row.status,
                 )}`}
                 style={{
                   fontSize: "var(--font-xs)",
@@ -339,61 +347,91 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       },
       ...(queueType === "completed"
         ? [
-          {
-            field: "prescription",
-            headerName: "Prescription",
-            width: 150,
-            sortable: false,
-            filterable: false,
-            renderCell: (p) => (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => openPrescription(p.row)}
-              >
-                View
-              </Button>
-            ),
-          } as GridColDef,
-        ]
+            {
+              field: "prescription",
+              headerName: "Prescription",
+              width: 150,
+              sortable: false,
+              filterable: false,
+              renderCell: (p) => (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => openPrescription(p.row)}
+                >
+                  View
+                </Button>
+              ),
+            } as GridColDef,
+          ]
         : []),
       ...(queueType === "pending"
         ? [
-          {
-            field: "status",
-            headerName: "Status",
-            flex: 0.8,
-            minWidth: 120,
-            renderCell: (params: GridRenderCellParams<any, Patient>) => {
-              const row = params.row as Patient;
+            {
+              field: "status",
+              headerName: "Status",
+              flex: 0.8,
+              minWidth: 120,
+              renderCell: (params: GridRenderCellParams<any, Patient>) => {
+                const row = params.row as Patient;
 
-              return (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "start",
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
-                  <div
-                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
-                      row.status
-                    )}`}
-                    style={{
-                      fontSize: "var(--font-xs)",
-                      height: 36,          // 👈 force visual parity
-                      padding: "0 16px",   // 👈 match button horizontal padding
+                return (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "start",
+                      width: "100%",
+                      height: "100%",
                     }}
                   >
-                    {formatEnumText(row.status)}
-                  </div>
-                </Box>
-              );
-            },
-          } as GridColDef,
-        ]
+                    <div
+                      className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                        row.status,
+                      )}`}
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        height: 36, // 👈 force visual parity
+                        padding: "0 16px", // 👈 match button horizontal padding
+                      }}
+                    >
+                      {formatEnumText(row.status)}
+                    </div>
+                  </Box>
+                );
+              },
+            } as GridColDef,
+          ]
+        : []),
+      ...(queueType === "completed"
+        ? [
+            {
+              field: "payment_status",
+              headerName: "Payment Status",
+              flex: 0.8,
+              minWidth: 150,
+              sortable: false,
+              filterable: false,
+              renderCell: (params) => {
+                const row = params.row || {};
+                const is_fee_paid = row.is_fee_paid === "1" ? "Paid" : "Unpaid";
+                return (
+                  <p
+                    style={{
+                      fontSize: "var(--font-xs)",
+                      height: 36, // 👈 force visual parity
+                      padding: "0 16px", // 👈 match button horizontal padding
+                    }}
+                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                      is_fee_paid,
+                    )}`}
+                  >
+                    {is_fee_paid}
+                  </p>
+                );
+              },
+            } as GridColDef,
+          ]
         : []),
       {
         field: "action",
@@ -416,8 +454,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
               onAction={handleAction}
             />
           );
-        }
-
+        },
       },
     ];
 
@@ -448,11 +485,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   );
 
   const getRowId: GridRowIdGetter = (row: any) => row.appointment_id;
+  console.log("Completed Appointments:", rows);
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${classProp || ""
-        }`}
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${
+        classProp || ""
+      }`}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         <div className="flex items-center gap-3"></div>
@@ -563,16 +602,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         vitalsOpen={vitalsDrawerOpen}
         serviceDrawer={serviceDrawer}
         followupOpen={followupDrawerOpen}
-         paymentOpen={paymentDrawerOpen}    
+        paymentOpen={paymentDrawerOpen}
         onCloseVitals={() => setVitalsDrawerOpen(false)}
-        onCloseService={() =>
-          setServiceDrawer({ open: false, type: null })
-        }
+        onCloseService={() => setServiceDrawer({ open: false, type: null })}
         onCloseFollowup={() => setFollowupDrawerOpen(false)}
-          onClosePayment={() => setPaymentDrawerOpen(false)} 
+        onClosePayment={() => setPaymentDrawerOpen(false)}
         onStatusUpdate={handleUpdatePatientStatus}
       />
-
     </div>
   );
 };

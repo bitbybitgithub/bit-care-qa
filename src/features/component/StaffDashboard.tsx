@@ -174,7 +174,6 @@ const StaffDashboard: React.FC = () => {
     setErrorQueue(null);
     try {
       const appointments = await getCompletedQueue(clinicId);
-
       const mapped: Patient[] = appointments.map((a) => ({
         patient_id: a.patient_id,
         patientId: a.patient_id,
@@ -187,6 +186,7 @@ const StaffDashboard: React.FC = () => {
         date_of_birth: a.dob,
         mobile_number: a.contact,
         time: undefined,
+        is_fee_paid: a.is_fee_paid,
         raw: {
           appointment_id: Number(a.appointment_id),
           patient_id: a.patient_id,

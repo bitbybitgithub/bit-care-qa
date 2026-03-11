@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from "react";
 import { Button, Menu, MenuItem, Box } from "@mui/material";
-import { RiHeartAdd2Line } from "react-icons/ri";
+import { RiHeartAdd2Line, RiSecurePaymentFill } from "react-icons/ri";
 import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
 import { FaFlask, FaClinicMedical } from "react-icons/fa";
 import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaRupeeSign } from "react-icons/fa";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
+import { Payment } from "@mui/icons-material";
 
 interface PatientActionMenuProps {
   patient: Patient;
@@ -23,13 +24,10 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
 
   const open = Boolean(anchorEl);
 
-  const handleOpen = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      e.stopPropagation();
-      setAnchorEl(e.currentTarget);
-    },
-    []
-  );
+  const handleOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+  }, []);
 
   const handleClose = useCallback(() => {
     setAnchorEl(null);
@@ -86,7 +84,14 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
                   <FaClinicMedical style={{ color: "var(--color-success)" }} />
                 )}
                 {a === "Set Follow Up" && (
-                  <RiChatFollowUpFill style={{ color: "var(--color-warning)" }} />
+                  <RiChatFollowUpFill
+                    style={{ color: "var(--color-warning)" }}
+                  />
+                )}
+                {a === "Make Payment" && (
+                  <RiSecurePaymentFill
+                    style={{ color: "var(--color-warning)" }}
+                  />
                 )}
                 {a === "Payment" && (
                   <FaRupeeSign style={{ color: "var(--color-info)" }} />

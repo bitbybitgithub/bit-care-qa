@@ -13,6 +13,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import { FaRupeeSign } from "react-icons/fa";
+import { getSessionItem } from "../../context/sessions/userSession";
+import { emrAPI } from "../../services/EmrApi";
 
 interface Props {
   patient: Patient | null;
@@ -25,7 +27,7 @@ const methods = [
     color: "emerald",
   },
   {
-    key: "UPI",
+    key: "ONLINE",
     icon: Smartphone,
     color: "violet",
   },
@@ -54,6 +56,8 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
   const [transactionId, setTransactionId] = useState("");
   const [method, setMethod] = useState("CASH");
   const [loading, setLoading] = useState(false);
+  const userId = getSessionItem("user", "user_id");
+  const clinicId = getSessionItem("user", "clinic_id");
 
   const handleSubmit = async () => {
     if (!patient) return;
@@ -68,25 +72,25 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
 
       const payload = {
         appointment_id: patient.appointment_id,
-        patient_id: patient.raw?.patient_id,
-        doctor_id: patient.raw?.doctor_id,
-        clinic_id: patient.raw?.clinic_id,
+        patient_id: Number(patient.raw?.patient_id),
+        doctor_id: Number(patient.raw?.doctor_id),
+        clinic_id: clinicId,
         amount,
         payment_method: method,
-        transaction_id: `PAY-${Date.now()}`,
         bank_transaction_id: transactionId,
         payment_gateway: "",
         payment_status: "SUCCESS",
         remarks,
+        created_by: userId,
       };
 
-      // await axios.post(
-      //   "http://localhost:8989/api/payments/save",
-      //   payload
-      // );
-
-      toast.success("Payment saved successfully");
-      onClose?.();
+      // console.log(payload);
+      const response = await emrAPI.post("/payments/save", payload);
+      // console.log(response);
+      if (response?.success) {
+        toast.success(`${response?.message}  ${response?.transaction_id}`);
+        onClose?.();
+      }
     } catch (error) {
       console.error(error);
       toast.error("Payment failed");
@@ -102,7 +106,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
         <div>
           <h2 className="flex items-center gap-2 text-white text-base font-semibold">
             <FaRupeeSign />
-            Record Payment
+            Make Payment
           </h2>
           <p className="text-white text-xs">{patient?.name}</p>
         </div>
@@ -148,6 +152,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
                 <div
                   key={key}
                   onClick={() => setMethod(key)}
+                  disabled={method === "ONLINE" ? true : false}
                   className={`cursor-pointer flex items-center justify-center gap-2
       px-4 py-3 rounded-xl border transition-all duration-200
       ${

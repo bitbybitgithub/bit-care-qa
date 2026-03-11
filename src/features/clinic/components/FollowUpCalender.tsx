@@ -24,14 +24,13 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const [followUpReason, setFollowUpReason] = useState("");
   const startOfMonth = currentMonth.startOf("month");
   const startDay = startOfMonth.day();
   const daysInMonth = currentMonth.daysInMonth();
 
   const user = getSessionItem("user", "user_id");
-  const clinic_id = getSessionItem("user", "clinic_id");
-  
+  const clinicId = getSessionItem("user", "clinic_id");
 
   const isPrevDisabled =
     currentMonth.isSame(today, "month") ||
@@ -56,7 +55,10 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       toast.error("Please select follow-up date");
       return;
     }
-
+  if (!followUpReason.trim()) {
+    toast.error("Please enter reason for follow up");
+    return;
+  }
     setLoading(true);
 
     try {
@@ -66,7 +68,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       const appointmentData = {
         patient_id: patient.patient_id,
         doctor_id: patient.raw?.doctor_id || 0,
-        clinic_id : Number(clinic_id),
+        clinic_id: clinicId,
         patient_name: patient.name,
         doctor_name: patient.doctor,
         gender: patient.gender,
@@ -75,14 +77,16 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         end_time: formatTime(endTime),
         status: AppointmentStatus.Scheduled,
         source: "walk_in",
-        reason: "Follow Up Visit",
+        reason: followUpReason,
         date_of_birth: patient.date_of_birth,
         mobile_number: patient.mobile_number,
         user_id: user,
+        follow_up_id: patient.appointment_id,
+        is_follow_up: true,
       };
 
       await saveAppointment(appointmentData);
-      toast.success("Patient Next Appointment saved successfully!");
+      toast.success("Patient Next Appointment Saved");
       onClose?.();
     } catch (error) {
       console.error(error);
@@ -192,8 +196,19 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
             })}
           </div>
         </div>
+        <div>
+          <TextField
+            placeholder="Reason for Follow Up"
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            size="small"
+            value={followUpReason}
+            onChange={(e) => setFollowUpReason(e.target.value)}
+          />
+        </div>
       </div>
-
       <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-bg)] sticky bottom-0">
         <Button variant="outlined" size="small" fullWidth onClick={onClose}>
           Cancel

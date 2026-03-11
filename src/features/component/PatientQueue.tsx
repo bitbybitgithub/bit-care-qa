@@ -36,7 +36,7 @@ const getActionsForStatus = (status: string): string[] => {
     case "on_hold":
       return ["Add Vitals", "Cancel Appointment"];
     case "completed":
-      return ["Send to Lab", "Send to Pharmacy", "Set Follow Up"];
+      return ["Send to Lab", "Send to Pharmacy", "Set Follow Up","Payment"];
     default:
       return [];
   }
@@ -92,6 +92,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   }>({ open: false, type: null });
 
   const [followupDrawerOpen, setFollowupDrawerOpen] = useState(false);
+  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").toString().trim().toLowerCase();
@@ -121,6 +122,9 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       } else if (action === "Set Follow Up") {
         setSelectedPatient(patient);
         setFollowupDrawerOpen(true);
+      } else if (action === "Payment") {
+        setSelectedPatient(patient);
+        setPaymentDrawerOpen(true);
       } else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
       }
@@ -559,11 +563,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         vitalsOpen={vitalsDrawerOpen}
         serviceDrawer={serviceDrawer}
         followupOpen={followupDrawerOpen}
+         paymentOpen={paymentDrawerOpen}    
         onCloseVitals={() => setVitalsDrawerOpen(false)}
         onCloseService={() =>
           setServiceDrawer({ open: false, type: null })
         }
         onCloseFollowup={() => setFollowupDrawerOpen(false)}
+          onClosePayment={() => setPaymentDrawerOpen(false)} 
         onStatusUpdate={handleUpdatePatientStatus}
       />
 

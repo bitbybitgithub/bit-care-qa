@@ -5,6 +5,7 @@ import { AiOutlineUserDelete } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
 import { FaFlask, FaClinicMedical } from "react-icons/fa";
 import { RiChatFollowUpFill } from "react-icons/ri";
+import { FaRupeeSign } from "react-icons/fa";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 
 interface PatientActionMenuProps {
@@ -86,6 +87,9 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
                 )}
                 {a === "Set Follow Up" && (
                   <RiChatFollowUpFill style={{ color: "var(--color-warning)" }} />
+                )}
+                {a === "Payment" && (
+                  <FaRupeeSign style={{ color: "var(--color-info)" }} />
                 )}
                 <span>{a}</span>
               </Box>

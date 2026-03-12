@@ -19,7 +19,10 @@ import { getSessionItem } from "../../../context/sessions/userSession";
 import type { ResetPassErrors } from "../../../types/types";
 import { usePasswordStrength } from "../../../components/common/usePasswordStrength";
 import { checkUserExists, resetPasswordApi } from "../../../api";
-import { generateOtpApi, verifyOtpApi } from "../../../api/GenerateAndVerifyOtpApi";
+import {
+  generateOtpApi,
+  verifyOtpApi,
+} from "../../../api/GenerateAndVerifyOtpApi";
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";
@@ -104,7 +107,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   }, [source, localuserId]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -124,6 +127,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     try {
       const response = await checkUserExists(formData.username);
       if (response.success) {
+        console.log("User exists response:", response);
         const numericId = Number(response.userId);
         setFormData((prev) => ({
           ...prev,
@@ -136,7 +140,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         setShowOtp(true);
       } else {
         toast.error(
-          response.message || "User not found. Please check username."
+          response.message || "User not found. Please check username.",
         );
         setShowOtp(false);
       }
@@ -158,12 +162,13 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");
         if (res.userId) {
-          const numeric = Number(res.userId);
-          setFormData((prev) => ({
-            ...prev,
-            userId: isNaN(numeric) ? null : numeric,
-          }));
-          setInternalUserId(isNaN(numeric) ? null : numeric);
+          console.log("Received userId from OTP API:", res.userId);
+          // const numeric = Number(res.userId);
+          // setFormData((prev) => ({
+          //   ...prev,
+          //   userId: isNaN(numeric) ? null : numeric,
+          // }));
+          // setInternalUserId(isNaN(numeric) ? null : numeric);
         }
         setShowOtp(true);
       } else {
@@ -290,17 +295,17 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               }}
               sx={{
                 "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
-                {
-                  borderColor: "var(--color-border)",
-                },
+                  {
+                    borderColor: "var(--color-border)",
+                  },
                 "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
-                {
-                  borderColor: "var(--color-border)",
-                },
+                  {
+                    borderColor: "var(--color-border)",
+                  },
                 "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
-                {
-                  borderColor: "var(--color-border)",
-                },
+                  {
+                    borderColor: "var(--color-border)",
+                  },
               }}
             />
 

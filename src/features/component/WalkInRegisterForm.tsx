@@ -53,6 +53,17 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
   const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
   const endTime = new Date(now.getTime() + 15 * 60 * 1000);
+  const NAME_REGEX = /^[A-Za-z\s.'-]{2,50}$/;
+  const MOBILE_REGEX = /^[6-9]\d{9}$/;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const REASON_REGEX = /^[A-Za-z0-9\s.,'-]{3,200}$/;
+  const [age, setAge] = useState<number | "">("");
+  const today = new Date();
+  const maxDate = today.toISOString().split("T")[0];
+
+  const minDateObj = new Date();
+  minDateObj.setFullYear(today.getFullYear() - 120);
+  const minDate = minDateObj.toISOString().split("T")[0];
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -69,6 +80,24 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     };
     fetchDoctors();
   }, []);
+  useEffect(() => {
+    if (!formData.dob) {
+      setAge("");
+      return;
+    }
+
+    const today = new Date();
+    const birthDate = new Date(formData.dob);
+
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      calculatedAge--;
+    }
+
+    setAge(calculatedAge);
+  }, [formData.dob]);
 
   useEffect(() => {
     if (patientData) {
@@ -98,16 +127,45 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
   const validate = (data: WalkinFormData) => {
     const newErrors: Record<string, string> = {};
-    if (!data.name.trim()) newErrors.name = "Full name is required";
-    if (!data.dob) newErrors.dob = "Date of birth is required";
-    if (!data.gender.trim()) newErrors.gender = "Gender is required";
 
-    if (!data.phone.trim()) newErrors.phone = "Mobile number is required";
-    else if (!/^\d{10}$/.test(data.phone))
-      newErrors.phone = "Enter valid 10-digit mobile";
+    if (!data.name.trim()) {
+      newErrors.name = "Full name is required";
+    } else if (!NAME_REGEX.test(data.name.trim())) {
+      newErrors.name = "Name should contain only letters";
+    }
+    if (!data.dob) {
+      newErrors.dob = "Date of birth is required";
+    } else {
+      const dob = new Date(data.dob);
+      const today = new Date();
 
-    if (data.email && !/^\S+@\S+\.\S+$/.test(data.email))
+      const age =
+        (today.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+
+      if (age < 0) newErrors.dob = "DOB cannot be in the future";
+      else if (age > 120) newErrors.dob = "Invalid date of birth";
+    }
+    if (!data.gender.trim()) {
+      newErrors.gender = "Gender is required";
+    }
+    if (!data.phone.trim()) {
+      newErrors.phone = "Mobile number is required";
+    } else if (!MOBILE_REGEX.test(data.phone)) {
+      newErrors.phone = "Enter valid Indian mobile number";
+    }
+    if (!data.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!EMAIL_REGEX.test(data.email.trim())) {
       newErrors.email = "Invalid email format";
+    }
+    if (!data.doctor.trim()) {
+      newErrors.doctor = "Please select doctor";
+    }
+    if (!data.reason.trim()) {
+      newErrors.reason = "Reason is required";
+    } else if (!REASON_REGEX.test(data.reason.trim())) {
+      newErrors.reason = "Invalid characters in reason";
+    }
 
     return newErrors;
   };
@@ -115,11 +173,26 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    let newValue = value;
+    if (name === "name") {
+      newValue = value.replace(/[^A-Za-z\s.'-]/g, "");
+    }
+    if (name === "phone") {
+      newValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+    if (name === "reason") {
+      newValue = value.slice(0, 200);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +227,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const appointmentData = {
         patient_id: patientId,
         doctor_id: selectedDoctor?.doctor_id || 0,
-        clinic_id : Number(clinic_id),
+        clinic_id: Number(clinic_id),
         patient_name: formData.name,
         doctor_name: formData.doctor,
         gender: formData.gender,
@@ -193,24 +266,13 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     }
   };
 
-  const age =
-    formData.dob
-      ? Math.floor(
-        (new Date().getTime() - new Date(formData.dob).getTime()) /
-        (365.25 * 24 * 60 * 60 * 1000)
-      )
-      : "";
-
   return (
-    <div
-      className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-md"
-    >
+    <div className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-md">
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
         className="bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-lg mx-4 p-6 transform transition-all"
       >
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <FaUsers
@@ -232,8 +294,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             <FaTimes />
           </button>
         </div>
-
-        {/* Body - vertical form, no scroll */}
         <div className="flex flex-col gap-y-3">
           {/* Full Name */}
           <FormControl fullWidth>
@@ -255,9 +315,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             />
           </FormControl>
 
-          {/* Row 1: DOB + Age */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* DOB */}
             <FormControl fullWidth>
               <TextField
                 type="date"
@@ -267,7 +325,11 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 size="small"
                 error={!!errors.dob}
                 helperText={errors.dob || " "}
-                InputLabelProps={{ shrink: !!formData.dob }}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  max: maxDate,
+                  min: minDate,
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -278,23 +340,18 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               />
             </FormControl>
 
-            {/* Age (read-only) */}
             <FormControl fullWidth>
               <TextField
-                value={age ? `${age} years` : ""}
+                value={age !== "" ? `${age} years` : ""}
                 placeholder="Age"
                 size="small"
-                InputProps={{
-                  readOnly: true,
-                }}
+                InputProps={{ readOnly: true }}
                 helperText=" "
               />
             </FormControl>
           </div>
 
-          {/* Row 2: Mobile + Gender */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Contact Number */}
             <FormControl fullWidth>
               <TextField
                 name="phone"
@@ -315,7 +372,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               />
             </FormControl>
 
-            {/* Gender */}
             <FormControl fullWidth error={!!errors.gender}>
               <TextField
                 select
@@ -324,6 +380,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
                 size="small"
                 helperText={errors.gender || " "}
+                error={!!errors.gender}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -353,7 +410,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             </FormControl>
           </div>
 
-          {/* Email */}
           <FormControl fullWidth>
             <TextField
               type="email"
@@ -374,7 +430,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
             />
           </FormControl>
 
-          {/* Doctor */}
           <FormControl fullWidth>
             <TextField
               select
@@ -383,7 +438,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
               size="small"
               disabled={doctorLoading}
-              helperText=" "
+              error={!!errors.doctor}
+              helperText={errors.doctor || " "}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -408,13 +464,13 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               </MenuItem>
               {doctors.map((d) => (
                 <MenuItem key={d.doctor_id} value={d.name}>
-                  {d.name}{d.specialization ? ` (${d.specialization})` : ""}
+                  {d.name}
+                  {d.specialization ? ` (${d.specialization})` : ""}
                 </MenuItem>
               ))}
             </TextField>
           </FormControl>
 
-          {/* Reason for Visit */}
           <FormControl fullWidth>
             <TextField
               multiline
@@ -437,7 +493,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </FormControl>
         </div>
 
-        {/* Actions */}
         <div className="flex justify-center gap-4 mt-6">
           <Button
             type="submit"

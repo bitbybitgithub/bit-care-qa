@@ -210,6 +210,7 @@ const StaffDashboard: React.FC = () => {
 
   const handlePatientSelect = (patient: Patient | null, contact: string) => {
     setSelectedPatient(patient);
+    setContact(contact); 
     setShowRegistrationForm(true);
     setOpenWalkIn(false);
   };

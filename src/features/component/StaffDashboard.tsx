@@ -104,7 +104,9 @@ const StaffDashboard: React.FC = () => {
     };
 
     socket.on("appointmentUpdate", handleUpdate);
-    return () => socket.off("appointmentUpdate", handleUpdate);
+    return () => {
+      socket.off("appointmentUpdate", handleUpdate);
+    };
   }, [socket, activeTab]);
 
   useEffect(() => {
@@ -112,10 +114,14 @@ const StaffDashboard: React.FC = () => {
       .then((data) => {
         const mapped: DashboardCard[] = data
           .map((item) => ({
-            ...item,
+            id: item.card_id,
+            title: item.card_title,
+            value: item.count,
             icon: cardIcon[item.card_id] || null,
+            description: item.card_description,
+            key: item.key,
           }))
-          .sort((a, b) => a.card_id - b.card_id);
+          .sort((a, b) => a.id - b.id);
 
         setStats(mapped);
       })
@@ -277,7 +283,7 @@ const StaffDashboard: React.FC = () => {
                   role="tab"
                   aria-selected={activeTab === t.key}
                   onClick={() => {
-                    setActiveTab(t.key);
+                    setActiveTab(t.key as ActiveTab);
                   }}
                   className={`
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]

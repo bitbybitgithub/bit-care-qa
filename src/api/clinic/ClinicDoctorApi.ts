@@ -41,12 +41,10 @@ export async function getMappedDoctorApi(
   }>("/clinics/get-doctor-by-clinicId", {
     clinic_id: clinicId,
   });
-  console.log("get mapped doctor response", response);
-  return response.data;
+    return response.data;
 }
 
 export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
   const response = await emrAPI.post("/clinics/map-doctor-clinic", payload);
-  console.log("map doctor clinic response", response);
   return response.data;
 }

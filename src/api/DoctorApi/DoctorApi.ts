@@ -32,19 +32,6 @@ export interface MappedDoctor {
 };
 
 export const getDoctorListApi = async (): Promise<DoctorList[]> => {
-  const response = await emrAPI.get<{ doctorList: DoctorList[] }>("/doctors/getdoctorlist");
-  console.log("get doctor list response",response)
+  const response = await emrAPI.get<{ data: DoctorList[] }>("/doctors/getdoctorlist");
   return response.data;
 };
-
-
-export async function getMappedDoctorApi(
-  clinicId: number
-): Promise<MappedDoctor[]> {
-  return emrAPI.post<MappedDoctor[]>(
-    "/clinics/mapped-doctor",
-    {
-      clinic_id: clinicId,
-    }
-  );
-}

@@ -25,7 +25,7 @@ import type {
   WalkinFormData,
   WalkInRegisterFormProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
-import { getDoctorListApi, type DoctorList } from "../../api";
+import { getMappedDoctorApi, type MappedDoctor } from "../../api/clinic/ClinicDoctorApi";
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,
@@ -44,7 +44,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [doctors, setDoctors] = useState<DoctorList[]>([]);
+  const [doctors, setDoctors] = useState<MappedDoctor[]>([]);
   const [doctorLoading, setDoctorLoading] = useState(false);
 
   const now = new Date();
@@ -69,8 +69,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     const fetchDoctors = async () => {
       try {
         setDoctorLoading(true);
-        const list = await getDoctorListApi();
-        setDoctors(list as DoctorList[]);
+        const list = await getMappedDoctorApi(clinic_id)
+        setDoctors(list as MappedDoctor[]);
       } catch (err) {
         console.error("Error fetching doctor list:", err);
         setDoctors([]);
@@ -222,7 +222,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         patientId = res.patientId;
       }
 
-      const selectedDoctor = doctors.find((d) => d.name === formData.doctor);
+      const selectedDoctor = doctors.find((d) => d.doctor_name === formData.doctor);
 
       const appointmentData = {
         patient_id: patientId,
@@ -463,9 +463,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
               </MenuItem>
               {doctors.map((d) => (
-                <MenuItem key={d.doctor_id} value={d.name}>
-                  {d.name}
-                  {d.specialization ? ` (${d.specialization})` : ""}
+                <MenuItem key={d.doctor_id} value={d.doctor_name}>
+                  {d.doctor_name}{d.specialized_in ? ` (${d.specialized_in})` : ""}
                 </MenuItem>
               ))}
             </TextField>

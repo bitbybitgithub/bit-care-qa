@@ -53,7 +53,6 @@ export default function PharmacyQueues({
     const fetchData = async () => {
       try {
         const res = await getPharmaPatientRecords(pharmaId);
-        console.log("pharama records", res);
         const data = (res as any)?.data ?? res ?? [];
         setRows(Array.isArray(data) ? data : []);
       } catch {
@@ -152,7 +151,6 @@ export default function PharmacyQueues({
         userID,
         "Complete",
       );
-      console.log("updatePharmaPatientStatus", res);
       if (!res?.success) {
         throw new Error("Status update failed");
       }

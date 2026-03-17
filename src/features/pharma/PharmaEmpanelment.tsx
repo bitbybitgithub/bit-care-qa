@@ -7,7 +7,7 @@ import {
   getActivePharmaListApi,
   getMappedPharmaciesApi,
 } from "../../api/pharmacyApi/PharmacyApi";
-import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
+import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
 import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
 

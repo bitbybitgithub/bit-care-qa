@@ -10,10 +10,10 @@ import {
   FaKey,
 } from "react-icons/fa";
 import { VscPersonAdd } from "react-icons/vsc";
-import { saveDocAPI } from "../../api/SaveDocApi";
+import { saveUsersAPI } from "../../api/clinic/SaveUpdateUserApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { getRoles, type Role } from "../../api/MasterApi";
-import { saveUserAPI } from "../../api/SaveLabPharmacyUserApi";
+import { saveLabPharmaUserAPI } from "../../api/CommonApi/SaveLabPharmacyUserApi";
 import Regex from "../../context/constant/Regex";
 
 interface AddUserProps {
@@ -126,7 +126,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
       let response;
 
       if (module === "CLINIC") {
-        response = await saveDocAPI({
+        response = await saveUsersAPI({
           clinic_id: clinicId,
           name: formData.name.trim(),
           email: formData.email.trim(),
@@ -137,7 +137,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
           created_by: createdBy,
         });
       } else {
-        response = await saveUserAPI({
+        response = await saveLabPharmaUserAPI({
           entity_type: entity_name,
           entity_id: entityId,
           name: formData.name.trim(),
@@ -152,7 +152,6 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
 
       const data = (response as any)?.data ?? response;
       if (data?.success) {
-        toast.success(data.message || "User added successfully");
         onSuccess?.();
         handleClose();
       } else {

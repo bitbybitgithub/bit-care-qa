@@ -20,7 +20,7 @@ export interface DoctorList {
   fees_duration?: number;
 }
 
-export interface MappedDoctor {
+export interface MappedDoctorList {
   doctor_id: number;
   name: string;
   phone?: string;
@@ -33,5 +33,6 @@ export interface MappedDoctor {
 
 export const getDoctorListApi = async (): Promise<DoctorList[]> => {
   const response = await emrAPI.get<{ data: DoctorList[] }>("/doctors/getdoctorlist");
+  console.log("get doctor list response",response)
   return response.data;
 };

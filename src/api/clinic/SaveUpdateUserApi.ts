@@ -1,38 +1,40 @@
-import { emrAPI } from "../services/EmrApi";
+import { emrAPI } from "../../services/EmrApi";
 
-export const saveUserAPI = async (userData: {
-  entity_type: string;
-  entity_id: number;
+export const saveUsersAPI = async (doctorData: {
+  clinic_id: number;
   name: string;
   email: string;
   role: string;
   phone: string;
   username: string;
   password: string;
-  created_by: string;
+  created_by:string;
 }) => {
   try {
-    const response = await emrAPI.post("/common/add-labpharma-user", userData);
-    return response;
+    const response = await emrAPI.post("/clinics/add-user", doctorData);
+    console.log("clinic user response",response)
+    return response; 
   } catch (error: any) {
     console.error("Error adding doctor:", error);
     throw error;
   }
 };
 
+
+
 export const updateUsers = async (userData: {
   user_id: number;
   status: boolean;
   phone: string;
-}) => {
+}): Promise<{success: boolean,message:string}> => {
   try {
-    const response = await emrAPI.post(
+    const response = await emrAPI.post<{success: boolean,message:string}>(
       "/clinics/active-deactivate-user",
       userData
     );
-    return response;
+    return response; 
   } catch (error: any) {
-    console.error("Error:", error);
     throw error;
   }
 };
+

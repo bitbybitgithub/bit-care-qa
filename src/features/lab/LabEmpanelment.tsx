@@ -7,7 +7,7 @@ import {
   getActiveLabListApi,
   getMappedLabsApi,
 } from "../../api/labApis/LabApi";
-import { mapClinicPartnersApi } from "../../api/CommonApi/SaveLabAndPharmaApi";
+import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
 import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
 import { toast } from "react-toastify";
 

@@ -8,7 +8,7 @@ import ProfileCard from "../../components/common/ProfileCards";
 import ConfirmModal from "../../utils/ConfirmModal";
 
 import { getUsersList, type User } from "../../api/UserManagementAPI";
-import { updateUsers } from "../../api/SaveDocApi";
+import { updateUsers } from "../../api/clinic/SaveUpdateUserApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 
 const Users: React.FC = () => {
@@ -35,30 +35,6 @@ const Users: React.FC = () => {
 
 const hasShownToast = useRef(false);
 
-// useEffect(() => {
-//   const entity_id = getEntityId();
-//   if (!entity_name || !entity_id) return;
-//   setLoading(true);
-//   getUsersList(entity_name, entity_id)
-//     .then(({ data, message }) => {
-//       setUsers(data);
-
-//       if (message && !hasShownToast.current) {
-//         toast.info(message);
-//         hasShownToast.current = true;
-//       }
-//     })
-//     .catch((error: unknown) => {
-//       let message = "Failed to load users";
-
-//       if (error instanceof AxiosError) {
-//         message = error.response?.data?.message || error.message;
-//       }
-//       toast.error(message);
-//     })
-//     .finally(() => setLoading(false));
-// }, [entity_name, getEntityId]);
-
 const fetchUsers = useCallback(async () => {
   const entity_id = getEntityId();
   if (!entity_name || !entity_id) return;
@@ -69,7 +45,6 @@ const fetchUsers = useCallback(async () => {
     setUsers(data);
 
     if (message && !hasShownToast.current) {
-      // toast.info(message);
       hasShownToast.current = true;
     }
   } catch (error: unknown) {

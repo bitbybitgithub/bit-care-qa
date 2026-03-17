@@ -23,7 +23,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         <div className="flex justify-between gap-3">
           <button
-            className="px-4 py-2 bg-gray-300 rounded"
+            className="px-4 py-2 bg-white rounded"
             onClick={onCancel}
             disabled={loading}
           >

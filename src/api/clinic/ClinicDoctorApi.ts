@@ -46,5 +46,5 @@ export async function getMappedDoctorApi(
 
 export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
   const response = await emrAPI.post("/clinics/map-doctor-clinic", payload);
-  return response.data;
+  return response;
 }

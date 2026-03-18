@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,17 +9,19 @@ import {
   FormHelperText,
   FormControl,
   IconButton,
+  Dialog,
 } from "@mui/material";
 import { FaPhoneAlt, FaUser, FaLock } from "react-icons/fa";
 import { loginSuccess } from "../../../redux/authSlice";
 import type { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { TokenManager, loginApi } from "../../../api";
+import { TokenManager, loginApi, selectClinicApi } from "../../../api";
 import { setSession } from "../../../context/sessions/userSession";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Regex from "../../../context/constant/Regex";
+import MultiClinicCardView from "./MultiClinicCardView";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -39,7 +41,12 @@ const Login = () => {
 
   const [source, setSource] = useState<
     "resetPassword" | "forgottenPassword" | null
-  >(null);
+    >(null);
+  
+  //clinics list popup states
+  const [openPopup, setOpenPopup] = useState(false);
+  const [loginResponse, setLoginResponse] = useState<any[]>([]);
+  const clinicSelectResolverRef = useRef<((clinic: any) => void) | null>(null);
 
   const DASHBOARD_ROUTES: Record<number, Record<string, string>> = {
   1: { 
@@ -99,6 +106,30 @@ const Login = () => {
     }
   };
 
+  const waitForClinicSelect = (): Promise<any> => {
+    return new Promise((resolve) => {
+      clinicSelectResolverRef.current = resolve;
+      setOpenPopup(true);
+    });
+  };
+
+  const handleClinicSelect = async(clinic: any) => {
+    setOpenPopup(false);
+    if (clinicSelectResolverRef.current) {
+       const requestBody = {
+          doctorId: loginResponse?.user?.doctor_id,
+          clinicId: clinic.clinic_id,
+          ip_address: "192.168.1.9",
+          platform: "web",
+        };
+      clinicSelectResolverRef.current(clinic); // null if cancelled
+      const selectApiResponse = await selectClinicApi(requestBody);
+      TokenManager.setAccessToken(selectApiResponse.accessToken);
+      clinicSelectResolverRef.current = null;
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const number = isClinic ? clinicUserId.trim() : patientNumber.trim();
@@ -146,10 +177,20 @@ const Login = () => {
           platform: "web",
         };
         const data = await loginApi(requestBody);
-        console.log(data.user.entity_type, data.user.role)
+        console.log(data)
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
+         if (data.user.role === "Doctor" && data?.clinics?.length > 0) {
+          setLoginResponse(data);
+           const selectedClinic = await waitForClinicSelect();
+           if (!selectedClinic) return; // user cancelled
+           setSession("user", {
+             ...data.user,
+             clinic_id: selectedClinic.clinic_id,
+           });
+         }
+          
           if (data.user.is_temp_password === "1") {
             setSource("resetPassword");
             setClinicUserId("");
@@ -161,7 +202,7 @@ const Login = () => {
               return;
             }
             navigate(route);
-            toast.success("Login successful");
+            toast.success("Login successfull");
           }
           dispatch(loginSuccess());
         } else {
@@ -182,6 +223,9 @@ const Login = () => {
     }
   };
 
+
+
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-bg)] p-7">
       <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
@@ -193,8 +237,7 @@ const Login = () => {
                   ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
                   : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-90"
               }`}
-              onClick={() => setIsClinic(false)}
-            >
+              onClick={() => setIsClinic(false)}>
               Patient
             </button>
             <button
@@ -203,8 +246,7 @@ const Login = () => {
                   ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
                   : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-900"
               }`}
-              onClick={() => setIsClinic(true)}
-            >
+              onClick={() => setIsClinic(true)}>
               Clinic
             </button>
           </div>
@@ -275,8 +317,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setSource("forgottenPassword")}
-                    className="text-sm text-[var(--color-info)] hover:underline font-medium"
-                  >
+                    className="text-sm text-[var(--color-info)] hover:underline font-medium">
                     Forgot Password?
                   </button>
                 </div>
@@ -284,8 +325,7 @@ const Login = () => {
                   type="submit"
                   variant="contained"
                   color="primary"
-                  sx={{ borderRadius: "12px", py: 1, fontWeight: 600 }}
-                >
+                  sx={{ borderRadius: "12px", py: 1, fontWeight: 600 }}>
                   {loading ? (
                     <CircularProgress size={22} color="inherit" />
                   ) : (
@@ -298,8 +338,7 @@ const Login = () => {
                       Don't have an account?{" "}
                       <Link
                         to="/register"
-                        className="text-[var(--color-info)] hover:underline cursor-pointer font-semibold"
-                      >
+                        className="text-[var(--color-info)] hover:underline cursor-pointer font-semibold">
                         Register Center
                       </Link>
                     </p>
@@ -316,15 +355,13 @@ const Login = () => {
               isClinic
                 ? "left-0 translate-x-full opacity-0 z-10"
                 : "left-0 opacity-100 z-50"
-            }`}
-          >
+            }`}>
             {source ? (
               <ResetPasswordForm source={source} setSource={setSource} />
             ) : (
               <form
                 onSubmit={handleSubmit}
-                className="flex flex-col items-center justify-center h-full px-10 space-y-5 w-full"
-              >
+                className="flex flex-col items-center justify-center h-full px-10 space-y-5 w-full">
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
                   Patient Login
                 </h1>
@@ -355,8 +392,7 @@ const Login = () => {
                     sx={{
                       minHeight: "20px",
                       visibility: errors.number ? "visible" : "hidden",
-                    }}
-                  >
+                    }}>
                     {errors.number}
                   </FormHelperText>
                 </FormControl>
@@ -377,8 +413,7 @@ const Login = () => {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            onClick={() => setShowPassword((p) => !p)}
-                          >
+                            onClick={() => setShowPassword((p) => !p)}>
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
@@ -393,8 +428,7 @@ const Login = () => {
                     sx={{
                       minHeight: "20px",
                       visibility: errors.password ? "visible" : "hidden",
-                    }}
-                  >
+                    }}>
                     {errors.password}
                   </FormHelperText>
                 </FormControl>
@@ -402,8 +436,7 @@ const Login = () => {
                 <div className="text-right -mt-2 mb-3 w-full">
                   <a
                     href="#"
-                    className="text-sm text-[var(--color-info)] hover:underline font-medium"
-                  >
+                    className="text-sm text-[var(--color-info)] hover:underline font-medium">
                     Forgot Password?
                   </a>
                 </div>
@@ -423,8 +456,7 @@ const Login = () => {
                     borderRadius: "12px",
                     py: 1,
                     fontWeight: 600,
-                  }}
-                >
+                  }}>
                   Login
                 </Button>
 
@@ -432,8 +464,7 @@ const Login = () => {
                   Are you a{" "}
                   <span
                     className="text-[var(--color-info)] font-semibold cursor-pointer hover:underline"
-                    onClick={() => setIsClinic(true)}
-                  >
+                    onClick={() => setIsClinic(true)}>
                     Clinic?
                   </span>
                 </p>
@@ -446,15 +477,13 @@ const Login = () => {
               isClinic
                 ? "left-1/2 opacity-100 z-50"
                 : "left-1/2 -translate-x-full opacity-0 z-10"
-            }`}
-          >
+            }`}>
             {source ? (
               <ResetPasswordForm source={source} setSource={setSource} />
             ) : (
               <form
                 onSubmit={handleSubmit}
-                className="flex flex-col items-center justify-center h-full px-10 space-y-5"
-              >
+                className="flex flex-col items-center justify-center h-full px-10 space-y-5">
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
                   Center Login
                 </h1>
@@ -482,8 +511,7 @@ const Login = () => {
                     sx={{
                       minHeight: "25px",
                       visibility: errors.number ? "visible" : "hidden",
-                    }}
-                  >
+                    }}>
                     {errors.number}
                   </FormHelperText>
                 </FormControl>
@@ -505,8 +533,7 @@ const Login = () => {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            onClick={() => setShowPassword((p) => !p)}
-                          >
+                            onClick={() => setShowPassword((p) => !p)}>
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
@@ -521,8 +548,7 @@ const Login = () => {
                     sx={{
                       minHeight: "25px",
                       visibility: errors.password ? "visible" : "hidden",
-                    }}
-                  >
+                    }}>
                     {errors.password}
                   </FormHelperText>
                 </FormControl>
@@ -530,8 +556,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setSource("forgottenPassword")}
-                    className="text-sm text-[var(--color-info)] hover:underline font-medium"
-                  >
+                    className="text-sm text-[var(--color-info)] hover:underline font-medium">
                     Forgot Password?
                   </button>
                 </div>
@@ -543,8 +568,7 @@ const Login = () => {
                     width: "65%",
                     py: 1,
                     fontWeight: 600,
-                  }}
-                >
+                  }}>
                   {loading ? (
                     <CircularProgress size={22} color="inherit" />
                   ) : (
@@ -556,8 +580,7 @@ const Login = () => {
                   Are you a{" "}
                   <span
                     className="text-[var(--color-info)] font-semibold cursor-pointer hover:underline"
-                    onClick={() => setIsClinic(false)}
-                  >
+                    onClick={() => setIsClinic(false)}>
                     Patient?
                   </span>
                 </p>
@@ -568,8 +591,7 @@ const Login = () => {
                       Don't have an Account?{" "}
                       <Link
                         to="/register"
-                        className="text-[var(--color-info)] hover:underline cursor-pointer"
-                      >
+                        className="text-[var(--color-info)] hover:underline cursor-pointer">
                         Register Center
                       </Link>
                     </span>
@@ -584,8 +606,7 @@ const Login = () => {
               isClinic
                 ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
                 : ""
-            }`}
-          >
+            }`}>
             <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-[var(--color-white)] items-center justify-center text-center px-8">
               {isClinic ? (
                 <div className="space-y-2 animate-fadeIn">
@@ -607,6 +628,25 @@ const Login = () => {
           </div>
         </div>
       </div>
+      <Dialog
+        open={openPopup}
+        disableEscapeKeyDown
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            overflow: "hidden",
+            background: "transparent",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          },
+              }}
+        >
+        <MultiClinicCardView
+          clinicsList={loginResponse?.clinics || []}
+          onClinicSelect={handleClinicSelect}
+        />
+      </Dialog>
     </div>
   );
 };

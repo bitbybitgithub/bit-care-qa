@@ -41,40 +41,40 @@ const Login = () => {
 
   const [source, setSource] = useState<
     "resetPassword" | "forgottenPassword" | null
-    >(null);
-  
+  >(null);
+
   //clinics list popup states
   const [openPopup, setOpenPopup] = useState(false);
   const [loginResponse, setLoginResponse] = useState<any[]>([]);
   const clinicSelectResolverRef = useRef<((clinic: any) => void) | null>(null);
 
   const DASHBOARD_ROUTES: Record<number, Record<string, string>> = {
-  1: { 
-    Admin: "/clinic/dashboard",
-    Staff: "/staff/dashboard",
-    Doctor: "/doctor/dashboard",
-  },
-  2: { 
-    Admin: "/lab/dashboard",
-    Staff: "/lab/dashboard",
-    Doctor:"/lab/dashboard",
-    Technician:"/lab/dashboard",
-  },
-  3: { 
-    Admin: "/pharmacy/dashboard",
-    Staff: "/pharmacy/dashboard",
-  },
-  4: {
-    Doctor: "/doctor/dashboard"
-  }
-};
+    1: {
+      Admin: "/clinic/dashboard",
+      Staff: "/staff/dashboard",
+      Doctor: "/doctor/dashboard",
+    },
+    2: {
+      Admin: "/lab/dashboard",
+      Staff: "/lab/dashboard",
+      Doctor: "/lab/dashboard",
+      Technician: "/lab/dashboard",
+    },
+    3: {
+      Admin: "/pharmacy/dashboard",
+      Staff: "/pharmacy/dashboard",
+    },
+    4: {
+      Doctor: "/doctor/dashboard"
+    }
+  };
 
   function getDashboardRoute(
-  entityType: number,
-  role: string
-): string | null {
-  return DASHBOARD_ROUTES[entityType]?.[role] ?? null;
-}
+    entityType: number,
+    role: string
+  ): string | null {
+    return DASHBOARD_ROUTES[entityType]?.[role] ?? null;
+  }
 
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,15 +113,15 @@ const Login = () => {
     });
   };
 
-  const handleClinicSelect = async(clinic: any) => {
+  const handleClinicSelect = async (clinic: any) => {
     setOpenPopup(false);
     if (clinicSelectResolverRef.current) {
-       const requestBody = {
-          doctorId: loginResponse?.user?.doctor_id,
-          clinicId: clinic.clinic_id,
-          ip_address: "192.168.1.9",
-          platform: "web",
-        };
+      const requestBody = {
+        doctorId: loginResponse?.user?.doctor_id,
+        clinicId: clinic.clinic_id,
+        ip_address: "192.168.1.9",
+        platform: "web",
+      };
       clinicSelectResolverRef.current(clinic); // null if cancelled
       const selectApiResponse = await selectClinicApi(requestBody);
       TokenManager.setAccessToken(selectApiResponse.accessToken);
@@ -181,16 +181,16 @@ const Login = () => {
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
-         if (data.user.role === "Doctor" && data?.clinics?.length > 0) {
-          setLoginResponse(data);
-           const selectedClinic = await waitForClinicSelect();
-           if (!selectedClinic) return; // user cancelled
-           setSession("user", {
-             ...data.user,
-             clinic_id: selectedClinic.clinic_id,
-           });
-         }
-          
+          if (data.user.role === "Doctor" && data?.clinics?.length > 0) {
+            setLoginResponse(data);
+            const selectedClinic = await waitForClinicSelect();
+            if (!selectedClinic) return; // user cancelled
+            setSession("user", {
+              ...data.user,
+              clinic_id: selectedClinic.clinic_id,
+            });
+          }
+
           if (data.user.is_temp_password === "1") {
             setSource("resetPassword");
             setClinicUserId("");
@@ -228,24 +228,22 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-bg)] p-7">
-      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-2xl md:min-h-[450px]">
+      <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden w-full max-w-3xl md:min-h-[450px]">
         <div className="block md:hidden">
           <div className="flex justify-center bg-[var(--color-primary)] rounded-full p-1 mx-4 mt-4">
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
-                !isClinic
-                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
-                  : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-90"
-              }`}
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${!isClinic
+                ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
+                : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-90"
+                }`}
               onClick={() => setIsClinic(false)}>
               Patient
             </button>
             <button
-              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${
-                isClinic
-                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
-                  : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-900"
-              }`}
+              className={`flex-1 py-2 rounded-full font-semibold transition-all duration-300 ${isClinic
+                ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]  shadow-md"
+                : "bg-[var(--color-primary)]  text-[var(--color-surface-alt)] hover:opacity-900"
+                }`}
               onClick={() => setIsClinic(true)}>
               Clinic
             </button>
@@ -351,11 +349,10 @@ const Login = () => {
 
         <div className="hidden md:flex">
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic
-                ? "left-0 translate-x-full opacity-0 z-10"
-                : "left-0 opacity-100 z-50"
-            }`}>
+            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${isClinic
+              ? "left-0 translate-x-full opacity-0 z-10"
+              : "left-0 opacity-100 z-50"
+              }`}>
             {source ? (
               <ResetPasswordForm source={source} setSource={setSource} />
             ) : (
@@ -473,11 +470,10 @@ const Login = () => {
           </div>
 
           <div
-            className={`absolute top-0 h-full w-1/2 transition-all duration-700 ease-in-out ${
-              isClinic
-                ? "left-1/2 opacity-100 z-50"
-                : "left-1/2 -translate-x-full opacity-0 z-10"
-            }`}>
+            className={`absolute top-0 h-full transition-all duration-700 ease-in-out ${isClinic
+              ? "left-1/2 opacity-100 z-50"
+              : "left-1/2 -translate-x-full opacity-0 z-10"
+              }`}>
             {source ? (
               <ResetPasswordForm source={source} setSource={setSource} />
             ) : (
@@ -602,11 +598,10 @@ const Login = () => {
           </div>
 
           <div
-            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${
-              isClinic
-                ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
-                : ""
-            }`}>
+            className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out rounded-l-[150px] ${isClinic
+              ? "translate-x-[-100%] rounded-r-[150px] rounded-l-none"
+              : ""
+              }`}>
             <div className="flex h-full w-full bg-gradient-to-r from-indigo-500 to-purple-800 text-[var(--color-white)] items-center justify-center text-center px-8">
               {isClinic ? (
                 <div className="space-y-2 animate-fadeIn">
@@ -640,8 +635,8 @@ const Login = () => {
             background: "transparent",
             boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
           },
-              }}
-        >
+        }}
+      >
         <MultiClinicCardView
           clinicsList={loginResponse?.clinics || []}
           onClinicSelect={handleClinicSelect}

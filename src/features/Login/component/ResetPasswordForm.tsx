@@ -480,7 +480,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
             <FormControl fullWidth>
               <TextField
                 fullWidth
-                placeholder="Enter Your Username"
+                placeholder="Enter Username"
                 size="small"
                 name="username"
                 value={formData.username}

@@ -50,16 +50,19 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [errors, setErrors] = useState<ResetPassErrors>({});
   const [loading, setLoading] = useState(false);
+  const [userId, setUseId] = useState(0);
 
   const localuserId = getSessionItem("user", "user_id");
   const navigate = useNavigate();
 
-  const showMobileBox = source;
+  // const showMobileBox = source;
+  const showMobileBox = source === "forgottenPassword" || source === "resetPassword";
   const showUserIdField = localuserId === null;
 
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
   const { passwordStrength, evaluate } = usePasswordStrength();
-
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [formData, setFormData] = useState<FormDataType>({
     userId: null,
     mobile: "",
@@ -106,17 +109,54 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     }
   }, [source, localuserId]);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  // ) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  //   setErrors((prev) => ({ ...prev, [name]: "" }));
+
+  //   if (name === "otp" && value.length === 4) {
+  //     handleVerifyOtp(value);
+  //   }
+  //   if (name === "newPassword") evaluate(value);
+  // };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    let updatedValue = value;
+
+    if (name === "otp") {
+      updatedValue = value.replace(/\D/g, "").slice(0, 4);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: updatedValue }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    if (name === "otp" && value.length === 4) {
-      handleVerifyOtp(value);
+    if (name === "otp" && updatedValue.length === 4) {
+      handleVerifyOtp(updatedValue);
     }
-    if (name === "newPassword") evaluate(value);
+
+    if (name === "newPassword") evaluate(updatedValue);
   };
 
   const handleIsUserExist = async () => {
@@ -149,28 +189,61 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     }
   };
 
+  // const handleSendOtp = async (mobileNumber: string) => {
+  //   if (!mobileNumber) {
+  //     toast.error("Mobile number not available for this user.");
+  //     return;
+  //   }
+  //   try {
+  //     const res = await generateOtpApi({
+  //       mobile_number: mobileNumber,
+  //       otp_type: 2,
+  //     });
+  //     if (res.success) {
+  //       toast.success("OTP sent to user mobile number successfully!");
+  //       setShowOtp(true);
+  //       setResendCooldown(30);
+  //       if (res.userId) {
+  //         console.log("Received userId from OTP API:", res.userId);
+  //         // const numeric = Number(res.userId);
+  //         // setFormData((prev) => ({
+  //         //   ...prev,
+  //         //   userId: isNaN(numeric) ? null : numeric,
+  //         // }));
+  //         // setInternalUserId(isNaN(numeric) ? null : numeric);
+  //       }
+  //       setShowOtp(true);
+  //     } else {
+  //       toast.error(res.message || "Failed to send OTP. Please try again.");
+  //     }
+  //   } catch (err: any) {
+  //     console.error("OTP generation error:", err);
+  //     toast.error("Something went wrong while sending OTP.");
+  //   }
+  // };
+
   const handleSendOtp = async (mobileNumber: string) => {
     if (!mobileNumber) {
       toast.error("Mobile number not available for this user.");
       return;
     }
+
     try {
       const res = await generateOtpApi({
         mobile_number: mobileNumber,
         otp_type: 2,
       });
+      console.log("res", res)
+      setUseId(res.userId)
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");
-        if (res.userId) {
-          console.log("Received userId from OTP API:", res.userId);
-          // const numeric = Number(res.userId);
-          // setFormData((prev) => ({
-          //   ...prev,
-          //   userId: isNaN(numeric) ? null : numeric,
-          // }));
-          // setInternalUserId(isNaN(numeric) ? null : numeric);
-        }
         setShowOtp(true);
+        setIsOtpVerified(false);
+        setResendCooldown(20);
+        setFormData((prev) => ({
+          ...prev,
+          otp: "",
+        }));
       } else {
         toast.error(res.message || "Failed to send OTP. Please try again.");
       }
@@ -180,13 +253,49 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     }
   };
 
+  const handleResendOtp = async () => {
+    if (!formData.mobile) {
+      toast.error("Mobile number not available for this user.");
+      return;
+    }
+
+    if (resendCooldown > 0) return;
+
+    try {
+      setResendLoading(true);
+
+      const res = await generateOtpApi({
+        mobile_number: formData.mobile,
+        otp_type: 2,
+      });
+
+      if (res.success) {
+        toast.success("OTP resent successfully!");
+        setFormData((prev) => ({
+          ...prev,
+          otp: "",
+        }));
+        setShowOtp(true);
+        setIsOtpVerified(false);
+        setResendCooldown(20);
+      } else {
+        toast.error(res.message || "Failed to resend OTP.");
+      }
+    } catch (error: any) {
+      console.error("Resend OTP error:", error);
+      toast.error("Something went wrong while resending OTP.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleVerifyOtp = async (otpValue?: string) => {
     const finalOtp = otpValue || formData.otp;
     if (!finalOtp || finalOtp.length < 4) return;
 
     try {
       const payload = {
-        userId: formData.userId ?? internalUserId ?? undefined,
+        userId: userId,
         otp: finalOtp,
         otp_type: 2,
       };
@@ -270,7 +379,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         {showMobileBox ? "Create new Password" : "Reset Your Password"}
       </h1>
 
-      {showMobileBox && showUserIdField && (
+      {/* {showMobileBox && showUserIdField && (
         <div className="flex gap-2">
           <FormControl fullWidth>
             <TextField
@@ -357,14 +466,157 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               size="small"
               value={formData.otp}
               onChange={handleChange}
-              inputProps={{ maxLength: 6 }}
+              inputProps={{ maxLength: 4 }}
               className="w-[40%]"
             />
           )}
         </div>
+      )} */}
+
+      {showMobileBox && showUserIdField && (
+        <div className="w-full flex flex-col gap-2 ">
+          {/* Username + Verify row */}
+          <div className="flex gap-2 items-start">
+            <FormControl fullWidth>
+              <TextField
+                fullWidth
+                placeholder="Enter Your Username"
+                size="small"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === " ") e.preventDefault();
+                }}
+                error={!!errors.username}
+                disabled={isOtpVerified}
+                inputProps={{ maxLength: 25 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FaUser className="text-[var(--color-text-secondary)]" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "var(--color-border)",
+                  },
+                  "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "var(--color-border)",
+                  },
+                  "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "var(--color-border)",
+                  },
+                }}
+              />
+
+              <FormHelperText
+                error={!!errors.username}
+                sx={{
+                  minHeight: "20px",
+                  visibility: errors.username ? "visible" : "hidden",
+                }}
+              >
+                {errors.username}
+              </FormHelperText>
+            </FormControl>
+
+            {!showOtp && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleIsUserExist}
+                disabled={!formData.username || isOtpVerified}
+                sx={{
+                  height: 40,
+                  minWidth: 100,
+                  fontWeight: 600,
+                  backgroundColor: "var(--color-success)",
+                  color: "var(--color-white)",
+                  whiteSpace: "nowrap",
+                  cursor:
+                    !formData.username || isOtpVerified ? "not-allowed" : "pointer",
+                  "&.Mui-disabled": {
+                    color: "var(--color-white)",
+                    backgroundColor: isOtpVerified
+                      ? "var(--color-success)"
+                      : "var(--color-border)",
+                    cursor: "not-allowed",
+                    opacity: 1,
+                  },
+                }}
+              >
+                {isOtpVerified ? "Verified" : "Verify"}
+              </Button>
+            )}
+          </div>
+
+          {/* OTP section below username */}
+          {showOtp && !isOtpVerified && (
+            <div className="w-[75%] flex flex-col gap-1 mt-0.5 ">
+
+              {/* OTP + Resend inline */}
+              <div className="flex items-center gap-1">
+                {/* FIXED WIDTH OTP INPUT */}
+                <div className="flex-1 ">
+                  <TextField
+                    fullWidth
+                    placeholder="Enter OTP"
+                    name="otp"
+                    size="small"
+                    value={formData.otp}
+                    onChange={handleChange}
+                    inputProps={{
+                      maxLength: 4,
+                      inputMode: "numeric",
+                      pattern: "[0-9]*",
+                      style: {
+                        textAlign: "center",
+                        fontWeight: 200,
+                      },
+                    }}
+                  />
+                </div>
+
+                {/* FIXED WIDTH BUTTON → NO LAYOUT SHIFT */}
+                <div className="w-[90px] flex justify-end">
+                  <Button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={resendCooldown > 0 || resendLoading}
+                    sx={{
+                      minWidth: "90px",
+                      maxWidth: "90px",
+                      padding: "6px 6px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      textTransform: "none",
+                      whiteSpace: "nowrap",
+                      color:
+                        resendCooldown > 0
+                          ? "var(--color-text-secondary)"
+                          : "var(--color-info)",
+                    }}
+                  >
+                    {resendLoading
+                      ? "Sending..."
+                      : resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : "Resend OTP"}
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
       )}
 
-      <FormControl fullWidth>
+      <FormControl fullWidth >
         <TextField
           placeholder="New password"
           name="newPassword"

@@ -20,7 +20,7 @@ export const SIDEBAR_MENUS: Record<
       { title: "Users", link: "/clinic/users", icon: FaUsers },
       { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUserMd },
       { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: ScienceIcon },
-      { title: "Pharma Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaClinicMedical },
+      { title: "Pharmacy Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaClinicMedical },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [

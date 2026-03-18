@@ -137,7 +137,7 @@ const Login = () => {
     let newErrors: any = {};
     if (!number) {
       newErrors.number = isClinic
-        ? "User Name is required"
+        ? "Username is required"
         : "Mobile number is required";
     }
     if (!password) {
@@ -258,7 +258,7 @@ const Login = () => {
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
                 <TextField
-                  placeholder={isClinic ? "User Name" : "Mobile Number"}
+                  placeholder={isClinic ? "Username" : "Mobile Number"}
                   value={isClinic ? clinicUserId : patientNumber}
                   size="small"
                   onChange={handleNumberChange}
@@ -485,7 +485,7 @@ const Login = () => {
                 </h1>
                 <FormControl fullWidth>
                   <TextField
-                    placeholder="User Name"
+                    placeholder="Username"
                     value={clinicUserId}
                     onChange={handleNumberChange}
                     error={!!errors.number}

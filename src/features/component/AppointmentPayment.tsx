@@ -25,11 +25,13 @@ const methods = [
     key: "CASH",
     icon: Banknote,
     color: "emerald",
+    disabled: false,
   },
   {
     key: "ONLINE",
     icon: Smartphone,
     color: "violet",
+    disabled: true,
   },
   // {
   //   key: "CARD",
@@ -144,30 +146,46 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
         <div>
           <p className="text-sm font-medium mb-3">Payment Method</p>
 
-          <div className="grid grid-cols-3 gap-3">
-            {methods.map(({ key, icon: Icon, color }) => {
+          <div className="grid grid-cols-2 gap-3">
+            {methods.map(({ key, icon: Icon, disabled }) => {
               const active = method === key;
 
               return (
-                <div
+                <button
                   key={key}
-                  onClick={() => setMethod(key)}
-                  disabled={method === "ONLINE" ? true : false}
-                  className={`cursor-pointer flex items-center justify-center gap-2
-      px-4 py-3 rounded-xl border transition-all duration-200
-      ${
-        active
-          ? `bg-${color}-500 text-white border-${color}-500 shadow-md scale-[1.04]`
-          : "border-[var(--color-border)] bg-[var(--color-surface-alt)] hover:shadow-sm"
-      }`}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => !disabled && setMethod(key)}
+                  className={`
+                    flex items-center justify-center gap-2 px-4 py-3 rounded-xl border
+                    transition-all text-sm font-semibold
+
+                    ${
+                      disabled
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : active
+                          ? "bg-[var(--color-primary)]  text-white border-emerald-500 shadow-md scale-[1.04]"
+                          : "bg-white border-gray-300 hover:shadow"
+                    }
+                  `}
                 >
                   <Icon
                     size={18}
-                    className={active ? "text-white" : `text-${color}-600`}
+                    className={
+                      disabled
+                        ? "text-gray-400"
+                        : active
+                          ? "text-white"
+                          : "text-gray-600"
+                    }
                   />
 
-                  <span className="text-xs font-semibold">{key}</span>
-                </div>
+                  {key}
+
+                  {disabled && (
+                    <span className="text-[10px] ml-1">(Coming soon)</span>
+                  )}
+                </button>
               );
             })}
           </div>

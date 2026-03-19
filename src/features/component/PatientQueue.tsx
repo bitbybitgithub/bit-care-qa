@@ -572,6 +572,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       <Dialog
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
       >
         <DialogTitle className="font-semibold">Cancel Appointment</DialogTitle>
         <DialogContent>

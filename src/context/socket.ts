@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL ="http://localhost:8989";
+// const SOCKET_URL ="http://cliniccareapi.bitbybitsolutions.co.in";
 
 let socket: Socket | null = null;
 

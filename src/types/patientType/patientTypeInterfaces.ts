@@ -13,6 +13,7 @@ export interface Patient {
   appointment_id?: number;
   time?: string;
   status: string;
+  is_fee_paid?: string;
   reason?: string;
   doctor?: string;
   source?: string;

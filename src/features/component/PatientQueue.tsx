@@ -28,39 +28,72 @@ import PatientActionMenu from "../clinic/components/PatientActionMenu";
 import PatientActionDrawers from "../clinic/components/PatientActionDrawers";
 import AppointmentPayment from "./AppointmentPayment";
 
-const getActionsForStatus = (status: string): string[] => {
-  switch (status.toLowerCase()) {
+// const getActionsForStatus = (status: string): string[] => {
+//   switch (status.toLowerCase()) {
+//     case "scheduled":
+//       return ["Add Vitals", "Cancel Appointment", "Hold Appointment"];
+//     case "checked_in":
+//       return ["Cancel Appointment", "Hold Appointment"];
+//     case "on_hold":
+//       return ["Add Vitals", "Cancel Appointment"];
+//     case "completed":
+//       return [
+//         "Send to Lab",
+//         "Send to Pharmacy",
+//         "Set Follow Up",
+//         "Make Payment",
+//       ];
+//     default:
+//       return [];
+//   }
+// };
+const getActionsForStatus = (patient: Patient): string[] => {
+  const status = patient.status?.toLowerCase();
+  const isPaid = patient.is_fee_paid === "1";
+
+  switch (status) {
     case "scheduled":
       return ["Add Vitals", "Cancel Appointment", "Hold Appointment"];
+
     case "checked_in":
       return ["Cancel Appointment", "Hold Appointment"];
+
     case "on_hold":
       return ["Add Vitals", "Cancel Appointment"];
+
     case "completed":
-      return [
+      const baseActions = [
         "Send to Lab",
         "Send to Pharmacy",
         "Set Follow Up",
-        "Make Payment",
       ];
+
+      // THIS is the actual condition you want
+      if (!isPaid) {
+        baseActions.push("Make Payment");
+      }
+
+      return baseActions;
+
     default:
       return [];
   }
 };
+
 const badgeClasses = (status: string): string => {
   const colors: Record<string, string> = {
-    waiting: "bg-amber-200 text-amber-800 border-[0.5px] border-amber-800",
-    pending_vitals: "bg-indigo-200 text-indigo-800 border border-indigo-800",
-    checked_in: "bg-sky-200 text-sky-800 border border-sky-800",
-    in_progress: "bg-blue-200 text-blue-800 border border-blue-800",
-    in_consultation: "bg-violet-200 text-violet-800 border border-violet-800",
-    started: "bg-indigo-200 text-indigo-800 border border-indigo-800",
-    on_hold: "bg-gray-200 text-gray-700 border border-gray-700",
-    completed: "bg-emerald-200 text-emerald-800 border border-emerald-800",
-    scheduled: "bg-cyan-200 text-cyan-800 border border-cyan-800",
-    cancelled: "bg-rose-200 text-rose-800 border border-rose-800",
-    paid: "bg-green-200 text-green-800 border border-green-800",
-    unpaid: "bg-orange-200 text-orange-800 border border-orange-800",
+    waiting: "bg-amber-100 text-amber-600 ",
+    pending_vitals: "bg-indigo-100 text-indigo-600 ",
+    checked_in: "bg-sky-100 text-sky-600 ",
+    in_progress: "bg-blue-100 text-blue-600 ",
+    in_consultation: "bg-violet-100 text-violet-600 ",
+    started: "bg-indigo-100 text-indigo-600 ",
+    on_hold: "bg-gray-300 text-gray-600 ",
+    completed: "bg-emerald-100 text-emerald-600 ",
+    scheduled: "bg-cyan-100 text-cyan-600 ",
+    cancelled: "bg-rose-100 text-rose-600 ",
+    paid: "bg-green-100 text-green-600 ",
+    unpaid: "bg-orange-100 text-orange-600  ",
   };
   return colors[status.toLowerCase()] || "bg-gray-100 border text-gray-800";
 };
@@ -134,7 +167,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setSelectedPatient(patient);
         setPaymentDrawerOpen(true);
       } else if (action === "Hold Appointment") {
-        await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold);
+        await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold, "Hold Appointment");
       }
     },
     [handleUpdatePatientStatus],
@@ -142,7 +175,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   const handleConfirmCancel = useCallback(() => {
     if (!patientToCancel) return;
-    handleUpdatePatientStatus?.(patientToCancel, AppointmentStatus.Cancelled);
+    handleUpdatePatientStatus?.(patientToCancel, AppointmentStatus.Cancelled, "Cancel Appointment");
     setCancelDialogOpen(false);
     setCancelReason("");
     setPatientToCancel(null);
@@ -306,6 +339,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                     handleUpdatePatientStatus?.(
                       p,
                       AppointmentStatus.InProgress,
+                      "Start Consultation"
                     );
                     onStartConsultation?.(p);
                   }}
@@ -347,91 +381,91 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       },
       ...(queueType === "completed"
         ? [
-            {
-              field: "prescription",
-              headerName: "Prescription",
-              width: 150,
-              sortable: false,
-              filterable: false,
-              renderCell: (p) => (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => openPrescription(p.row)}
-                >
-                  View
-                </Button>
-              ),
-            } as GridColDef,
-          ]
+          {
+            field: "prescription",
+            headerName: "Prescription",
+            width: 150,
+            sortable: false,
+            filterable: false,
+            renderCell: (p) => (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => openPrescription(p.row)}
+              >
+                View
+              </Button>
+            ),
+          } as GridColDef,
+        ]
         : []),
       ...(queueType === "pending"
         ? [
-            {
-              field: "status",
-              headerName: "Status",
-              flex: 0.8,
-              minWidth: 120,
-              renderCell: (params: GridRenderCellParams<any, Patient>) => {
-                const row = params.row as Patient;
+          {
+            field: "status",
+            headerName: "Status",
+            flex: 0.8,
+            minWidth: 120,
+            renderCell: (params: GridRenderCellParams<any, Patient>) => {
+              const row = params.row as Patient;
 
-                return (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "start",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  >
-                    <div
-                      className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
-                        row.status,
-                      )}`}
-                      style={{
-                        fontSize: "var(--font-xs)",
-                        height: 36, // 👈 force visual parity
-                        padding: "0 16px", // 👈 match button horizontal padding
-                      }}
-                    >
-                      {formatEnumText(row.status)}
-                    </div>
-                  </Box>
-                );
-              },
-            } as GridColDef,
-          ]
-        : []),
-      ...(queueType === "completed"
-        ? [
-            {
-              field: "payment_status",
-              headerName: "Payment Status",
-              flex: 0.8,
-              minWidth: 150,
-              sortable: false,
-              filterable: false,
-              renderCell: (params) => {
-                const row = params.row || {};
-                const is_fee_paid = row.is_fee_paid === "1" ? "Paid" : "Unpaid";
-                return (
-                  <p
+              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "start",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <div
+                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                      row.status,
+                    )}`}
                     style={{
                       fontSize: "var(--font-xs)",
                       height: 36, // 👈 force visual parity
                       padding: "0 16px", // 👈 match button horizontal padding
                     }}
-                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
-                      is_fee_paid,
-                    )}`}
                   >
-                    {is_fee_paid}
-                  </p>
-                );
-              },
-            } as GridColDef,
-          ]
+                    {formatEnumText(row.status)}
+                  </div>
+                </Box>
+              );
+            },
+          } as GridColDef,
+        ]
+        : []),
+      ...(queueType === "completed"
+        ? [
+          {
+            field: "payment_status",
+            headerName: "Payment Status",
+            flex: 0.8,
+            minWidth: 150,
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => {
+              const row = params.row || {};
+              const is_fee_paid = row.is_fee_paid === "1" ? "Paid" : "Unpaid";
+              return (
+                <p
+                  style={{
+                    fontSize: "var(--font-xs)",
+                    height: 36, // 👈 force visual parity
+                    padding: "0 16px", // 👈 match button horizontal padding
+                  }}
+                  className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                    is_fee_paid,
+                  )}`}
+                >
+                  {is_fee_paid}
+                </p>
+              );
+            },
+          } as GridColDef,
+        ]
         : []),
       {
         field: "action",
@@ -445,7 +479,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           const p = params.row as Patient;
           if (!p) return null;
           if (!shouldShowSelectButton(p.status)) return null;
-          const actions = getActionsForStatus(p.status);
+          const actions = getActionsForStatus(p);
 
           return (
             <PatientActionMenu
@@ -489,9 +523,8 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
 
   return (
     <div
-      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${
-        classProp || ""
-      }`}
+      className={`bg-[var(--color-bg)] rounded-[var(--radius-lg)]  ${classProp || ""
+        }`}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between  gap-3">
         <div className="flex items-center gap-3"></div>

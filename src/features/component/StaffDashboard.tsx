@@ -125,7 +125,7 @@ const StaffDashboard: React.FC = () => {
 
         setStats(mapped);
       })
-      .catch((err) => {});
+      .catch((err) => { });
   }, []);
 
   useEffect(() => {
@@ -216,40 +216,103 @@ const StaffDashboard: React.FC = () => {
 
   const handlePatientSelect = (patient: Patient | null, contact: string) => {
     setSelectedPatient(patient);
-    setContact(contact); 
+    setContact(contact);
     setShowRegistrationForm(true);
     setOpenWalkIn(false);
   };
 
+  // const handleUpdatePatientStatus = useCallback(
+  //   async (patient: Patient, newStatus: string, actionType?: string) => {
+  //     if (!patient?.raw?.appointment_id) {
+  //       toast.error("Invalid appointment ID.");
+  //       return;
+  //     }
+  //     const payload: UpdateAppointmentStatusRequest = {
+  //       appointment_id: patient.raw.appointment_id,
+  //       user_id: uId,
+  //       status: newStatus,
+  //     };
+  //     try {
+  //       const res = await updatePatientStatus(payload);
+  //       if (res.success) {
+  //         // toast.success("Patient appointment upadated successfully");
+
+  //         setPendingPatients((prev) =>
+  //           prev.map((p) =>
+  //             p?.raw.appointment_id === patient.appointment_id
+  //               ? { ...p, status: newStatus }
+  //               : p,
+  //           ),
+  //         );
+  //       } else
+  //         toast.error(res.message || "Failed to update appointment status.");
+  //     } catch {
+  //       toast.error("Error updating patient status.");
+  //     }
+  //   },
+  //   [uId, clinicId],
+  // );
+
   const handleUpdatePatientStatus = useCallback(
-    async (patient: Patient, newStatus: string) => {
+    async (patient: Patient, newStatus: string, actionType?: string) => {
+
+      const getSuccessMessage = (action?: string) => {
+        switch (action) {
+          case "Hold Appointment":
+            return "Patient has been put on hold";
+          case "Cancel Appointment":
+            return "Patient appointment has been cancelled";
+          case "Add Vitals":
+            return "Vitals added successfully";
+          case "Send to Lab":
+            return "Patient sent to lab";
+          case "Send to Pharmacy":
+            return "Patient sent to pharmacy";
+          case "Set Follow Up":
+            return "Follow-up set successfully";
+          case "Make Payment":
+            return "Payment completed successfully";
+          case "Start Consultation":
+            return "Consultation started";
+          default:
+            return "Status updated successfully";
+        }
+      };
+
       if (!patient?.raw?.appointment_id) {
         toast.error("Invalid appointment ID.");
         return;
       }
+
       const payload: UpdateAppointmentStatusRequest = {
         appointment_id: patient.raw.appointment_id,
         user_id: uId,
         status: newStatus,
       };
+
       try {
         const res = await updatePatientStatus(payload);
+
         if (res.success) {
-          toast.success("Patient appointment upadated successfully");
+          toast.success(getSuccessMessage(actionType));
+
           setPendingPatients((prev) =>
             prev.map((p) =>
-              p?.raw.appointment_id === patient.appointment_id
+              p?.raw?.appointment_id === patient?.raw?.appointment_id
                 ? { ...p, status: newStatus }
-                : p,
-            ),
+                : p
+            )
           );
-        } else
+        } else {
           toast.error(res.message || "Failed to update appointment status.");
-      } catch {
+        }
+
+      } catch (err) {
+        console.error("Update error:", err); // 👈 don’t be blind
         toast.error("Error updating patient status.");
       }
     },
-    [uId, clinicId],
+    [uId, clinicId]
   );
 
   const resetModalState = () => {
@@ -287,11 +350,10 @@ const StaffDashboard: React.FC = () => {
                   }}
                   className={`
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
-              ${
-                activeTab === t.key
-                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
-                  : "text-[var(--color-surface-alt)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-surface-alt)]"
-              }
+              ${activeTab === t.key
+                      ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
+                      : "text-[var(--color-surface-alt)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-surface-alt)]"
+                    }
             `}
                 >
                   {t.label}

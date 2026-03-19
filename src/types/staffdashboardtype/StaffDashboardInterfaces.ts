@@ -30,7 +30,7 @@ export interface PatientQueueProps {
   error: string | null;
   onStartConsultation?: (patient: Patient) => void;
   onAddWalkIn?: () => void;
-  handleUpdatePatientStatus: (patient: Patient, status: string) => void;
+  handleUpdatePatientStatus: (patient: Patient, status: string, actionType?: string) => void;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
 }

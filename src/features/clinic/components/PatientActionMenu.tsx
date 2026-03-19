@@ -38,6 +38,13 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
     onAction(action, patient);
   };
 
+const filteredActions = actions.filter((a) => {
+  if (a === "Make Payment" && patient.is_fee_paid === "1") {
+    return false;
+  }
+  return true;
+});
+
   if (!actions.length) return null;
 
   return (
@@ -65,7 +72,7 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
             borderColor: "var(--color-primary)",
           }}
         >
-          {actions.map((a) => (
+          {filteredActions.map((a) => (
             <MenuItem key={a} onClick={() => handleClick(a)}>
               <Box display="flex" alignItems="center" gap={1} fontSize={13}>
                 {a === "Add Vitals" && (

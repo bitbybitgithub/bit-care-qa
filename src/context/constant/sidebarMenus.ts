@@ -25,11 +25,11 @@ export const SIDEBAR_MENUS: Record<
     ],
     Staff: [
       { title: "Staff Dashboard", link: "/staff/dashboard", icon: FaHome },
-      {
-        title: "Patient Document Management",
-        link: "/patient-doc-managment",
-        icon: GrDocumentText,
-      },
+      // {
+      //   title: "Patient Document Management",
+      //   link: "/patient-doc-managment",
+      //   icon: GrDocumentText,
+      // },
     ],
     Doctor: [
       { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },

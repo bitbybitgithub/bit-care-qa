@@ -64,8 +64,8 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
   const handleSubmit = async () => {
     if (!patient) return;
 
-    if (!amount) {
-      toast.error("Enter payment amount");
+    if (!amount || Number(amount) <= 0) {
+      toast.error("Enter valid payment amount");
       return;
     }
 
@@ -89,9 +89,19 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       // console.log(payload);
       const response = await emrAPI.post("/payments/save", payload);
       // console.log(response);
-      if (response?.success) {
-        toast.success(`${response?.message}  ${response?.transaction_id}`);
+      // if (response?.success) {
+      //   toast.success(`${response?.message}  ${response?.transaction_id}`);
+      //   onClose?.();
+      // }
+      const resData = response?.data || response;
+
+      const isSuccess = resData?.success || resData?.sucess;
+
+      if (isSuccess) {
+        toast.success(resData?.message || "Payment successful");
         onClose?.();
+      } else {
+        toast.error(resData?.message || "Payment failed");
       }
     } catch (error) {
       console.error(error);
@@ -104,7 +114,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
   return (
     <div className="flex flex-col h-full bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-primary)] m-2 rounded-[var(--radius-lg)]">
+      <div className="flex items-center justify-between px-6 py-3 bg-[var(--color-primary)]">
         <div>
           <h2 className="flex items-center gap-2 text-white text-base font-semibold">
             <FaRupeeSign />
@@ -115,22 +125,21 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
 
         <button
           onClick={onClose}
-          className="text-[var(--color-primary)] hover:text-white p-1.5 rounded-md bg-[var(--color-surface)]"
+          className="text-[var(--color-primary)] hover:text-black p-1.5 rounded-lg bg-[var(--color-surface)]"
         >
-          <MdClose size={18} />
+          <MdClose size={20} />
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-        {/* Patient Info */}
-        <div className="p-4 rounded-xl bg-[var(--color-surface-alt)] shadow-[var(--shadow-xs)] flex justify-between items-center">
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">        {/* Patient Info */}
+        <div className="p-5 rounded-xl bg-[var(--color-surface-alt)] shadow-sm flex justify-between items-center">
           <div>
             <p className="text-xs text-[var(--color-text-secondary)]">
               Consultation Fee
             </p>
 
-            <p className="text-xl font-semibold">
+            <p className="text-2xl font-bold mt-1">
               ₹{patient?.consultation_fees ?? "1000"}
             </p>
           </div>
@@ -191,73 +200,115 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
           </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-[var(--color-surface-alt)] p-4 rounded-xl space-y-5 shadow-[var(--shadow-xs)]">
-          <FormControl fullWidth>
-            <TextField
-              placeholder="Amount"
-              size="small"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              helperText=" "
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <MdCurrencyRupee className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
+        {method === "ONLINE" && (
+          <div className="flex flex-col items-center justify-center text-center 
+bg-gradient-to-br from-orange-50 to-orange-100 
+border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
 
-          {method !== "CASH" && (
-            <FormControl fullWidth>
+
+            <div className="text-4xl">🚧</div>
+
+            <h3 className="text-lg font-semibold text-orange-700">
+              Online Payments Coming Soon
+            </h3>
+
+            <p className="text-sm text-orange-600 max-w-xs">
+              We’re working on integrating secure online payment options.
+              Please use cash for now.
+            </p>
+
+            <div className="w-12 h-1 bg-orange-400 rounded-full animate-pulse"></div>
+          </div>
+        )}
+
+        {/* Form */}
+        {method !== "ONLINE" && (
+          <div className="bg-white p-4 rounded-xl space-y-4 shadow-sm border border-gray-100">
+
+            {/* Amount */}
+            <div className="flex items-center gap-4">
+              {/* Label */}
+              <p className="text-sm font-medium min-w-[65px] text-[var(--color-text)]">
+                Amount :
+              </p>
+
+              {/* Input */}
               <TextField
-                placeholder="Transaction ID"
                 size="small"
+                type="text"
+                value={amount}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, "");
+                  setAmount(value === "" ? "" : Number(value));
+                }}
+                inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                sx={{
+                  "& .MuiInputBase-root": {
+                    borderRadius: "12px",
+                    height: "40px",
+                    width: "150px",
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <MdCurrencyRupee className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </div>
+
+            {/* Transaction ID */}
+            {method !== "CASH" && (
+              <TextField
+                label="Transaction ID"
+                size="small"
+                fullWidth
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                helperText=" "
               />
-            </FormControl>
-          )}
+            )}
 
-          <FormControl fullWidth>
-            <TextField
-              placeholder="Remarks"
-              size="small"
-              multiline
-              rows={2}
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              helperText=" "
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaCommentDots className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
-        </div>
+            <div className="flex items-center gap-4">
+
+              <p className="text-sm font-medium min-w-[65px] text-[var(--color-text)]">
+                Remarks :
+              </p>
+
+              {/* Remarks */}
+              <TextField
+                label="Remarks (optional)"
+                size="small"
+                fullWidth
+                sx={{ "& .MuiInputBase-root": { borderRadius: "13px", marginBottom: "2px" } }}
+
+                multiline
+                rows={2}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
+
       {/* Footer */}
-      <div className="flex gap-3 p-4 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
-        <Button variant="outlined" size="small" fullWidth onClick={onClose}>
-          Cancel
-        </Button>
+      <div className="flex gap-4 p-5 border-t border-[var(--color-border)] bg-[var(--color-bg)]">        <Button variant="outlined" size="small" fullWidth onClick={onClose}>
+        Cancel
+      </Button>
 
         <Button
           variant="contained"
           size="small"
           fullWidth
-          disabled={loading}
+          disabled={loading || method === "ONLINE"}
           onClick={handleSubmit}
         >
-          Save Payment
+          <div className="space-y-4">
+            {method === "ONLINE" ? "Coming Soon" : "Pay"}
+          </div>
         </Button>
       </div>
     </div>

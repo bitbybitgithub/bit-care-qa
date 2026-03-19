@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -51,14 +51,11 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   const [errors, setErrors] = useState<ResetPassErrors>({});
   const [loading, setLoading] = useState(false);
   const [userId, setUseId] = useState(0);
-
   const localuserId = getSessionItem("user", "user_id");
   const navigate = useNavigate();
-
-  // const showMobileBox = source;
   const showMobileBox = source === "forgottenPassword" || source === "resetPassword";
   const showUserIdField = localuserId === null;
-
+  const [isUsernameLocked, setIsUsernameLocked] = useState(false);
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
   const { passwordStrength, evaluate } = usePasswordStrength();
   const [resendLoading, setResendLoading] = useState(false);
@@ -71,7 +68,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     newPassword: "",
     confirmPassword: "",
   });
-
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const canConfirmPassword =
     isOtpVerified && formData.newPassword && passwordStrength.level !== "Weak";
 
@@ -125,19 +122,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // const handleChange = (
-  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  // ) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  //   setErrors((prev) => ({ ...prev, [name]: "" }));
-
-  //   if (name === "otp" && value.length === 4) {
-  //     handleVerifyOtp(value);
-  //   }
-  //   if (name === "newPassword") evaluate(value);
-  // };
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -159,68 +143,39 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
     if (name === "newPassword") evaluate(updatedValue);
   };
 
+
   const handleIsUserExist = async () => {
     if (showMobileBox && showUserIdField && !formData.username) {
       setErrors({ username: "Username is required." });
       return;
     }
+
     try {
       const response = await checkUserExists(formData.username);
+
       if (response.success) {
-        console.log("User exists response:", response);
         const numericId = Number(response.userId);
+
         setFormData((prev) => ({
           ...prev,
           mobile: response.mobileNumber,
           userId: isNaN(numericId) ? null : numericId,
         }));
+
         setInternalUserId(isNaN(numericId) ? null : numericId);
+
+        setIsUsernameLocked(true); //  LOCK username HERE 
 
         await handleSendOtp(response.mobileNumber);
         setShowOtp(true);
       } else {
-        toast.error(
-          response.message || "User not found. Please check username.",
-        );
+        toast.error(response.message || "User not found.");
         setShowOtp(false);
       }
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.");
+      toast.error(error.message || "Something went wrong.");
     }
   };
-
-  // const handleSendOtp = async (mobileNumber: string) => {
-  //   if (!mobileNumber) {
-  //     toast.error("Mobile number not available for this user.");
-  //     return;
-  //   }
-  //   try {
-  //     const res = await generateOtpApi({
-  //       mobile_number: mobileNumber,
-  //       otp_type: 2,
-  //     });
-  //     if (res.success) {
-  //       toast.success("OTP sent to user mobile number successfully!");
-  //       setShowOtp(true);
-  //       setResendCooldown(30);
-  //       if (res.userId) {
-  //         console.log("Received userId from OTP API:", res.userId);
-  //         // const numeric = Number(res.userId);
-  //         // setFormData((prev) => ({
-  //         //   ...prev,
-  //         //   userId: isNaN(numeric) ? null : numeric,
-  //         // }));
-  //         // setInternalUserId(isNaN(numeric) ? null : numeric);
-  //       }
-  //       setShowOtp(true);
-  //     } else {
-  //       toast.error(res.message || "Failed to send OTP. Please try again.");
-  //     }
-  //   } catch (err: any) {
-  //     console.error("OTP generation error:", err);
-  //     toast.error("Something went wrong while sending OTP.");
-  //   }
-  // };
 
   const handleSendOtp = async (mobileNumber: string) => {
     if (!mobileNumber) {
@@ -361,6 +316,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         newPassword: "",
         confirmPassword: "",
       });
+      setIsUsernameLocked(false);
       setSource(null);
     } catch (error: any) {
       toast.error(error.message || "Password reset failed");
@@ -379,100 +335,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         {showMobileBox ? "Create new Password" : "Reset Your Password"}
       </h1>
 
-      {/* {showMobileBox && showUserIdField && (
-        <div className="flex gap-2">
-          <FormControl fullWidth>
-            <TextField
-              fullWidth
-              placeholder="Enter Your Username"
-              size="small"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              onKeyDown={(e) => {
-                if (e.key === " ") e.preventDefault();
-              }}
-              error={!!errors.username}
-              disabled={isOtpVerified}
-              inputProps={{ maxLength: 25 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUser className="text-[var(--color-text-secondary)]" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-                "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-                "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-              }}
-            />
-
-            <FormHelperText
-              error={!!errors.username}
-              sx={{
-                minHeight: "20px",
-                visibility: errors.username ? "visible" : "hidden",
-              }}
-            >
-              {errors.username}
-            </FormHelperText>
-          </FormControl>
-
-          {!showOtp && (
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleIsUserExist}
-              disabled={!formData.username || isOtpVerified}
-              sx={{
-                height: 40,
-                minWidth: 90,
-                fontWeight: 600,
-                backgroundColor: "var(--color-success)",
-                color: "var(--color-white)",
-                cursor:
-                  !formData.username || isOtpVerified
-                    ? "not-allowed"
-                    : "pointer",
-                "&.Mui-disabled": {
-                  color: "var(--color-white)",
-                  backgroundColor: isOtpVerified
-                    ? "var(--color-success)"
-                    : "var(--color-border)",
-                  cursor: "not-allowed",
-                  opacity: 1,
-                },
-              }}
-            >
-              {isOtpVerified ? "Verified" : "Verify"}
-            </Button>
-          )}
-
-          {showOtp && !isOtpVerified && (
-            <TextField
-              placeholder="Enter OTP"
-              name="otp"
-              size="small"
-              value={formData.otp}
-              onChange={handleChange}
-              inputProps={{ maxLength: 4 }}
-              className="w-[40%]"
-            />
-          )}
-        </div>
-      )} */}
-
       {showMobileBox && showUserIdField && (
         <div className="w-full flex flex-col gap-2 ">
           {/* Username + Verify row */}
@@ -489,7 +351,8 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                   if (e.key === " ") e.preventDefault();
                 }}
                 error={!!errors.username}
-                disabled={isOtpVerified}
+                // disabled={isOtpVerified}
+                disabled={isUsernameLocked}
                 inputProps={{ maxLength: 25 }}
                 InputProps={{
                   startAdornment: (
@@ -562,26 +425,79 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               {/* OTP + Resend inline */}
               <div className="flex items-center gap-1">
                 {/* FIXED WIDTH OTP INPUT */}
-                <div className="flex-1 ">
-                  <TextField
-                    fullWidth
-                    placeholder="Enter OTP"
-                    name="otp"
-                    size="small"
-                    value={formData.otp}
-                    onChange={handleChange}
-                    inputProps={{
-                      maxLength: 4,
-                      inputMode: "numeric",
-                      pattern: "[0-9]*",
-                      style: {
-                        textAlign: "center",
-                        fontWeight: 200,
-                      },
-                    }}
-                  />
-                </div>
 
+                <div className="flex gap-3 justify-center">
+                  {[0, 1, 2, 3].map((index) => (
+                    <TextField
+                      key={index}
+                      value={formData.otp[index] || ""}
+                      inputRef={(el) => (otpRefs.current[index] = el)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+
+                        const otpArray = formData.otp.split("");
+
+                        // allow clearing
+                        if (val === "") {
+                          otpArray[index] = "";
+                          setFormData((prev) => ({
+                            ...prev,
+                            otp: otpArray.join(""),
+                          }));
+
+                          return;
+                        }
+
+                        // set digit
+                        otpArray[index] = val[0];
+                        const newOtp = otpArray.join("").slice(0, 4);
+
+                        setFormData((prev) => ({ ...prev, otp: newOtp }));
+
+                        // move forward
+                        if (index < 3) {
+                          otpRefs.current[index + 1]?.focus();
+                        }
+
+                        if (newOtp.length === 4) {
+                          handleVerifyOtp(newOtp);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace") {
+                          const otpArray = formData.otp.split("");
+
+                          if (otpArray[index]) {
+                            // clear current
+                            otpArray[index] = "";
+                            setFormData((prev) => ({
+                              ...prev,
+                              otp: otpArray.join(""),
+                            }));
+                          } else if (index > 0) {
+                            // move back
+                            otpRefs.current[index - 1]?.focus();
+                          }
+                        }
+                      }}
+                      inputProps={{
+                        maxLength: 1,
+                        style: {
+                          textAlign: "center",
+                          fontSize: "18px",
+                          fontWeight: 600,
+                        },
+                      }}
+                      sx={{
+                        width: "40px",
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "16px",
+                          height: "40px",
+                        },
+                      }}
+                    />
+                  ))}
+                </div>
                 {/* FIXED WIDTH BUTTON → NO LAYOUT SHIFT */}
                 <div className="w-[90px] flex justify-end">
                   <Button

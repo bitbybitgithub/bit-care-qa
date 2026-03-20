@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Dialog,
   Box,
@@ -27,8 +27,7 @@ import {
 } from "@mui/icons-material";
 import { FaFilePrescription } from "react-icons/fa";
 import { Document, Page, pdfjs } from "react-pdf";
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
+import workerSrc from "pdfjs-dist/build/pdf.worker.mjs?url";
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 interface PdfViewerDialogProps {
@@ -62,6 +61,12 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
     setNumPages(numPages);
     setPage(1);
   };
+
+  
+  const documentFile = useMemo(() => pdfUrl, [pdfUrl]);
+
+  
+  console.log(  {documentFile});
 
   useEffect(() => {
     const updateWidth = () => {
@@ -142,6 +147,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
       transform: "scale(1.05)",
     },
   };
+
 
   return (
     <Dialog
@@ -344,9 +350,9 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
       >
         {loading && <CircularProgress />}
 
-        {pdfUrl && (
+        {documentFile && (
           <Document
-            file={{ url: pdfUrl }}
+            file={documentFile}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<CircularProgress />}
           >

@@ -56,12 +56,14 @@ export const getActivePharmaListApi = async () => {
 };
 
 export async function getMappedPharmaciesApi(
-  clinicId: number
+  clinicId: number,
+  prescriptionId : number
 ): Promise<MappedPharmacy[]> {
   return emrAPI.post<MappedPharmacy[]>(
     "/clinics/mapped-pharmacies",
     {
       clinic_id: clinicId,
+      prescription_id: prescriptionId
     }
   );
 };

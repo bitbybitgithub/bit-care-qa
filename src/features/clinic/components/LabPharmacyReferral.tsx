@@ -39,18 +39,18 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     const title = isLab ? "Send to Lab" : "Send to Pharmacy";
     const clinic_id = getSessionItem("user", "clinic_id");
     const user = getSessionItem("user", "user_id");
-
+    console.log({patient})
     useEffect(() => {
       const fetchItems = async () => {
         setLoading(true);
         try {
           if (type === "lab") {
-            const res = await getMappedLabsListApi(clinic_id);
+            const res = await getMappedLabsListApi(clinic_id, patient?.appointment_id);
             if (res.success) {
               setItems(res.data);
             }
           } else {
-            const res = await getMappedPharmacyListApi(clinic_id);
+            const res = await getMappedPharmacyListApi(clinic_id, patient?.raw?.prescriptions[0]?.prescription_id);
             if (res.success) {
               setItems(res.data);
             }
@@ -60,7 +60,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         } finally {
           setLoading(false);
         }
-      };
+      };  
 
       fetchItems();
     }, [type]);
@@ -76,6 +76,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
             address: `${item.address || ""}, ${item.city || ""}, ${item.state || ""}`,
             raw: item,
             logo: item.lab_logo || null,
+            is_patient_reffered: item.is_patient_reffered,
           };
         }
 
@@ -87,6 +88,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
           address: `${item.address || ""}, ${item.city || ""}, ${item.state || ""}`,
           raw: item,
           logo: item.pharma_logo || null,
+          is_patient_reffered: item.is_patient_reffered,
         };
       });
     }, [items, isLab]);
@@ -205,8 +207,10 @@ const LabPharmacyReferral: React.FC<Props> = memo(
             return (
               <div
                 key={item.id}
-                onClick={() => toggleSelect(item.id)}
-                className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)]  ${
+                onClick={() => {
+                  if(!item.is_patient_reffered) toggleSelect(item.id)}
+                } 
+                className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)] ${item.is_patient_reffered && "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)]" } ${
                   isSelected
                     ? "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)] "
                     : " border-transparent bg-[var(--color-bg)]"
@@ -269,6 +273,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                             <span className="font-semibold text-sm truncate">
                               {item.name || "N/A"}
                             </span>
+
                           </div>
 
                           <div className="px-3 py-2 space-y-2">
@@ -312,6 +317,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
                     </Tooltip>
 
                     <p className="text-sm font-medium truncate">{item.name}</p>
+
                   </div>
                 </div>
               </div>

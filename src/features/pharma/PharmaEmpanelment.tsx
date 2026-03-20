@@ -34,7 +34,7 @@ const PharmaEmpanelment = () => {
 
   const fetchPharmaByClinicId = async () => {
     try {
-      const res = await getMappedPharmaciesApi(clinicId);
+      const res = await getMappedPharmaciesApi(clinicId, null);
       setMappedPharmas(res.data);
     } catch (error) {
       console.error(error);

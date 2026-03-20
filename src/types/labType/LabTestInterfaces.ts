@@ -69,6 +69,7 @@ export interface MappedLab {
   state?: string;
 
   status?: "Active" | "Inactive";
+  is_patient_reffered?: boolean;
 
 }
 
@@ -84,6 +85,8 @@ export interface LabApiItem {
   state?: string;
 
   status: "Active" | "Inactive";
+  is_patient_reffered?: boolean;
+
 }
 
   

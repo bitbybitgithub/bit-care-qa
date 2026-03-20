@@ -36,7 +36,7 @@ const LabEmpanelment = () => {
   const fetchMappedLabByClinicId = async () => {
     try {
       setLoading(true);
-      const res = await getMappedLabsApi(clinicId);
+      const res = await getMappedLabsApi(clinicId, null);
       setMappedLabs(res.data);
     } catch (err) {
       console.error("Lab list error", err);

@@ -126,12 +126,14 @@ export const getActiveLabListApi = async () => {
 /* ===================== */
 
 export async function getMappedLabsApi(
-  clinicId: number
+  clinicId: number,
+  appointmentId : number
 ): Promise<MappedLab[]> {
   return emrAPI.post<MappedLab[]>(
     "/clinics/mapped-labs",
     {
       clinic_id: clinicId,
+      appointment_id : appointmentId
     }
   );
 }

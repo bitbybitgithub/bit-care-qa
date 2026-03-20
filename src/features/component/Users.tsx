@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FaPlus, FaSearch } from "react-icons/fa";
+import { FaSearch, FaUserPlus } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 
@@ -129,7 +129,7 @@ useEffect(() => {
           className="flex items-center gap-2 bg-[var(--color-primary)]
           text-white px-4 py-2 rounded-lg shadow-md"
         >
-          <FaPlus /> Add New User
+          <FaUserPlus /> Add New User
         </button>
 
         <div className="relative w-full sm:w-64">

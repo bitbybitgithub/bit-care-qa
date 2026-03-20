@@ -420,7 +420,7 @@ const namePlaceholder =
                 }
               }}
               onChange={(e) => {
-                const cleaned = e.target.value.replace(/\s/g, "");
+                const cleaned = e.target.value.replace(/\s/g, "").toLowerCase();
                 setFormData((prev) => ({ ...prev, email: cleaned }));
                 setErrors((prev) => ({ ...prev, email: "" }));
               }}

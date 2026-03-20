@@ -87,8 +87,12 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
       if (value.length === 1 && !/^[6-9]$/.test(value)) return;
       if (value.length > 10) return;
     }
-
-    setFormData((p) => ({ ...p, [name]: value }));
+    if (name === 'email') {
+          setFormData((p) => ({ ...p, [name]: value.toLowerCase() }));
+    }
+    else {
+      setFormData((p) => ({ ...p, [name]: value }));
+    }
     setErrors((p) => ({ ...p, [name]: "" }));
   };
 

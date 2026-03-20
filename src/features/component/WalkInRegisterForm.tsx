@@ -188,7 +188,13 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       newValue = value.slice(0, 200);
     }
 
-    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    if(name === 'email')
+    {
+      setFormData((prev) => ({ ...prev, [name]: newValue.toLowerCase() }));
+    }
+    else{
+      setFormData((prev) => ({ ...prev, [name]: newValue }));
+    }
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));

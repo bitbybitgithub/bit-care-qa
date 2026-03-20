@@ -68,37 +68,38 @@ const RegistrationForm = () => {
   const [showEmailOtp, setShowEmailOtp] = useState(false);
   const [entityList, setEntityList] = useState<Entity[]>([]);
   const [entityLoading, setEntityLoading] = useState(false);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   useEffect(() => {
-  const fetchEntities = async () => {
-    setEntityLoading(true);
-    try {
-      const res = await getEntityTypes();
-      if (res.success) {
-        const formattedEntities = res.data
-          .filter((e) => e.is_active === "1")
-          .map((e) => ({
-            ...e,
-            entity_name:
-              e.entity_name === "lab"
-                ? "Diagnostic Lab"
-                : e.entity_name.charAt(0).toUpperCase() +
-                  e.entity_name.slice(1),
-          }));
+    const fetchEntities = async () => {
+      setEntityLoading(true);
+      try {
+        const res = await getEntityTypes();
+        if (res.success) {
+          const formattedEntities = res.data
+            .filter((e) => e.is_active === "1")
+            .map((e) => ({
+              ...e,
+              entity_name:
+                e.entity_name === "lab"
+                  ? "Diagnostic Lab"
+                  : e.entity_name.charAt(0).toUpperCase() +
+                    e.entity_name.slice(1),
+            }));
 
-        setEntityList(formattedEntities);
-      } else {
-        toast.error(res.error || "Failed to load Center types");
+          setEntityList(formattedEntities);
+        } else {
+          toast.error(res.error || "Failed to load Center types");
+        }
+      } catch {
+        toast.error("Unable to load Center types");
+      } finally {
+        setEntityLoading(false);
       }
-    } catch {
-      toast.error("Unable to load Center types");
-    } finally {
-      setEntityLoading(false);
-    }
-  };
+    };
 
-  fetchEntities();
-}, []);
+    fetchEntities();
+  }, []);
 
   /* ---------------- INPUT CHANGE HANDLERS ---------------- */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +134,7 @@ const RegistrationForm = () => {
   };
 
   const handleNumberChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length === 1 && /^[0-5]/.test(value)) return;
@@ -141,7 +142,7 @@ const RegistrationForm = () => {
   };
 
   const handleEmailBlur = (
-    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const cleaned = e.target.value.trim().replace(/\s/g, "");
     setFormData((prev) => ({ ...prev, email: cleaned }));
@@ -172,14 +173,13 @@ const RegistrationForm = () => {
   };
 
   const handlePincodeChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length > 6) return;
 
     setFormData((p) => ({ ...p, PINCode: value }));
 
-    // typing phase
     if (value.length < 6) {
       setErrors((p) => ({ ...p, PINCode: "Pincode must be 6 digits" }));
       setStateList([]);
@@ -195,6 +195,7 @@ const RegistrationForm = () => {
     }
 
     try {
+      setPincodeLoading(true); // ✅ START LOADER
       setErrors((p) => ({ ...p, PINCode: "" }));
 
       const result = await getPincodeDetails(value);
@@ -215,15 +216,11 @@ const RegistrationForm = () => {
         district: first.District || "",
       }));
 
-      setErrors((p) => ({
-        ...p,
-        state: "",
-        district: "",
-      }));
-
       fetchLocationList(result);
     } catch {
       setErrors((p) => ({ ...p, PINCode: "Failed to fetch pincode details" }));
+    } finally {
+      setPincodeLoading(false); // ✅ STOP LOADER
     }
   };
 
@@ -285,13 +282,13 @@ const RegistrationForm = () => {
   );
 
   const selectedEntity = entityList.find(
-  (e) => e.entity_id === formData.entityType
-);
+    (e) => e.entity_id === formData.entityType,
+  );
 
-const namePlaceholder =
-  selectedEntity?.entity_name?.toLowerCase() === "doctor"
-    ? "Doctor Name"
-    : "Center Name";
+  const namePlaceholder =
+    selectedEntity?.entity_name?.toLowerCase() === "doctor"
+      ? "Doctor Name"
+      : "Center Name";
 
   return (
     <div className="bg-[var(--color-surface)] rounded-2xl shadow-2xl p-5">
@@ -358,7 +355,7 @@ const namePlaceholder =
 
           <FormControl fullWidth>
             <TextField
-             placeholder={namePlaceholder}
+              placeholder={namePlaceholder}
               name="name"
               size="small"
               value={formData.name}
@@ -460,39 +457,33 @@ const namePlaceholder =
           </FormControl>
 
           <FormControl>
-            <Autocomplete
-              readOnly
-              open={false}
+            <TextField
+              value={formData.state}
+              placeholder={pincodeLoading ? "Fetching..." : "State"}
+              size="small"
               disabled
-              options={stateList}
-              value={formData.state || null}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="State"
-                  size="small"
-                  error={!!errors.state}
-                />
-              )}
+              error={!!errors.state}
+              InputProps={{
+                endAdornment: pincodeLoading ? (
+                  <CircularProgress size={16} />
+                ) : null,
+              }}
             />
             <FieldErrorText error={errors.state} />
           </FormControl>
 
           <FormControl>
-            <Autocomplete
-              readOnly
-              open={false}
+            <TextField
+              value={formData.district}
+              placeholder={pincodeLoading ? "Fetching..." : "District"}
+              size="small"
               disabled
-              options={districtList}
-              value={formData.district || null}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="District"
-                  size="small"
-                  error={!!errors.district}
-                />
-              )}
+              error={!!errors.district}
+              InputProps={{
+                endAdornment: pincodeLoading ? (
+                  <CircularProgress size={16} />
+                ) : null,
+              }}
             />
             <FieldErrorText error={errors.district} />
           </FormControl>
@@ -546,8 +537,8 @@ const namePlaceholder =
               {errors.address
                 ? errors.address
                 : formData.address
-                ? `${formData.address.length}/70 characters`
-                : ""}
+                  ? `${formData.address.length}/70 characters`
+                  : ""}
             </FormHelperText>
           </FormControl>
         </div>

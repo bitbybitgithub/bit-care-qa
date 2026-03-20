@@ -57,6 +57,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
       const normalized = apiData.map((r: any) => ({
+        
         ...r,
         result_status: normalizeStatus(r.result_status),
       }));
@@ -97,7 +98,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       setOpenPdf(false);
     }
   };
-
 
   /* ---------------- FILTER ---------------- */
   const filteredRows = useMemo(() => {
@@ -164,6 +164,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     try {
       setUploading(true);
       const uploadRes = await uploadPrescriptionReport(file);
+      console.log("uploadRes", uploadRes);
       setReportMap((prev) => ({
         ...prev,
         [appointment_id]: [
@@ -176,9 +177,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         ],
       }));
       toast.success(`${uploadRes.original_file_name} uploaded`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast.error("File upload failed");
+
+      const backendMessage =
+        error?.response?.data?.message || 
+        error?.response?.data?.error || 
+        error?.message || 
+        "File upload failed";
+
+      toast.error(backendMessage);
     } finally {
       setUploading(false);
     }

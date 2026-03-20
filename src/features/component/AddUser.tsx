@@ -156,6 +156,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
 
       const data = (response as any)?.data ?? response;
       if (data?.success) {
+        toast.success(data.message || "User added successfully");
         onSuccess?.();
         handleClose();
       } else {

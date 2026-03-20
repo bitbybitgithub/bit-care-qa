@@ -40,12 +40,12 @@ interface ClinicProfileData {
 }
 
 const fetchClinicProfile = async (
-  clinicId: number
+  clinicId: number,
 ): Promise<ClinicProfileData> => {
   const req = { clinic_id: clinicId };
   const res = await axios.post(
     "http://localhost:8989/api/clinics/get-clinic-profile",
-    req
+    req,
   );
   return res.data;
 };
@@ -73,7 +73,7 @@ const Profile: React.FC = () => {
   const { data, isFetched } = useQuery<ClinicProfileData>({
     queryKey: ["clinicProfile", clinicId],
     queryFn: () => fetchClinicProfile(clinicId),
-    enabled: !!clinicId, 
+    enabled: !!clinicId,
     staleTime: Infinity,
   });
 
@@ -81,7 +81,7 @@ const Profile: React.FC = () => {
     if (data && isFetched) {
       setClinicType(data.operational_hrs);
       setPatientDemand(data.patient_demand);
-      setSendReminders(data.patient_reminder === 1);
+      setSendReminders(data.patient_reminder == 1);
       data.logo && setLogoImg(Base64ToImage(data.logo));
       setOperationalDays(data.operational_days);
       setShiftDetails(data.shifts);
@@ -97,14 +97,14 @@ const Profile: React.FC = () => {
       });
 
       const originalDayShifts = initialAllShifts.filter(
-        (s) => s.co_id === coId
+        (s) => s.co_id === coId,
       );
 
       const newlyAddedShifts = formattedShifts.filter((newShift) => {
         const isOriginal = originalDayShifts.some(
           (originalShift) =>
             originalShift.shift_start === newShift.shift_start &&
-            originalShift.shift_end === newShift.shift_end
+            originalShift.shift_end === newShift.shift_end,
         );
         return !isOriginal;
       });
@@ -114,7 +114,7 @@ const Profile: React.FC = () => {
         return [...others, ...newlyAddedShifts];
       });
     },
-    [initialAllShifts]
+    [initialAllShifts],
   );
 
   const debouncedUpdateClinicOperationStatus = useCallback(
@@ -130,29 +130,28 @@ const Profile: React.FC = () => {
           };
           await axios.post(
             "http://localhost:8989/api/clinics/update-clinic-operation-status",
-            req
+            req,
           );
         } catch (err: any) {
           toast.error(err.message || "Failed to update status");
         }
       }, 2500);
     },
-    [] 
+    [],
   );
 
   const handleOperationDay = useCallback(
     (coId: number | string, clinicId: number | string, value: boolean) => {
       setOperationalDays((prevData) =>
-        prevData.map(
-          (dayItem: OperationalDay) =>
-            dayItem.co_id === coId
-              ? { ...dayItem, is_active: value ? 1 : 0 }
-              : dayItem
-        )
+        prevData.map((dayItem: OperationalDay) =>
+          dayItem.co_id === coId
+            ? { ...dayItem, is_active: value ? 1 : 0 }
+            : dayItem,
+        ),
       );
       debouncedUpdateClinicOperationStatus(coId, clinicId, value);
     },
-    [debouncedUpdateClinicOperationStatus]
+    [debouncedUpdateClinicOperationStatus],
   );
 
   const handleFileChange = (file: File | null) => {
@@ -166,17 +165,32 @@ const Profile: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const formData = new FormData();
-    clinicLogo && formData.append("clinic_logo", clinicLogo);
-    formData.append("clinic_id", clinicId.toString());
-    clinicType && formData.append("operational_hrs", clinicType);
-    patientDemand && formData.append("patient_demand", patientDemand);
-    sendReminders &&
-      formData.append("patient_reminder", sendReminders ? "1" : "0");
+    try {
+      if (!clinicId) return toast.error("Clinic is required");
+      if (!clinicType) return toast.error("Operational hours is required");
+      if (!patientDemand) return toast.error("Patient demand is required");
+      const formData = new FormData();
+      clinicLogo && formData.append("clinic_logo", clinicLogo);
+      formData.append("clinic_id", clinicId.toString());
+      clinicType && formData.append("operational_hrs", clinicType);
+      patientDemand && formData.append("patient_demand", patientDemand);
+      sendReminders &&
+        formData.append("patient_reminder", sendReminders ? "1" : "0");
 
-    await saveProfileSettingDetails(formData);
-    if (updatedShiftDetails.length > 0) {
-      await saveCilnicShifts();
+      await saveProfileSettingDetails(formData);
+      if (updatedShiftDetails.length > 0) {
+        await saveCilnicShifts();
+      }
+    } catch (err: any) {
+      const apiErrors = err?.response?.data?.errors;
+
+      if (apiErrors && Array.isArray(apiErrors)) {
+        apiErrors.forEach((e: any) => {
+          toast.error(e.message.replace(/"/g, ""));
+        });
+      } else {
+        toast.error(err.message || "Something went wrong");
+      }
     }
   };
 
@@ -185,7 +199,7 @@ const Profile: React.FC = () => {
       .post(
         "http://localhost:8989/api/clinics/update-clinic-profile",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       )
       .then((res) => toast.success(res.data.message))
       .catch((err) => toast.error(err.message));
@@ -195,7 +209,7 @@ const Profile: React.FC = () => {
     axios
       .post(
         "http://localhost:8989/api/clinics/save-clinic-shifts",
-        updatedShiftDetails
+        updatedShiftDetails,
       )
       .then((res) => {
         toast.success(res.data.message);

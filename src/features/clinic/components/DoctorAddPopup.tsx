@@ -3,7 +3,7 @@ import {
   MdLocationOn,
   MdCurrencyRupee,
   MdCalendarToday,
-  MdPhone
+  MdPhone,
 } from "react-icons/md";
 import { FormControl, TextField, InputAdornment, Button } from "@mui/material";
 import { FaUserMd } from "react-icons/fa";
@@ -35,7 +35,6 @@ interface Props {
   };
   address: string;
 }
-
 const DoctorAddPopup = ({
   doctor,
   fee,
@@ -46,7 +45,7 @@ const DoctorAddPopup = ({
   loading,
   onSubmit,
   onClose,
-  address
+  address,
 }: Props) => {
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -54,10 +53,7 @@ const DoctorAddPopup = ({
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-[var(--color-surface-alt)]"
       >
-        {/* HEADER */}
         <div className="flex items-start gap-4 px-6 py-5 bg-[var(--color-primary)] text-white">
-
-          {/* Avatar */}
           <div className="w-14 h-14 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-sm">
             {doctor.logo ? (
               <img
@@ -70,15 +66,12 @@ const DoctorAddPopup = ({
             )}
           </div>
 
-          {/* Doctor Info */}
           <div className="flex-1">
             <h3 className="font-semibold text-lg leading-tight">
               {doctor.name}
             </h3>
 
-            {/* metadata chips */}
             <div className="flex flex-wrap gap-2 mt-2 text-xs">
-
               {doctor.specialization && (
                 <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur">
                   {doctor.specialization}
@@ -91,19 +84,19 @@ const DoctorAddPopup = ({
                 </span>
               )}
 
-              {doctor.experience !== undefined && (
+              {doctor.qualification ? (
                 <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur">
                   {doctor.experience} yrs exp
                 </span>
+              ) : (
+                <span></span>
               )}
-
             </div>
           </div>
         </div>
 
         {/* CONTACT DETAILS */}
         <div className="px-6 py-4 space-y-3 text-sm text-[var(--color-text-secondary)] border-b border-gray-200">
-
           {doctor.phone && (
             <div className="flex items-center gap-3">
               <MdPhone className="text-[var(--color-primary)] text-lg" />
@@ -124,12 +117,10 @@ const DoctorAddPopup = ({
               <span className="leading-relaxed">{address}</span>
             </div>
           )}
-
         </div>
 
         {/* FORM */}
         <div className="px-6 py-5 space-y-4">
-
           <FormControl fullWidth>
             <TextField
               placeholder="Consultation Fee"
@@ -172,7 +163,6 @@ const DoctorAddPopup = ({
 
           {/* ACTION BUTTONS */}
           <div className="flex justify-end gap-3 pt-2">
-
             <Button
               variant="outlined"
               onClick={onClose}
@@ -189,7 +179,6 @@ const DoctorAddPopup = ({
             >
               {loading ? "Adding..." : "Add Doctor"}
             </Button>
-
           </div>
         </div>
       </div>

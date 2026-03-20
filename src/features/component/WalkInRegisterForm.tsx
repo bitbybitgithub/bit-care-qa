@@ -16,7 +16,7 @@ import {
   InputAdornment,
   Button,
 } from "@mui/material";
-
+import CircularProgress from "@mui/material/CircularProgress";
 import { savePatient } from "../../api/SavePatientApi";
 import { saveAppointment } from "../../api/SaveAppointmentApi";
 import { AppointmentStatus } from "../../context/constant/enum";
@@ -43,7 +43,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     gender: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [doctors, setDoctors] = useState<MappedDoctor[]>([]);
   const [doctorLoading, setDoctorLoading] = useState(false);
 
@@ -153,9 +154,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     } else if (!MOBILE_REGEX.test(data.phone)) {
       newErrors.phone = "Enter valid Indian mobile number";
     }
-    if (!data.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!EMAIL_REGEX.test(data.email.trim())) {
+    if (data.email.trim() && !EMAIL_REGEX.test(data.email.trim())) {
       newErrors.email = "Invalid email format";
     }
     if (!data.doctor.trim()) {
@@ -188,11 +187,10 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       newValue = value.slice(0, 200);
     }
 
-    if(name === 'email')
-    {
+    if (name === 'email') {
       setFormData((prev) => ({ ...prev, [name]: newValue.toLowerCase() }));
     }
-    else{
+    else {
       setFormData((prev) => ({ ...prev, [name]: newValue }));
     }
 
@@ -216,7 +214,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     };
 
     try {
-      setLoading(true);
+      setSaving(true);
 
       let patientId = patientData?.patient_id;
 
@@ -268,129 +266,199 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       console.error("Error in save flow:", err);
       toast.error(err?.message || "Something went wrong.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-md">
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={handleSubmit}
-        className="bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full max-w-lg mx-4 p-6 transform transition-all"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <FaUsers
-              className="text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h2)" }}
-            />
-            <h3
-              className="font-semibold text-[var(--color-primary)]"
-              style={{ fontSize: "var(--font-h3)" }}
-            >
-              Walk-In Patient Registration
-            </h3>
+    <div className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg mx-4">
+
+        {saving && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 rounded-[var(--radius-lg)]">
+            <CircularProgress size={40} thickness={4} />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
-          >
-            <FaTimes />
-          </button>
-        </div>
-        <div className="flex flex-col gap-y-3">
-          {/* Full Name */}
-          <FormControl fullWidth>
-            <TextField
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              size="small"
-              error={!!errors.name}
-              helperText={errors.name || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IoPerson className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
+        )}
+
+        <form
+          onClick={(e) => e.stopPropagation()}
+          onSubmit={handleSubmit}
+          className={`bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full p-6 transform transition-all ${saving ? "pointer-events-none opacity-80" : ""
+            }`}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <FaUsers
+                className="text-[var(--color-primary)]"
+                style={{ fontSize: "var(--font-h2)" }}
+              />
+              <h3
+                className="font-semibold text-[var(--color-primary)]"
+                style={{ fontSize: "var(--font-h3)" }}
+              >
+                Walk-In Patient Registration
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!saving) onClose();
               }}
-            />
-          </FormControl>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormControl fullWidth>
-              <TextField
-                type="date"
-                name="dob"
-                value={formData.dob}
-                onChange={handleChange}
-                size="small"
-                error={!!errors.dob}
-                helperText={errors.dob || " "}
-                InputLabelProps={{ shrink: true }}
-                inputProps={{
-                  max: maxDate,
-                  min: minDate,
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaCalendarAlt className="text-[var(--color-text)]" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </FormControl>
-
-            <FormControl fullWidth>
-              <TextField
-                value={age !== "" ? `${age} years` : ""}
-                placeholder="Age"
-                size="small"
-                InputProps={{ readOnly: true }}
-                helperText=" "
-              />
-            </FormControl>
+              className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+            >
+              <FaTimes />
+            </button>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-y-3">
+            {/* Full Name */}
             <FormControl fullWidth>
               <TextField
-                name="phone"
-                placeholder="Contact Number"
-                value={formData.phone}
+                name="name"
+                placeholder="Full Name"
+                value={formData.name}
                 onChange={handleChange}
                 size="small"
-                error={!!errors.phone}
-                helperText={errors.phone || " "}
-                inputProps={{ maxLength: 10, inputMode: "tel" }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <IoCallOutline className="text-[var(--color-text)]" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </FormControl>
-
-            <FormControl fullWidth error={!!errors.gender}>
-              <TextField
-                select
-                name="gender"
-                value={formData.gender}
-                onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
-                size="small"
-                helperText={errors.gender || " "}
-                error={!!errors.gender}
+                error={!!errors.name}
+                helperText={errors.name || " "}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <IoPerson className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </FormControl>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormControl fullWidth>
+                <TextField
+                  type="date"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  size="small"
+                  error={!!errors.dob}
+                  helperText={errors.dob || " "}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{
+                    max: maxDate,
+                    min: minDate,
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FaCalendarAlt className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  value={age !== "" ? `${age} years` : ""}
+                  placeholder="Age"
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                  helperText=" "
+                />
+              </FormControl>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormControl fullWidth>
+                <TextField
+                  name="phone"
+                  placeholder="Contact Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  size="small"
+                  error={!!errors.phone}
+                  helperText={errors.phone || " "}
+                  inputProps={{ maxLength: 10, inputMode: "tel" }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IoCallOutline className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </FormControl>
+
+              <FormControl fullWidth error={!!errors.gender}>
+                <TextField
+                  select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
+                  size="small"
+                  helperText={errors.gender || " "}
+                  error={!!errors.gender}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IoPerson className="text-[var(--color-text)]" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  SelectProps={{
+                    displayEmpty: true,
+                    renderValue: (selected: any) =>
+                      !selected ? (
+                        <span style={{ color: "rgba(0,0,0,0.6)" }}>
+                          Select Gender
+                        </span>
+                      ) : (
+                        selected
+                      ),
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select Gender</em>
+                  </MenuItem>
+                  <MenuItem value="Male">Male</MenuItem>
+                  <MenuItem value="Female">Female</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </TextField>
+              </FormControl>
+            </div>
+
+            <FormControl fullWidth>
+              <TextField
+                type="email"
+                name="email"
+                placeholder="Email Id"
+                value={formData.email}
+                onChange={handleChange}
+                size="small"
+                error={!!errors.email}
+                helperText={errors.email || " "}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FaEnvelope className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </FormControl>
+
+            <FormControl fullWidth>
+              <TextField
+                select
+                name="doctor"
+                value={formData.doctor}
+                onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
+                size="small"
+                disabled={doctorLoading}
+                error={!!errors.doctor}
+                helperText={errors.doctor || " "}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FaUserMd className="text-[var(--color-text)]" />
                     </InputAdornment>
                   ),
                 }}
@@ -399,7 +467,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                   renderValue: (selected: any) =>
                     !selected ? (
                       <span style={{ color: "rgba(0,0,0,0.6)" }}>
-                        Select Gender
+                        {doctorLoading ? "Loading..." : "Select Doctor"}
                       </span>
                     ) : (
                       selected
@@ -407,117 +475,58 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 }}
               >
                 <MenuItem value="">
-                  <em>Select Gender</em>
+                  <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
                 </MenuItem>
-                <MenuItem value="Male">Male</MenuItem>
-                <MenuItem value="Female">Female</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
+                {doctors.map((d) => (
+                  <MenuItem key={d.doctor_id} value={d.doctor_name}>
+                    {d.doctor_name}{d.specialized_in ? ` (${d.specialized_in})` : ""}
+                  </MenuItem>
+                ))}
               </TextField>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <TextField
+                multiline
+                rows={3}
+                name="reason"
+                placeholder="Reason for Visit"
+                value={formData.reason}
+                onChange={handleChange}
+                size="small"
+                error={!!errors.reason}
+                helperText={errors.reason || " "}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FaClipboardList className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
             </FormControl>
           </div>
 
-          <FormControl fullWidth>
-            <TextField
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleChange}
-              size="small"
-              error={!!errors.email}
-              helperText={errors.email || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaEnvelope className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
-
-          <FormControl fullWidth>
-            <TextField
-              select
-              name="doctor"
-              value={formData.doctor}
-              onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
-              size="small"
-              disabled={doctorLoading}
-              error={!!errors.doctor}
-              helperText={errors.doctor || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaUserMd className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-              SelectProps={{
-                displayEmpty: true,
-                renderValue: (selected: any) =>
-                  !selected ? (
-                    <span style={{ color: "rgba(0,0,0,0.6)" }}>
-                      {doctorLoading ? "Loading..." : "Select Doctor"}
-                    </span>
-                  ) : (
-                    selected
-                  ),
-              }}
+          <div className="flex justify-center gap-4 mt-6">
+            <Button
+              type="submit"
+              disabled={saving}
+              variant="contained"
+              className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
             >
-              <MenuItem value="">
-                <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
-              </MenuItem>
-              {doctors.map((d) => (
-                <MenuItem key={d.doctor_id} value={d.doctor_name}>
-                  {d.doctor_name}{d.specialized_in ? ` (${d.specialized_in})` : ""}
-                </MenuItem>
-              ))}
-            </TextField>
-          </FormControl>
+              Submit            </Button>
 
-          <FormControl fullWidth>
-            <TextField
-              multiline
-              rows={3}
-              name="reason"
-              placeholder="Reason for Visit"
-              value={formData.reason}
-              onChange={handleChange}
-              size="small"
-              error={!!errors.reason}
-              helperText={errors.reason || " "}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FaClipboardList className="text-[var(--color-text)]" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </FormControl>
-        </div>
-
-        <div className="flex justify-center gap-4 mt-6">
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="contained"
-            className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
-          >
-            {loading ? "Saving..." : "Submit"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl normal-case"
-          >
-            Close
-          </Button>
-        </div>
-      </form>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl normal-case"
+            >
+              Close
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

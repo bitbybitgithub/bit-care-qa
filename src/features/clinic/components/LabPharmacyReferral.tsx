@@ -39,7 +39,9 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     const title = isLab ? "Send to Lab" : "Send to Pharmacy";
     const clinic_id = getSessionItem("user", "clinic_id");
     const user = getSessionItem("user", "user_id");
-    console.log({patient})
+    console.log({patient})   
+    const [sending, setSending] = useState(false);
+
     useEffect(() => {
       const fetchItems = async () => {
         setLoading(true);
@@ -116,7 +118,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
       const doctorId = patient?.raw?.doctor_id;
       const prescriptionId = patient?.raw?.prescriptions?.[0]?.prescription_id;
       try {
-        setLoading(true);
+        setSending(true);
 
         const selectedItems = normalizedItems
           .filter((i) => selected.includes(i.id))
@@ -157,7 +159,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         console.error("Failed to send referral", error);
         toast.error("Failed to send referral");
       } finally {
-        setLoading(false);
+        setSending(false);
       }
     };
 
@@ -334,10 +336,10 @@ const LabPharmacyReferral: React.FC<Props> = memo(
             variant="contained"
             size="small"
             fullWidth
-            disabled={!selected.length}
+            disabled={!selected.length || sending}
             onClick={handleAdd}
           >
-            {title} ({selected.length})
+            {sending ? "Sending..." : `${title} (${selected.length})`}
           </Button>
         </div>
       </div>

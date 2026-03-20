@@ -180,7 +180,7 @@ const LabDashboard = () => {
             <input
               value={queueSearch}
               onChange={(e) => setQueueSearch(e.target.value)}
-              placeholder="Search by Patient Name/Patient ID"
+              placeholder="Search by Patient Name"
               className="w-full pl-10 pr-3 py-2 rounded-lg
                       border border-[var(--color-primary)]"
             />

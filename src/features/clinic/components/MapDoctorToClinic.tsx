@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { MdSearch, MdEmail, MdLocationOn, MdPhone } from "react-icons/md";
-import { IconButton } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import DoctorAddPopup from "./DoctorAddPopup";
 import { FaUserMd } from "react-icons/fa";
 
@@ -16,11 +13,9 @@ interface PartnerItem {
   city?: string;
   state?: string;
   pincode?: string;
-
   specialization?: string;
   qualification?: string;
   experience?: number;
-
   alreadyMapped?: boolean;
 }
 
@@ -79,14 +74,18 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
 
   const selectedDoctor = data.find((d) => d.id === selectedId);
   const selectedDoctorAddress = selectedDoctor
-  ? [selectedDoctor.address, selectedDoctor.city, selectedDoctor.state, selectedDoctor.pincode]
-      .filter(Boolean)
-      .join(", ")
-  : "";
+    ? [
+        selectedDoctor.address,
+        selectedDoctor.city,
+        selectedDoctor.state,
+        selectedDoctor.pincode,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   return (
     <div className="p-6 bg-[var(--color-surface-alt)] min-w-[80vh]">
-
       <div className="mb-6 relative w-72">
         <MdSearch
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -104,30 +103,30 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {filtered.map((item) => {
-          const isSelected = selectedId === item.id;
-
           return (
             <div
               key={item.id}
               onClick={() => !item.alreadyMapped && setSelectedId(item.id)}
               className={`
-                rounded-[var(--radius-lg)]
-                overflow-hidden
-                shadow-[var(--shadow-md)]
-                transition
-                cursor-pointer
-                border
-                bg-[var(--color-surface-alt)]
-                hover:shadow-[var(--shadow-lg)]
-                ${
-                  isSelected
-                    ? "border-[var(--color-primary)]"
-                    : "border-transparent"
-                }
-              `}
+    rounded-[var(--radius-lg)]
+    overflow-hidden
+    shadow-[var(--shadow-md)]
+    transition
+    border
+    flex flex-col  
+    h-full          
+    bg-[var(--color-surface-alt)]
+    border-transparent
+    
+    ${
+      item.alreadyMapped
+        ? "cursor-not-allowed"
+        : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
+    }
+ 
+  `}
             >
               <div className="flex items-start gap-3 px-3 py-3 bg-[var(--color-primary)] text-white relative">
-
                 <div
                   className="w-10 h-10 flex items-center justify-center
                   rounded-xl bg-[var(--color-surface)]
@@ -150,7 +149,6 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
                   </h3>
 
                   <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
-
                     {item.specialization && (
                       <span className="px-2 py-[2px] rounded-full bg-white/20">
                         {item.specialization}
@@ -164,30 +162,17 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
                     )}
 
                     {item.experience ? (
-                     <span className="px-2 py-[2px] rounded-full bg-white/20">
+                      <span className="px-2 py-[2px] rounded-full bg-white/20">
                         {item.experience} yrs exp
                       </span>
-                    ):(
-                      <span>
-                      </span>
+                    ) : (
+                      <span></span>
                     )}
-
                   </div>
                 </div>
-
-                {!item.alreadyMapped && (
-                  <IconButton size="small" sx={{ color: "white" }}>
-                    {isSelected ? (
-                      <CheckCircleIcon />
-                    ) : (
-                      <RadioButtonUncheckedIcon />
-                    )}
-                  </IconButton>
-                )}
               </div>
 
-              <div className="px-4 py-3 space-y-2 text-xs text-[var(--color-text-secondary)]">
-
+              <div className="px-4 py-3 space-y-2 text-xs text-[var(--color-text-secondary)] flex-1">
                 {item.phone && (
                   <div className="flex items-center gap-2">
                     <MdPhone className="text-[var(--color-primary)]" />
@@ -204,29 +189,33 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
 
                 {item.address && (
                   <div className="flex items-start gap-2">
-                    <MdLocationOn className="text-[var(--color-primary)] mt-0.5" />
-                    {[item.address, item.city, item.state, item.pincode]
-                      .filter(Boolean)
-                      .join(", ")}
+                    <MdLocationOn className="text-[var(--color-primary)]  shrink-0" />
+
+                    <p className="leading-snug break-words">
+                      {[item.address, item.city, item.state, item.pincode]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
                   </div>
                 )}
-
               </div>
 
-              {item.alreadyMapped && (
-                <div className="px-4 pb-3">
-                  <span className="inline-block px-3 py-1 rounded-full text-xs bg-red-100 text-red-600">
-                    Already Added
-                  </span>
-                </div>
-              )}
-
+              <div className="px-4 pb-3 mt-auto">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs ${
+                    item.alreadyMapped
+                      ? "bg-red-100 text-red-600"
+                      : "bg-gray-100 text-[var(--color-text)]"
+                  }`}
+                >
+                  {item.alreadyMapped ? "Already Added" : "Available"}
+                </span>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Popup */}
       {selectedDoctor && (
         <DoctorAddPopup
           doctor={selectedDoctor}

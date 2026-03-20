@@ -92,16 +92,19 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
             <div
               key={item.id}
               onClick={() => toggleSelect(item.id, item.alreadyMapped)}
-              className={`w-72 rounded-[var(--radius-lg)] overflow-hidden
-                  shadow-[var(--shadow-md)]
-                  transition-all duration-300 cursor-pointer border 
-                  ${
-                    isSelected
-                      ? " border-[var(--color-primary)]"
-                      : "border-transparent"
-                  }
+              className={`w-full rounded-[var(--radius-lg)] overflow-hidden
+  shadow-[var(--shadow-md)]
+  transition-all duration-300 border 
+  flex flex-col h-full
 
-                  hover:shadow-[var(--shadow-lg)]`}
+  ${isSelected ? "border-[var(--color-primary)]" : "border-transparent"}
+
+  ${
+    item.alreadyMapped
+      ? "cursor-not-allowed"
+      : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
+  }
+`}
             >
               <div
                 className="flex items-center gap-3 px-3 py-2
@@ -140,44 +143,34 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
 
               <div
                 className="px-4 py-3 space-y-3 text-xs
-                      text-[var(--color-text-secondary)]
-                      bg-[var(--color-surface-alt)]"
+                  text-[var(--color-text-secondary)]
+                  bg-[var(--color-surface-alt)] flex-1"
               >
                 {item.mobile && (
                   <div className="flex items-center gap-2">
                     <MdPhone className="text-[var(--color-primary)] text-sm shrink-0" />
-
-                    <a
-                      href={`tel:${item.mobile}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="hover:text-[var(--color-primary)] transition"
-                    >
-                      {item.mobile}
-                    </a>
+                    <span>{item.mobile}</span>
                   </div>
                 )}
+
                 {item.email && (
                   <div className="flex items-center gap-2">
                     <MdEmail className="text-[var(--color-primary)] text-sm shrink-0" />
-
-                    <a
-                      href={`mailto:${item.email}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="truncate hover:text-[var(--color-primary)] transition"
-                    >
-                      {item.email}
-                    </a>
+                    <span className="truncate">{item.email}</span>
                   </div>
                 )}
 
                 {item.address && (
                   <div className="flex items-start gap-2">
                     <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
-                    <span className="leading-relaxed">{[item.address, item.city, item.state].filter(Boolean).join(", ")}</span>
+                    <span>
+                      {[item.address, item.city, item.state]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
                   </div>
                 )}
               </div>
-
               <div className="px-4 pb-3 bg-[var(--color-surface-alt)]">
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-medium

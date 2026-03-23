@@ -87,9 +87,9 @@ const Users: React.FC = () => {
 
      if (result.success) {
   if (isActive) {
-    toast.error("User deactivated successfully"); 
+    toast.error("User Deactivated"); 
   } else {
-    toast.success("User activated successfully");
+    toast.success("User Activated");
   }
 }
     } catch (error: unknown) {

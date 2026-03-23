@@ -242,8 +242,7 @@ const StaffDashboard: React.FC = () => {
             return "Payment completed successfully";
           case "Start Consultation":
             return "Consultation started";
-          default:
-            return "Status updated successfully";
+          break;
         }
       };
 

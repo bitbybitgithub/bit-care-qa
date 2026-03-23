@@ -429,7 +429,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               <TextField
                 type="email"
                 name="email"
-                placeholder="Email Id"
+                placeholder="Email Id (Optional)"
                 value={formData.email}
                 onChange={handleChange}
                 size="small"

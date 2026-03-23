@@ -125,7 +125,7 @@ const StaffDashboard: React.FC = () => {
 
         setStats(mapped);
       })
-      .catch((err) => { });
+      .catch((err) => {});
   }, []);
 
   useEffect(() => {
@@ -200,6 +200,7 @@ const StaffDashboard: React.FC = () => {
           prescriptions: a.prescriptions,
         },
         age: calculateAge(a.date_of_birth),
+        consultation_fees: a.consultation_fees,
       }));
 
       setCompletedPatients(mapped);
@@ -223,7 +224,6 @@ const StaffDashboard: React.FC = () => {
 
   const handleUpdatePatientStatus = useCallback(
     async (patient: Patient, newStatus: string, actionType?: string) => {
-
       const getSuccessMessage = (action?: string) => {
         switch (action) {
           case "Hold Appointment":
@@ -268,19 +268,18 @@ const StaffDashboard: React.FC = () => {
             prev.map((p) =>
               p?.raw?.appointment_id === patient?.raw?.appointment_id
                 ? { ...p, status: newStatus }
-                : p
-            )
+                : p,
+            ),
           );
         } else {
           toast.error(res.message || "Failed to update appointment status.");
         }
-
       } catch (err) {
         console.error("Update error:", err); // 👈 don’t be blind
         toast.error("Error updating patient status.");
       }
     },
-    [uId, clinicId]
+    [uId, clinicId],
   );
 
   const resetModalState = () => {
@@ -318,10 +317,11 @@ const StaffDashboard: React.FC = () => {
                   }}
                   className={`
               px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition border-2  border-[var(--color-primary)]
-              ${activeTab === t.key
-                      ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
-                      : "text-[var(--color-surface-alt)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-surface-alt)]"
-                    }
+              ${
+                activeTab === t.key
+                  ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
+                  : "text-[var(--color-surface-alt)] hover:bg-[var(--color-hover)] border-transparent hover:border-[var(--color-surface-alt)]"
+              }
             `}
                 >
                   {t.label}

@@ -12,7 +12,6 @@ export const saveUsersAPI = async (doctorData: {
 }) => {
   try {
     const response = await emrAPI.post("/clinics/add-user", doctorData);
-    console.log("clinic user response",response)
     return response; 
   } catch (error: any) {
     console.error("Error adding doctor:", error);

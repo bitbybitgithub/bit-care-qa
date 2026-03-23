@@ -519,7 +519,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   );
 
   const getRowId: GridRowIdGetter = (row: any) => row.appointment_id;
-  console.log("Completed Appointments:", rows);
 
   return (
     <div
@@ -605,14 +604,13 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       <Dialog
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
-        maxWidth="md"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle className="font-semibold">Cancel Appointment</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Cancellation Reason"
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             multiline

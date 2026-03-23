@@ -39,7 +39,6 @@ const LabPharmacyReferral: React.FC<Props> = memo(
     const title = isLab ? "Send to Lab" : "Send to Pharmacy";
     const clinic_id = getSessionItem("user", "clinic_id");
     const user = getSessionItem("user", "user_id");
-    console.log({patient})   
     const [sending, setSending] = useState(false);
 
     useEffect(() => {

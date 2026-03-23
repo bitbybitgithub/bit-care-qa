@@ -62,11 +62,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
     setPage(1);
   };
 
-  
   const documentFile = useMemo(() => pdfUrl, [pdfUrl]);
-
-  
-  console.log(  {documentFile});
 
   useEffect(() => {
     const updateWidth = () => {

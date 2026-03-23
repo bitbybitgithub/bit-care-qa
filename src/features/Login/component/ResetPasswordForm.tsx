@@ -188,7 +188,6 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
         mobile_number: mobileNumber,
         otp_type: 2,
       });
-      console.log("res", res)
       setUseId(res.userId)
       if (res.success) {
         toast.success("OTP sent to user mobile number successfully!");

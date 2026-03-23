@@ -221,38 +221,6 @@ const StaffDashboard: React.FC = () => {
     setOpenWalkIn(false);
   };
 
-  // const handleUpdatePatientStatus = useCallback(
-  //   async (patient: Patient, newStatus: string, actionType?: string) => {
-  //     if (!patient?.raw?.appointment_id) {
-  //       toast.error("Invalid appointment ID.");
-  //       return;
-  //     }
-  //     const payload: UpdateAppointmentStatusRequest = {
-  //       appointment_id: patient.raw.appointment_id,
-  //       user_id: uId,
-  //       status: newStatus,
-  //     };
-  //     try {
-  //       const res = await updatePatientStatus(payload);
-  //       if (res.success) {
-  //         // toast.success("Patient appointment upadated successfully");
-
-  //         setPendingPatients((prev) =>
-  //           prev.map((p) =>
-  //             p?.raw.appointment_id === patient.appointment_id
-  //               ? { ...p, status: newStatus }
-  //               : p,
-  //           ),
-  //         );
-  //       } else
-  //         toast.error(res.message || "Failed to update appointment status.");
-  //     } catch {
-  //       toast.error("Error updating patient status.");
-  //     }
-  //   },
-  //   [uId, clinicId],
-  // );
-
   const handleUpdatePatientStatus = useCallback(
     async (patient: Patient, newStatus: string, actionType?: string) => {
 

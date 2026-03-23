@@ -164,7 +164,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     try {
       setUploading(true);
       const uploadRes = await uploadPrescriptionReport(file);
-      console.log("uploadRes", uploadRes);
       setReportMap((prev) => ({
         ...prev,
         [appointment_id]: [

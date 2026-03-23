@@ -280,6 +280,12 @@ const WalkInVerificationModal: React.FC<Props> = ({
                       backgroundColor: "var(--color-info)",
                       opacity: 0.8,
                     },
+                    "&.Mui-disabled": {
+                      color: "var(--color-white)",
+                      cursor: "not-allowed",
+                      opacity: 0.7,
+                      pointerEvents: "auto",
+                    },
                   }}
                 >
                   Send OTP

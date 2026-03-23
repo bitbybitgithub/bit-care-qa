@@ -105,6 +105,7 @@ export interface CompletedAppointmentDto {
   prescriptions: CompletedPrescriptionDto[];
   age?: number;
   is_fee_paid:string;
+  consultation_fees?:string;
 }
 export interface CompletedQueueUiDto {
   appointment_id: number;

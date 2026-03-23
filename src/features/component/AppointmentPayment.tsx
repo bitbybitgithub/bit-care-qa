@@ -1,21 +1,13 @@
 import React, { useState, memo } from "react";
-import { Button, TextField, FormControl, InputAdornment } from "@mui/material";
+import { Button, TextField, InputAdornment } from "@mui/material";
 import { MdClose, MdCurrencyRupee } from "react-icons/md";
-import { FaCommentDots } from "react-icons/fa";
-import {
-  Banknote,
-  CreditCard,
-  Landmark,
-  Smartphone,
-  Wallet,
-} from "lucide-react";
-import axios from "axios";
+import { Banknote, Smartphone } from "lucide-react";
 import { toast } from "react-toastify";
-import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import { FaRupeeSign } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { emrAPI } from "../../services/EmrApi";
-
+import type { Patient } from "../../types/patientType/patientTypeInterfaces";
+import { savePayment } from "../../api/paymentApi/PaymentAPI";
+import type { SavePaymentRequest } from "../../types/paymentTypes";
 interface Props {
   patient: Patient | null;
   onClose?: () => void;
@@ -33,27 +25,10 @@ const methods = [
     color: "violet",
     disabled: true,
   },
-  // {
-  //   key: "CARD",
-  //   icon: CreditCard,
-  //   color: "blue",
-  // },
-  // {
-  //   key: "NETBANKING",
-  //   icon: Landmark,
-  //   color: "orange",
-  // },
-  // {
-  //   key: "WALLET",
-  //   icon: Wallet,
-  //   color: "pink",
-  // },
 ];
 
 const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
-  const [amount, setAmount] = useState<number | "">(
-    patient?.consultation_fees || "1000",
-  );
+  const [amount, setAmount] = useState(patient?.consultation_fees);
   const [remarks, setRemarks] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [method, setMethod] = useState("CASH");
@@ -69,48 +44,39 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       return;
     }
 
+    if (method === "ONLINE") {
+      toast.error("Online payment not available");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const payload = {
+      const payload: SavePaymentRequest = {
         appointment_id: patient.appointment_id,
         patient_id: Number(patient.raw?.patient_id),
         doctor_id: Number(patient.raw?.doctor_id),
         clinic_id: clinicId,
-        amount,
-        payment_method: method,
-        bank_transaction_id: transactionId,
+        amount: Number(amount),
+        payment_method: method as "CASH" | "ONLINE",
+        bank_transaction_id: transactionId || undefined,
         payment_gateway: "",
-        payment_status: "SUCCESS",
-        remarks,
+        payment_status: "SUCCESS", // ✅ FIXED
+        remarks: remarks || undefined,
         created_by: userId,
       };
 
-      // console.log(payload);
-      const response = await emrAPI.post("/payments/save", payload);
-      // console.log(response);
-      // if (response?.success) {
-      //   toast.success(`${response?.message}  ${response?.transaction_id}`);
-      //   onClose?.();
-      // }
-      const resData = response?.data || response;
+      const res = await savePayment(payload);
 
-      const isSuccess = resData?.success || resData?.sucess;
-
-      if (isSuccess) {
-        toast.success(resData?.message || "Payment successful");
-        onClose?.();
-      } else {
-        toast.error(resData?.message || "Payment failed");
-      }
-    } catch (error) {
+      toast.success(res?.message || "Payment successful");
+      onClose?.();
+    } catch (error: any) {
       console.error(error);
-      toast.error("Payment failed");
+      toast.error(error.message || "Payment failed");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="flex flex-col h-full bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
       {/* Header */}
@@ -132,7 +98,9 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">        {/* Patient Info */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        {" "}
+        {/* Patient Info */}
         <div className="p-5 rounded-xl bg-[var(--color-surface-alt)] shadow-sm flex justify-between items-center">
           <div>
             <p className="text-xs text-[var(--color-text-secondary)]">
@@ -140,7 +108,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
             </p>
 
             <p className="text-2xl font-bold mt-1">
-              ₹{patient?.consultation_fees ?? "1000"}
+              ₹{patient.consultation_fees}
             </p>
           </div>
 
@@ -150,7 +118,6 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
             <p className="text-sm font-medium">{patient?.doctor || "—"}</p>
           </div>
         </div>
-
         {/* Payment Methods */}
         <div>
           <p className="text-sm font-medium mb-3">Payment Method</p>
@@ -199,13 +166,12 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
             })}
           </div>
         </div>
-
         {method === "ONLINE" && (
-          <div className="flex flex-col items-center justify-center text-center 
+          <div
+            className="flex flex-col items-center justify-center text-center 
 bg-gradient-to-br from-orange-50 to-orange-100 
-border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
-
-
+border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4"
+          >
             <div className="text-4xl">🚧</div>
 
             <h3 className="text-lg font-semibold text-orange-700">
@@ -213,18 +179,16 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
             </h3>
 
             <p className="text-sm text-orange-600 max-w-xs">
-              We’re working on integrating secure online payment options.
-              Please use cash for now.
+              We’re working on integrating secure online payment options. Please
+              use cash for now.
             </p>
 
             <div className="w-12 h-1 bg-orange-400 rounded-full animate-pulse"></div>
           </div>
         )}
-
         {/* Form */}
         {method !== "ONLINE" && (
           <div className="bg-white p-4 rounded-xl space-y-4 shadow-sm border border-gray-100">
-
             {/* Amount */}
             <div className="flex items-center gap-4">
               {/* Label */}
@@ -242,13 +206,13 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
                   setAmount(value === "" ? "" : Number(value));
                 }}
                 inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                sx={{
-                  "& .MuiInputBase-root": {
-                    borderRadius: "12px",
-                    height: "40px",
-                    width: "150px",
-                  },
-                }}
+                // sx={{
+                //   "& .MuiInputBase-root": {
+                //     borderRadius: "12px",
+                //     height: "40px",
+                //     width: "150px",
+                //   },
+                // }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -271,7 +235,6 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
             )}
 
             <div className="flex items-center gap-4">
-
               <p className="text-sm font-medium min-w-[65px] text-[var(--color-text)]">
                 Remarks :
               </p>
@@ -281,8 +244,12 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
                 label="Remarks (optional)"
                 size="small"
                 fullWidth
-                sx={{ "& .MuiInputBase-root": { borderRadius: "13px", marginBottom: "2px" } }}
-
+                sx={{
+                  "& .MuiInputBase-root": {
+                    borderRadius: "13px",
+                    marginBottom: "2px",
+                  },
+                }}
                 multiline
                 rows={2}
                 value={remarks}
@@ -293,12 +260,12 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4">
         )}
       </div>
 
-
       {/* Footer */}
-      <div className="flex gap-4 p-5 border-t border-[var(--color-border)] bg-[var(--color-bg)]">        <Button variant="outlined" size="small" fullWidth onClick={onClose}>
-        Cancel
-      </Button>
-
+      <div className="flex gap-4 p-5 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
+        {" "}
+        <Button variant="outlined" size="small" fullWidth onClick={onClose}>
+          Cancel
+        </Button>
         <Button
           variant="contained"
           size="small"

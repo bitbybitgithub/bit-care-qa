@@ -21,6 +21,7 @@ export interface Patient {
   appointmentDate?: string;
   endTime?: string;
   raw?: any;
+  consultation_fees?:string;
 }
 
 /* ==================== Documents ==================== */

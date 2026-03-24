@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { Base64ToImage } from "../../../utils/converter";
 import ScheduleDayWrapper from "./ScheduleDayWrapper";
 import { getSessionItem } from "../../../context/sessions/userSession";
+import { BASE_URL } from "../../../services/EmrApi";
 
 interface ShiftPayload {
   clinic_id: number | string;
@@ -44,7 +45,7 @@ const fetchClinicProfile = async (
 ): Promise<ClinicProfileData> => {
   const req = { clinic_id: clinicId };
   const res = await axios.post(
-    "http://localhost:8989/api/clinics/get-clinic-profile",
+    `${BASE_URL}/clinics/get-clinic-profile`,
     req,
   );
   return res.data;
@@ -129,7 +130,7 @@ const Profile: React.FC = () => {
             modified_by: "Internal Admin",
           };
           await axios.post(
-            "http://localhost:8989/api/clinics/update-clinic-operation-status",
+            `${BASE_URL}/clinics/update-clinic-operation-status`,
             req,
           );
         } catch (err: any) {
@@ -197,7 +198,7 @@ const Profile: React.FC = () => {
   const saveProfileSettingDetails = (formData: FormData) => {
     axios
       .post(
-        "http://localhost:8989/api/clinics/update-clinic-profile",
+        `${BASE_URL}/clinics/update-clinic-profile`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } },
       )
@@ -208,7 +209,7 @@ const Profile: React.FC = () => {
   const saveCilnicShifts = () => {
     axios
       .post(
-        "http://localhost:8989/api/clinics/save-clinic-shifts",
+        `${BASE_URL}/clinics/save-clinic-shifts`,
         updatedShiftDetails,
       )
       .then((res) => {

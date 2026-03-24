@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import PatientHistory from "./PatientHistory";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import type { ConsultationSummaryResponse } from "../../../types/appointmentTypes";
+import { BASE_URL } from "../../../services/EmrApi";
 
 const DocumentationView = () => (
   <div className="p-6 bg-[var(--color-surface-alt)] dark:bg-gray-800 rounded-xl shadow-md">
@@ -81,7 +82,7 @@ const fetchPatientInfo = async (
 ): Promise<ConsultationSummaryResponse> => {
   const req = { patient_id: patientId };
   const res = await axios.post(
-    "http://localhost:8989/api/patients/info",
+    `${BASE_URL}/patients/info`,
     req
   );
   return res.data;

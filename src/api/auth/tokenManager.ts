@@ -1,3 +1,4 @@
+import { BASE_URL } from "../../services/EmrApi";
 import type { RefreshToken } from "../../types/types";
 
 // tokenManager.ts
@@ -17,7 +18,7 @@ async rehydrate(): Promise<void> {
 
         const payload: RefreshToken = { ip_address: ip,platform:"web"};
       // Try refreshing token silently using the HttpOnly cookie
-      const res = await fetch("http://localhost:8989/api/auth/refresh-token", {
+      const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
          method: "POST",
          credentials: "include",
            headers: {

@@ -241,7 +241,7 @@ border border-orange-200 rounded-2xl px-6 py-8 shadow-sm space-y-4"
 
               {/* Remarks */}
               <TextField
-                label="Remarks (optional)"
+                placeholder="Remarks (optional)"
                 size="small"
                 fullWidth
                 sx={{

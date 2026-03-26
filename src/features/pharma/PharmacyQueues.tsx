@@ -179,7 +179,7 @@ export default function PharmacyQueues({
   const commonColumns: GridColDef[] = [
     {
       field: "patient_name",
-      headerName: "Patient Name",
+      headerName: "Patient",
       flex: 1.5,
       renderCell: (p) => (
         <h1 className="font-[var(--font-weight-semibold)]">
@@ -192,18 +192,18 @@ export default function PharmacyQueues({
     },
     {
       field: "phone",
-      headerName: "Contact Number",
+      headerName: "Contact",
       flex: 1,
       renderCell: (p) => <span>{p.row.phone}</span>,
     },
     {
       field: "clinic_name",
-      headerName: "Clinic Name",
+      headerName: "Clinic",
       flex: 1,
     },
     {
       field: "doctor_name",
-      headerName: "Doctor Name",
+      headerName: "Doctor",
       flex: 1,
     },
     {

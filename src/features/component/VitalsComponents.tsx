@@ -164,7 +164,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     );
 
     const fields = [
-      { field: "height_cm", label: "Height (cm)", placeholder: "0-272", icon: <GiBodyHeight />, },
+      { field: "height_cm", label: "Height (cm)", placeholder: "55-272", icon: <GiBodyHeight />, },
       {
         field: "weight_kg",
         label: "Weight (kg)",

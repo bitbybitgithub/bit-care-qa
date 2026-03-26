@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { UploadPrescriptionResponse } from "../../types/common/uploadReport.types";
+import { BASE_URL } from "../../services/EmrApi";
 
 export const uploadPrescriptionReport = async (
   file: File
@@ -12,7 +13,7 @@ formData.append("file",file);
 
 
   const response = await axios.post<UploadPrescriptionResponse>(
-    "https://cliniccareapi.bitbybitsolutions.co.in/api/doctors/upload-prescription",
+    `${BASE_URL}/doctors/upload-prescription`,
     formData
   );
   return response.data;

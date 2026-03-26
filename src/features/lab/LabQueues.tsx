@@ -239,7 +239,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const commonColumns: GridColDef[] = [
     {
       field: "patient_name",
-      headerName: "Patient",
+      headerName: "Patient Name",
       flex: 1.5,
       renderCell: (p) => (
         <h1 className="font-[var(--font-weight-semibold)]">
@@ -250,9 +250,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         </h1>
       ),
     },
-    { field: "contact_no", headerName: "Contact", flex: 1 },
-    { field: "clinic_name", headerName: "Clinic", flex: 1 },
-    { field: "doctor_name", headerName: "Doctor", flex: 1 },
+    { field: "contact_no", headerName: "Contact Number", flex: 1 },
+    { field: "clinic_name", headerName: "Clinic Name", flex: 1 },
+    { field: "doctor_name", headerName: "Doctor Name", flex: 1 },
   ];
 
   const columns: GridColDef[] = useMemo(() => {

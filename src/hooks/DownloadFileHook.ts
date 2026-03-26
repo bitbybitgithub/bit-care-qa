@@ -1,4 +1,5 @@
 import axios from "axios";
+import { BASE_URL } from "../services/EmrApi";
 
 export const getPdfFromServer = async (
   filePath: string,
@@ -6,7 +7,7 @@ export const getPdfFromServer = async (
 ): Promise<string> => {
   try {
     const response = await axios.post(
-      "https://cliniccareapi.bitbybitsolutions.co.in/api/common/downloadFile",
+      `${BASE_URL}/common/downloadFile`,
       { filePath, fileName },
       {
         responseType: "blob", 

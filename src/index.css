@@ -11,3 +11,13 @@ select:-webkit-autofill {
   caret-color: var(--color-text) !important;
   transition: background-color 9999s ease-in-out 0s !important;
 }
+/* Hide Edge native password reveal + clear button */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+/* Extra safety (Edge sometimes ignores scoped selector) */
+input::-ms-reveal {
+  display: none !important;
+}

@@ -228,7 +228,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
           const row = params.row || {};
           const name = row.name || "--";
           const id = row.appointment_id ?? row.patient_id ?? "—";
-          const gender = row.gender ? String(row.gender).charAt(0) : "-";
+          const gender = row.gender?.toString()?.[0]?.toUpperCase() || "-";
           return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Box

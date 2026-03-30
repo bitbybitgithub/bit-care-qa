@@ -245,11 +245,12 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
           <span style={{ color: "var(--color-primary)" }}>
-            ({p.row.gender?.charAt(0)})
+            ({p.row.gender?.toUpperCase().charAt(0)})
           </span>
         </h1>
       ),
     },
+    { field: "result_status", headerName: "result_status", flex: 1 },
     { field: "contact_no", headerName: "Contact Number", flex: 1 },
     { field: "clinic_name", headerName: "Clinic Name", flex: 1 },
     { field: "doctor_name", headerName: "Doctor Name", flex: 1 },
@@ -333,7 +334,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         <DataGrid
           rows={pagedRows}
           columns={columns}
-          getRowId={(row) => `${row.appointment_id}_${row.patient_id}`}
+          // getRowId={(row) => `${row.appointment_id}_${row.patient_id}`}
+          getRowId={(row) => `${row.appointment_id}_${row.patient_id}_${row.created_date}`}
           paginationModel={{ page: currentPage - 1, pageSize: PAGE_SIZE }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
           rowHeight={64}

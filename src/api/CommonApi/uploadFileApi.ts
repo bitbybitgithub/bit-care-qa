@@ -12,7 +12,7 @@ formData.append("file",file);
 
 
   const response = await axios.post<UploadPrescriptionResponse>(
-    "http://qacliniccareapi.bitbybitsolutions.co.in/api/doctors/upload-prescription",
+    "https://qacliniccareapi.bitbybitsolutions.co.in/api/doctors/upload-prescription",
     formData
   );
   return response.data;

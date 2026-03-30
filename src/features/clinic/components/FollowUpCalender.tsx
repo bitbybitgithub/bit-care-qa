@@ -76,7 +76,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         start_time: formatTime(now),
         end_time: formatTime(endTime),
         status: AppointmentStatus.Scheduled,
-        source: "walk_in",
+        source: "web",
         reason: followUpReason,
         date_of_birth: patient.date_of_birth,
         mobile_number: patient.mobile_number,

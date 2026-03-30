@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import ViewPartnerUI from "../../component/ViewPartnerUI";
-import {
-  getSession,
-  getSessionItem,
-} from "../../../context/sessions/userSession";
+import {getSessionItem,} from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import { getDoctorListApi, type DoctorList } from "../../../api";
 import {
@@ -12,8 +9,6 @@ import {
 } from "../../../api/clinic/ClinicDoctorApi";
 import MapDoctorToClinic from "./MapDoctorToClinic";
 
-const session = getSession("user");
-const clinicId = session?.clinic_id ?? null;
 
 const DoctorEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
@@ -21,6 +16,7 @@ const DoctorEmpanelment = () => {
   const [mappedDoctors, setMappedDoctor] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const user = getSessionItem("user", "user_id");
+  const clinicId = getSessionItem("user", "clinic_id");
 
   const fetchDoctors = async () => {
     try {

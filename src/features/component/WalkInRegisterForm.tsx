@@ -239,7 +239,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         start_time: formatTime(now),
         end_time: formatTime(endTime),
         status: AppointmentStatus.Scheduled,
-        source: "walk_in",
+        source: "web",
         reason: formData.reason || "Regular checkup",
         date_of_birth: formData.dob,
         mobile_number: formData.phone || contact,

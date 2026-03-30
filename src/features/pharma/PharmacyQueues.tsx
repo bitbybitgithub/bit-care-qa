@@ -185,7 +185,7 @@ export default function PharmacyQueues({
         <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
           <span style={{ color: "var(--color-primary)" }}>
-            ({p.row.gender?.charAt(0)})
+             ({p.row.gender?.toUpperCase().charAt(0)})
           </span>
         </h1>
       ),

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
-import { getSession } from "../../context/sessions/userSession";
+import {getSessionItem } from "../../context/sessions/userSession";
 import {
   getActivePharmaListApi,
   getMappedPharmaciesApi,
@@ -11,14 +11,15 @@ import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
 import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
 
-const session = getSession("user");
-const clinicId = session?.clinic_id ?? null;
 
 const PharmaEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
   const [pharmas, setPharmas] = useState<PharmaApiItem[]>([]);
   const [mappedPharmas, setMappedPharmas] = useState<PharmaApiItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const user = getSessionItem("user", "user_id");
+  const clinicId = getSessionItem("user", "clinic_id");
+
 
   const fetchPharmas = async () => {
     try {
@@ -35,7 +36,7 @@ const PharmaEmpanelment = () => {
   const fetchPharmaByClinicId = async () => {
     try {
       const res = await getMappedPharmaciesApi(clinicId, null);
-      setMappedPharmas(res.data);
+      setMappedPharmas(res);
     } catch (error) {
       console.error(error);
     }

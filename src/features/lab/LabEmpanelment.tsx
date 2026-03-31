@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
-import { getSession } from "../../context/sessions/userSession";
+import { getSessionItem } from "../../context/sessions/userSession";
 import {
   getActiveLabListApi,
   getMappedLabsApi,
@@ -11,8 +11,6 @@ import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
 import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
 import { toast } from "react-toastify";
 
-const session = getSession("user");
-const clinicId = session?.clinic_id ?? null;
 
 const LabEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
@@ -20,7 +18,8 @@ const LabEmpanelment = () => {
   const [labs, setLabs] = useState<LabApiItem[]>([]);
   const [mappedLabs, setMappedLabs] = useState<LabApiItem[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const user = getSessionItem("user", "user_id");
+  const clinicId = getSessionItem("user", "clinic_id");
   const fetchLabs = async () => {
     try {
       setLoading(true);

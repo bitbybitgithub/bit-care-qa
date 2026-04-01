@@ -119,6 +119,7 @@ const Login = () => {
       const requestBody = {
         doctorId: loginResponse?.user?.doctor_id,
         clinicId: clinic.clinic_id,
+        userId :  loginResponse?.user?.user_id,
         ip_address: "192.168.1.9",
         platform: "web",
       };
@@ -204,7 +205,8 @@ const Login = () => {
             }
             if (data.user.role === "Doctor") {
               toast.info("Use Mobile App for doctor login");
-            } else {
+            }
+            else {
               navigate(route);
               toast.success("Login successfull");
             }

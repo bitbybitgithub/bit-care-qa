@@ -49,17 +49,34 @@ import AppointmentPayment from "./AppointmentPayment";
 // };
 const getActionsForStatus = (patient: Patient): string[] => {
   const status = patient.status?.toLowerCase();
-  const isPaid = patient.is_fee_paid === "1";
+  const isPaid = patient.is_fees_paid === "1";
 
   switch (status) {
     case "scheduled":
-      return ["Add Vitals", "Cancel Appointment", "Hold Appointment"];
+      const scheduledActions = [
+        "Add Vitals",
+        "Cancel Appointment",
+        "Hold Appointment",
+      ];
+
+      if (patient.is_fee_applicable === "1" && !isPaid) {
+        scheduledActions.push("Make Payment");
+      }
+
+      return scheduledActions;
 
     case "checked_in":
-      return ["Cancel Appointment", "Hold Appointment"];
+      const checkedInActions = ["Cancel Appointment", "Hold Appointment"];
+
+      if (patient.is_fee_applicable === "1" && !isPaid) {
+        checkedInActions.push("Make Payment");
+      }
+
+      return checkedInActions;
 
     case "on_hold":
-      return ["Add Vitals", "Cancel Appointment"];
+      const onHoldActions = ["Add Vitals", "Cancel Appointment"];
+      return onHoldActions;
 
     case "completed":
       const baseActions = [
@@ -68,7 +85,6 @@ const getActionsForStatus = (patient: Patient): string[] => {
         "Set Follow Up",
       ];
 
-      // THIS is the actual condition you want
       if (!isPaid) {
         baseActions.push("Make Payment");
       }
@@ -367,130 +383,165 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
       return doctorColumns;
     }
 
-    const staffColumns: GridColDef[] = [
-      ...common,
-      {
-        field: "doctor",
-        headerName: "Doctor",
-        flex: 1,
-        minWidth: 160,
-        renderCell: (params: GridRenderCellParams<any, Patient>) => {
-          const row = params?.row as Patient;
-          return row?.doctor ?? "—";
-        },
-      },
-      ...(queueType === "completed"
-        ? [
-          {
-            field: "prescription",
-            headerName: "Prescription",
-            width: 150,
-            sortable: false,
-            filterable: false,
-            renderCell: (p) => (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => openPrescription(p.row)}
-              >
-                View
-              </Button>
-            ),
-          } as GridColDef,
-        ]
-        : []),
-      ...(queueType === "pending"
-        ? [
-          {
-            field: "status",
-            headerName: "Status",
-            flex: 0.8,
-            minWidth: 120,
-            renderCell: (params: GridRenderCellParams<any, Patient>) => {
-              const row = params.row as Patient;
+   const staffColumns: GridColDef[] = [
+  ...common,
+  {
+    field: "doctor",
+    headerName: "Doctor",
+    flex: 1,
+    minWidth: 160,
+    renderCell: (params: GridRenderCellParams<any, Patient>) => {
+      const row = params?.row as Patient;
+      return row?.doctor ?? "—";
+    },
+  },
 
-              return (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "start",
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
-                  <div
-                    className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
-                      row.status,
-                    )}`}
-                    style={{
-                      fontSize: "var(--font-xs)",
-                      height: 36, // 👈 force visual parity
-                      padding: "0 16px", // 👈 match button horizontal padding
-                    }}
-                  >
-                    {formatEnumText(row.status)}
-                  </div>
-                </Box>
-              );
-            },
-          } as GridColDef,
-        ]
-        : []),
-      ...(queueType === "completed"
-        ? [
-          {
-            field: "payment_status",
-            headerName: "Payment Status",
-            flex: 0.8,
-            minWidth: 150,
-            sortable: false,
-            filterable: false,
-            renderCell: (params) => {
-              const row = params.row || {};
-              const is_fee_paid = row.is_fee_paid === "1" ? "Paid" : "Unpaid";
-              return (
-                <p
-                  style={{
-                    fontSize: "var(--font-xs)",
-                    height: 36, // 👈 force visual parity
-                    padding: "0 16px", // 👈 match button horizontal padding
-                  }}
-                  className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
-                    is_fee_paid,
-                  )}`}
-                >
-                  {is_fee_paid}
-                </p>
-              );
-            },
-          } as GridColDef,
-        ]
-        : []),
+  ...(queueType === "completed"
+    ? [
+        {
+          field: "prescription",
+          headerName: "Prescription",
+          width: 150,
+          sortable: false,
+          filterable: false,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => openPrescription(p.row)}
+            >
+              View
+            </Button>
+          ),
+        } as GridColDef,
+      ]
+    : []),
+
+  ...(queueType === "pending"
+  ? [
       {
-        field: "action",
-        headerName: "Action",
+        field: "payment_status",
+        headerName: "Payment Status",
         flex: 0.8,
         minWidth: 150,
         sortable: false,
         filterable: false,
-
         renderCell: (params) => {
-          const p = params.row as Patient;
-          if (!p) return null;
-          if (!shouldShowSelectButton(p.status)) return null;
-          const actions = getActionsForStatus(p);
+          const row = params.row || {};
+          const isApplicable = String(row.is_fee_applicable) === "1";
+          const isPaid = String(row.is_fees_paid) === "1";
+
+          //  SAME STRUCTURE AS COMPLETED + EXTRA CONDITION
+          let label;
+
+          if (!isApplicable) {
+            label = "No Dues";
+          } else {
+            label = isPaid ? "Paid" : "Unpaid";
+          }
 
           return (
-            <PatientActionMenu
-              patient={p}
-              actions={actions}
-              onAction={handleAction}
-            />
+            <p
+              className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                label.toLowerCase()
+              )}`}
+              style={{
+                fontSize: "var(--font-xs)",
+                height: 36,
+                padding: "0 16px",
+              }}
+            >
+              {label}
+            </p>
           );
         },
-      },
-    ];
+      } as GridColDef,
+
+      {
+        field: "status",
+        headerName: "Status",
+        flex: 0.8,
+        minWidth: 120,
+        renderCell: (params: GridRenderCellParams<any, Patient>) => {
+          const row = params.row as Patient;
+
+          return (
+            <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <div
+                className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                  row.status
+                )}`}
+                style={{
+                  fontSize: "var(--font-xs)",
+                  height: 36,
+                  padding: "0 16px",
+                }}
+              >
+                {formatEnumText(row.status)}
+              </div>
+            </Box>
+          );
+        },
+      } as GridColDef,
+    ]
+  : []),
+  
+  ...(queueType === "completed"
+    ? [
+        {
+          field: "payment_status",
+          headerName: "Payment Status",
+          flex: 0.8,
+          minWidth: 150,
+          sortable: false,
+          filterable: false,
+          renderCell: (params) => {
+            const row = params.row || {};
+            const label = row.is_fee_paid === "1" ? "Paid" : "Unpaid";
+
+            return (
+              <p
+                className={`inline-flex items-center justify-center font-semibold rounded-full ${badgeClasses(
+                  label.toLowerCase()
+                )}`}
+                style={{
+                  fontSize: "var(--font-xs)",
+                  height: 36,
+                  padding: "0 16px",
+                }}
+              >
+                {label}
+              </p>
+            );
+          },
+        } as GridColDef,
+      ]
+    : []),
+
+  {
+    field: "action",
+    headerName: "Action",
+    flex: 0.8,
+    minWidth: 150,
+    sortable: false,
+    filterable: false,
+    renderCell: (params) => {
+      const p = params.row as Patient;
+      if (!p) return null;
+      if (!shouldShowSelectButton(p.status)) return null;
+
+      const actions = getActionsForStatus(p);
+
+      return (
+        <PatientActionMenu
+          patient={p}
+          actions={actions}
+          onAction={handleAction}
+        />
+      );
+    },
+  },
+];
 
     return staffColumns;
   }, [

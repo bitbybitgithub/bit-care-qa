@@ -10,10 +10,12 @@ export interface Patient {
   age: number;
   date_of_birth?: string | number | Date;
   mobile_number?: string;
+is_fee_applicable?: string;
+is_visited?: string;
   appointment_id?: number;
   time?: string;
   status: string;
-  is_fee_paid?: string;
+  is_fees_paid?: string;
   reason?: string;
   doctor?: string;
   source?: string;

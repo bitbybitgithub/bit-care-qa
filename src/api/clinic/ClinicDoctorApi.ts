@@ -48,3 +48,19 @@ export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
   const response = await emrAPI.post("/clinics/map-doctor-clinic", payload);
   return response;
 }
+
+
+export async function getDoctorFeesApi(
+  doctorId: number,
+  clinicId: number
+): Promise<number> {
+  const response = await emrAPI.post<{
+    success: boolean;
+    data: { consultation_fees: number };
+  }>("/doctors/get-doctor-fees", {
+    doctor_id: doctorId,
+    clinic_id: clinicId,
+  });
+
+  return response.data?.consultation_fees || 0;
+}

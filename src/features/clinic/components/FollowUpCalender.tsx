@@ -285,6 +285,10 @@ const handleFollowUpUpdate = async () => {
                   className={`
                     h-11 w-11 rounded-full flex items-center justify-center cursor-pointer
                     text-sm font-medium transition-all duration-300
+                    ${isPast
+                      ? "text-gray-300 cursor-none"
+                      : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
+                    }
                     ${hasFollowUp ? "bg-red-500 text-white" : "bg-blue-50"}
                     ${isSelected ? "ring-2 ring-blue-600" : ""}
                   `}

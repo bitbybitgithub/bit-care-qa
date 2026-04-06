@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Button, MenuItem, TextField } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Button, CircularProgress, TextField } from "@mui/material";
 import { MdClose } from "react-icons/md";
 import {
   RiArrowLeftSLine,
@@ -9,29 +9,72 @@ import {
 } from "react-icons/ri";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import { saveAppointment } from "../../../api";
+import { getfollowupData, saveAppointment, updateFollowUp } from "../../../api";
 import { AppointmentStatus } from "../../../context/constant/enum";
 import { getSessionItem } from "../../../context/sessions/userSession";
-
+import { formatDateDDMMYYYY } from "../../../utils/DateUtils";
 interface Props {
   patient: any;
   onClose?: () => void;
   onSave?: (data: any) => void;
 }
 
-const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
+const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
   const today = dayjs();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [loading, setLoading] = useState(false);
   const [followUpReason, setFollowUpReason] = useState("");
-  const startOfMonth = currentMonth.startOf("month");
-  const startDay = startOfMonth.day();
-  const daysInMonth = currentMonth.daysInMonth();
+
+  const [followUps, setFollowUps] = useState<any[]>([]);
+  const [selectedFollowUp, setSelectedFollowUp] = useState<any>(null);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
 
   const user = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
 
+
+  const startOfMonth = currentMonth.startOf("month");
+  const startDay = startOfMonth.day();
+  const daysInMonth = currentMonth.daysInMonth();
+
+  const formatDate = (d: string) => dayjs(d).format("YYYY-MM-DD");
+
+  useEffect(() => {
+    const fetchFollowups = async () => {
+      try {
+        if (!patient?.appointment_id || !patient?.patient_id) return;
+
+        const res = await getfollowupData(
+          Number(patient.appointment_id),
+          Number(patient.patient_id),
+        );
+        const data = (res || []).map((f: any) => ({
+          ...f,
+          appointment_id: Number(f.new_appointment_id),
+          patient_id: Number(f.patient_id),
+        }));
+        setFollowUps(data);
+      } catch (error) {
+        console.error("Failed to fetch followups", error);
+      }
+    };
+
+    fetchFollowups();
+  }, [patient]);
+
+const hasFollowUp = followUps.some(
+  (f) => f.is_follow_up == "1"
+);
+
+  const futureFollowUps = followUps
+    .filter((f) => dayjs(f.follow_up_date).isAfter(dayjs().startOf("day")))
+    .sort((a, b) => dayjs(a.follow_up_date).diff(dayjs(b.follow_up_date)));
+  const nextFollowUp = futureFollowUps[0];
+
+const existingFollowUp = followUps.find(
+  (f) => f.is_follow_up === "1"
+);
   const isPrevDisabled =
     currentMonth.isSame(today, "month") ||
     currentMonth.isBefore(today, "month");
@@ -47,7 +90,22 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       toast.error("Past date not allowed");
       return;
     }
+
     setSelectedDate(date);
+
+    const selected = followUps.find(
+      (f) => formatDate(f.follow_up_date) === date.format("YYYY-MM-DD"),
+    );
+
+    if (selected) {
+      setFollowUpReason(selected.follow_up_reason);
+      setSelectedFollowUp(selected);
+      setIsUpdateMode(true);
+    } else {
+      setFollowUpReason("");
+      setSelectedFollowUp(null);
+      setIsUpdateMode(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -55,46 +113,95 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
       toast.error("Please select follow-up date");
       return;
     }
-  if (!followUpReason.trim()) {
-    toast.error("Please enter reason for follow up");
-    return;
-  }
+    if (!followUpReason.trim()) {
+      toast.error("Please enter reason for follow up");
+      return;
+    }
     setLoading(true);
-
     try {
-      const now = new Date();
-      const endTime = new Date(now.getTime() + 30 * 60000);
+      if (isUpdateMode && selectedFollowUp) {
+        await updateFollowUp({
+          appointment_id: selectedFollowUp.new_appointment_id,
+          follow_up_date: selectedDate.format("YYYY-MM-DD"),
+          follow_up_reason: followUpReason,
+        });
 
-      const appointmentData = {
-        patient_id: patient.patient_id,
-        doctor_id: patient.raw?.doctor_id || 0,
-        clinic_id: clinicId,
-        patient_name: patient.name,
-        doctor_name: patient.doctor,
-        gender: patient.gender,
-        appointment_date: selectedDate.format("YYYY-MM-DD"),
-        start_time: formatTime(now),
-        end_time: formatTime(endTime),
-        status: AppointmentStatus.Scheduled,
-        source: "web",
-        reason: followUpReason,
-        date_of_birth: patient.date_of_birth,
-        mobile_number: patient.mobile_number,
-        user_id: user,
-        follow_up_id: patient.appointment_id,
-        is_follow_up: true,
-      };
+        toast.success("Follow-up updated successfully");
+      } else {
+        const now = new Date();
+        const endTime = new Date(now.getTime() + 30 * 60000);
 
-      await saveAppointment(appointmentData);
-      toast.success("Patient Next Appointment Saved");
+        const appointmentData = {
+          patient_id: patient.patient_id,
+          doctor_id: patient.raw?.doctor_id || 0,
+          clinic_id: clinicId,
+          patient_name: patient.name,
+          doctor_name: patient.doctor,
+          gender: patient.gender,
+          appointment_date: selectedDate.format("YYYY-MM-DD"),
+          start_time: formatTime(now),
+          end_time: formatTime(endTime),
+          status: AppointmentStatus.Scheduled,
+          source: "web",
+          reason: followUpReason,
+          date_of_birth: patient.date_of_birth,
+          mobile_number: patient.mobile_number,
+          user_id: user,
+          follow_up_id: patient.appointment_id,
+          is_follow_up: true,
+        };
+
+        await saveAppointment(appointmentData);
+        toast.success("Follow-up created successfully");
+      }
+
       onClose?.();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create follow-up appointment");
+      toast.error("Failed to save follow-up");
     } finally {
       setLoading(false);
     }
   };
+
+const handleFollowUpUpdate = async () => {
+  setLoading(true);
+  if (!selectedDate) {
+    toast.error("Please select follow-up date");
+    return;
+  }
+  if (!followUpReason.trim()) {
+    toast.error("Please enter reason for follow up");
+    return;
+  }
+  if (!existingFollowUp) {
+    toast.error("No follow-up available to update");
+    return;
+  }
+  const existingDate = dayjs(existingFollowUp.follow_up_date).format("YYYY-MM-DD");
+  const newDate = selectedDate.format("YYYY-MM-DD");
+
+  if (existingDate === newDate) {
+    toast.error("Follow-up already exists on this date");
+    return;
+  }
+
+  try {
+    await updateFollowUp({
+      appointment_id: existingFollowUp.new_appointment_id,
+      follow_up_date: newDate,
+      follow_up_reason: followUpReason,
+      modified_by: user,
+    });
+
+    toast.success("Appointment updated successfully");
+    onClose?.();
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to update follow-up");
+  }
+};
+
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
@@ -113,8 +220,14 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         </button>
       </div>
 
+      {nextFollowUp && (
+        <div className="text-sm text-red-600 mt-3 font-medium text-center">
+          Your next scheduled appointment is on{" "}
+          {formatDateDDMMYYYY(nextFollowUp.follow_up_date)}
+        </div>
+      )}
       <div className="flex-1 py-2 px-5 space-y-3 overflow-y-auto">
-        <div className="bg-[var(--color-surface-alt)]/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40 transition hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+        <div className="bg-[var(--color-surface-alt)]/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40">
           <div className="flex items-center justify-between mb-6">
             <button
               disabled={isPrevDisabled}
@@ -122,31 +235,21 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
                 !isPrevDisabled &&
                 setCurrentMonth(currentMonth.subtract(1, "month"))
               }
-              className={`
-    h-10 w-10 rounded-full flex items-center justify-center
-    text-white shadow-md transition-all duration-300 cursor-pointer
-    ${isPrevDisabled
-                  ? "bg-gray-300 cursor-not-allowed opacity-60"
-                  : "hover:scale-110"
-                }
-  `}
-              style={
-                !isPrevDisabled
-                  ? { background: "var(--color-primary-light)" }
-                  : undefined
-              }
+              className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                isPrevDisabled ? "bg-gray-300" : ""
+              }`}
             >
               <RiArrowLeftSLine size={20} />
             </button>
 
             <div className="flex items-center gap-2 text-lg font-semibold text-gray-700">
-              <RiCalendarEventLine className="text-[var(--color-primary)]" />
+              <RiCalendarEventLine />
               {currentMonth.format("MMMM YYYY")}
             </div>
 
             <button
               onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}
-              className="h-10 w-10 rounded-full bg-[var(--color-primary-light)] text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer"
+              className="h-10 w-10 rounded-full"
             >
               <RiArrowRightSLine size={20} />
             </button>
@@ -165,29 +268,29 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
               const isPast = date.isBefore(today.startOf("day"));
               const isSelected =
                 selectedDate && date.isSame(selectedDate, "day");
-              const isToday = date.isSame(today, "day");
+
+              const followUpData = followUps.find(
+                (f) =>
+                  formatDate(f.follow_up_date) === date.format("YYYY-MM-DD"),
+              );
+
+              const hasFollowUp = !!followUpData;
 
               return (
                 <button
                   key={index}
                   disabled={isPast}
                   onClick={() => handleSelect(date)}
+                  title={followUpData?.follow_up_reason || ""}
                   className={`
                     h-11 w-11 rounded-full flex items-center justify-center cursor-pointer
-                    text-sm font-medium
-                    transition-all duration-300 
+                    text-sm font-medium transition-all duration-300
                     ${isPast
                       ? "text-gray-300 cursor-none"
                       : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
                     }
-                    ${isSelected
-                      ? "bg-[var(--color-primary)] text-[var(--color-surface-alt)] scale-110 shadow-[var(--shadow-lg)]"
-                      : "bg-blue-50"
-                    }
-                    ${!isSelected && isToday
-                      ? "border-2 border-[var(--color-primary)]"
-                      : ""
-                    }
+                    ${hasFollowUp ? "bg-red-500 text-white" : "bg-blue-50"}
+                    ${isSelected ? "ring-2 ring-blue-600" : ""}
                   `}
                 >
                   {date.date()}
@@ -196,6 +299,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
             })}
           </div>
         </div>
+
         <div>
           <TextField
             placeholder="Reason for Follow Up"
@@ -209,20 +313,40 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
           />
         </div>
       </div>
+
       <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-bg)] sticky bottom-0">
         <Button variant="outlined" size="small" fullWidth onClick={onClose}>
           Cancel
         </Button>
-
-        <Button
-          variant="contained"
-          size="small"
-          fullWidth
-          disabled={loading}
-          onClick={handleSubmit}
-        >
-          Save Follow Up
-        </Button>
+        {hasFollowUp ? (
+          <Button
+            variant="contained"
+            size="small"
+            fullWidth
+            disabled={loading}
+            onClick={handleFollowUpUpdate}
+          >
+            {loading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Update Follow Up"
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            size="small"
+            fullWidth
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+             {loading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Save Follow Up"
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

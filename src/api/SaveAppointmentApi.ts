@@ -9,3 +9,31 @@ export const saveAppointment = async (appointmentData: any) => {
     throw err;
   }
 };
+
+export const getfollowupData = async (
+  appointmentId: number,
+  patientId: number
+) => {
+  try {
+    const response = await emrAPI.post("/appointments/get-follow-up-by-appointment-id",
+      {
+        appointment_id: appointmentId,
+        patient_id: patientId,
+      }
+    );
+    return (response as any).data;
+  } catch (err: any) {
+    console.error("Error in getfollowupData API:", err);
+    throw err;
+  }
+};
+
+export const updateFollowUp = async (payload: any) => {
+  try {
+    const response = await emrAPI.post("/appointments/update-follow-up-date",payload);
+    return response;
+  } catch (err) {
+    console.error("Error in updateFollowUp API:", err);
+    throw err;
+  }
+};

@@ -78,6 +78,10 @@ export interface AppointmentDto {
   date_of_birth: string;
   mobile_number: string;
   age?: number;
+  consultation_fees?: string;
+  is_fees_paid?: string;
+  is_fee_applicable?: string;
+  is_visited?: string;
 }
 
 export interface CompletedPrescriptionDto {

@@ -147,6 +147,7 @@ const StaffDashboard: React.FC = () => {
       const mapped: Patient[] = appointments.map((a) => ({
         patient_id: a.patient_id,
         patientId: a.patient_id,
+        doctor_id: a.doctor_id,
         appointment_id: a.appointment_id,
         time:
           a.start_time && a.end_time
@@ -159,6 +160,10 @@ const StaffDashboard: React.FC = () => {
         source: a.source,
         date_of_birth: a.date_of_birth,
         mobile_number: a.mobile_number,
+        is_fees_paid: a.is_fees_paid,
+        is_fee_applicable: a.is_fee_applicable,
+        is_visited: a.is_visited,
+        consultation_fees: a.consultation_fees,
         raw: a,
         age: calculateAge(a.date_of_birth),
       }));
@@ -274,7 +279,7 @@ const StaffDashboard: React.FC = () => {
           toast.error(res.message || "Failed to update appointment status.");
         }
       } catch (err) {
-        console.error("Update error:", err); // 👈 don’t be blind
+        console.error("Update error:", err); //  don’t be blind
         toast.error("Error updating patient status.");
       }
     },

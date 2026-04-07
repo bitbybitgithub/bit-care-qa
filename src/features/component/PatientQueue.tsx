@@ -90,6 +90,14 @@ const getActionsForStatus = (patient: Patient): string[] => {
       }
 
       return baseActions;
+          case "in_consultation":
+      const consultationActions: string[] = [];
+
+      if (patient.is_fee_applicable === "1" && !isPaid) {
+        consultationActions.push("Make Payment");
+      }
+
+      return consultationActions;
 
     default:
       return [];
@@ -137,7 +145,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const [pdfLoading, setPdfLoading] = useState(false);
 
   const shouldShowSelectButton = (status: string): boolean => {
-    const allowedStatuses = ["scheduled", "checked_in", "on_hold", "completed"];
+    const allowedStatuses = ["scheduled", "checked_in", "on_hold", "completed", "in_consultation"];
     return allowedStatuses.includes(status.toLowerCase());
   };
 

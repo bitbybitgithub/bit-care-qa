@@ -1,10 +1,10 @@
-import { emrAPI } from "../../services/EmrApi";
+import { BASE_URL, emrAPI } from "../../services/EmrApi";
 import type {
   PharmaPatientRecordResponse,
   MappedPharmacy,
   PharmaProfileInfoResponse,
 } from "../../types/pharmacyType/pharmacyInterfaceType";
-
+import axios from "axios";
 
 export async function getPharmaPatientRecords(
   pharmaId: number | null,
@@ -98,22 +98,33 @@ export async function verifyPharmaPassword(
   return response
 };
 
+
 export async function savePharmaProfileInfo(
-  pharmaID: number,
+  pharmacyID: number,
   profileLogo?: File,
 ): Promise<{ success: boolean; message: string }> {
-
   const formData = new FormData();
-  formData.append("pharma_id", String(pharmaID));
+  formData.append("pharmacy_id", String(pharmacyID));
   if (profileLogo) {
     formData.append("logo", profileLogo);
   }
-  const response = await emrAPI.post<{
-    success: boolean;
-    message: string;
-  }>("/pharmacy/update-pharma-info", formData);
-
-  return response;
+  try {
+    const { data } = await axios.post<{
+      success: boolean;
+      message: string;
+    }>(
+      `${BASE_URL}/pharmacy/update-pharma-info`,
+      formData
+    );
+    return data; 
+  } catch (error: any) {
+    console.error("❌ API Error:", error);
+    return {
+      success: false,
+      message:
+        error?.response?.data?.message || "Error saving profile",
+    };
+  }
 }
 
 

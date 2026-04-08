@@ -22,6 +22,8 @@ import ResetPasswordForm from "./ResetPasswordForm";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Regex from "../../../context/constant/Regex";
 import MultiClinicCardView from "./MultiClinicCardView";
+import platform from "platform";
+
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -116,11 +118,12 @@ const Login = () => {
   const handleClinicSelect = async (clinic: any) => {
     setOpenPopup(false);
     if (clinicSelectResolverRef.current) {
+      const ip = await getIP();
       const requestBody = {
         doctorId: loginResponse?.user?.doctor_id,
         clinicId: clinic.clinic_id,
-        userId :  loginResponse?.user?.user_id,
-        ip_address: "192.168.1.9",
+        userId: loginResponse?.user?.user_id,
+        ip_address: ip,
         platform: "web",
       };
       clinicSelectResolverRef.current(clinic); // null if cancelled
@@ -129,7 +132,14 @@ const Login = () => {
       clinicSelectResolverRef.current = null;
     }
   };
-
+  const getDeviceInfo = () => {
+    return `${platform.name} ${platform.version} | ${platform.os}`;
+  };
+  const getIP = async () => {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,15 +177,21 @@ const Login = () => {
       toast.error("Invalid password");
       return;
     }
-
+    const ip = await getIP();
     if (isClinic) {
       try {
         setLoading(true);
+        // const requestBody = {
+        //   userId: number,
+        //   password: password,
+        //   ip_address: "192.168.1.9",
+        //   platform: "web",
+        // };
         const requestBody = {
           userId: number,
           password: password,
-          ip_address: "192.168.1.9",
-          platform: "web",
+          ip_address: ip, // dynamic
+          platform: "web" // dynamic
         };
         const data = await loginApi(requestBody);
         console.log(data)

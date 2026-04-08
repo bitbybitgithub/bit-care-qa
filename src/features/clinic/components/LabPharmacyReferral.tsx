@@ -17,7 +17,7 @@ import {
   ReferralEntityType,
   sendReferralsApi,
   type SendReferralPayload,
-} from "../../../api/clinic/LabPharmaReferralApi";
+} from "../../../api/clinic/ClinicEmpanelmentApis";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
 

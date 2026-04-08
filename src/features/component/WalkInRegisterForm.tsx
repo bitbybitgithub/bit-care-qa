@@ -25,7 +25,7 @@ import type {
   WalkinFormData,
   WalkInRegisterFormProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
-import { getMappedDoctorApi, type MappedDoctor } from "../../api/clinic/ClinicDoctorApi";
+import { getMappedDoctorApi, type MappedDoctor } from "../../api/clinic/ClinicEmpanelmentApis";
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,

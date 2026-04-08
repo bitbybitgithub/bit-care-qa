@@ -4,7 +4,7 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import { toast, ToastContainer } from "react-toastify";
 import { ApiInterceptor } from "./services/EmrApi";
-import { logoutApi } from "./api/auth/LogoutApi";
+import { logoutApi } from "./api";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
 import { clearSession } from "./context/sessions/userSession";

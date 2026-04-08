@@ -6,7 +6,7 @@ import { getDoctorListApi, type DoctorList } from "../../../api";
 import {
   getMappedDoctorApi,
   mapDoctorClinicApi,
-} from "../../../api/clinic/ClinicDoctorApi";
+} from "../../../api/clinic/ClinicEmpanelmentApis";
 import MapDoctorToClinic from "./MapDoctorToClinic";
 
 const DoctorEmpanelment = () => {

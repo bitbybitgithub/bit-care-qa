@@ -38,30 +38,6 @@ export interface PharmacyRecordProps {
   searchTerm?: string;
 };
 
-export interface MapPartnersPayload {
-  clinic_id: number;
-  lab_ids: number[];
-  pharmacy_ids: number[];
-  doctor_ids?: number[]; 
-}
-
-export interface MapPartnersResponse {
-  success: boolean;
-  message?: string;
-}
-
-export interface MappedPharmacy {
-  pharma_id: number;
-  pharma_name: string;
-  pharma_logo?: string;
-
-  email?: string;
-  phone?: string;
-  address?: string;
-
-  status: "Active" | "Inactive";
-}
-
 export interface PharmaProfileInfoResponse {
   pharma_id: number;
   pharma_name: string,

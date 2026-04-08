@@ -7,7 +7,6 @@ import type {
   LabTestItemRequest,
   SaveLabShiftPayload,
   SaveLabTestItem,
-  MappedLab,
 } from "../../types/labType/LabTestInterfaces";
 
 /* ===================== */
@@ -125,15 +124,4 @@ export const getActiveLabListApi = async () => {
 
 /* ===================== */
 
-export async function getMappedLabsApi(
-  clinicId: number,
-  appointmentId : number
-): Promise<MappedLab[]> {
-  return emrAPI.post<MappedLab[]>(
-    "/clinics/mapped-labs",
-    {
-      clinic_id: clinicId,
-      appointment_id : appointmentId
-    }
-  );
-}
+

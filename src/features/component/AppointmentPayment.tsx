@@ -8,8 +8,7 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 import { savePayment } from "../../api/paymentApi/PaymentAPI";
 import type { SavePaymentRequest } from "../../types/paymentTypes";
-import { emrAPI } from "../../services/EmrApi";
-import { getDoctorFeesApi } from "../../api/clinic/ClinicDoctorApi";
+import { getDoctorFeesApi } from "../../api/clinic/ClinicEmpanelmentApis";
 interface Props {
   patient: Patient | null;
   onClose?: () => void;

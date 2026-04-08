@@ -3,7 +3,7 @@ import { Box, AppBar, Toolbar, styled, IconButton } from "@mui/material";
 import { Menu as MenuIcon } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { logoutApi } from "../../api/auth/LogoutApi";
+import { logoutApi } from "../../api";
 import { clearSession } from "../../context/sessions/userSession";
 import { logout } from "../../redux";
 import { FaSignOutAlt } from "react-icons/fa";

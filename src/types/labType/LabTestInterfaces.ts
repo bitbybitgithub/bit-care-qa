@@ -57,21 +57,7 @@ export interface LabListItem {
   is_active: "0" | "1";
 }
 
-export interface MappedLab {
-  lab_id: number;
-  lab_code: string;
-  lab_name: string;
 
-  phone?: string;
-  email?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-
-  status?: "Active" | "Inactive";
-  is_patient_reffered?: boolean;
-
-}
 
 export interface LabApiItem {
   lab_id: number;

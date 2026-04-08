@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import UploadControl from "../../components/common/UploadControl";
 import { type PharmaProfileInfoResponse } from "../../types/pharmacyType/pharmacyInterfaceType";
-import { savePharmaProfileInfo } from "../../api/pharmacyApi/PharmacyApi";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { TextField } from "@mui/material";
-
+import { savePharmaProfileInfo } from "../../api";
 interface GeneralSettingProps {
   profile: PharmaProfileInfoResponse;
   setProfile: React.Dispatch<
@@ -48,27 +47,21 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
       toast.error("Please select a logo");
       return;
     }
-
     try {
       setLoading(true);
-
-      const response = await savePharmaProfileInfo(
-        pharmacy_id,
-        pharmaLogoFile
-      );
-
+      const response = await savePharmaProfileInfo(pharmacy_id,pharmaLogoFile);
       if (response.success) {
         toast.success("Profile updated successfully");
       } else {
         toast.error(response.message);
       }
-
     } catch (error) {
       toast.error("Error saving profile");
     } finally {
       setLoading(false);
     }
   };
+
 
   if (!profile) {
     return (

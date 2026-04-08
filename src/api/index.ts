@@ -3,15 +3,13 @@ export * from "./AppoinmentApi/DoctorAvailibityApi";
 
 /* -------------------- AUTH -------------------- */
 export * from "./auth/loginApi";
-export * from "./auth/LogoutApi";
 export * from "./auth/tokenManager";
+export * from "./auth/CommonAuthApi";
 
 /* -------------------- CLINIC -------------------- */
 export * from "./clinic/FormApi";
 export * from "./clinic/SaveUpdateUserApi";
-export * from "./clinic/ClinicDoctorApi";
-export * from "./clinic/LabPharmaReferralApi";
-export * from "./clinic/SaveLabAndPharmaApi"
+export * from "./clinic/ClinicEmpanelmentApis";
 
 /*-------------------- Common Api -------------------- */
 export * from "./CommonApi/CommonApi"
@@ -19,9 +17,7 @@ export * from "./CommonApi/uploadFileApi"
 export * from "./CommonApi/SaveLabPharmacyUserApi"
 
 /* -------------------- DOCTOR -------------------- */
-export * from "./DoctorApi/DoctorApi";
-export * from "./DoctorApi/DocProfileApi";
-export * from "./DoctorApi/DeleteDocApi";
+export * from "./DoctorApi/DoctorApiService";
 /* -------------------- DOCUMENTS -------------------- */
 export * from "./documentApi/DocumentsApis";
 /* -------------------- Lab Api -------------------- */

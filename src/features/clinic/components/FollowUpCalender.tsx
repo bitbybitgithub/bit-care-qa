@@ -285,9 +285,10 @@ const handleFollowUpUpdate = async () => {
                   className={`
                     h-11 w-11 rounded-full flex items-center justify-center cursor-pointer
                     text-sm font-medium transition-all duration-300
-                    ${isPast
-                      ? "text-gray-300 cursor-none"
-                      : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
+                    ${
+                      isPast
+                        ? "text-gray-300 cursor-none"
+                        : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
                     }
                     ${hasFollowUp ? "bg-red-500 text-white" : "bg-blue-50"}
                     ${isSelected ? "ring-2 ring-blue-600" : ""}
@@ -306,6 +307,20 @@ const handleFollowUpUpdate = async () => {
             fullWidth
             multiline
             rows={3}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "#87ade9",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#2167d6",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1976d2",
+                  borderWidth: "3px",
+                },
+              },
+            }}
             variant="outlined"
             size="small"
             value={followUpReason}
@@ -340,7 +355,7 @@ const handleFollowUpUpdate = async () => {
             onClick={handleSubmit}
             disabled={loading}
           >
-             {loading ? (
+            {loading ? (
               <CircularProgress size={20} color="inherit" />
             ) : (
               "Save Follow Up"

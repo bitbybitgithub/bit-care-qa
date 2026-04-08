@@ -18,11 +18,11 @@ import { FaUser } from "react-icons/fa";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import type { ResetPassErrors } from "../../../types/types";
 import { usePasswordStrength } from "../../../components/common/usePasswordStrength";
-import { checkUserExists, resetPasswordApi } from "../../../api";
 import {
   generateOtpApi,
   verifyOtpApi,
 } from "../../../api/GenerateAndVerifyOtpApi";
+import { checkUserExists, resetPasswordApi  } from "../../../api/auth/CommonAuthApi";
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";

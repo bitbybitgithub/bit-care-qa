@@ -3,13 +3,11 @@ import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
 import { getSessionItem } from "../../context/sessions/userSession";
-import {
-  getActiveLabListApi,
-  getMappedLabsApi,
-} from "../../api/labApis/LabApi";
-import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
+
+import { getMappedLabsListApi, mapClinicPartnersApi } from "../../api/clinic/ClinicEmpanelmentApis";
 import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
 import { toast } from "react-toastify";
+import { getActiveLabListApi } from "../../api";
 
 
 const LabEmpanelment = () => {
@@ -35,7 +33,7 @@ const LabEmpanelment = () => {
   const fetchMappedLabByClinicId = async () => {
     try {
       setLoading(true);
-      const res = await getMappedLabsApi(clinicId, null);
+      const res = await getMappedLabsListApi(clinicId, null);
       setMappedLabs(res.data);
     } catch (err) {
       console.error("Lab list error", err);

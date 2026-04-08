@@ -5,9 +5,8 @@ import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import {getSessionItem } from "../../context/sessions/userSession";
 import {
   getActivePharmaListApi,
-  getMappedPharmaciesApi,
 } from "../../api/pharmacyApi/PharmacyApi";
-import { mapClinicPartnersApi } from "../../api/clinic/SaveLabAndPharmaApi";
+import { getMappedPharmaciesApi, mapClinicPartnersApi } from "../../api/clinic/ClinicEmpanelmentApis";
 import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
 

@@ -5,8 +5,9 @@ import {
   MdCalendarToday,
   MdPhone,
 } from "react-icons/md";
-import { FormControl, TextField, InputAdornment, Button } from "@mui/material";
+import { FormControl, TextField, InputAdornment, Button, Switch, styled } from "@mui/material";
 import { FaUserMd } from "react-icons/fa";
+import { useEffect, useState } from "react";
 
 interface PartnerItem {
   id: number;
@@ -34,7 +35,45 @@ interface Props {
     days?: string;
   };
   address: string;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+   data: PartnerItem[];
+   setValue;
+   value;
+   handleUpdate
 }
+const MiniSwitch = styled(Switch)(() => ({
+  width: 32,
+  height: 18,
+  padding: 0,
+  display: "flex",
+  alignItems: "center",
+  "& .MuiSwitch-switchBase": {
+    padding: 2,
+    transitionDuration: "200ms",
+    "&.Mui-checked": {
+      transform: "translateX(14px)",
+      color: "var(--color-surface-alt)",
+      "& + .MuiSwitch-track": {
+        backgroundColor: "var(--color-success)",
+        opacity: 1,
+        border: 0,
+      },
+    },
+  },
+
+  "& .MuiSwitch-thumb": {
+    width: 14,
+    height: 14,
+    boxShadow: "var(--shadow-sm)",
+  },
+
+  "& .MuiSwitch-track": {
+    borderRadius: 9,
+    backgroundColor: "var(--color-error)",
+    opacity: 1,
+  },
+}));
 const DoctorAddPopup = ({
   doctor,
   fee,
@@ -46,7 +85,29 @@ const DoctorAddPopup = ({
   onSubmit,
   onClose,
   address,
+  open,
+  data,
+  setValue,
+  value,
+  handleUpdate
 }: Props) => {
+  
+
+  const handleChange = (event) => {
+    setValue(event.target.checked ? true : false);
+  };
+  useEffect(() => {
+  if (open && doctor) {
+    setFee(doctor.consultation_fees || "");
+    setDays(doctor.fees_duration?.toString() || "");
+
+    // set switch value also
+    setValue(doctor.is_active === "1"?true:false);
+  }
+}, [open, doctor]);
+  console.log(doctor)
+  console.log(value)
+  console.log(data)
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div
@@ -93,6 +154,39 @@ const DoctorAddPopup = ({
               )}
             </div>
           </div>
+          {open &&
+            <div className="flex items-center gap-4 p-3 rounded-lg">
+              {/* Status Text */}
+              <span className="text-sm font-semibold text-white">
+                {value === 1 ? "Active" : "Deactive"}
+              </span>
+
+              {/* Switch */}
+              <MiniSwitch
+                checked={value === true}
+                onChange={handleChange}
+                // className="border-2 rounded-full p-[2px] border-blue-900"
+                // sx={{
+                //   "& .MuiSwitch-switchBase.Mui-checked": {
+                //     color: "#fff",
+                //     "& + .MuiSwitch-track": {
+                //       backgroundColor: "#1e3a8a", // dark blue
+                //       opacity: 1,
+                //     },
+                //   },
+                //   "& .MuiSwitch-thumb": {
+                //     border: "2px solid #1e3a8a",
+                //     backgroundColor: "#ffffff",
+                //   },
+                //   "& .MuiSwitch-track": {
+                //     backgroundColor: value === 1 ? "#1e3a8a" : "#ffffff",
+                //     border: "2px solid #1e3a8a",
+                //     opacity: 1,
+                //   },
+                // }}
+              />
+            </div>
+          }
         </div>
 
         {/* CONTACT DETAILS */}
@@ -170,15 +264,25 @@ const DoctorAddPopup = ({
             >
               Cancel
             </Button>
-
-            <Button
+            {open?
+            (<Button
+              variant="contained"
+              disabled={loading}
+              onClick={handleUpdate}
+              className="normal-case px-6"
+            >
+              {loading ? "Updating..." : "Update"}
+            </Button>):
+            (<Button
               variant="contained"
               disabled={loading}
               onClick={onSubmit}
               className="normal-case px-6"
             >
               {loading ? "Adding..." : "Add Doctor"}
-            </Button>
+            </Button>)
+          }
+            
           </div>
         </div>
       </div>

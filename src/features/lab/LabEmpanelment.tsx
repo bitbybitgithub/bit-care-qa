@@ -175,7 +175,7 @@ const LabEmpanelment = () => {
             }))}
             icon={<ScienceIcon className="text-[var(--color-info)]" />}
             placeholder="Search labs..."
-            buttonText="Add Selected Labs"
+            buttonText="Selected Labs"
             onSubmit={handleSubmitLabs}
           />
         )}

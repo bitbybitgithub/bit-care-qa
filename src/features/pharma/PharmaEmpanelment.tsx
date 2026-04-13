@@ -177,7 +177,7 @@ const PharmaEmpanelment = () => {
             }))}
             icon={<LocalPharmacyIcon className="text-[var(--color-info)]" />}
             placeholder="Search pharmacy..."
-            buttonText="Add Selected Pharmacy"
+            buttonText="Selected Pharmacy"
             onSubmit={handleSubmitPharma}
           />
         )}

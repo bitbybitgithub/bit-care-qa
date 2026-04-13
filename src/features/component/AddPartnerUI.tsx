@@ -4,6 +4,8 @@ import ScienceIcon from "@mui/icons-material/Science";
 import { FaClinicMedical } from "react-icons/fa";
 import { MdSearch } from "react-icons/md";
 import { MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
+import SidebarBg from "../../assets/SidebarBg.png";
+
 interface PartnerItem {
   id: number;
   name: string;
@@ -54,8 +56,8 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
 
   return (
     <div className="p-6 bg-[var(--color-surface-alt)]">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="relative">
+      <div className="mb-6 flex items-center  gap-4">
+        <div className="relative flex-1 max-w-sm">
           <MdSearch
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             size={18}
@@ -74,14 +76,15 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
           disabled={!selected.length || loading}
           className={`px-4 py-2 rounded-[var(--radius-lg)] whitespace-nowrap text-[var(--color-surface-alt)]
 
-      ${
-        !selected.length || loading
-          ? "bg-[var(--color-primary-light)]"
-          : "bg-[var(--color-primary)] cursor-pointer"
-      }
-    `}
+      ${!selected.length || loading
+              ? "bg-[var(--color-primary-light)]"
+              : "bg-[var(--color-primary)] cursor-pointer"
+            }
+         `}
         >
-          {loading ? "Processing..." : buttonText}
+          {loading
+            ? "Processing..."
+            : `${buttonText} ${selected.length ? `(${selected.length})` : ""}`}        
         </button>
       </div>
 
@@ -92,18 +95,18 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
             <div
               key={item.id}
               onClick={() => toggleSelect(item.id, item.alreadyMapped)}
-              className={`w-full rounded-[var(--radius-lg)] overflow-hidden
+              className={`w-full rounded-[var(--radius-3xl)] overflow-hidden
   shadow-[var(--shadow-md)]
   transition-all duration-300 border 
   flex flex-col h-full
+  
 
-  ${isSelected ? "border-[var(--color-primary)]" : "border-transparent"}
+  ${isSelected ? "border-[var(--color-primary)] bg-blue-50" : "border-transparent bg-white "}
 
-  ${
-    item.alreadyMapped
-      ? "cursor-not-allowed"
-      : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
-  }
+  ${item.alreadyMapped
+                  ? "cursor-not-allowed"
+                  : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
+                }
 `}
             >
               <div
@@ -112,7 +115,7 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
               >
                 <div
                   className="w-10 h-10 flex items-center justify-center
-                        rounded-[var(--radius-full)] bg-[var(--color-surface)]
+                        rounded-[var(--radius-2xl)] bg-[var(--color-surface)]
                         border border-white shadow-sm overflow-hidden"
                 >
                   {item.logo ? (
@@ -121,7 +124,7 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                       alt={item.name}
                       className="w-full h-full object-fill rounded-2xl"
                     />
-                  ) : buttonText === "Add Selected Labs" ? (
+                  ) : buttonText === "Selected Labs" ? (
                     <ScienceIcon
                       fontSize="medium"
                       className="text-[var(--color-primary)]"
@@ -142,9 +145,11 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
               </div>
 
               <div
-                className="px-4 py-3 space-y-3 text-xs
-                  text-[var(--color-text-secondary)]
-                  bg-[var(--color-surface-alt)] flex-1"
+                className={`px-4 py-3 space-y-3 text-xs
+  text-[var(--color-text-secondary)]
+  flex-1 
+  ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
+`}
               >
                 {item.mobile && (
                   <div className="flex items-center gap-2">
@@ -171,18 +176,20 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                   </div>
                 )}
               </div>
-              <div className="px-4 pb-3 bg-[var(--color-surface-alt)]">
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium
-            ${
-              item.alreadyMapped
-                ? "bg-red-100 text-[var(--color-error)]"
-                : isSelected
-                  ? "bg-green-100 text-[var(--color-success)]"
-                  : "bg-gray-100 text-[var(--color-text)]"
-            }
+              <div
+                className={`px-4 pb-3
+  ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
+`}
+              >                <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-medium
+            ${item.alreadyMapped
+                    ? "bg-red-100 text-[var(--color-error)]"
+                    : isSelected
+                      ? "bg-green-200 text-[var(--color-success)]"
+                      : "bg-gray-200 text-[var(--color-text)]"
+                  }
           `}
-                >
+              >
                   {item.alreadyMapped
                     ? "Already Added"
                     : isSelected
@@ -196,6 +203,9 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
       </div>
     </div>
   );
+
+
+
 };
 
 export default AddPartner;

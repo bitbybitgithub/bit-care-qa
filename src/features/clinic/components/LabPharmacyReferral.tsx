@@ -47,13 +47,23 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         try {
           if (type === "lab") {
             const res = await getMappedLabsListApi(clinic_id, patient?.appointment_id);
+            console.log(res.data)
             if (res.success) {
-              setItems(res.data);
+              const activeItems = res.data.filter(
+                (item) => item.is_active === "1"
+              );
+              console.log(activeItems)
+              setItems(activeItems);
             }
           } else {
             const res = await getMappedPharmacyListApi(clinic_id, patient?.raw?.prescriptions[0]?.prescription_id);
+            console.log(res.data)
             if (res.success) {
-              setItems(res.data);
+              const activeItems = res.data.filter(
+                (item) => item.is_active === "1"
+              );
+              console.log(activeItems)
+              setItems(activeItems);
             }
           }
         } catch (error) {
@@ -61,7 +71,7 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         } finally {
           setLoading(false);
         }
-      };  
+      };
 
       fetchItems();
     }, [type]);
@@ -125,26 +135,26 @@ const LabPharmacyReferral: React.FC<Props> = memo(
 
         const payload: SendReferralPayload = isLab
           ? {
-              entity_type: ReferralEntityType.Lab,
-              lab_ids: selectedItems.map((i) => i.lab_id),
-              clinic_id: clinic_id,
-              patient_id: patientId,
-              doctor_id: doctorId,
-              prescription_id: prescriptionId,
-              appointment_id: appointmentId!,
-              remarks: "",
-              created_by: user,
-            }
+            entity_type: ReferralEntityType.Lab,
+            lab_ids: selectedItems.map((i) => i.lab_id),
+            clinic_id: clinic_id,
+            patient_id: patientId,
+            doctor_id: doctorId,
+            prescription_id: prescriptionId,
+            appointment_id: appointmentId!,
+            remarks: "",
+            created_by: user,
+          }
           : {
-              entity_type: ReferralEntityType.Pharmacy,
-              pharmacy_ids: selectedItems.map((i) => i.pharma_id),
-              clinic_id: clinic_id,
-              patient_id: patientId,
-              doctor_id: doctorId,
-              prescription_id: prescriptionId,
-              remarks: "",
-              created_by: user,
-            };
+            entity_type: ReferralEntityType.Pharmacy,
+            pharmacy_ids: selectedItems.map((i) => i.pharma_id),
+            clinic_id: clinic_id,
+            patient_id: patientId,
+            doctor_id: doctorId,
+            prescription_id: prescriptionId,
+            remarks: "",
+            created_by: user,
+          };
 
         const response = await sendReferralsApi(payload);
 
@@ -209,13 +219,13 @@ const LabPharmacyReferral: React.FC<Props> = memo(
               <div
                 key={item.id}
                 onClick={() => {
-                  if(!item.is_patient_reffered) toggleSelect(item.id)}
-                } 
-                className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)] ${item.is_patient_reffered && "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)]" } ${
-                  isSelected
+                  if (!item.is_patient_reffered) toggleSelect(item.id)
+                }
+                }
+                className={`rounded-lg border transition-all duration-200 cursor-pointer shadow-[var(--shadow-md)] ${item.is_patient_reffered && "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)]"} ${isSelected
                     ? "border-transparent bg-[var(--color-primary-light)] text-[var(--color-surface-alt)] "
                     : " border-transparent bg-[var(--color-bg)]"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between px-3 py-2">
                   <div className="flex items-center gap-3 min-w-0">

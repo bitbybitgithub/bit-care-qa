@@ -114,6 +114,18 @@ export interface MappedLab {
 
 }
 
+export interface UpdateDoctorStatusRequest {
+  clinic_id: number;
+  doctor_id: number;
+  is_active: boolean;
+  consutation_fee: number;
+  fee_duaration:number; 
+  modified_by:string;
+}
+export interface UpdateDoctorStatusResponse {
+  success: boolean;
+  message: string;
+}
 //API CALLS
 export async function getMappedDoctorApi(
   clinicId: number,
@@ -127,7 +139,7 @@ export async function getMappedDoctorApi(
     return response.data;
 }
 export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
-  const response = await emrAPI.post("/clinics/get-map-doctor-clinic", payload);
+  const response = await emrAPI.post("/clinics/save-map-doctor-clinic", payload);
   return response;
 }
 
@@ -203,5 +215,16 @@ export const sendReferralsApi = async (
     payload
   );
 
+  return response;
+};
+
+export const updateDoctorStatusApi = async (
+  payload: UpdateDoctorStatusRequest
+): Promise<ApiResponse<UpdateDoctorStatusResponse>> => {
+  console.log("request payload",payload)
+  const response = await emrAPI.post<ApiResponse<UpdateDoctorStatusResponse>>(
+    "/active-deactivate-doctor",
+    payload
+  );
   return response;
 };

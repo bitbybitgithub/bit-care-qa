@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ViewPartnerUI from "../../component/ViewPartnerUI";
 import {getSessionItem,} from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
@@ -8,6 +8,7 @@ import {
   mapDoctorClinicApi,
 } from "../../../api/clinic/ClinicEmpanelmentApis";
 import MapDoctorToClinic from "./MapDoctorToClinic";
+import DoctorViewUI from "../../component/DoctorViewUI";
 
 const DoctorEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
@@ -110,7 +111,9 @@ const DoctorEmpanelment = () => {
     state: d.state,
     consultation_fees: d.consultation_fees,
     fees_duration: d.fees_duration,
-    qualification: d.qualification
+    qualification: d.qualification,
+    experience:d.experience,
+    is_active:d.doctor_is_active
   }));
 
   return (
@@ -172,12 +175,13 @@ const DoctorEmpanelment = () => {
 
       <div>
         {activeTab === "view" && (
-          <ViewPartnerUI
+          <DoctorViewUI
             title="Registered Doctors"
             countLabel="doctor connected to your clinic"
             emptyText="No doctor mapped yet."
             clinicId={clinicId}
             data={viewItems}
+            onSubmit={async (doctorId, fee, days) => {}}
           />
         )}
 

@@ -23,6 +23,7 @@ interface Props {
   data: PartnerItem[];
   placeholder: string;
   onSubmit: (doctorId: number, fee: number, days: number) => Promise<void>;
+  
 }
 
 const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
@@ -79,6 +80,7 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
         selectedDoctor.city,
         selectedDoctor.state,
         selectedDoctor.pincode,
+        
       ]
         .filter(Boolean)
         .join(", ")

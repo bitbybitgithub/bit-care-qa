@@ -4,11 +4,14 @@ import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
 import { getSessionItem } from "../../context/sessions/userSession";
 
-import { getMappedLabsListApi, mapClinicPartnersApi } from "../../api/clinic/ClinicEmpanelmentApis";
+import {
+  getMappedLabsListApi,
+  mapClinicPartnersApi,
+  updateLabStatus,
+} from "../../api/clinic/ClinicEmpanelmentApis";
 import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
 import { toast } from "react-toastify";
 import { getActiveLabListApi } from "../../api";
-
 
 const LabEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
@@ -17,11 +20,12 @@ const LabEmpanelment = () => {
   const [mappedLabs, setMappedLabs] = useState<LabApiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const clinicId = getSessionItem("user", "clinic_id");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const fetchLabs = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       const res = await getActiveLabListApi();
-      setLabs((res as {data:LabApiItem[]}).data);
+      setLabs((res as { data: LabApiItem[] }).data);
     } catch (err) {
       console.error("Lab list error", err);
     } finally {
@@ -89,16 +93,53 @@ const LabEmpanelment = () => {
   const mappedLabIds = new Set(mappedLabs.map((l) => l.lab_id));
 
   const viewItems = mappedLabs?.map((l) => ({
+    clinic_lab_id: l.clinic_lab_id,
     id: l.lab_id,
     name: l.lab_name,
     logo: l.lab_logo,
     phone: l.phone,
     email: l.email,
     address: l.address,
-    city:l.city,
-    state:l.state,
-    status: l.status,
+    city: l.city,
+    state: l.state,
+    is_active: l.is_active,
   }));
+
+  const handleLabStatus = async (item: any) => {
+    const isActive = item.is_active === "1";
+    const previousValue = item.is_active;
+
+    setUpdatingId(item.id);
+
+    setMappedLabs((prev) =>
+      prev.map((l) =>
+        l.lab_id === item.id ? { ...l, is_active: isActive ? "0" : "1" } : l,
+      ),
+    );
+    try {
+      const result = await updateLabStatus({
+        clinic_id: clinicId,
+        lab_id: item.id,
+        is_active: isActive ? false : true,
+      });
+
+      // if (result.success) {
+      //   toast.success(isActive ? "Lab Deactivated" : "Lab Activated");
+      // }
+    } catch (error: any) {
+      setMappedLabs((prev) =>
+        prev.map((l) =>
+          l.lab_id === item.id ? { ...l, is_active: previousValue } : l,
+        ),
+      );
+
+      toast.error(
+        error?.response?.data?.message || "Failed to update lab status",
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
@@ -122,8 +163,12 @@ const LabEmpanelment = () => {
           transition border-2
         `}
               style={{
-                background:activeTab === t.key ? "var(--color-surface-alt)" : "transparent",
-                color:activeTab === t.key
+                background:
+                  activeTab === t.key
+                    ? "var(--color-surface-alt)"
+                    : "transparent",
+                color:
+                  activeTab === t.key
                     ? "var(--color-primary)"
                     : "var(--color-surface-alt)",
                 borderColor:
@@ -132,7 +177,8 @@ const LabEmpanelment = () => {
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== t.key) {
-                  e.currentTarget.style.borderColor = "var(--color-surface-alt)";
+                  e.currentTarget.style.borderColor =
+                    "var(--color-surface-alt)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -147,7 +193,14 @@ const LabEmpanelment = () => {
         </div>
       </div>
 
-      {loading && <div className="p-3 text-[var(--color-info)]" style={{fontSize:"var(--font-xs)"}}>Loading...</div>}
+      {loading && (
+        <div
+          className="p-3 text-[var(--color-info)]"
+          style={{ fontSize: "var(--font-xs)" }}
+        >
+          Loading...
+        </div>
+      )}
 
       <div>
         {activeTab === "view" && (
@@ -157,6 +210,8 @@ const LabEmpanelment = () => {
             emptyText="No labs mapped yet."
             clinicId={clinicId}
             data={viewItems}
+            onToggleStatus={handleLabStatus}
+            updatingId={updatingId}
           />
         )}
 
@@ -169,8 +224,8 @@ const LabEmpanelment = () => {
               email: l.email,
               mobile: l.phone,
               address: l.address,
-              city:l.city,
-              state:l.state,
+              city: l.city,
+              state: l.state,
               alreadyMapped: mappedLabIds.has(l.lab_id),
             }))}
             icon={<ScienceIcon className="text-[var(--color-info)]" />}

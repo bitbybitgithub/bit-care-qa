@@ -64,4 +64,5 @@ export interface PharmaApiItem {
   state?: string;
 
   status: "Active" | "Inactive";
+  is_active: "1" | "0";
 }

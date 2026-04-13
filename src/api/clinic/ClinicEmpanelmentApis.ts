@@ -56,6 +56,17 @@ export interface MapPartnersResponse {
   message?: string;
 }
 
+export interface StatusUpdateRequest {
+  clinic_id: number;
+  lab_id?: number;
+  pharma_id?: number;
+  is_active: boolean;
+}
+
+export interface StatusUpdateResponse {
+  success: boolean;
+  message?: string;
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -212,6 +223,28 @@ export const sendReferralsApi = async (
 
   const response = await emrAPI.post<ApiResponse<SendReferralResponse>>(
     "/clinics/send-referrals-to-lab-pharmacy",
+    payload
+  );
+
+  return response;
+};
+
+export const updateLabStatus = async (
+  payload: StatusUpdateRequest
+): Promise<StatusUpdateResponse> => {
+  const response = await emrAPI.post<StatusUpdateResponse>(
+    "/clinics/active-deactivate-lab",
+    payload
+  );
+
+  return response;
+};
+
+export const updatePharmaStatus = async (
+   payload: StatusUpdateRequest
+): Promise<StatusUpdateResponse> => {
+  const response = await emrAPI.post<StatusUpdateResponse>(
+    "/clinics/active-deactivate-pharma",
     payload
   );
 

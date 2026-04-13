@@ -60,6 +60,7 @@ export interface LabListItem {
 
 
 export interface LabApiItem {
+  clinic_lab_id?:number;
   lab_id: number;
   lab_name: string;
   lab_logo?: string;
@@ -72,6 +73,7 @@ export interface LabApiItem {
 
   status: "Active" | "Inactive";
   is_patient_reffered?: boolean;
+  is_active: "0" | "1";
 
 }
 

@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
-import {getSessionItem } from "../../context/sessions/userSession";
+import { getSessionItem } from "../../context/sessions/userSession";
+import { getActivePharmaListApi } from "../../api/pharmacyApi/PharmacyApi";
 import {
-  getActivePharmaListApi,
-} from "../../api/pharmacyApi/PharmacyApi";
-import { getMappedPharmaciesApi, mapClinicPartnersApi } from "../../api/clinic/ClinicEmpanelmentApis";
+  getMappedPharmaciesApi,
+  mapClinicPartnersApi,
+  updatePharmaStatus,
+} from "../../api/clinic/ClinicEmpanelmentApis";
 import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 import { toast } from "react-toastify";
-
 
 const PharmaEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
@@ -17,6 +18,7 @@ const PharmaEmpanelment = () => {
   const [mappedPharmas, setMappedPharmas] = useState<PharmaApiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const clinicId = getSessionItem("user", "clinic_id");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const fetchPharmas = async () => {
     try {
       setLoading(true);
@@ -92,9 +94,54 @@ const PharmaEmpanelment = () => {
     phone: p.phone,
     email: p.email,
     address: p.address,
-    city:p.city,
-    state:p.state
+    city: p.city,
+    state: p.state,
+    is_active: p.is_active,
   }));
+
+const handlePharmaStatus = async (item: any) => {
+  const isActive = item.is_active === "1";
+  const previousStatus = item.is_active;
+
+  setUpdatingId(item.id);
+
+  setMappedPharmas((prev) =>
+    prev.map((p) =>
+      p.pharma_id === item.id
+        ? { ...p, is_active: isActive ? "0" : "1" }
+        : p
+    )
+  );
+
+  try {
+    const result = await updatePharmaStatus({
+      clinic_id: clinicId,
+      pharma_id: item.id,
+      is_active: !isActive,
+    });
+
+    // if (result.success) {
+    //   toast.success(
+    //     isActive ? "Pharmacy Deactivated" : "Pharmacy Activated"
+    //   );
+    // }
+  } catch (error: any) {
+    setMappedPharmas((prev) =>
+      prev.map((p) =>
+        p.pharma_id === item.id
+          ? { ...p, is_active: previousStatus }
+          : p
+      )
+    );
+
+    toast.error(
+      error?.response?.data?.message ||
+        "Failed to update pharmacy status"
+    );
+  } finally {
+    setUpdatingId(null);
+  }
+};
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
       <div className="flex p-4 border-b border-b-[var(--color-primary)]">
@@ -116,7 +163,9 @@ const PharmaEmpanelment = () => {
                      transition border-2"
               style={{
                 background:
-                  activeTab === t.key ? "var(--color-surface-alt)" : "transparent",
+                  activeTab === t.key
+                    ? "var(--color-surface-alt)"
+                    : "transparent",
                 color:
                   activeTab === t.key
                     ? "var(--color-primary)"
@@ -127,7 +176,8 @@ const PharmaEmpanelment = () => {
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== t.key) {
-                  e.currentTarget.style.borderColor = "var(--color-surface-alt)";
+                  e.currentTarget.style.borderColor =
+                    "var(--color-surface-alt)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -159,6 +209,8 @@ const PharmaEmpanelment = () => {
             emptyText="No pharmacies mapped yet."
             clinicId={clinicId}
             data={viewItems}
+            onToggleStatus={handlePharmaStatus}
+            updatingId={updatingId}
           />
         )}
 
@@ -171,8 +223,8 @@ const PharmaEmpanelment = () => {
               email: p.email,
               mobile: p.phone,
               address: p.address,
-              city:p.city,
-              state:p.state,
+              city: p.city,
+              state: p.state,
               alreadyMapped: mappedIds.has(p.pharma_id),
             }))}
             icon={<LocalPharmacyIcon className="text-[var(--color-info)]" />}

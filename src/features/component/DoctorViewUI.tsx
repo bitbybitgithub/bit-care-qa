@@ -19,6 +19,7 @@ import {
 } from "../../api";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { toast } from "react-toastify";
+import AvatarWithStatus from "../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
@@ -165,45 +166,32 @@ const sortedData = [...data].sort((a, b) => {
         {sortedData?.map((item) => (
           <div
             key={item.id}
-            className="w-72 flex flex-col rounded-[var(--radius-lg)] overflow-hidden
+            className="w-full flex flex-col rounded-[var(--radius-lg)] overflow-hidden
               shadow-[var(--shadow-md)] bg-[var(--color-bg)]
               transition-all duration-300 hover:shadow-[var(--shadow-lg)]"
           >
             <div className="flex items-center gap-3 px-3 py-2 bg-[var(--color-primary)] text-white">
-              <div
-                className="relative w-10 h-10 flex items-center justify-center rounded-xl 
-                bg-[var(--color-surface)] border border-white shadow-sm overflow-hidden shrink-0"
-              >
-                {item.logo ? (
-                  <img
-                    src={`data:image/png;base64,${item.logo}`}
-                    alt={item.name}
-                    className="w-full h-full object-fill rounded-2xl"
-                  />
-                ) : title === "Registered Labs" ? (
-                  <ScienceIcon className="text-[var(--color-primary)]" />
-                ) : title === "Registered Doctors" ? (
-                  <FaUserMd className="text-[var(--color-primary)]" />
-                ) : (
-                  <FaClinicMedical className="text-[var(--color-primary)]" />
-                )}
-                <GoDotFill
-                className={`absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-base
-                ${item.is_active ? "text-green-500" : "text-red-500"}`}
-              />
-              </div>
+              <AvatarWithStatus
+  image={item.logo}
+  alt={item.name}
+  isActive={item.is_active ? "1" : "0"}
+  showStatus={true}
+  fallbackIcon={
+    title === "Registered Labs"
+      ? ScienceIcon
+      : title === "Registered Doctors"
+      ? FaUserMd
+      : FaClinicMedical
+  }
+/>
+           
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between w-full">
-                  <h3 className="font-semibold text-sm truncate">
+                  <div className="flex flex-col">
+                      <h3 className="font-semibold text-sm truncate">
                     {item.name}
                   </h3>
-
-                  <IconButton onClick={() => handleClick(item.id)}>
-                    <MdOutlineEditNote className="text-white" />
-                  </IconButton>
-                </div>
-
-                <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
+                     <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
                   {item.specialization && (
                     <span className="px-2 py-[2px] rounded-full bg-white/20">
                       {item.specialization}
@@ -222,6 +210,15 @@ const sortedData = [...data].sort((a, b) => {
                     </span>
                   )}
                 </div>
+                    </div>
+                
+
+                  <IconButton onClick={() => handleClick(item.id)}>
+                    <MdOutlineEditNote className="text-white h-full" />
+                  </IconButton>
+                </div>
+
+               
               </div>
             </div>
 

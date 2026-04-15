@@ -8,6 +8,7 @@ import {
   MdCurrencyRupee,
   MdCalendarToday,
 } from "react-icons/md";
+import AvatarWithStatus from "../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
@@ -108,7 +109,7 @@ const ViewPartnerUI = ({
         {data?.map((item) => (
           <div
             key={item.id}
-            className="w-72 flex flex-col rounded-[var(--radius-lg)] overflow-hidden
+            className="w-full flex flex-col rounded-[var(--radius-lg)] overflow-hidden
                shadow-[var(--shadow-md)]
                bg-[var(--color-bg)]
                transition-all duration-300
@@ -116,21 +117,17 @@ const ViewPartnerUI = ({
           >
             <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-primary)] text-white">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-surface)] border border-white shadow-sm overflow-hidden shrink-0">
-                  {item.logo ? (
-                    <img
-                      src={`data:image/png;base64,${item.logo}`}
-                      alt={item.name}
-                      className="w-full h-full object-fill rounded-2xl"
-                    />
-                  ) : title === "Registered Labs" ? (
-                    <ScienceIcon className="text-[var(--color-primary)]" />
-                  ) : title === "Registered Doctors" ? (
-                    <FaUserMd className="text-[var(--color-primary)]" />
-                  ) : (
-                    <FaClinicMedical className="text-[var(--color-primary)]" />
-                  )}
-                </div>
+             
+<AvatarWithStatus
+  image={item.logo}
+  alt={item.name}
+  isActive={item.is_active}
+   fallbackIcon={
+    title === "Registered Labs"
+        ? ScienceIcon
+        : FaClinicMedical
+    }
+/>
 
                 <h3 className="font-semibold text-sm truncate">{item.name}</h3>
               </div>

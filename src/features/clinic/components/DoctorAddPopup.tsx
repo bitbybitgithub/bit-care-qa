@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { FaUserMd } from "react-icons/fa";
 import { useEffect } from "react";
+import AvatarWithStatus from "../../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
@@ -122,20 +123,18 @@ const DoctorAddPopup = ({
         className="w-full max-w-md rounded-2xl overflow-hidden shadow-xl border bg-[var(--color-surface-alt)]"
       >
         <div className="flex items-start gap-4 px-6 py-5 bg-[var(--color-primary)] text-white">
-          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-sm">
-            {doctor.logo ? (
-              <img
-                src={`data:image/png;base64,${doctor.logo}`}
-                alt={doctor.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <FaUserMd className="text-[var(--color-primary)] text-xl" />
-            )}
-          </div>
-
+          <AvatarWithStatus
+            image={doctor.logo}
+            alt={doctor.name}
+            size={56}
+            isActive={doctor.is_active ? "1" : "0"}
+            showStatus={mode == "update" ? true : false}
+            fallbackIcon={FaUserMd}
+          />
           <div className="flex-1">
-            <h3 className="font-semibold text-lg leading-tight">{doctor.name}</h3>
+            <h3 className="font-semibold text-lg leading-tight">
+              {doctor.name}
+            </h3>
 
             <div className="flex flex-wrap gap-2 mt-2 text-xs">
               {doctor.specialization && (
@@ -159,22 +158,20 @@ const DoctorAddPopup = ({
           </div>
 
           {mode === "update" && setValue && (
-            <div className="
+            <div
+              className="
     flex items-center gap-2
     px-2 py-1 rounded-[var(--radius-lg)] 
     border bg-[var(--color-surface-alt)]
     shadow-[var(--shadow-md)]
     text-[var(--color-primary)]
   "
-                >
+            >
               <span className="text-[12px] font-semibold leading-none">
                 {value ? "Active" : "Inactive"}
               </span>
 
-              <MiniSwitch
-                checked={!!value}
-                onChange={handleChange}
-              />
+              <MiniSwitch checked={!!value} onChange={handleChange} />
             </div>
           )}
         </div>
@@ -245,7 +242,11 @@ const DoctorAddPopup = ({
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button className="normal-case px-5" variant="outlined" onClick={onClose}>
+            <Button
+              className="normal-case px-5"
+              variant="outlined"
+              onClick={onClose}
+            >
               Cancel
             </Button>
 

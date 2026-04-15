@@ -5,6 +5,7 @@ import { FaClinicMedical } from "react-icons/fa";
 import { MdSearch } from "react-icons/md";
 import { MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
 import SidebarBg from "../../assets/SidebarBg.png";
+import AvatarWithStatus from "../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
@@ -113,29 +114,17 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                 className="flex items-center gap-3 px-3 py-2
                       bg-[var(--color-primary)] text-white"
               >
-                <div
-                  className="w-10 h-10 flex items-center justify-center
-                        rounded-[var(--radius-2xl)] bg-[var(--color-surface)]
-                        border border-white shadow-sm overflow-hidden"
-                >
-                  {item.logo ? (
-                    <img
-                      src={`data:image/png;base64,${item.logo}`}
-                      alt={item.name}
-                      className="w-full h-full object-fill rounded-2xl"
-                    />
-                  ) : buttonText === "Selected Labs" ? (
-                    <ScienceIcon
-                      fontSize="medium"
-                      className="text-[var(--color-primary)]"
-                    />
-                  ) : (
-                    <FaClinicMedical
-                      size={24}
-                      className="text-[var(--color-primary)]"
-                    />
-                  )}
-                </div>
+                <AvatarWithStatus
+  image={item.logo}
+  alt={item.name}
+  showStatus={false} 
+  fallbackIcon={
+    buttonText === "Selected Labs"
+      ? ScienceIcon
+      : FaClinicMedical
+  }
+/>
+                
 
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm truncate">

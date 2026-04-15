@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MdSearch, MdEmail, MdLocationOn, MdPhone } from "react-icons/md";
 import DoctorAddPopup from "./DoctorAddPopup";
 import { FaUserMd } from "react-icons/fa";
+import AvatarWithStatus from "../../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
@@ -125,22 +126,14 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
   `}
           >
             <div className="flex items-start gap-3 px-3 py-3 bg-[var(--color-primary)] text-white relative">
-              <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-surface)] border border-white overflow-hidden shrink-0">
-                {item.logo ? (
-                  <img
-                    src={`data:image/png;base64,${item.logo}`}
-                    alt={item.name}
-                    className="w-full h-full object-fill"
-                  />
-                ) : (
-                  <FaUserMd className="text-[var(--color-primary)]"/>
-                )}
-              </div>
-
+              <AvatarWithStatus
+                image={item.logo}
+                alt={item.name}
+                showStatus={false}
+                fallbackIcon={FaUserMd}
+              />
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm truncate">
-                  {item.name}
-                </h3>
+                <h3 className="font-semibold text-sm truncate">{item.name}</h3>
 
                 <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
                   {item.specialization && (

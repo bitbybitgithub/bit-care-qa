@@ -27,12 +27,13 @@ export default function PharmacyQueues({
   const location = useLocation();
 
   /* ================= MODE ================= */
-  const resolvedMode: "pending" | "processing" = useMemo(() => {
-    if (mode) return mode;
-    if (location.pathname.toLowerCase().includes("completed"))
-      return "processing";
-    return "pending";
-  }, [mode, location.pathname]);
+const resolvedMode: "pending" | "processing" | "complete" = useMemo(() => {
+  if (mode) return mode;
+  const path = location.pathname.toLowerCase();
+  if (path.includes("complete")) return "complete";
+  if (path.includes("processing")) return "processing";
+  return "pending";
+}, [mode, location.pathname]);
 
   /* ================= STATE ================= */
   const [rows, setRows] = useState<PharmacyRecord[]>([]);
@@ -70,6 +71,8 @@ export default function PharmacyQueues({
       if (resolvedMode === "pending" && r.status !== "Pending") return false;
       if (resolvedMode === "processing" && r.status !== "Processing")
         return false;
+      if (resolvedMode === "complete" && r.status !== "Complete")
+      return false;
       if (!q) return true;
       return (
         r.patient_name.toLowerCase().includes(q) || r.patient_id.includes(q)
@@ -275,6 +278,25 @@ export default function PharmacyQueues({
           },
         },
       ];
+    if (resolvedMode === "complete") 
+      return [
+    ...commonColumns,
+    {
+          field: "action",
+          headerName: "Action",
+          width: 160,
+          flex: 1,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => openPrescription(p.row)}
+            >
+              View Prescription
+            </Button>
+          ),
+        },
+  ];
   }, [resolvedMode]);
 
   const getRowId: GridRowIdGetter = (row) =>

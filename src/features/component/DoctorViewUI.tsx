@@ -13,11 +13,7 @@ import {
 } from "react-icons/md";
 
 import DoctorAddPopup from "../clinic/components/DoctorAddPopup";
-import {
-  mapDoctorClinicApi,
-  updateDoctorStatusApi,
-  type UpdateDoctorStatusRequest,
-} from "../../api";
+import {mapDoctorClinicApi} from "../../api";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import AvatarWithStatus from "../../components/common/AvatarWithStatus";
@@ -123,7 +119,6 @@ console.log("data",data)
         modified_by: String(userId),
       };
 
-      // await updateDoctorStatusApi(payload);
       await mapDoctorClinicApi(payload);
 
       toast.success("Updated successfully");

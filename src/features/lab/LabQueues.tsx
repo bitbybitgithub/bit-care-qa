@@ -32,7 +32,7 @@ const normalizeStatus = (s: string) => {
 };
 
 interface Props {
-  mode?: "pending" | "processing" | "reporting";
+  mode?: "pending" | "processing" | "reporting"|"completed";
   searchTerm?: string;
 }
 
@@ -72,6 +72,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     if (location.pathname.includes("Pending")) return "pending";
     if (location.pathname.includes("Processing")) return "processing";
     if (location.pathname.includes("Reporting")) return "reporting";
+    if (location.pathname.includes("Completed")) return "completed";
     return "pending";
   }, [mode, location.pathname]);
 
@@ -106,6 +107,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       if (resolvedMode === "pending" && r.result_status !== "Pending")
         return false;
       if (resolvedMode === "processing" && r.result_status !== "Processing")
+        return false;
+      if (resolvedMode === "completed" && r.result_status !== "Completed")
         return false;
       if (
         resolvedMode === "reporting" &&
@@ -250,7 +253,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         </h1>
       ),
     },
-    { field: "result_status", headerName: "result_status", flex: 1 },
+    { field: "result_status", headerName: "Status", flex: 1 },
     { field: "contact_no", headerName: "Contact Number", flex: 1 },
     { field: "clinic_name", headerName: "Clinic Name", flex: 1 },
     { field: "doctor_name", headerName: "Doctor Name", flex: 1 },
@@ -308,7 +311,24 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           ),
         },
       ];
-
+if (resolvedMode === "completed")
+      return [
+        ...commonColumns,
+        {
+          field: "action",
+          headerName: "Action",
+          width: 200,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => openViewPrescription(p.row)}
+            >
+              View Prescription
+            </Button>
+          ),
+        },
+      ];
     return [
       ...commonColumns,
       {

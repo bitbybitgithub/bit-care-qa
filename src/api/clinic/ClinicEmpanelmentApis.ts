@@ -250,13 +250,3 @@ export const updatePharmaStatus = async (
 
   return response;
 };
-
-export const updateDoctorStatusApi = async (
-  payload: UpdateDoctorStatusRequest
-): Promise<ApiResponse<UpdateDoctorStatusResponse>> => {
-  const response = await emrAPI.post<ApiResponse<UpdateDoctorStatusResponse>>(
-    "/clinics/active-deactivate-doctor",
-    payload
-  );
-  return response;
-};

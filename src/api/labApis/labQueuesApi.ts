@@ -29,7 +29,7 @@ export async function getPendingQueueAsync(
     "/lab/get-lab-test-record",
     {
       lab_id: labId,
-      days: 15,
+      //days: 60,
     }
   );
   return response.data; 

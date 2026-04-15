@@ -26,7 +26,7 @@ export type PharmacyRecord = {
   phone: string;
   gender: string;
   prescription_id:number;
-  status: "Pending" | "Processing";
+  status: "Pending" | "Processing"|"Complete";
   doc_url: string;
   file_name: string;
   remarks: string;
@@ -34,7 +34,7 @@ export type PharmacyRecord = {
 };
 
 export interface PharmacyRecordProps {
-  mode?: "pending" | "processing";
+  mode?: "pending" | "processing"|"complete";
   searchTerm?: string;
 };
 

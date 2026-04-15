@@ -14,6 +14,7 @@ import {
 
 import DoctorAddPopup from "../clinic/components/DoctorAddPopup";
 import {
+  mapDoctorClinicApi,
   updateDoctorStatusApi,
   type UpdateDoctorStatusRequest,
 } from "../../api";
@@ -36,6 +37,7 @@ interface PartnerItem {
   specialization?: string;
   qualification?: string;
   experience?: number;
+  clinic_doctor_id?: number;
 }
 
 interface Props {
@@ -111,16 +113,18 @@ console.log("data",data)
     try {
       setLoading(true);
 
-      const payload: UpdateDoctorStatusRequest = {
+      const payload = {
+        clinic_doctor_id  : Number(selectedDoctor.clinic_doctor_id),
         clinic_id: Number(clinicId),
         doctor_id: selectedDoctor.id,
-        is_active: value,
-        consutation_fee: feeNum,
-        fee_duaration: daysNum,
+        is_active: value ? "1" : "0",
+        consultation_fees: feeNum,
+        fees_duration: daysNum,
         modified_by: String(userId),
       };
 
-      await updateDoctorStatusApi(payload);
+      // await updateDoctorStatusApi(payload);
+      await mapDoctorClinicApi(payload);
 
       toast.success("Updated successfully");
       handleClose();

@@ -8,12 +8,15 @@ import {
 } from "../../../api/clinic/ClinicEmpanelmentApis";
 import MapDoctorToClinic from "./MapDoctorToClinic";
 import DoctorViewUI from "../../component/DoctorViewUI";
+import { useSocket } from "../../../context/SocketContext";
 
 const DoctorEmpanelment = () => {
   const [activeTab, setActiveTab] = useState<"view" | "add">("view");
   const [doctor, setDoctor] = useState<DoctorList[]>([]);
   const [mappedDoctors, setMappedDoctor] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { socket } = useSocket();
+  
 
   const user = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
@@ -66,6 +69,36 @@ const DoctorEmpanelment = () => {
     fetchMappedDoctorByClinicId();
   }, [clinicId]);
 
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = (data) => {
+      if (activeTab !== "view") return;
+
+      setMappedDoctor((prev) =>
+        prev.map((d) =>
+          d?.clinic_doctor_id == data.clinic_doctor_id
+            ? {
+                ...d,
+                consultation_fees: Number(data.consultation_fees),
+                fees_duration: Number(data.fees_duration),
+                mapping_is_active:
+                  data.is_active === "1" || data.is_active === true,
+              }
+            : d,
+        ),
+      );
+    };
+
+    socket.on("doctorClinicMapping", handleUpdate);
+
+    return () => {
+      socket.off("doctorClinicMapping", handleUpdate);
+    };
+  }, [socket, activeTab]);
+
+  
   const handleSubmitDoctors = async (
     doctorId: number,
     consultation_fees: number,
@@ -125,6 +158,7 @@ const DoctorEmpanelment = () => {
     qualification: d.qualification,
     experience: d.experience,
     is_active: d.mapping_is_active,
+    clinic_doctor_id : d.clinic_doctor_id
   }));
 
   return (

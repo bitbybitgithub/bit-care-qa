@@ -83,6 +83,7 @@ const DocDashboard: React.FC = () => {
 
     const payload: UpdateAppointmentStatusRequest = {
       appointment_id: patient.appointment_id,
+      clinic_id: clinicId,
       user_id: userId,
       status: AppointmentStatus.InConsultation,
     };

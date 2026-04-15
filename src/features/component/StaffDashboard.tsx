@@ -258,6 +258,7 @@ const StaffDashboard: React.FC = () => {
 
       const payload: UpdateAppointmentStatusRequest = {
         appointment_id: patient.raw.appointment_id,
+        clinic_id: clinicId,
         user_id: uId,
         status: newStatus,
       };

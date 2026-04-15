@@ -6,6 +6,7 @@ export interface TodayAppointmentsResponse {
 }
 export interface UpdateAppointmentStatusRequest {
   appointment_id: number;
+  clinic_id: number;
   user_id: string;
   status: string;
 }

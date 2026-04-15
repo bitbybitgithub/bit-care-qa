@@ -23,6 +23,7 @@ import {
   verifyOtpApi,
 } from "../../../api/GenerateAndVerifyOtpApi";
 import { checkUserExists, resetPasswordApi  } from "../../../api/auth/CommonAuthApi";
+import { CheckCircleIcon } from "lucide-react";
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";
@@ -359,6 +360,12 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                       <FaUser className="text-[var(--color-text-secondary)]" />
                     </InputAdornment>
                   ),
+                  endAdornment: isOtpVerified && (
+                                      <InputAdornment position="end">
+                                        <CheckCircleIcon style={{ color: "green" }} />
+                                      </InputAdornment>
+                                    ),
+                                    // inputProps: { maxLength: 10 },
                 }}
                 sx={{
                   "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
@@ -387,7 +394,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
               </FormHelperText>
             </FormControl>
 
-            {!showOtp && (
+            {!showOtp && !isOtpVerified && (
               <Button
                 variant="contained"
                 size="small"
@@ -404,15 +411,14 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                     !formData.username || isOtpVerified ? "not-allowed" : "pointer",
                   "&.Mui-disabled": {
                     color: "var(--color-white)",
-                    backgroundColor: isOtpVerified
-                      ? "var(--color-success)"
-                      : "var(--color-border)",
+                    backgroundColor: !isOtpVerified &&
+                      "var(--color-border)",
                     cursor: "not-allowed",
                     opacity: 1,
                   },
                 }}
               >
-                {isOtpVerified ? "Verified" : "Verify"}
+                {!isOtpVerified && "Verify"}
               </Button>
             )}
           </div>

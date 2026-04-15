@@ -30,6 +30,7 @@ import type {
 import OtpVerification from "../../components/common/OtpVerification";
 import { validateRegistration } from "../../context/constant/ErrorHandler";
 import Regex from "../../context/constant/Regex";
+import { CheckCircleIcon } from "lucide-react";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -84,7 +85,7 @@ const RegistrationForm = () => {
                 e.entity_name === "lab"
                   ? "Diagnostic Lab"
                   : e.entity_name.charAt(0).toUpperCase() +
-                    e.entity_name.slice(1),
+                  e.entity_name.slice(1),
             }));
 
           setEntityList(formattedEntities);
@@ -396,6 +397,11 @@ const RegistrationForm = () => {
                       <FaPhoneAlt className="text-[var(--color-text)]" />
                     </InputAdornment>
                   ),
+                  endAdornment: verified.mobile && (
+                    <InputAdornment position="end">
+                      <CheckCircleIcon style={{ color: "green" }} />
+                    </InputAdornment>
+                  ),
                   inputProps: { maxLength: 10 },
                 },
               }}
@@ -427,6 +433,11 @@ const RegistrationForm = () => {
                   startAdornment: (
                     <InputAdornment position="start">
                       <MdEmail className="text-[var(--color-text)]" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: verified.email && (
+                    <InputAdornment position="end">
+                      <CheckCircleIcon style={{ color: "green" }} />
                     </InputAdornment>
                   ),
                 },

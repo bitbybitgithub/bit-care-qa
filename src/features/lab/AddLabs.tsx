@@ -3,7 +3,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ScienceIcon from "@mui/icons-material/Science";
 import SearchIcon from "@mui/icons-material/Search";
 import Popover from "@mui/material/Popover";
-import type { LabApiItem } from "../../features/lab/LabEmpanelment";
+import type { LabApiItem } from "../../types/labType/LabTestInterfaces";
 
 interface Props {
   labs: LabApiItem[];
@@ -208,7 +208,7 @@ const AddLabs = ({ labs, onAdd }: Props) => {
             </p>
 
             <p>{activeLab.email || "N/A"}</p>
-            <p>{activeLab.mobile || "N/A"}</p>
+            <p>{activeLab.phone || "N/A"}</p>
             <p>{activeLab.address || "N/A"}</p>
 
           </div>

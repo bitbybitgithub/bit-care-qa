@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ViewPartnerUI from "../../component/ViewPartnerUI";
-import {getSessionItem,} from "../../../context/sessions/userSession";
+import { getSessionItem } from "../../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import { getDoctorListApi, type DoctorList } from "../../../api";
 import {
@@ -15,6 +14,7 @@ const DoctorEmpanelment = () => {
   const [doctor, setDoctor] = useState<DoctorList[]>([]);
   const [mappedDoctors, setMappedDoctor] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
   const user = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
 
@@ -22,7 +22,7 @@ const DoctorEmpanelment = () => {
     try {
       setLoading(true);
       const res = await getDoctorListApi();
-      setDoctor(res);
+      setDoctor(res || []);
     } catch (err) {
       console.error("Doctor list error", err);
     } finally {
@@ -35,12 +35,23 @@ const DoctorEmpanelment = () => {
   }, []);
 
   const fetchMappedDoctorByClinicId = async () => {
+    if (!clinicId) return;
+
     try {
       setLoading(true);
 
       const res = await getMappedDoctorApi(clinicId);
+
       if (Array.isArray(res)) {
-        setMappedDoctor(res);
+        const normalized = res.map((d: any) => ({
+          ...d,
+          doctor_id: Number(d.doctor_id),
+          consultation_fees: Number(d.consultation_fees),
+          fees_duration: Number(d.fees_duration),
+          mapping_is_active: d.mapping_is_active === "1",
+        }));
+
+        setMappedDoctor(normalized);
       } else {
         setMappedDoctor([]);
       }
@@ -58,14 +69,14 @@ const DoctorEmpanelment = () => {
   const handleSubmitDoctors = async (
     doctorId: number,
     consultation_fees: number,
-    fees_duration: number,
+    fees_duration: number
   ) => {
     if (!clinicId) {
       toast.error("Session expired. Please login again.");
       return;
     }
 
-    const existingIds = mappedDoctors.map((d) => Number(d.doctor_id));
+    const existingIds = mappedDoctors.map((d) => d.doctor_id);
 
     if (existingIds.includes(doctorId)) {
       toast.warning("Doctor already registered.");
@@ -96,11 +107,11 @@ const DoctorEmpanelment = () => {
     }
   };
 
-  // const mappedDoctorIds = new Set(mappedDoctors.map((d) => d.doctor_id));
   const mappedDoctorIds = new Set(
-    mappedDoctors.map((d) => Number(d.doctor_id)),
+    mappedDoctors.map((d) => d.doctor_id)
   );
-  const viewItems = mappedDoctors?.map((d) => ({
+
+  const viewItems = mappedDoctors.map((d) => ({
     id: d.doctor_id,
     name: d.doctor_name,
     logo: d.profile_pic,
@@ -112,8 +123,8 @@ const DoctorEmpanelment = () => {
     consultation_fees: d.consultation_fees,
     fees_duration: d.fees_duration,
     qualification: d.qualification,
-    experience:d.experience,
-    is_active:d.doctor_is_active
+    experience: d.experience,
+    is_active: d.mapping_is_active,
   }));
 
   return (
@@ -143,7 +154,8 @@ const DoctorEmpanelment = () => {
                     ? "var(--color-primary)"
                     : "var(--color-surface-alt)",
                 borderColor:
-                  activeTab === t.key ? "var(--color-primary)" : "transparent",
+                  activeTab === t.key ? 
+                "var(--color-primary)" : "transparent",
                 transition: "var(--transition-fast)",
               }}
               onMouseEnter={(e) => {
@@ -158,6 +170,7 @@ const DoctorEmpanelment = () => {
                 }
               }}
             >
+            
               {t.label}
             </button>
           ))}
@@ -181,7 +194,6 @@ const DoctorEmpanelment = () => {
             emptyText="No doctor mapped yet."
             clinicId={clinicId}
             data={viewItems}
-            onSubmit={async (doctorId, fee, days) => {}}
           />
         )}
 
@@ -198,10 +210,10 @@ const DoctorEmpanelment = () => {
               city: d.city,
               state: d.state,
               pincode: d.pincode,
-              experience:d.experience,
-              specialization:d.specialization,
-              qualification:d.qualification,
-              alreadyMapped: mappedDoctorIds.has(Number(d.doctor_id)),
+              experience: d.experience,
+              specialization: d.specialization,
+              qualification: d.qualification,
+              alreadyMapped: mappedDoctorIds.has(d.doctor_id),
             }))}
             onSubmit={handleSubmitDoctors}
           />

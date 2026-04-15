@@ -3,7 +3,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import SearchIcon from "@mui/icons-material/Search";
 import Popover from "@mui/material/Popover";
-import type { PharmaApiItem } from "../../features/pharma/PharmaEmpanelment";
+import type { PharmaApiItem } from "../../types/pharmacyType/pharmacyInterfaceType";
 
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 const AddPharma = ({ pharmas, onAdd }: Props) => {
 
   const [selected, setSelected] =
-    useState<string[]>([]);
+    useState<number[]>([]);
 
   const [search, setSearch] =
     useState("");
@@ -28,7 +28,7 @@ const AddPharma = ({ pharmas, onAdd }: Props) => {
   const [activePharma, setActivePharma] =
     useState<PharmaApiItem | null>(null);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (id: number) => {
 
     setSelected((prev) =>
       prev.includes(id)

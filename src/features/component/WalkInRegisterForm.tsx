@@ -477,7 +477,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <MenuItem value="">
                   <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
                 </MenuItem>
-                {doctors.map((d) => (
+                {doctors.filter((d) => d.mapping_is_active ==true).map((d) => (
                   <MenuItem key={d.doctor_id} value={d.doctor_name}>
                     {d.doctor_name}{d.specialized_in ? ` (${d.specialized_in})` : ""}
                   </MenuItem>

@@ -73,11 +73,21 @@ const DocDashboard: React.FC = () => {
       });
     });
 
+
+    socket.on("newAppointment", (data: AppointmentDto) => {
+      toast.info("New appointment assigned");
+      const mapped = mapAppointmentsToPatients([data])[0];
+      console.log("New appointment received via socket", mapped);
+      setPatients(prev => [...prev, mapped]);
+    });
+
     return () => {
       socket.off("patient_assigned");
+      socket.off("newAppointment");
     };
   }, [socket]);
 
+  console.log("Doctor Dashboard Rendered", { patients });
   const handleStartConsultation = async (patient: Patient) => {
     if (!patient?.appointment_id) return;
 

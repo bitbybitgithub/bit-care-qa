@@ -47,22 +47,18 @@ const LabPharmacyReferral: React.FC<Props> = memo(
         try {
           if (type === "lab") {
             const res = await getMappedLabsListApi(clinic_id, patient?.appointment_id);
-            console.log(res.data)
             if (res.success) {
               const activeItems = res.data.filter(
                 (item) => item.is_active === "1"
               );
-              console.log(activeItems)
               setItems(activeItems);
             }
           } else {
             const res = await getMappedPharmacyListApi(clinic_id, patient?.raw?.prescriptions[0]?.prescription_id);
-            console.log(res.data)
             if (res.success) {
               const activeItems = res.data.filter(
                 (item) => item.is_active === "1"
               );
-              console.log(activeItems)
               setItems(activeItems);
             }
           }

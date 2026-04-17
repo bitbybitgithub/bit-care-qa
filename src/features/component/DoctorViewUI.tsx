@@ -11,13 +11,11 @@ import {
   MdCalendarToday,
   MdOutlineEditNote,
 } from "react-icons/md";
-
 import DoctorAddPopup from "../clinic/components/DoctorAddPopup";
 import {mapDoctorClinicApi} from "../../api";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import AvatarWithStatus from "../../components/common/AvatarWithStatus";
-
 interface PartnerItem {
   id: number;
   name: string;
@@ -63,7 +61,6 @@ const DoctorViewUI = ({
   const userId = getSessionItem("user", "user_id");
 
   const selectedDoctor = data.find((d) => d.id === selectedId);
-console.log("data",data)
   const selectedDoctorAddress = selectedDoctor
     ? [selectedDoctor.address, selectedDoctor.city, selectedDoctor.state]
         .filter(Boolean)
@@ -118,10 +115,7 @@ console.log("data",data)
         fees_duration: daysNum,
         modified_by: String(userId),
       };
-
       await mapDoctorClinicApi(payload);
-
-      toast.success("Updated successfully");
       handleClose();
     } catch (error) {
       console.error(error);
@@ -210,14 +204,10 @@ const sortedData = [...data].sort((a, b) => {
                   )}
                 </div>
                     </div>
-                
-
                   <IconButton onClick={() => handleClick(item.id)}>
                     <MdOutlineEditNote className="text-white h-full" />
                   </IconButton>
                 </div>
-
-               
               </div>
             </div>
 

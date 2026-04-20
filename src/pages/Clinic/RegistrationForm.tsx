@@ -7,10 +7,6 @@ import {
   FormControl,
   FormHelperText,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import { MdEmail, MdLocationOn } from "react-icons/md";
 import { FaHospital, FaPhoneAlt } from "react-icons/fa";
@@ -31,6 +27,7 @@ import OtpVerification from "../../components/common/OtpVerification";
 import { validateRegistration } from "../../context/constant/ErrorHandler";
 import Regex from "../../context/constant/Regex";
 import { CheckCircleIcon } from "lucide-react";
+import WelcomePage from "../../components/common/WelcomePage";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -300,9 +297,6 @@ const RegistrationForm = () => {
         >
           Create Account
         </h1>
-        <h3 className="text-[var(--color-text)] ">
-          Register your Center below
-        </h3>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -565,52 +559,29 @@ const RegistrationForm = () => {
             "&:hover": { backgroundColor: "var(--color-primary)" },
           }}
         >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            "Register"
-          )}
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Sign Up"}
         </Button>
 
         <div className="text-center text-sm mt-2">
           Already have an account?
           <Link
             to="/login"
-            className="text-[var(--color-primary)] hover:underline ml-1"
+            className="text-[var(--color-primary)] underline ml-1"
           >
-            Click Here to login
+            Sign In
           </Link>
         </div>
       </form>
 
-      {/* SUCCESS POPUP */}
-      <Dialog
-        open={openPopup}
-        onClose={handlePopupClose}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>Welcome {formData.name}!</DialogTitle>
-        <DialogContent>
-          Your registration request has been submitted successfully. Login
-          credentials have been sent to your email. If you have questions,
-          contact (98989898989)
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center" }}>
-          <Button
-            onClick={handlePopupClose}
-            sx={{
-              backgroundColor: "var(--color-primary)",
-              color: "var(--color-surface-alt)",
-              px: 4,
-              borderRadius: "var(--radius-lg)",
-              "&:hover": { backgroundColor: "var(--color-primary-dark)" },
-            }}
-          >
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {openPopup && (
+        <WelcomePage
+          name={formData.name}
+          email={formData.email}
+          phone={formData.phone}
+          entity={selectedEntity?.entity_name}
+          onClose={handlePopupClose}
+        />
+      )}
 
       {/* OTP COMPONENTS */}
       <OtpVerification

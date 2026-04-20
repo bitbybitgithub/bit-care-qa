@@ -220,16 +220,16 @@ const Login = () => {
               return;
             }
             if (data.user.role === "Doctor") {
-              toast.info("Use Mobile App for doctor login");
+              toast.info("Use Mobile App for doctor Sign In");
             }
             else {
               navigate(route);
-              toast.success("Login successfull");
+              toast.success("Signed in successfully");
             }
           }
           dispatch(loginSuccess());
         } else {
-          toast.error(data.message || "Login failed");
+          toast.error(data.message || "Failed to sign in");
         }
       } catch (error: any) {
         console.error("API Error:", error.message || error);
@@ -240,7 +240,7 @@ const Login = () => {
         setLoading(false);
       }
     } else {
-      toast.success("Patient login successful");
+      toast.success("Signed in successfully");
       dispatch(loginSuccess());
       navigate("/dashboard");
     }
@@ -274,7 +274,7 @@ const Login = () => {
 
           <div className="p-6 relative">
             <h2 className="text-2xl font-bold text-center text-[var(--color-primary)] mb-6">
-              {isClinic ? "Clinic Login" : "Patient Login"}
+              {isClinic ? "Clinic Sign In" : "Patient Sign In"}
             </h2>
             {source ? (
               <ResetPasswordForm source={source} setSource={setSource} />
@@ -350,7 +350,7 @@ const Login = () => {
                   {loading ? (
                     <CircularProgress size={22} color="inherit" />
                   ) : (
-                    "Login"
+                    "Sign In"
                   )}
                 </Button>
                 {isClinic && (
@@ -383,7 +383,7 @@ const Login = () => {
                 onSubmit={handleSubmit}
                 className="flex flex-col items-center justify-center h-full px-10 space-y-5 w-full">
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
-                  Patient Login
+                  Patient Sign In
                 </h1>
                 <FormControl fullWidth>
                   <TextField
@@ -477,7 +477,7 @@ const Login = () => {
                     py: 1,
                     fontWeight: 600,
                   }}>
-                  Login
+                  Sign In
                 </Button>
 
                 <p className="text-sm mt-2">
@@ -504,7 +504,7 @@ const Login = () => {
                 onSubmit={handleSubmit}
                 className="flex flex-col items-center justify-center h-full px-10 space-y-5">
                 <h1 className="text-3xl font-extrabold text-[var(--color-primary)]">
-                  Center Login
+                  Sign In
                 </h1>
                 <FormControl fullWidth>
                   <TextField
@@ -591,7 +591,7 @@ const Login = () => {
                   {loading ? (
                     <CircularProgress size={22} color="inherit" />
                   ) : (
-                    "Login"
+                    "Sign In"
                   )}
                 </Button>
 
@@ -610,8 +610,8 @@ const Login = () => {
                       Don't have an Account?{" "}
                       <Link
                         to="/register"
-                        className="text-[var(--color-info)] hover:underline cursor-pointer">
-                        Register Center
+                        className="text-[var(--color-info)] underline cursor-pointer">
+                        Sign Up
                       </Link>
                     </span>
                   </p>
@@ -630,7 +630,7 @@ const Login = () => {
                 <div className="space-y-2 animate-fadeIn">
                   <h1 className="text-2xl font-bold">Welcome to BITCARE!</h1>
                   <p className="text-sm opacity-90">
-                    Login to securely access and manage your healthcare
+                    Sign in to securely access and manage your healthcare
                     services.
                   </p>
                 </div>

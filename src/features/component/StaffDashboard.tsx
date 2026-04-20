@@ -245,8 +245,8 @@ const StaffDashboard: React.FC = () => {
             return "Follow-up set successfully";
           case "Make Payment":
             return "Payment completed successfully";
-          case "Started Consultation":
-            return "Started Consultation";
+          case "Start Consultation":
+            return "Consultation started";
           break;
         }
       };

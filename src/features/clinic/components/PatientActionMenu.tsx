@@ -8,7 +8,6 @@ import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaRupeeSign } from "react-icons/fa";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import { Payment } from "@mui/icons-material";
-import { GiStethoscope } from "react-icons/gi";
 
 interface PatientActionMenuProps {
   patient: Patient;
@@ -40,7 +39,7 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
   };
 
 const filteredActions = actions.filter((a) => {
-  if (a === "Make Payment" && patient.is_fees_paid === "1") {
+  if (a === "Make Payment" && patient.is_fee_paid === "1") {
     return false;
   }
   return true;
@@ -103,9 +102,6 @@ const filteredActions = actions.filter((a) => {
                 )}
                 {a === "Payment" && (
                   <FaRupeeSign style={{ color: "var(--color-info)" }} />
-                )}
-                {a === "Started Consultation" && (
-                  <GiStethoscope  style={{ color: "var(--color-info)" }} />
                 )}
                 <span>{a}</span>
               </Box>

@@ -66,7 +66,7 @@ const getActionsForStatus = (patient: Patient): string[] => {
       return scheduledActions;
 
     case "checked_in":
-      const checkedInActions = ["Cancel Appointment",];
+      const checkedInActions = ["Cancel Appointment", "Hold Appointment"];
 
       if (patient.is_fee_applicable === "1" && !isPaid) {
         checkedInActions.push("Make Payment");
@@ -75,7 +75,7 @@ const getActionsForStatus = (patient: Patient): string[] => {
       return checkedInActions;
 
     case "on_hold":
-      const onHoldActions = ["Cancel Appointment","Started Consultation"];
+      const onHoldActions = ["Add Vitals", "Cancel Appointment"];
       return onHoldActions;
 
     case "completed":
@@ -117,7 +117,7 @@ const badgeClasses = (status: string): string => {
     scheduled: "bg-cyan-100 text-cyan-600 ",
     cancelled: "bg-rose-100 text-rose-600 ",
     paid: "bg-green-100 text-green-600 ",
-    unpaid: "bg-orange-100 text-orange-600 ",
+    unpaid: "bg-orange-100 text-orange-600  ",
   };
   return colors[status.toLowerCase()] || "bg-gray-100 border text-gray-800";
 };
@@ -136,7 +136,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const search = searchQuery;
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [page, setPage] = useState(0);
+
   const [cancelReason, setCancelReason] = useState("");
   const [patientToCancel, setPatientToCancel] = useState<Patient | null>(null);
 
@@ -192,8 +192,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         setPaymentDrawerOpen(true);
       } else if (action === "Hold Appointment") {
         await handleUpdatePatientStatus?.(patient, AppointmentStatus.OnHold, "Hold Appointment");
-      }else if (action === "Started Consultation") {
-        await handleUpdatePatientStatus?.(patient, AppointmentStatus.CheckedIn, "Started Consultation");
       }
     },
     [handleUpdatePatientStatus],
@@ -202,7 +200,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   const handleConfirmCancel = useCallback(() => {
     if (!patientToCancel) return;
     handleUpdatePatientStatus?.(patientToCancel, AppointmentStatus.Cancelled, "Cancel Appointment");
-    handleUpdatePatientStatus?.(patientToCancel, AppointmentStatus.Started, "Started Consultation");
     setCancelDialogOpen(false);
     setCancelReason("");
     setPatientToCancel(null);

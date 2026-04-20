@@ -7,7 +7,6 @@ import { FaFlask, FaClinicMedical } from "react-icons/fa";
 import { RiChatFollowUpFill } from "react-icons/ri";
 import { FaRupeeSign } from "react-icons/fa";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
-import { Payment } from "@mui/icons-material";
 
 interface PatientActionMenuProps {
   patient: Patient;
@@ -39,7 +38,7 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
   };
 
 const filteredActions = actions.filter((a) => {
-  if (a === "Make Payment" && patient.is_fee_paid === "1") {
+  if (a === "Make Payment" && patient.is_fees_paid === "1") {
     return false;
   }
   return true;

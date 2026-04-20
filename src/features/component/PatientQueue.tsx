@@ -363,7 +363,6 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
                     handleUpdatePatientStatus?.(
                       p,
                       AppointmentStatus.InProgress,
-                      "Start Consultation"
                     );
                     onStartConsultation?.(p);
                   }}

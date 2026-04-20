@@ -23,7 +23,7 @@ const PharmaEmpanelment = () => {
     try {
       setLoading(true);
       const res = await getActivePharmaListApi();
-      setPharmas(res.data);
+      setPharmas(res);
     } catch (err) {
       console.error("Pharma list error", err);
     } finally {

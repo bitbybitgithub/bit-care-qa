@@ -78,6 +78,7 @@ const getActionsForStatus = (patient: Patient): string[] => {
       const onHoldActions = ["Add Vitals", "Cancel Appointment"];
       return onHoldActions;
 
+
     case "completed":
       const baseActions = [
         "Send to Lab",

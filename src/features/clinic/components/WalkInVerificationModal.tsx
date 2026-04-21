@@ -7,6 +7,7 @@ import { generateOtpApi } from "../../../api/GenerateAndVerifyOtpApi";
 import { verifyPatientpApi } from "../../../api/VerifyPatientApi";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import Regex from "../../../context/constant/Regex";
+import { getAge } from "../../../utils/CalculateAge";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
   const [verifiedPatients, setVerifiedPatients] = useState<Patient[] | null>(
     null,
   );
+  const count = verifiedPatients?.length || 0;
   const [error, setError] = useState({ mobile: "", otp: "" });
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
@@ -401,10 +403,26 @@ const WalkInVerificationModal: React.FC<Props> = ({
         )}
 
         {verifiedPatients && verifiedPatients.length > 0 && (
-          <div className="max-h-[300px] overflow-y-auto space-y-2 mt-4 custom-scrollbar">
-            {verifiedPatients.map((p, i) => (
+          <>
+            <div className="flex justify-between items-center mb-3">
+              <h3>
+                {count} Patient{count > 1 ? "s" : ""}{" "}
+                {count > 0 ? "found for existing contact" : "alreay exist"}
+              </h3>
+              <button
+                onClick={() => {
+                  onClose();
+                  resetState();
+                }}
+                className="w-8 h-8 flex justify-center items-center rounded-full cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {verifiedPatients.map((p) => (
               <div
-                key={i}
+                key={p.patient_id}
                 onClick={() => onPatientSelect(p, contact)}
                 className="flex items-center justify-between bg-[var(--color-surface-alt)] border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
               >
@@ -421,31 +439,44 @@ const WalkInVerificationModal: React.FC<Props> = ({
                     </div>
 
                     <h4>{p.patient_name}</h4>
+                    <span
+                      style={{ color: "var(--color-primary)", fontWeight: 500 }}
+                    >
+                      ({p.gender?.toString()?.[0]?.toUpperCase() || "-"})
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm">
-                    <FaCalendarAlt />
-                    {new Date(p.date_of_birth).toLocaleDateString()}
-                    <IoCall /> +91 {contact}
-                  </div>
-                </div>
+                  <div className="flex items-center justify-between gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <FaCalendarAlt className="text-gray-500" />
+                      <span>
+                        {new Date(p.date_of_birth).toLocaleDateString()}
+                      </span>
+                    </div>
 
-                <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold">
-                  {p.age} yrs
+                    <div className="flex items-center gap-2">
+                      <IoCall className="text-gray-500" />
+                      <span>{p.mobile_number}</span>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold">
+                      {getAge(p.date_of_birth)} yrs
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
 
             <div className="text-center mt-4">
-              <p>No patient found for this contact?</p>
+              <p>Do you want to register a new patient? Click below</p>
               <Button
                 variant="contained"
                 onClick={() => onPatientSelect(null, contact)}
               >
-                Register Patient
+                Register New Patient
               </Button>
             </div>
-          </div>
+          </>
         )}
 
         <div className="flex justify-center mt-4">

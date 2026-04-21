@@ -38,7 +38,7 @@ const PatientActionMenu: React.FC<PatientActionMenuProps> = ({
   };
 
 const filteredActions = actions.filter((a) => {
-  if (a === "Make Payment" && patient.is_fees_paid === "1") {
+  if (a === "Make Payment" && patient.is_fee_paid === "1") {
     return false;
   }
   return true;

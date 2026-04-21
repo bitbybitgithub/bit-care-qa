@@ -26,7 +26,6 @@ import { toast } from "react-toastify";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import PatientActionMenu from "../clinic/components/PatientActionMenu";
 import PatientActionDrawers from "../clinic/components/PatientActionDrawers";
-import AppointmentPayment from "./AppointmentPayment";
 
 // const getActionsForStatus = (status: string): string[] => {
 //   switch (status.toLowerCase()) {
@@ -49,7 +48,7 @@ import AppointmentPayment from "./AppointmentPayment";
 // };
 const getActionsForStatus = (patient: Patient): string[] => {
   const status = patient.status?.toLowerCase();
-  const isPaid = patient.is_fees_paid === "1";
+  const isPaid = patient.is_fee_paid === "1";
 
   switch (status) {
     case "scheduled":
@@ -437,7 +436,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         renderCell: (params) => {
           const row = params.row || {};
           const isApplicable = String(row.is_fee_applicable) === "1";
-          const isPaid = String(row.is_fees_paid) === "1";
+          const isPaid = String(row.is_fee_paid) === "1";
 
           //  SAME STRUCTURE AS COMPLETED + EXTRA CONDITION
           let label;

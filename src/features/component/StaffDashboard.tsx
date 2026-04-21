@@ -160,7 +160,7 @@ const StaffDashboard: React.FC = () => {
         source: a.source,
         date_of_birth: a.date_of_birth,
         mobile_number: a.mobile_number,
-        is_fees_paid: a.is_fees_paid,
+        is_fee_paid: a.is_fees_paid,
         is_fee_applicable: a.is_fee_applicable,
         is_visited: a.is_visited,
         consultation_fees: a.consultation_fees,

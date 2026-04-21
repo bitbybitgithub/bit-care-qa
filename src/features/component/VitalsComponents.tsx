@@ -10,38 +10,18 @@ import {
   FaHeartPulse,
   FaTemperatureLow,
 } from "react-icons/fa6";
-import { SavePatientVital } from "../../api/VitalsApi";
+import {
+  GetPatientVital,
+  SavePatientVital,
+  type PatientVitalsData,
+  type PatientVitalsProps,
+  type SavePatientVitalRequest,
+} from "../../api/VitalsApi";
 import { toast } from "react-toastify";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { GiBodyHeight } from "react-icons/gi";
 import { IoBody } from "react-icons/io5";
-
-interface PatientVitalsData {
-  height_cm: number | "";
-  weight_kg: number | "";
-  temperature_c: number | "";
-  blood_pressure_systolic: number | "";
-  blood_pressure_diastolic: number | "";
-  pulse_rate: number | "";
-  respiration_rate: number | "";
-  oxygen_saturation: number | "";
-  bmi: number;
-  notes: string;
-  chief_complaint: string;
-  allergies: string;
-  current_medications: string;
-}
-
-interface PatientVitalsProps {
-  patientName?: string;
-  patientId: number;
-  doctorId: number;
-  appointmentId: number;
-  onClose?: () => void;
-  isOpen?: boolean;
-  createdBy: string;
-  onStatusUpdate?: () => void;
-}
+import { useSocket } from "../../context/SocketContext";
 
 const VitalsComponents: React.FC<PatientVitalsProps> = memo(
   ({
@@ -49,10 +29,11 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     onClose,
     patientId,
     doctorId,
+    patientStatus,
     appointmentId,
-    createdBy,
     onStatusUpdate,
   }) => {
+    const { socket } = useSocket();
     const clinicId = getSessionItem("user", "clinic_id");
     const userId = getSessionItem("user", "user_id");
     const [formData, setFormData] = useState<PatientVitalsData>({
@@ -73,23 +54,61 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
 
     const [loading, setLoading] = useState(false);
     type VitalField = keyof PatientVitalsData;
-    const [errors, setErrors] = useState<Partial<Record<VitalField, string>>>({});
+    const [errors, setErrors] = useState<Partial<Record<VitalField, string>>>(
+      {},
+    );
 
     useEffect(() => {
-      const { height_cm, weight_kg } = formData;
-      if (height_cm > 0 && weight_kg > 0) {
-        const bmi = Math.round((weight_kg / (height_cm / 100) ** 2) * 10) / 10;
+      if (!socket) return;
+
+      const fetchVitals = async () => {
+        if (patientStatus === "on_hold") {
+          try {
+            const payload = { patient_id: patientId };
+            const response = await GetPatientVital(payload);
+            const vitals = response?.data?.[0];
+            if (vitals) {
+              setFormData((prev) => ({
+                ...prev,
+                height_cm: Number(vitals.height_cm) || 0,
+                weight_kg: Number(vitals.weight_kg) || 0,
+                temperature_c: Number(vitals.temperature_c) || 0,
+                blood_pressure_systolic: vitals.blood_pressure_systolic || 0,
+                blood_pressure_diastolic: vitals.blood_pressure_diastolic || 0,
+                pulse_rate: vitals.pulse_rate || 0,
+                respiration_rate: vitals.respiration_rate || 0,
+                oxygen_saturation: Number(vitals.oxygen_saturation) || 0,
+                bmi: Number(vitals.bmi) || 0,
+                notes: vitals.notes || "",
+                chief_complaint: vitals.chief_complaint || "",
+                allergies: vitals.allergies || "",
+                current_medications: vitals.current_medications || "",
+              }));
+            }
+          } catch (error) {
+            console.error("Error fetching vitals:", error);
+          }
+        }
+      };
+      fetchVitals();
+    }, [socket, patientStatus, patientId]);
+
+    useEffect(() => {
+      const height = Number(formData.height_cm);
+      const weight = Number(formData.weight_kg);
+
+      if (height > 0 && weight > 0) {
+        const bmi = Math.round((weight / (height / 100) ** 2) * 10) / 10;
+
         setFormData((prev) => ({ ...prev, bmi }));
       }
     }, [formData.height_cm, formData.weight_kg]);
 
     const handleInputChange = (
       field: keyof PatientVitalsData,
-      value: string | number
+      value: string | number,
     ) => {
-      const numValue =
-        value === "" ? "" : Number.parseFloat(value as string);
-
+      const numValue = value === "" ? 0 : Number(value);
       setFormData((prev) => ({ ...prev, [field]: numValue }));
 
       setErrors((prev) => {
@@ -100,21 +119,19 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       });
     };
 
-
     const handleSubmit = async () => {
-
       setLoading(true);
       try {
-        const payload = {
+        const payload: SavePatientVitalRequest = {
+          ...formData,
           patient_id: patientId,
           doctor_id: doctorId,
           clinic_id: clinicId,
           appointment_id: appointmentId,
-          ...formData,
-          created_by: createdBy,
-          modified_by: createdBy,
+          created_by: userId,
+          modified_by: userId,
           is_active: true,
-          user_id: userId
+          user_id: userId,
         };
         await SavePatientVital(payload);
         toast.success("Vitals saved successfully!");
@@ -152,7 +169,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       setErrors({});
     };
 
-
     const renderDivider = (label: string) => (
       <div className="flex items-center gap-3 pt-2">
         <div className="flex-1 h-px bg-[var(--color-primary)]" />
@@ -164,14 +180,19 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
     );
 
     const fields = [
-      { field: "height_cm", label: "Height (cm)", placeholder: "55-272", icon: <GiBodyHeight />, },
+      {
+        field: "height_cm",
+        label: "Height (cm)",
+        placeholder: "55-272",
+        icon: <GiBodyHeight />,
+      },
       {
         field: "weight_kg",
         label: "Weight (kg)",
         placeholder: "0-150",
         icon: <FaWeightScale />,
       },
-      { field: "bmi", label: "BMI", placeholder: "Auto", icon: <IoBody />, },
+      { field: "bmi", label: "BMI", placeholder: "Auto", icon: <IoBody /> },
       {
         field: "temperature_c",
         label: "Temp (°C)",
@@ -238,15 +259,17 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
                 <TextField
                   type="text"
                   placeholder={placeholder}
-                  value={formData[field] || ""}
+                  value={formData[field] === 0 ? "" : formData[field]}
                   onChange={(e) =>
-                    handleInputChange(field as keyof PatientVitalsData, e.target.value)
+                    handleInputChange(
+                      field as keyof PatientVitalsData,
+                      e.target.value,
+                    )
                   }
                   size="small"
                   fullWidth
                   error={Boolean(errors[field as VitalField])}
                 />
-
               </div>
             ))}
           </div>
@@ -271,7 +294,6 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               }
               error={Boolean(errors.chief_complaint)}
             />
-
           </div>
 
           <div>
@@ -291,9 +313,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
             />
           </div>
           <div>
-            <label className="text-xs font-semibold uppercase">
-              Allergies
-            </label>
+            <label className="text-xs font-semibold uppercase">Allergies</label>
             <TextField
               fullWidth
               multiline
@@ -349,7 +369,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 export default VitalsComponents;

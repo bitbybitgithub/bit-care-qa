@@ -1,7 +1,34 @@
 import { emrAPI } from "../services/EmrApi";
 
+export interface PatientVitalsData {
+  height_cm: number ;
+  weight_kg: number;
+  temperature_c: number;
+  blood_pressure_systolic: number;
+  blood_pressure_diastolic: number;
+  pulse_rate: number;
+  respiration_rate: number ;
+  oxygen_saturation: number ;
+  bmi: number;
+  notes: string;
+  chief_complaint: string;
+  allergies: string;
+  current_medications: string;
+}
+
+export interface PatientVitalsProps {
+  patientName?: string;
+  patientId: number;
+  doctorId: number;
+  appointmentId: number;
+  onClose?: () => void;
+  isOpen?: boolean;
+  createdBy: string;
+  onStatusUpdate?: () => void;
+  patientStatus?: string;
+}
 export interface GetPatientVitalsRequest {
-  patientId: 1;
+  patient_id: number;
 }
 
 export interface SavePatientVitalRequest {

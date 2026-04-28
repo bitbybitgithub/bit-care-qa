@@ -36,7 +36,8 @@ export const saveDoctorAvailabilityApi = async (
   start_time: string,
   end_time: string,
   date: string,
-  is_fullday_blocked: boolean
+  is_fullday_blocked: boolean,
+  clinic_id : number
 ): Promise<SaveDoctorAvailabilityResponse> => {
   try {
     const payload = {
@@ -45,7 +46,8 @@ export const saveDoctorAvailabilityApi = async (
       end_time,
       date,
       reason,
-      is_fullday_blocked
+      is_fullday_blocked,
+      clinic_id
     };
     const response = await emrAPI.post<SaveDoctorAvailabilityResponse>(
       "/doctors/save-doctor-unavailability",
@@ -65,12 +67,14 @@ export const saveDoctorAvailabilityApi = async (
 
 export const deleteDoctorBlockApi = async (
   da_id:number,
-  doctor_id: number
+  doctor_id: number,
+  clinic_id : number
 ): Promise<DeleteDoctorAvailabilityResponse> => {
   try {
     const payload = {
       da_id,
       doctor_id,
+      clnic_id
     };
     const response = await emrAPI.post<DeleteDoctorAvailabilityResponse>(
       "/doctors/delete-doctor-unavailability",

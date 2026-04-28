@@ -42,7 +42,7 @@ const DocDashboard: React.FC = () => {
     setLoading(true);
 
     try {
-      const list: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+      const list: AppointmentDto[] = await fetchTodayAppointments(doctorId, clinicId);
 
       setPatients(mapAppointmentsToPatients(list));
     } catch (err: any) {

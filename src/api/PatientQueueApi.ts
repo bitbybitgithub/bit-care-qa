@@ -84,10 +84,13 @@ interface CompletedAppointmentsResponse {
   appointments: CompletedAppointmentDto[];
 }
 
-export async function fetchTodayAppointments(doctorId: number | null): Promise<AppointmentDto[]> {
+export async function fetchTodayAppointments(doctorId: number | null, clinic_id : number): Promise<AppointmentDto[]> {
   const response = await emrAPI.post<TodayAppointmentsResponse>(
     "/appointments/today",
-    { doctor_id: doctorId } 
+    {
+      doctor_id: doctorId,
+      clinic_id
+     } 
   );
   if (!response || !response.success) {
     throw new Error("Failed to fetch today's appointments");
@@ -110,10 +113,10 @@ export async function updatePatientStatus(
   }
 }
 
-export async function getMedicalDispensingAsync(doctorId: number | null): Promise<MedicalDispensingDto[]> {
+export async function getMedicalDispensingAsync(doctorId: number | null, clinic_id : number): Promise<MedicalDispensingDto[]> {
   const response = await emrAPI.post<MedicalDispensingResponse>(
     "/doctors/getMedicalDispensing",
-    { doctor_id: doctorId } 
+    { doctor_id: doctorId, clinic_id } 
   );
   if (!response || !response.success) {
     throw new Error("Failed to Medical Dispensing");
@@ -121,10 +124,10 @@ export async function getMedicalDispensingAsync(doctorId: number | null): Promis
   return response?.data?? [];
 }
 
-export async function getfollowUpAsync(doctorId: number | null):Promise<FollowUpDto[]> {
+export async function getfollowUpAsync(doctorId: number | null, clinic_id : number):Promise<FollowUpDto[]> {
   const response = await emrAPI.post<followUpResponse>(
     "/doctors/get-patient-followup",
-    { doctor_id: doctorId } 
+    { doctor_id: doctorId, clinic_id } 
   );
   if (!response || !response.success) {
     throw new Error("Failed to follow up");

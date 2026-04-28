@@ -30,6 +30,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
   const [loading, setLoading] = useState(false);
 
   const doctorId = getSessionItem("user","doctor_id")
+  const clinicId = getSessionItem("user","clinic_id")
 
   const blocksForDate = useMemo(
     () => daySchedule?.breakTime || [],
@@ -49,7 +50,8 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
         startTime,
         endTime,
         selectedDate.format("YYYY-MM-DD"),
-        false
+        false,
+        clinicId
       );
       toast.success(response?.message || "Saved successfully!");
       setReason("");
@@ -67,7 +69,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
 
     try {
       setLoading(true);
-      const response = await deleteDoctorBlockApi(da_id, doctorId);
+      const response = await deleteDoctorBlockApi(da_id, doctorId, clinicId);
       toast.success(response?.message || "Deleted successfully!");
     } catch (error: any) {
       toast.error(error.message || "Failed to delete block");
@@ -85,7 +87,8 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
         "00:00",
         "23:59",
         selectedDate.format("YYYY-MM-DD"),
-        true
+        true,
+        clinicId
       );
       toast.success(response?.message || "Full day blocked!");
 

@@ -25,6 +25,7 @@ export const updateUsers = async (userData: {
   user_id: number;
   status: boolean;
   phone: string;
+  clinic_id: number;
 }): Promise<{success: boolean,message:string}> => {
   try {
     const response = await emrAPI.post<{success: boolean,message:string}>(

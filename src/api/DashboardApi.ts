@@ -12,12 +12,13 @@ export interface DashboardApiCard {
 }
 
 export const fetchDashboardStats = async (
-  user_id: number
+  user_id: number,
+  clinic_id : number
 ): Promise<DashboardApiCard[]> => {
   try {
     const response = await emrAPI.post<DashboardApiCard[]>(
       "/clinics/dashboard/cards",
-      { user_id }
+      { user_id, clinic_id }
     );
 
     return response;

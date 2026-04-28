@@ -48,6 +48,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
         const res = await getfollowupData(
           Number(patient.appointment_id),
           Number(patient.patient_id),
+          Number(clinicId)
         );
         const data = (res || []).map((f: any) => ({
           ...f,
@@ -124,6 +125,7 @@ const existingFollowUp = followUps.find(
           appointment_id: selectedFollowUp.new_appointment_id,
           follow_up_date: selectedDate.format("YYYY-MM-DD"),
           follow_up_reason: followUpReason,
+          clinic_id: clinicId,
         });
 
         toast.success("Follow-up updated successfully");
@@ -192,6 +194,7 @@ const handleFollowUpUpdate = async () => {
       follow_up_date: newDate,
       follow_up_reason: followUpReason,
       modified_by: user,
+      clinic_id: clinicId,
     });
 
     toast.success("Appointment updated successfully");

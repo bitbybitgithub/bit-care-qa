@@ -9,14 +9,14 @@ import ConsultationInProgressPanel from "./ConsultationInProgressPanel";
 
 const ConsultationInProgress: React.FC = () => {
   const doctorId = getSessionItem("user", "doctor_id");
-
+  const clinicId = getSessionItem("user", "clinic_id");
   const [list, setList] = useState<Patient[]>([]);
   const [selected, setSelected] = useState<Patient | null>(null);
 
   const load = useCallback(async () => {
     if (!doctorId) return;
 
-    const appts: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+    const appts: AppointmentDto[] = await fetchTodayAppointments(doctorId, clinicId);
 
     setList(
       mapAppointmentsToPatients(appts).filter(p =>

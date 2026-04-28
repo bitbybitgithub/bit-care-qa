@@ -27,6 +27,7 @@ const Dashboard = () => {
     setLoading(true);
   }, []);
   const userId = getSessionItem("user", "user_id");
+  const clinic_id = getSessionItem("user", "clinic_id");
   const module = Module.CLINIC;
 
   const [stats, setStats] = useState<DashboardCard[]>([]);
@@ -34,8 +35,8 @@ const Dashboard = () => {
   const [showAddUser, setShowAddUser] = useState(false);
 
   const { data, isFetched } = useQuery<DashboardCard[]>({
-    queryKey: ["dashboardStats", userId],
-    queryFn: () => fetchDashboardStats(Number(userId)),
+    queryKey: ["dashboardStats", userId, clinic_id],
+    queryFn: () => fetchDashboardStats(Number(userId), Number(clinic_id)),
     enabled: !!userId,
     staleTime: Infinity,
   });

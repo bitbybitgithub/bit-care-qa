@@ -83,6 +83,7 @@ const Users: React.FC = () => {
         user_id: user.userid,
         status: !isActive,
         phone: user.phone,
+        clinic_id: getEntityId(),
       });
 
      if (result.success) {

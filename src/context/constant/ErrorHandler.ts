@@ -38,7 +38,7 @@ if (!form.entityType) {
   if (form.address && form.address.length < 10) {
     errors.address = "Address must be at least 10 characters";
   }
-  if (!form.address?.trim()) errors.address = "Clinic Address is required";
+  if (!form.address?.trim()) errors.address = "Address is required";
 
   return errors;
 };

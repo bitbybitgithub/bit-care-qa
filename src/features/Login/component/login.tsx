@@ -68,6 +68,9 @@ const Login = () => {
     },
     4: {
       Doctor: "/doctor/dashboard"
+    },
+    5:{
+      support:"/support"
     }
   };
 

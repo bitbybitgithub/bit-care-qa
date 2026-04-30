@@ -20,6 +20,8 @@ import LabEmpanelment from "../features/lab/LabEmpanelment";
 import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
+import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
+
 
 
 
@@ -66,6 +68,11 @@ const Router = [
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
       { path: "/pharmacy/pharmacysettings", element: <PharmaSetting /> },
 
+
+      //  SupportTeam routes
+      { path: '/support', element: <SupportDashboard/> }
+
+      
       // { path: "/patients-records", element: <ComingSoon /> },
       // { path: "/add-diagnosis", element: <ComingSoon /> },
       // { path: "/manage-medication", element: <ComingSoon /> },
@@ -80,7 +87,8 @@ const Router = [
       //   element: <ConsultationInProgress />,
       // },
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
-      // { path: '/clinic-manage', element: <ManageAvailabilityPage/> }
+      // 
+      
     ],
   },
 ];

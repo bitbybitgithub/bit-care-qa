@@ -77,7 +77,6 @@ const Users: React.FC = () => {
           : u
       )
     );
-
     try {
       const result = await updateUsers({
         user_id: user.userid,
@@ -85,16 +84,7 @@ const Users: React.FC = () => {
         phone: user.phone,
         clinic_id: getEntityId(),
       });
-
-     if (result.success) {
-  if (isActive) {
-    toast.error("User Deactivated"); 
-  } else {
-    toast.success("User Activated");
-  }
-}
     } catch (error: unknown) {
-      // Rollback on failure
       setUsers((prev) =>
         prev.map((u) =>
           u.userid === user.userid ? { ...u, status: previousStatus } : u

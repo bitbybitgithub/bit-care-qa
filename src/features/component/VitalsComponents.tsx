@@ -108,9 +108,14 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       field: keyof PatientVitalsData,
       value: string | number,
     ) => {
-      const numValue = value === "" ? 0 : Number(value);
-      setFormData((prev) => ({ ...prev, [field]: numValue }));
-
+      let val = String(value);
+      val = val.replace(/[^0-9]/g, "");
+      if (val.length > 3) return;
+      const numValue = val === "" ? 0 : isNaN(Number(val)) ? 0 : Number(val);
+      setFormData((prev) => ({
+        ...prev,
+        [field]: numValue,
+      }));
       setErrors((prev) => {
         if (!prev[field]) return prev;
         const copy = { ...prev };

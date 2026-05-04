@@ -350,9 +350,20 @@ const StaffDashboard: React.FC = () => {
             )}
             <TextField
               size="small"
+              type="text"
               placeholder={currentSearchConfig.placeholder}
               value={sharedSearch}
-              onChange={(e) => setSharedSearch(e.target.value)}
+              onChange={(e) => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9]/g, "");
+                if (value.length > 4) return;
+                setSharedSearch(value);
+              }}
+              onKeyDown={(e) => {
+                if (["e", "E", "+", "-", "."].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               sx={{ width: 280 }}
               InputProps={{
                 startAdornment: (
@@ -361,7 +372,10 @@ const StaffDashboard: React.FC = () => {
                   </InputAdornment>
                 ),
               }}
-              inputProps={currentSearchConfig.inputProps}
+              inputProps={{
+                maxLength: 4,
+                inputMode: "numeric",
+              }}
             />
           </div>
         </div>

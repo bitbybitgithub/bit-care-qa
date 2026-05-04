@@ -211,6 +211,7 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
           onSubmit={handleAdd}
           onClose={handleClose}
           errors={errors}
+          setErrors={setErrors}
           address={selectedDoctorAddress}
         />
       )}

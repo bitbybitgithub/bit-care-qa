@@ -15,7 +15,6 @@ export const registerApi = async (formData: FormDataBase) => {
       state: formData.state,
     };
     const response = await emrAPI.post<any>(`/onboard/register`, registerPayload);
-    console.log("address",response)
     return response;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || error.message || "Registration failed");

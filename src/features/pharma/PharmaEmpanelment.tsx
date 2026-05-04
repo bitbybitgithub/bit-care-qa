@@ -70,11 +70,7 @@ const PharmaEmpanelment = () => {
         lab_ids: [],
         pharmacy_ids: ids,
       });
-
-      toast.success("Pharmacy Added Successfully.");
-
       await fetchPharmaByClinicId();
-
       setActiveTab("view");
     } catch (err: any) {
       if (err?.response?.status === 409) {

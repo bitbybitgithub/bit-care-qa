@@ -8,6 +8,8 @@ import { verifyPatientpApi } from "../../../api/VerifyPatientApi";
 import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
 import Regex from "../../../context/constant/Regex";
 import { getAge } from "../../../utils/CalculateAge";
+import { Mobile_Otp_Sent } from "../../../context/constant/constant";
+import { toast } from "react-toastify";
 
 interface Props {
   open: boolean;
@@ -99,6 +101,7 @@ const WalkInVerificationModal: React.FC<Props> = ({
       });
 
       if (res.success) {
+        toast.success(Mobile_Otp_Sent)
         setUserId(res.userId ?? null);
         setShowOtp(true);
         setOtpSent(true);

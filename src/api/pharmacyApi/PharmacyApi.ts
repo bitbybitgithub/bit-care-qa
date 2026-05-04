@@ -5,6 +5,10 @@ import type {
 } from "../../types/pharmacyType/pharmacyInterfaceType";
 import axios from "axios";
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data: any;
+}
 export async function getPharmaPatientRecords(
   pharmaId: number | null,
 ): Promise<PharmaPatientRecordResponse[]> {
@@ -46,7 +50,7 @@ export async function updatePharmaPatientStatus(
 }
 export const getActivePharmaListApi = async () => {
   try {
-    const response = await emrAPI.get("/pharmacy/get-pharma-list");
+    const response = await emrAPI.get<ApiResponse<any[]>>("/pharmacy/get-pharma-list");
     return response;
   } catch (error) {
     console.error("getActivePharmaListApi error:", error);

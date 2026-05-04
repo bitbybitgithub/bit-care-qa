@@ -3,7 +3,7 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { generateOtpApi, verifyOtpApi } from "../../api/GenerateAndVerifyOtpApi";
-import { RESEND_COOLDOWN } from "../../context/constant/constant";
+import { Email_Otp_Sent, Email_Otp_Verify, Mobile_Otp_Sent, Mobile_Otp_Verify, RESEND_COOLDOWN } from "../../context/constant/constant";
 
 interface Props {
   anchorEl: HTMLElement | null;
@@ -70,9 +70,12 @@ const OtpVerification: React.FC<Props> = ({
         toast.error(res?.message || "Failed to send OTP");
         return;
       }
-
-      toast.success("OTP sent");
-
+      if(res.success)
+      {if(otpType==2)
+        {toast.success(Mobile_Otp_Sent)}
+        if(otpType==1)
+        {toast.success(Email_Otp_Sent)}
+      }
       const now = Date.now();
       setLastSent(now);
       setTimeLeft(RESEND_COOLDOWN / 1000);
@@ -103,7 +106,12 @@ const OtpVerification: React.FC<Props> = ({
         toast.error(res?.message || "Invalid OTP");
         return;
       }
-
+      if(res.success)
+      {if(otpType==2)
+        {toast.success(Mobile_Otp_Verify)}
+        if(otpType==1)
+        {toast.success(Email_Otp_Verify)}
+      }
       toast.success("OTP verified");
       setOtp("");
       onClose();

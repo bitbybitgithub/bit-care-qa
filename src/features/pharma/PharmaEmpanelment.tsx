@@ -23,7 +23,7 @@ const PharmaEmpanelment = () => {
     try {
       setLoading(true);
       const res = await getActivePharmaListApi();
-      setPharmas(res);
+      setPharmas(res.data);
     } catch (err) {
       console.error("Pharma list error", err);
     } finally {
@@ -71,10 +71,7 @@ const PharmaEmpanelment = () => {
         pharmacy_ids: ids,
       });
 
-      toast.success("Pharmacy Added Successfully.");
-
       await fetchPharmaByClinicId();
-
       setActiveTab("view");
     } catch (err: any) {
       if (err?.response?.status === 409) {

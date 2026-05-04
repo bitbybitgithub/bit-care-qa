@@ -47,6 +47,9 @@ interface Props {
     fee?: string;
     days?: string;
   };
+  setErrors: React.Dispatch<
+    React.SetStateAction<{ fee?: string; days?: string }>
+  >;
   address: string;
   value?: boolean;
   setValue?: (v: boolean) => void;
@@ -89,6 +92,7 @@ const DoctorAddPopup = ({
   fee,
   days,
   errors,
+  setErrors,
   setFee,
   setDays,
   loading,
@@ -204,12 +208,29 @@ const DoctorAddPopup = ({
             <TextField
               placeholder="Consultation Fee"
               value={fee}
-              onChange={(e) => setFee(e.target.value)}
               size="small"
               type="number"
               error={!!errors?.fee}
               helperText={errors?.fee || " "}
-              inputProps={{ min: 0, max: 5000 }}
+              onChange={(e) => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9]/g, "");
+                if (value.length > 4) return;
+                setFee(value);
+                const num = Number(value);
+                if (value === "") {
+                  setErrors((prev) => ({ ...prev, fee: undefined }));
+                  return;
+                }
+                if (num < 0 || num > 5000) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    fee: "Fee must be between 0 and 5000",
+                  }));
+                } else {
+                  setErrors((prev) => ({ ...prev, fee: undefined }));
+                }
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -224,12 +245,24 @@ const DoctorAddPopup = ({
             <TextField
               placeholder="Fee Validity (Days)"
               value={days}
-              onChange={(e) => setDays(e.target.value)}
               size="small"
               type="number"
               error={!!errors?.days}
               helperText={errors?.days || " "}
-              inputProps={{ min: 0, max: 30 }}
+              onChange={(e) => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9]/g, "");
+                if (value.length > 2) return;
+                setDays(value);
+                const num = Number(value);
+                if (value === "") {
+                  setErrors((prev) => ({ ...prev, days: undefined }));
+                  return;}
+                if (num < 0 || num > 30) {setErrors((prev) => ({
+                    ...prev, days: "Days must be between 0 and 30",
+                  }));
+                } else {setErrors((prev) => ({ ...prev, days: undefined }));}
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

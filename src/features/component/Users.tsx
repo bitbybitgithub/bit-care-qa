@@ -85,13 +85,6 @@ const Users: React.FC = () => {
         phone: user.phone,
       });
 
-     if (result.success) {
-  if (isActive) {
-    toast.error("User Deactivated"); 
-  } else {
-    toast.success("User Activated");
-  }
-}
     } catch (error: unknown) {
       // Rollback on failure
       setUsers((prev) =>

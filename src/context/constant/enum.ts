@@ -21,7 +21,8 @@ export enum EntityType {
   Clinic = 1,
   Lab = 2,
   Pharmacy = 3,
-  Doctor = 4
+  Doctor = 4,
+  Support=5,
 }
 
 export const OtpTypeEnums = {

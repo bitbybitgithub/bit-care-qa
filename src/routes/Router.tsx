@@ -70,7 +70,7 @@ const Router = [
 
 
       //  SupportTeam routes
-      { path: '/support', element: <SupportDashboard/> }
+      { path: '/support/dashboard', element: <SupportDashboard/> }
 
       
       // { path: "/patients-records", element: <ComingSoon /> },

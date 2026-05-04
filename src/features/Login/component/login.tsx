@@ -70,7 +70,7 @@ const Login = () => {
       Doctor: "/doctor/dashboard"
     },
     5:{
-      support:"/support"
+      support:"/support/dashboard"
     }
   };
 

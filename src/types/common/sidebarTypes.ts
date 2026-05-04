@@ -15,4 +15,4 @@ export interface SidebarProps {
 }
 
 
-export type Role = "Admin" | "Staff" | "Doctor";
+export type Role = "Admin" | "Staff" | "Doctor" |"support";

@@ -65,4 +65,9 @@ export const SIDEBAR_MENUS: Record<
       { title: "Profile", link: "/doctor/profile", icon: FaUsers },
     ],
   },
+   [EntityType.Support]: {
+     support: [
+      { title: "Support Dashboard", link: "/support/dashboard", icon: FaHome },
+    ],
+  },
 };

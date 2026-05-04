@@ -6,9 +6,7 @@ interface WelcomeBannerProps {
   subtitle?: string;
 }
 
-const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
-  subtitle,
-}) => {
+const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ subtitle }) => {
   const username = getSessionItem("user", "full_name");
   const entityType = getSessionItem("user", "entity_name");
   const role = getSessionItem("user", "role");
@@ -31,6 +29,8 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
         return "Lab operations are active and up to date.";
       case "PHARMACY":
         return "Pharmacy inventory and dispensing are active.";
+      case "SUPPORT":
+        return "Manage clinic enquiries and approvals";
       default:
         return "Here is your dashboard overview.";
     }
@@ -59,9 +59,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
           className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
           style={{ fontSize: "var(--font-h4)" }}
         >
-          <span className="text-[var(--color-primary)]">
-            {resolveTitle()}
-          </span>
+          <span className="text-[var(--color-primary)]">{resolveTitle()}</span>
         </h1>
 
         <p

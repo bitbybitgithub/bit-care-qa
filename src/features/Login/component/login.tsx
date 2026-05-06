@@ -68,6 +68,9 @@ const Login = () => {
     },
     4: {
       Doctor: "/doctor/dashboard"
+    },
+    5:{
+      support:"/support/dashboard"
     }
   };
 
@@ -181,12 +184,6 @@ const Login = () => {
     if (isClinic) {
       try {
         setLoading(true);
-        // const requestBody = {
-        //   userId: number,
-        //   password: password,
-        //   ip_address: "192.168.1.9",
-        //   platform: "web",
-        // };
         const requestBody = {
           userId: number,
           password: password,
@@ -194,20 +191,19 @@ const Login = () => {
           platform: "web" // dynamic
         };
         const data = await loginApi(requestBody);
-        console.log(data)
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);
           //dont remove below code
-          // if (data.user.role === "Doctor" && data?.clinics?.length > 0) {
-          //   setLoginResponse(data);
-          //   const selectedClinic = await waitForClinicSelect();
-          //   if (!selectedClinic) return; // user cancelled
-          //   setSession("user", {
-          //     ...data.user,
-          //     clinic_id: selectedClinic.clinic_id,
-          //   });
-          // }
+          if (data.user.role === "Doctor" && data?.clinics?.length > 0) {
+            setLoginResponse(data);
+            const selectedClinic = await waitForClinicSelect();
+            if (!selectedClinic) return; // user cancelled
+            setSession("user", {
+              ...data.user,
+              clinic_id: selectedClinic.clinic_id,
+            });
+          }
 
           if (data.user.is_temp_password === "1") {
             setSource("resetPassword");
@@ -219,9 +215,9 @@ const Login = () => {
               toast.error("No dashboard configured for this user role");
               return;
             }
-            if (data.user.role === "Doctor") {
-              toast.info("Use Mobile App for doctor Sign In");
-            }
+            // if (data.user.role === "Doctor") {
+            //   toast.info("Use Mobile App for doctor Sign In");
+            // }
             else {
               navigate(route);
               toast.success("Signed in successfully");

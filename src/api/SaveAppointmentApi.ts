@@ -12,13 +12,15 @@ export const saveAppointment = async (appointmentData: any) => {
 
 export const getfollowupData = async (
   appointmentId: number,
-  patientId: number
+  patientId: number,
+  clinic_id: number
 ) => {
   try {
     const response = await emrAPI.post("/appointments/get-follow-up-by-appointment-id",
       {
         appointment_id: appointmentId,
         patient_id: patientId,
+        clinic_id: clinic_id
       }
     );
     return (response as any).data;

@@ -58,6 +58,7 @@ onClosePayment
             doctorId={selectedPatient?.raw?.doctor_id}
             appointmentId={selectedPatient?.appointment_id}
             patientName={selectedPatient?.name}
+            patientStatus={selectedPatient?.status}
             createdBy="SystemUser"
             onStatusUpdate={() =>
               onStatusUpdate?.(

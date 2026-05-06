@@ -277,7 +277,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       setErrors({ username: "Please Verify Username first." });
       return;
     } else if (!formData.newPassword) {
-      setErrors({ newPassword: "Please fill new password field" });
+      setErrors({ newPassword: "Please fill New password" });
       return;
     } else if (passwordStrength.level === "Weak") {
       setErrors({
@@ -286,7 +286,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
       return;
     } else if (!formData.confirmPassword) {
       setErrors({
-        confirmPassword: "Please fill new password field",
+        confirmPassword: "Please fill Confirm password",
       });
       return;
     } else if (formData.newPassword !== formData.confirmPassword) {

@@ -14,7 +14,7 @@ export const regex: RegexCollection = {
 const Regex = {
   MOBILEREGEX : /^[6-9][0-9]{9}$/,
   email: /^[a-zA-Z0-9._%+-]+@(?:gmail|outlook|hotmail|yahoo|live|icloud|protonmail|zoho|gmx|aol|yandex|[a-zA-Z0-9-]+)\.(?:com|in|co|net|org|edu|gov|io|me|tech|info|biz|us|uk|ca|au|de|fr|co\.in|co\.uk|[a-z]{2,})$/,
-  username: /^[a-zA-Z0-9_]{3,16}$/,
+  username: /^[a-zA-Z0-9_]{5,20}$/,
   pincode: /^[1-9][0-9]{5}$/,
   name: /^[A-Za-z\s]{5,50}$/,
   numeric: /^\d+$/,

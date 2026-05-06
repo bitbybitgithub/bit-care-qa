@@ -2,13 +2,13 @@ import { emrAPI } from "../../../services/EmrApi";
 import { type Patient } from "../types/patient";
 
 
-export async function searchPatient(query: string): Promise<Patient[]> {
+export async function searchPatient(query: string, clinic_id: number): Promise<Patient[]> {
   try {
     if (!query.trim()) return [];
 
     const res = await emrAPI.post<{ patients: Patient[] }>(
       `/appointments/search`,
-      { query: query  }
+      { query: query, clinic_id :clinic_id  }
     );
     return res.patients;
   } catch (error: any) {

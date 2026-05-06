@@ -77,16 +77,14 @@ const Users: React.FC = () => {
           : u
       )
     );
-
     try {
       const result = await updateUsers({
         user_id: user.userid,
         status: !isActive,
         phone: user.phone,
+        clinic_id: getEntityId(),
       });
-
     } catch (error: unknown) {
-      // Rollback on failure
       setUsers((prev) =>
         prev.map((u) =>
           u.userid === user.userid ? { ...u, status: previousStatus } : u

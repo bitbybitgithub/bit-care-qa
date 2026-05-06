@@ -42,7 +42,7 @@ const DocDashboard: React.FC = () => {
     setLoading(true);
 
     try {
-      const list: AppointmentDto[] = await fetchTodayAppointments(doctorId);
+      const list: AppointmentDto[] = await fetchTodayAppointments(doctorId, clinicId);
 
       setPatients(mapAppointmentsToPatients(list));
     } catch (err: any) {
@@ -77,7 +77,6 @@ const DocDashboard: React.FC = () => {
     socket.on("newAppointment", (data: AppointmentDto) => {
       toast.info("New appointment assigned");
       const mapped = mapAppointmentsToPatients([data])[0];
-      console.log("New appointment received via socket", mapped);
       setPatients(prev => [...prev, mapped]);
     });
 
@@ -87,7 +86,6 @@ const DocDashboard: React.FC = () => {
     };
   }, [socket]);
 
-  console.log("Doctor Dashboard Rendered", { patients });
   const handleStartConsultation = async (patient: Patient) => {
     if (!patient?.appointment_id) return;
 

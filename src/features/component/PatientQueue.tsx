@@ -436,7 +436,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         renderCell: (params) => {
           const row = params.row || {};
           const isApplicable = String(row.is_fee_applicable) === "1";
-          const isPaid = String(row.is_fees_paid) === "1";
+          const isPaid = String(row.is_fee_paid) === "1";
 
           //  SAME STRUCTURE AS COMPLETED + EXTRA CONDITION
           let label;

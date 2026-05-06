@@ -110,7 +110,7 @@ const StaffDashboard: React.FC = () => {
   }, [socket, activeTab]);
 
   useEffect(() => {
-    fetchDashboardStats(Number(uId))
+    fetchDashboardStats(Number(uId),Number(clinicId))
       .then((data) => {
         const mapped: DashboardCard[] = data
           .map((item) => ({
@@ -143,7 +143,7 @@ const StaffDashboard: React.FC = () => {
     setErrorQueue(null);
 
     try {
-      const appointments = await fetchTodayAppointments(null);
+      const appointments = await fetchTodayAppointments(null, Number(clinicId));
       const mapped: Patient[] = appointments.map((a) => ({
         patient_id: a.patient_id,
         patientId: a.patient_id,

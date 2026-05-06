@@ -276,6 +276,7 @@ const sortedData = [...data].sort((a, b) => {
           loading={loading}
           onSubmit={() => {}}
           onClose={handleClose}
+          setErrors={setErrors}
           errors={errors}
           setErrors={setErrors}
           address={selectedDoctorAddress}

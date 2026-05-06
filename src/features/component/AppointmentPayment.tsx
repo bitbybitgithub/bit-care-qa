@@ -33,6 +33,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
   const [transactionId, setTransactionId] = useState("");
   const [method, setMethod] = useState("CASH");
   const [loading, setLoading] = useState(false);
+  const [consultationFee, setConsultationFee] = useState(0);
 
   const userId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
@@ -44,26 +45,19 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       } else {
         //Calling api to fetch the fee amount for that doctor
         getDoctorFees();
-        // setAmount(0);
       }
     }
   }, [patient]);
 
-
-  // const getDoctorFees = async () => {
-  //   const res = await emrAPI.post('/doctors/get-doctor-fees', { doctor_id: patient.raw?.doctor_id, clinic_id: clinicId })
-  //   setAmount(res?.data?.consultation_fees);
-  // }
-
   const getDoctorFees = async () => {
   if (!patient?.raw?.doctor_id || !clinicId) return;
-
   try {
     const fee = await getDoctorFeesApi(
       Number(patient.raw.doctor_id),
       Number(clinicId)
     );
     setAmount(fee);
+    setConsultationFee(fee);
   } catch (err) {
     console.error("Failed to fetch doctor fees", err);
     setAmount(0);
@@ -112,9 +106,6 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       setLoading(false);
     }
   };
-
-  const consultationFee = amount ? amount : patient?.consultation_fees;
-
   return (
     <div className="flex flex-col h-full bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
       {/* Header */}

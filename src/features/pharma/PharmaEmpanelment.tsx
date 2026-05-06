@@ -70,7 +70,6 @@ const PharmaEmpanelment = () => {
         lab_ids: [],
         pharmacy_ids: ids,
       });
-
       await fetchPharmaByClinicId();
       setActiveTab("view");
     } catch (err: any) {

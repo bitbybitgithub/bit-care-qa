@@ -110,12 +110,16 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!Regex.email.test(formData.email))
       newErrors.email = "Invalid email";
+    
+    if (!formData.phone.trim()) newErrors.phone = "Phone No. is required";
+    else if (!Regex.MOBILEREGEX.test(formData.phone))
+      newErrors.phone = "Invalid email";
 
-    if (!Regex.MOBILEREGEX.test(formData.phone))
-      newErrors.phone = "Invalid phone number";
 
+    
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.username.trim()) newErrors.username = "Username required";
+    else if(!Regex.username.test(formData.username))
     if (!formData.password.trim()) newErrors.password = "Password required";
 
     setErrors(newErrors);

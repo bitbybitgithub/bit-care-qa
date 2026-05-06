@@ -28,7 +28,7 @@ export default function SearchPatient() {
   const [options, setOptions] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const clinic_id = Number(sessionStorage.getItem("clinic_id") || 0);
   const activeRequest = useRef(0);
   useEffect(() => {
     if (!searchValue.trim()) {
@@ -41,7 +41,7 @@ export default function SearchPatient() {
     const timeout = setTimeout(async () => {
       try {
         setLoading(true);
-        const result: Patient[] = await searchPatient(searchValue);
+        const result: Patient[] = await searchPatient(searchValue, clinic_id);
 
         if (requestId === activeRequest.current) {
           setOptions(result || []);

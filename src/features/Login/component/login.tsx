@@ -191,6 +191,7 @@ const Login = () => {
           platform: "web" // dynamic
         };
         const data = await loginApi(requestBody);
+        console.log(data)
         if (data.success) {
           setSession("user", data.user);
           TokenManager.setAccessToken(data.accessToken);

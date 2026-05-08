@@ -14,7 +14,10 @@ const Users: React.FC = () => {
   const clinic_id = getSessionItem<number>("user", "clinic_id");
   const lab_id = getSessionItem<number>("user", "lab_id");
   const pharmacy_id = getSessionItem<number>("user", "pharmacy_id");
+  const entity_type = getSessionItem<number>("user", "entity_type");
 
+
+  console.log("Session Data:", entity_type);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,6 +86,7 @@ const Users: React.FC = () => {
         status: !isActive,
         phone: user.phone,
         clinic_id: getEntityId(),
+        entity_type: entity_type,
       });
     } catch (error: unknown) {
       setUsers((prev) =>

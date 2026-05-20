@@ -284,9 +284,20 @@ const StaffDashboard: React.FC = () => {
     },
     [uId, clinicId],
   );
+
   const handlePaymentSuccess = useCallback(
   (appointmentId: number) => {
     setPendingPatients((prev) =>
+      prev.map((p) =>
+        p.raw?.appointment_id === appointmentId
+          ? {
+              ...p,
+              is_fee_paid: "1",
+            }
+          : p
+      )
+    );
+    setCompletedPatients((prev) =>
       prev.map((p) =>
         p.raw?.appointment_id === appointmentId
           ? {

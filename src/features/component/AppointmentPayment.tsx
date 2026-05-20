@@ -41,6 +41,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
   useEffect(() => {
     if (patient) {
       const fee = Number(patient.consultation_fees);
+      setConsultationFee(fee);
       if (!isNaN(fee) && fee != 0) {
         setAmount(fee);
       } else {

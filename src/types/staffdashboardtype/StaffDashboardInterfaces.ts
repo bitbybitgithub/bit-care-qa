@@ -33,6 +33,7 @@ export interface PatientQueueProps {
   handleUpdatePatientStatus: (patient: Patient, status: string, actionType?: string) => void;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
+  onPaymentSuccess?: (appointmentId: number) => void;
 }
 
 /* ... Walkin / Medical props stay as you wrote ... */

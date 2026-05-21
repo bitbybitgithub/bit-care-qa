@@ -158,12 +158,11 @@ const resolvedMode: "pending" | "processing" | "complete" = useMemo(() => {
         throw new Error("Status update failed");
       }
       setRows((prev) =>
-        prev.filter(
-          (r) =>
-            !(
-              r.prescription_id === row.prescription_id &&
-              r.created_date === row.created_date
-            ),
+        prev.map((r) =>
+          r.prescription_id === row.prescription_id &&
+          r.created_date === row.created_date
+            ? { ...r, status: "Complete" }
+            : r,
         ),
       );
       toast.success("Prescription Status Completed");

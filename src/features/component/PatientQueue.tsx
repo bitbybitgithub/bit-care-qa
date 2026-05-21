@@ -132,6 +132,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
   handleUpdatePatientStatus,
   searchQuery,
   queueType,
+  onPaymentSuccess,
 }) => {
   const search = searchQuery;
 
@@ -699,6 +700,7 @@ const PatientQueue: React.FC<PatientQueueProps> = ({
         onCloseFollowup={() => setFollowupDrawerOpen(false)}
         onClosePayment={() => setPaymentDrawerOpen(false)}
         onStatusUpdate={handleUpdatePatientStatus}
+        onPaymentSuccess={onPaymentSuccess}
       />
     </div>
   );

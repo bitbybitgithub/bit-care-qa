@@ -12,6 +12,7 @@ import { getDoctorFeesApi } from "../../api/clinic/ClinicEmpanelmentApis";
 interface Props {
   patient: Patient | null;
   onClose?: () => void;
+  onPaymentSuccess?: (appointmentId: number) => void;
 }
 
 const methods = [
@@ -27,7 +28,7 @@ const methods = [
   },
 ];
 
-const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
+const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess }) => {
   const [amount, setAmount] = useState(0);
   const [remarks, setRemarks] = useState("");
   const [transactionId, setTransactionId] = useState("");
@@ -40,6 +41,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
   useEffect(() => {
     if (patient) {
       const fee = Number(patient.consultation_fees);
+      setConsultationFee(fee);
       if (!isNaN(fee) && fee != 0) {
         setAmount(fee);
       } else {
@@ -96,8 +98,11 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose }) => {
       };
 
       const res = await savePayment(payload);
-
+      console.log("Payment saved", res);
       toast.success(res?.message || "Payment successful");
+      if (patient?.appointment_id) {
+        onPaymentSuccess?.(patient.appointment_id);
+      }
       onClose?.();
     } catch (error: any) {
       console.error(error);

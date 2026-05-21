@@ -19,8 +19,8 @@ interface PatientActionDrawersProps {
   onCloseService: () => void;
   onCloseFollowup: () => void;
    onClosePayment: () => void; 
-
   onStatusUpdate?: (patient: Patient, status: string) => void;
+  onPaymentSuccess?: (appointmentId: number) => void;
 }
 
 const PatientActionDrawers: React.FC<PatientActionDrawersProps> = ({
@@ -33,7 +33,8 @@ const PatientActionDrawers: React.FC<PatientActionDrawersProps> = ({
   onCloseService,
   onCloseFollowup,
   onStatusUpdate,
-onClosePayment
+  onClosePayment,
+  onPaymentSuccess
 }) => {
   return (
     <>
@@ -129,6 +130,7 @@ onClosePayment
     <AppointmentPayment
       patient={selectedPatient}
       onClose={onClosePayment}
+      onPaymentSuccess={onPaymentSuccess}
     />
   </Drawer>
 )}

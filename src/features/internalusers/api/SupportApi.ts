@@ -42,7 +42,6 @@ export const approveClinicApi = async (
   clinic_enquiry_id: number,
   userId: number,
 ) => {
-  console.log(clinic_enquiry_id, userId);
   return await emrAPI.post("/admin/approve-clinic", {
     clinic_enquiry_id,
     userId,

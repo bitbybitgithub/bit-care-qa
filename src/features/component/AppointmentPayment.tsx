@@ -98,7 +98,6 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
       };
 
       const res = await savePayment(payload);
-      console.log("Payment saved", res);
       toast.success(res?.message || "Payment successful");
       if (patient?.appointment_id) {
         onPaymentSuccess?.(patient.appointment_id);

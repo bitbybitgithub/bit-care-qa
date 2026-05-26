@@ -82,7 +82,7 @@ const RegistrationForm = () => {
                 e.entity_name === "lab"
                   ? "Diagnostic Lab"
                   : e.entity_name.charAt(0).toUpperCase() +
-                  e.entity_name.slice(1),
+                    e.entity_name.slice(1),
             }));
 
           setEntityList(formattedEntities);
@@ -197,7 +197,6 @@ const RegistrationForm = () => {
       setErrors((p) => ({ ...p, PINCode: "" }));
 
       const result = await getPincodeDetails(value);
-
       if (!Array.isArray(result) || result.length === 0) {
         setErrors((p) => ({
           ...p,
@@ -211,7 +210,8 @@ const RegistrationForm = () => {
       setFormData((p) => ({
         ...p,
         state: first.State || "",
-        district: first.District || "",
+        district: first.Name || "",
+        area: first.Name || "",
       }));
 
       fetchLocationList(result);
@@ -476,7 +476,7 @@ const RegistrationForm = () => {
             />
             <FieldErrorText error={errors.state} />
           </FormControl>
-
+{/* 
           <FormControl>
             <TextField
               value={formData.district}
@@ -491,7 +491,7 @@ const RegistrationForm = () => {
               }}
             />
             <FieldErrorText error={errors.district} />
-          </FormControl>
+          </FormControl> */}
 
           <FormControl fullWidth>
             <Autocomplete

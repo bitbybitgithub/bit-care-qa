@@ -17,7 +17,6 @@ const Users: React.FC = () => {
   const entity_type = getSessionItem<number>("user", "entity_type");
 
 
-  console.log("Session Data:", entity_type);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

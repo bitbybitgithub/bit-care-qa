@@ -197,7 +197,6 @@ const RegistrationForm = () => {
       setErrors((p) => ({ ...p, PINCode: "" }));
 
       const result = await getPincodeDetails(value);
-
       if (!Array.isArray(result) || result.length === 0) {
         setErrors((p) => ({
           ...p,
@@ -211,7 +210,8 @@ const RegistrationForm = () => {
       setFormData((p) => ({
         ...p,
         state: first.State || "",
-        district: first.District || "",
+        district: first.Name || "",
+        area: first.Name || "",
       }));
 
       fetchLocationList(result);
@@ -477,7 +477,7 @@ const RegistrationForm = () => {
             <FieldErrorText error={errors.state} />
           </FormControl>
 
-          <FormControl>
+          {/* <FormControl>
             <TextField
               value={formData.district}
               placeholder={pincodeLoading ? "Fetching..." : "District"}
@@ -491,7 +491,7 @@ const RegistrationForm = () => {
               }}
             />
             <FieldErrorText error={errors.district} />
-          </FormControl>
+          </FormControl> */}
 
           <FormControl fullWidth>
             <Autocomplete

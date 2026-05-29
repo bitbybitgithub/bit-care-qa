@@ -77,15 +77,16 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
           disabled={!selected.length || loading}
           className={`px-4 py-2 rounded-[var(--radius-lg)] whitespace-nowrap text-[var(--color-surface-alt)]
 
-      ${!selected.length || loading
-              ? "bg-[var(--color-primary-light)]"
-              : "bg-[var(--color-primary)] cursor-pointer"
-            }
+      ${
+        !selected.length || loading
+          ? "bg-[var(--color-primary-light)]"
+          : "bg-[var(--color-primary)] cursor-pointer"
+      }
          `}
         >
           {loading
             ? "Processing..."
-            : `${buttonText} ${selected.length ? `(${selected.length})` : ""}`}        
+            : `${buttonText} ${selected.length ? `(${selected.length})` : ""}`}
         </button>
       </div>
 
@@ -104,10 +105,11 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
 
   ${isSelected ? "border-[var(--color-primary)] bg-blue-50" : "border-transparent bg-white "}
 
-  ${item.alreadyMapped
-                  ? "cursor-not-allowed"
-                  : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
-                }
+  ${
+    item.alreadyMapped
+      ? "cursor-not-allowed"
+      : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
+  }
 `}
             >
               <div
@@ -115,19 +117,18 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                       bg-[var(--color-primary)] text-white"
               >
                 <AvatarWithStatus
-  image={item.logo}
-  alt={item.name}
-  showStatus={false} 
-  fallbackIcon={
-    buttonText === "Selected Labs"
-      ? ScienceIcon
-      : FaClinicMedical
-  }
-/>
-                
+                  image={item.logo}
+                  alt={item.name}
+                  showStatus={false}
+                  fallbackIcon={
+                    buttonText === "Selected Labs"
+                      ? ScienceIcon
+                      : FaClinicMedical
+                  }
+                />
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate">
+                  <h3 className="font-semibold text-sm break-words leading-snug">
                     {item.name}
                   </h3>
                 </div>
@@ -169,16 +170,19 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                 className={`px-4 pb-3
   ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
 `}
-              >                <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium
-            ${item.alreadyMapped
-                    ? "bg-red-100 text-[var(--color-error)]"
-                    : isSelected
-                      ? "bg-green-200 text-[var(--color-success)]"
-                      : "bg-gray-200 text-[var(--color-text)]"
-                  }
-          `}
               >
+                {" "}
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium
+            ${
+              item.alreadyMapped
+                ? "bg-red-100 text-[var(--color-error)]"
+                : isSelected
+                  ? "bg-green-200 text-[var(--color-success)]"
+                  : "bg-gray-200 text-[var(--color-text)]"
+            }
+          `}
+                >
                   {item.alreadyMapped
                     ? "Already Added"
                     : isSelected
@@ -192,9 +196,6 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
       </div>
     </div>
   );
-
-
-
 };
 
 export default AddPartner;

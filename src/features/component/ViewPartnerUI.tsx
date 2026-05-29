@@ -30,7 +30,7 @@ interface Props {
   emptyText: string;
   clinicId: number | null;
   data: PartnerItem[];
-  onToggleStatus?: (item: PartnerItem) => void; 
+  onToggleStatus?: (item: PartnerItem) => void;
   updatingId?: number | null;
 }
 
@@ -116,31 +116,35 @@ const ViewPartnerUI = ({
                hover:shadow-[var(--shadow-lg)]"
           >
             <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-primary)] text-white">
-              <div className="flex items-center gap-3 min-w-0">
-             
-<AvatarWithStatus
-  image={item.logo}
-  alt={item.name}
-  isActive={item.is_active}
-   fallbackIcon={
-    title === "Registered Labs"
-        ? ScienceIcon
-        : FaClinicMedical
-    }
-/>
 
-                <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="shrink-0">
+                  <AvatarWithStatus
+                    image={item.logo}
+                    alt={item.name}
+                    isActive={item.is_active}
+                    fallbackIcon={
+                      title === "Registered Labs"
+                        ? ScienceIcon
+                        : FaClinicMedical
+                    }
+                  />
+                </div>
+
+                <h3 className="font-semibold text-sm break-words leading-snug">
+                  {item.name}
+                </h3>
               </div>
 
               {onToggleStatus && (
                 <div
                   className="
-    flex items-center gap-2
-    px-2 py-1 rounded-[var(--radius-lg)] 
-    border bg-[var(--color-surface-alt)]
-    shadow-[var(--shadow-md)]
-    text-[var(--color-primary)]
-  "
+                  flex items-center gap-2
+                  px-2 py-1 rounded-[var(--radius-lg)] 
+                  border bg-[var(--color-surface-alt)]
+                  shadow-[var(--shadow-md)]
+                  text-[var(--color-primary)]
+                "
                 >
                   <span className="text-[10px] font-semibold leading-none">
                     {item.is_active === "1" ? "Active" : "Inactive"}
@@ -154,6 +158,7 @@ const ViewPartnerUI = ({
                 </div>
               )}
             </div>
+
             <div
               className="px-4 py-3 flex flex-col h-full text-xs
                     text-[var(--color-text-secondary)]

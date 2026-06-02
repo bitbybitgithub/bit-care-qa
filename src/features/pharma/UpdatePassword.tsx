@@ -83,7 +83,7 @@ const UpdatePassword: React.FC<UpdatePasswordProps> = ({ profile }) => {
     }
 
     try {
-      const response = await updatePassword(profile.pharma_id, newPassword);
+      const response = await updatePassword(userID, newPassword);
 
       if (response.success) {
         toast.success(response.message);

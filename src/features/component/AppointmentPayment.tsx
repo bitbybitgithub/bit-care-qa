@@ -139,9 +139,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
               Consultation Fee
             </p>
 
-            <p className="text-2xl font-bold mt-1">
-              {consultationFee ?? 0}
-            </p>
+            <p className="text-2xl font-bold mt-1">{consultationFee ?? 0}</p>
           </div>
 
           <div className="text-right">
@@ -167,11 +165,12 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
                   className={`
                     flex items-center justify-center gap-2 px-4 py-3 rounded-xl border
                     transition-all text-sm font-semibold
-                    ${disabled
-                      ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                      : active
-                        ? "bg-[var(--color-primary)] text-white border-emerald-500 shadow-md scale-[1.04]"
-                        : "bg-white border-gray-300 hover:shadow"
+                    ${
+                      disabled
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : active
+                          ? "bg-[var(--color-primary)] text-white border-emerald-500 shadow-md scale-[1.04]"
+                          : "bg-white border-gray-300 hover:shadow"
                     }
                   `}
                 >
@@ -201,6 +200,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
               <TextField
                 size="small"
                 type="text"
+                disabled={true}
                 value={amount}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9]/g, "");
@@ -219,7 +219,6 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
 
             <div className="flex items-center gap-4">
               <p className="text-sm font-medium min-w-[65px]">Remarks :</p>
-
               <TextField
                 placeholder="Remarks (optional)"
                 size="small"
@@ -227,7 +226,9 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
                 multiline
                 rows={2}
                 value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
+                onChange={(e) =>
+                  setRemarks(e.target.value.replace(/[^A-Za-z\s.'-]/g, ""))
+                }
               />
             </div>
           </div>

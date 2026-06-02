@@ -58,6 +58,9 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
       {},
     );
 
+    const sanitizeMedicalNumber = (value: string) => value.replace(/[^A-Za-z0-9\s.,/'()-]/g, "");
+    const sanitizeMedicalText = (value: string) => value.replace(/[^A-Za-z\s.'-]/g, "");
+
     useEffect(() => {
       if (!socket) return;
 
@@ -294,7 +297,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  chief_complaint: e.target.value,
+                  chief_complaint: sanitizeMedicalText(e.target.value),
                 }))
               }
               error={Boolean(errors.chief_complaint)}
@@ -312,7 +315,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               placeholder="Any relevant clinical observations..."
               value={formData.notes}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                setFormData((prev) => ({ ...prev, notes: sanitizeMedicalNumber(e.target.value) }))
               }
               error={Boolean(errors.notes)}
             />
@@ -326,7 +329,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               placeholder="e.g., Penicillin,Peanuts,Latex,"
               value={formData.allergies}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, allergies: e.target.value }))
+                setFormData((prev) => ({ ...prev, allergies: sanitizeMedicalNumber(e.target.value) }))
               }
               error={Boolean(errors.allergies)}
             />
@@ -344,7 +347,7 @@ const VitalsComponents: React.FC<PatientVitalsProps> = memo(
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  current_medications: e.target.value,
+                  current_medications: sanitizeMedicalNumber(e.target.value),
                 }))
               }
               error={Boolean(errors.current_medications)}

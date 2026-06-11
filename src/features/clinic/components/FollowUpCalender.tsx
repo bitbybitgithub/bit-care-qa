@@ -9,7 +9,13 @@ import {
 } from "react-icons/ri";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import { getfollowupData, saveAppointment, updateFollowUp } from "../../../api";
+import {
+  getAppointmentSlots,
+  getfollowupData,
+  saveAppointment,
+  updateFollowUp,
+  type AppointmentSlot,
+} from "../../../api";
 import { AppointmentStatus } from "../../../context/constant/enum";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import { formatDateDDMMYYYY } from "../../../utils/DateUtils";
@@ -30,15 +36,19 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
   const [selectedFollowUp, setSelectedFollowUp] = useState<any>(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
 
-  const user = getSessionItem("user", "user_id");
+  const userId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
-
 
   const startOfMonth = currentMonth.startOf("month");
   const startDay = startOfMonth.day();
   const daysInMonth = currentMonth.daysInMonth();
 
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const formatDate = (d: string) => dayjs(d).format("YYYY-MM-DD");
+  const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(
+    null,
+  );
+  const [doctorSlots, setDoctorSlots] = useState<AppointmentSlot[]>([]);
 
   useEffect(() => {
     const fetchFollowups = async () => {
@@ -48,7 +58,7 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
         const res = await getfollowupData(
           Number(patient.appointment_id),
           Number(patient.patient_id),
-          Number(clinicId)
+          Number(clinicId),
         );
         const data = (res || []).map((f: any) => ({
           ...f,
@@ -64,18 +74,14 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
     fetchFollowups();
   }, [patient]);
 
-const hasFollowUp = followUps.some(
-  (f) => f.is_follow_up == "1"
-);
+  const hasFollowUp = followUps.some((f) => f.is_follow_up == "1");
 
   const futureFollowUps = followUps
     .filter((f) => dayjs(f.follow_up_date).isAfter(dayjs().startOf("day")))
     .sort((a, b) => dayjs(a.follow_up_date).diff(dayjs(b.follow_up_date)));
   const nextFollowUp = futureFollowUps[0];
 
-const existingFollowUp = followUps.find(
-  (f) => f.is_follow_up === "1"
-);
+  const existingFollowUp = followUps.find((f) => f.is_follow_up === "1");
   const isPrevDisabled =
     currentMonth.isSame(today, "month") ||
     currentMonth.isBefore(today, "month");
@@ -86,28 +92,65 @@ const existingFollowUp = followUps.find(
   for (let i = 0; i < startDay; i++) days.push(null);
   for (let i = 1; i <= daysInMonth; i++) days.push(currentMonth.date(i));
 
-  const handleSelect = (date: dayjs.Dayjs) => {
-    if (date.isBefore(today.startOf("day"))) {
-      toast.error("Past date not allowed");
-      return;
-    }
+  const handleSelect = async (date: dayjs.Dayjs) => {
+  if (date.isBefore(today.startOf("day"))) {
+    toast.error("Past date not allowed");
+    return;
+  }
+  setSelectedDate(date);
+  setSelectedSlot(null);
+  const selected = followUps.find(
+    (f) => formatDate(f.follow_up_date) === date.format("YYYY-MM-DD")
+  );
+  if (selected) {
+    setFollowUpReason(selected.follow_up_reason);
+    setSelectedFollowUp(selected);
+    setIsUpdateMode(true);
+  } else {
+    setFollowUpReason("");
+    setSelectedFollowUp(null);
+    setIsUpdateMode(false);
+  }
+  try {
+    setSlotsLoading(true);
 
-    setSelectedDate(date);
+    const res = await getAppointmentSlots({
+      doctorId: Number(patient.raw?.doctor_id),
+      clinicId: Number(clinicId),
+      date: date.format("YYYY-MM-DD"),
+    });
 
-    const selected = followUps.find(
-      (f) => formatDate(f.follow_up_date) === date.format("YYYY-MM-DD"),
-    );
+    if (res.success) {
+      const availableSlots = res.slots.filter(
+        (slot) => slot.status === "AVAILABLE"
+      );
 
-    if (selected) {
-      setFollowUpReason(selected.follow_up_reason);
-      setSelectedFollowUp(selected);
-      setIsUpdateMode(true);
+      setDoctorSlots(availableSlots);
+      if (
+        selected &&
+        selected.start_time &&
+        selected.end_time
+      ) {
+        const existingSlot = availableSlots.find(
+          (slot) =>
+            slot.start === selected.start_time.substring(0, 5) &&
+            slot.end === selected.end_time.substring(0, 5)
+        );
+
+        if (existingSlot) {
+          setSelectedSlot(existingSlot);
+        }
+      }
     } else {
-      setFollowUpReason("");
-      setSelectedFollowUp(null);
-      setIsUpdateMode(false);
+      setDoctorSlots([]);
     }
-  };
+  } catch (error) {
+    console.error("Failed to fetch slots", error);
+    setDoctorSlots([]);
+  } finally {
+    setSlotsLoading(false);
+  }
+};
 
   const handleSubmit = async () => {
     if (!selectedDate) {
@@ -118,6 +161,10 @@ const existingFollowUp = followUps.find(
       toast.error("Please enter reason for follow up");
       return;
     }
+    if (!selectedSlot) {
+      toast.error("Please select a slot");
+      return;
+    }
     setLoading(true);
     try {
       if (isUpdateMode && selectedFollowUp) {
@@ -126,6 +173,9 @@ const existingFollowUp = followUps.find(
           follow_up_date: selectedDate.format("YYYY-MM-DD"),
           follow_up_reason: followUpReason,
           clinic_id: clinicId,
+          start_time: selectedSlot.start,
+          end_time: selectedSlot.end,
+          modified_by: userId,
         });
 
         toast.success("Follow-up updated successfully");
@@ -148,7 +198,7 @@ const existingFollowUp = followUps.find(
           reason: followUpReason,
           date_of_birth: patient.date_of_birth,
           mobile_number: patient.mobile_number,
-          user_id: user,
+          user_id: userId,
           follow_up_id: patient.appointment_id,
           is_follow_up: true,
         };
@@ -166,45 +216,56 @@ const existingFollowUp = followUps.find(
     }
   };
 
-const handleFollowUpUpdate = async () => {
-  setLoading(true);
-  if (!selectedDate) {
-    toast.error("Please select follow-up date");
-    return;
-  }
-  if (!followUpReason.trim()) {
-    toast.error("Please enter reason for follow up");
-    return;
-  }
-  if (!existingFollowUp) {
-    toast.error("No follow-up available to update");
-    return;
-  }
-  const existingDate = dayjs(existingFollowUp.follow_up_date).format("YYYY-MM-DD");
-  const newDate = selectedDate.format("YYYY-MM-DD");
+  const handleFollowUpUpdate = async () => {
+    setLoading(true);
+    if (!selectedDate) {
+      toast.error("Please select follow-up date");
+      return;
+    }
+    if (!followUpReason.trim()) {
+      toast.error("Please enter reason for follow up");
+      return;
+    }
+    if (!selectedSlot) {
+      toast.error("Please select a slot");
+      return;
+    }
+    if (!existingFollowUp) {
+      toast.error("No follow-up available to update");
+      return;
+    }
+    const existingDate = dayjs(existingFollowUp.follow_up_date).format(
+      "YYYY-MM-DD",
+    );
+    const newDate = selectedDate.format("YYYY-MM-DD");
 
-  if (existingDate === newDate) {
-    toast.error("Follow-up already exists on this date");
-    return;
-  }
+      const existingStart = existingFollowUp.start_time?.substring(0, 5);
 
-  try {
-    await updateFollowUp({
-      appointment_id: existingFollowUp.new_appointment_id,
-      follow_up_date: newDate,
-      follow_up_reason: followUpReason,
-      modified_by: user,
-      clinic_id: clinicId,
-    });
+      const isSameDate = existingDate === newDate;
+      const isSameSlot = existingStart === selectedSlot.start;
 
-    toast.success("Appointment updated successfully");
-    onClose?.();
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to update follow-up");
-  }
-};
+      if (isSameDate && isSameSlot) {
+        toast.error("No changes detected");
+        return;
+      }
+    try {
+      await updateFollowUp({
+        appointment_id: existingFollowUp.new_appointment_id,
+        follow_up_date: newDate,
+        follow_up_reason: followUpReason,
+        modified_by: userId,
+        clinic_id: clinicId,
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+      });
 
+      toast.success("Appointment updated successfully");
+      onClose?.();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update follow-up");
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
@@ -303,7 +364,42 @@ const handleFollowUpUpdate = async () => {
             })}
           </div>
         </div>
+        {selectedDate && (
+          <div className="bg-white rounded-[var(--radius-lg)] p-4 shadow-sm border">
+            <h3 className="font-semibold mb-3 text-gray-800">
+              Available Slots
+            </h3>
 
+            {slotsLoading ? (
+              <div className="flex justify-center py-4">
+                <CircularProgress size={25} />
+              </div>
+            ) : doctorSlots.length === 0 ? (
+              <div className="text-center text-red-500 py-3">
+                No slots available for this date
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {doctorSlots.map((slot) => (
+                  <button
+                    key={`${slot.start}-${slot.end}`}
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`
+                      p-2 rounded-lg border text-sm
+                      ${
+                        selectedSlot?.start === slot.start
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white hover:bg-blue-50"
+                      }
+                    `}
+                  >
+                    {slot.start} - {slot.end}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <TextField
             placeholder="Reason for Follow Up"

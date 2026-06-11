@@ -1,5 +1,21 @@
 import { emrAPI } from "../services/EmrApi";
 
+export interface GetAppointmentSlotsRequest {
+  doctorId: number;
+  clinicId: number;
+  date: string;
+}
+export interface AppointmentSlot {
+  start: string;
+  end: string;
+  status: "AVAILABLE" | "BOOKED";
+}
+
+export interface getAppointmentSlotsResponse {
+  success: boolean;
+  slots: AppointmentSlot[];
+}
+
 export const saveAppointment = async (appointmentData: any) => {
   try {
     const res = await emrAPI.post("/appointments/save", appointmentData);
@@ -36,6 +52,25 @@ export const updateFollowUp = async (payload: any) => {
     return response;
   } catch (err) {
     console.error("Error in updateFollowUp API:", err);
+    throw err;
+  }
+};
+
+export const getAppointmentSlots = async (
+  payload: GetAppointmentSlotsRequest
+): Promise<getAppointmentSlotsResponse> => {
+  try {
+    const response = await emrAPI.post<getAppointmentSlotsResponse>(
+      "/appointments/get-appointment-slots",
+      {
+        doctor_id: payload.doctorId,
+        clinic_id: payload.clinicId,
+        appointment_date: payload.date,
+      }
+    );
+    return response;
+  } catch (err) {
+    console.error("Error in getAppointmentSlots API:", err);
     throw err;
   }
 };

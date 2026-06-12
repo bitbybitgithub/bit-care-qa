@@ -246,9 +246,13 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         user_id: Number(user_id),
       };
 
-      await saveAppointment(appointmentData);
-
-      toast.success("Patient and Appointment saved successfully!");
+      const res = await saveAppointment(appointmentData);
+      if(res?.success){
+        toast.success(res?.message);
+      }
+      else{
+        toast.error(res?.message);
+      }
 
       setFormData({
         name: "",

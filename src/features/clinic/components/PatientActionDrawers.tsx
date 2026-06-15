@@ -19,7 +19,6 @@ interface PatientActionDrawersProps {
   onCloseService: () => void;
   onCloseFollowup: () => void;
    onClosePayment: () => void; 
-
   onStatusUpdate?: (patient: Patient, status: string) => void;
   onPaymentSuccess?: (appointmentId: number) => void;
 }

@@ -126,7 +126,6 @@ const LabDashboard = () => {
                 ))}
               </div>
             </div>
-            
             <div className="bg-[var(--color-surface)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
               <div
                 className="flex items-center gap-x-2 mb-2"
@@ -180,10 +179,12 @@ const LabDashboard = () => {
             <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
             <input
               value={queueSearch}
-              onChange={(e) => setQueueSearch(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                setQueueSearch(value);
+              }}
               placeholder="Search by Patient Name"
-              className="w-full pl-10 pr-3 py-2 rounded-lg
-                      border border-[var(--color-primary)]"
+              className="w-full pl-10 pr-3 py-2 rounded-lg border border-[var(--color-primary)]"
             />
           </div>
         </div>

@@ -184,7 +184,10 @@ const PharmacyDashboard = () => {
             size="small"
             placeholder="Search by Patient Name"
             value={queueSearch}
-            onChange={(e) => setQueueSearch(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+              setQueueSearch(value);
+            }}
           />
         </div>
 

@@ -85,7 +85,7 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
   };
 
   return (
-    <div className="p-6 bg-[var(--color-surface-alt)] min-w-[80vh]">
+    <div className="p-6 bg-[var(--color-surface-alt)]">
       <div className="mb-6 relative w-72">
         <MdSearch
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -116,7 +116,6 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
     h-full          
     bg-[var(--color-surface-alt)]
     border-transparent
-    
     ${
       item.alreadyMapped
         ? "cursor-not-allowed"

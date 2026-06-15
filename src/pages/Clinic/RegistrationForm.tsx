@@ -82,7 +82,7 @@ const RegistrationForm = () => {
                 e.entity_name === "lab"
                   ? "Diagnostic Lab"
                   : e.entity_name.charAt(0).toUpperCase() +
-                  e.entity_name.slice(1),
+                    e.entity_name.slice(1),
             }));
 
           setEntityList(formattedEntities);
@@ -476,8 +476,8 @@ const RegistrationForm = () => {
             />
             <FieldErrorText error={errors.state} />
           </FormControl>
-
-          {/* <FormControl>
+{/* 
+          <FormControl>
             <TextField
               value={formData.district}
               placeholder={pincodeLoading ? "Fetching..." : "District"}

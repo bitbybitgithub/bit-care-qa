@@ -57,7 +57,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
       const normalized = apiData.map((r: any) => ({
-        
         ...r,
         result_status: normalizeStatus(r.result_status),
       }));
@@ -95,6 +94,30 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     } catch (error) {
       console.error("PDF Load Error:", error);
       toast.error("Failed to load prescription PDF");
+      setPdfLoading(false);
+      setOpenPdf(false);
+    }
+  };
+
+  const openViewReport = async (row: any) => {
+    try {
+      setSelectedPatient(row);
+      setPdfUrl(null);
+      setOpenPdf(true);
+      setPdfLoading(true);
+
+      const filePath = row.report_file_path;
+      const fileName = row.report_guid_name;
+
+      if (!filePath || !fileName) {
+        throw new Error("Prescription file not found");
+      }
+      const url = await getPdfFromServer(filePath, fileName);
+      setPdfUrl(url);
+      setPdfLoading(false);
+    } catch (error) {
+      console.error("PDF Load Error:", error);
+      toast.error("Failed to load Report PDF");
       setPdfLoading(false);
       setOpenPdf(false);
     }
@@ -316,7 +339,7 @@ if (resolvedMode === "completed")
         ...commonColumns,
         {
           field: "action",
-          headerName: "Action",
+          headerName: "Prescription",
           width: 200,
           renderCell: (p) => (
             <Button
@@ -325,6 +348,20 @@ if (resolvedMode === "completed")
               onClick={() => openViewPrescription(p.row)}
             >
               View Prescription
+            </Button>
+          ),
+        },
+        {
+          field: "complete",
+          headerName: "Report",
+          width: 200,
+          renderCell: (p) => (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => openViewReport(p.row)}
+            >
+              View Report
             </Button>
           ),
         },

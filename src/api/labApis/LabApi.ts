@@ -11,18 +11,27 @@ import type {
 
 /* ===================== */
 
-export const getlabtestserviceApi = async (
-  lab_Id: number
-): Promise<LabTestApiResponse[]> => {
+export const getlabtestserviceApi = async (): Promise<LabTestApiResponse[]> => {
   try {
     const response = await emrAPI.get<LabTestApiResponse[]>(
-      `/lab/get-lab-test-service?lab_id=${lab_Id}`
+      `/lab/get-lab-test-service`
     );
-
     return response;
-
   } catch (error) {
     console.error("getlabtestserviceApi error:", error);
+    throw error;
+  }
+};
+
+export const getLabTestListApi = async (labId: number)=> {
+  try {
+    const response = await emrAPI.post(
+      "/lab/get-lab-testList-by-lab-id",
+      {lab_id: labId}
+    );
+    return response;
+  } catch (error) {
+    console.error("getLabTestListApi error:", error);
     throw error;
   }
 };
@@ -37,9 +46,7 @@ export const saveAvailableLabApi = async (
       "/lab/save-available-lab-test",
       payload
     );
-
     return response;
-
   } catch (error) {
     console.error("saveAvailableLabApi error:", error);
     throw error;
@@ -56,9 +63,7 @@ export const fetchLabProfile = async (
       "/lab/get-lab-profile",
       { lab_id: labid }
     );
-
     return response;
-
   } catch (error) {
     console.error("fetchLabProfile error:", error);
     throw error;
@@ -113,9 +118,7 @@ export const getActiveLabListApi = async () => {
     const response = await emrAPI.get(
       "/lab/get-lab-list"
     );
-
     return response;
-
   } catch (error) {
     console.error("getActiveLabListApi error:", error);
     throw error;

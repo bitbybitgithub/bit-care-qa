@@ -42,7 +42,7 @@ export const SIDEBAR_MENUS: Record<
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
       { title: "Lab Setting", link: "/lab/labsetting", icon: FaCog },
-      // { title: "Service Management", link: "/lab/service-management", icon: FaCog },
+      { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],
     Staff: [
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },

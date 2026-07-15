@@ -14,7 +14,7 @@ import PatientDocManagementPage from "../features/patient-document-management/pa
 
 import LabDashboard from "../features/lab/LabDashboard";
 import PharmacyDashboard from "../features/pharma/PharmacyDashboard";
-// import ServiceManagement from "../features/lab/ServiceManagement";
+import ServiceManagement from "../features/lab/ServiceManagement";
 import LabProfile from "../features/lab/LabProfile";
 import LabEmpanelment from "../features/lab/LabEmpanelment";
 import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
@@ -60,7 +60,7 @@ const Router = [
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
       { path: "/lab/labsetting", element: <LabProfile /> },
-      // { path: "/lab/service-management", element: <ServiceManagement /> },
+      { path: "/lab/service-management", element: <ServiceManagement /> },
 
 
       // pharmacy routes

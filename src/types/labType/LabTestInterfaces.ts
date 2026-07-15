@@ -1,5 +1,6 @@
 export interface LabTest {
   id: string;
+  categoryId: number;
   name: string;
 }
 
@@ -11,7 +12,10 @@ export interface LabCategory {
 export interface SelectedTest {
   category: string;
   testId: string;
+  categoryId: number;
   testName: string;
+  price: string;
+  priceError?: string;
 }
 
 export interface LabTestApiResponse {
@@ -21,13 +25,19 @@ export interface LabTestApiResponse {
   test_code: string;
   test_name: string;
   is_active: "0" | "1";
+  price: string;
 }
 
+export interface LabTestPriceItem {
+  test_id: number;
+  category_id: number;
+  price: number;
+}
 export interface LabTestItemRequest {
   lab_id: number;
-  test_id: number[];
-   door_step_service:boolean,
-  created_by: string;
+  tests: LabTestPriceItem[];
+  door_step_service:boolean,
+  created_by: number;
 }
 
 export interface SaveLabTestItem{

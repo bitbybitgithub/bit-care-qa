@@ -14,6 +14,57 @@ export interface FormDataBase {
   state: string;  
 }
 
+export interface OfferForm {
+  // center_id: number;
+  // center_name: string;
+  // center_type: string;
+
+  //center_id?: number;
+
+  center_name?: string;
+  center_type?: string;
+
+  offer_title: string;
+  offer_description: string;
+
+  // Temporary field for upload only
+  offer_image: File | null;
+
+  // Database fields
+  offer_image_path: string;
+  offer_image_guid: string;
+  offer_image_name: string;
+
+  discount_percentage: number | "";
+
+  coupon_code: string;
+
+  start_date: string;
+  end_date: string;
+
+  priority: number;
+
+  created_by: string;
+}
+
+// export interface OfferForm{
+//   // clinic_id: number,
+//   // clinic_name: string,
+//   offer_title:string,
+//   offer_description:string,
+//   offer_image: File | null,
+//   //offer_image:string,
+//   //discount_percentage:number,
+//   discount_percentage: number | "";
+//   coupon_code:string,
+//   start_date:string,
+//   end_date:string,
+//   priority:number,
+//   created_by: string,
+//   // status: boolean
+// }
+
+
 export interface ResetPassword {
   phone?:string,
   userId?:number;

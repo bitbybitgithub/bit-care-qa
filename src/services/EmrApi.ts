@@ -3,9 +3,9 @@ import { TokenManager } from "../api/auth/tokenManager";
 import type { RefreshToken } from "../types/types";
 import { getSocket } from "../context/socket";
 
-export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
+//export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
 //export const BASE_URL = "https://qacliniccareapi.bitbybitsolutions.co.in/api";
-//export const BASE_URL = "http://localhost:8989/api";
+export const BASE_URL = "http://localhost:8989/api";
 
 // -------------------- //  
 //  Interceptor Hooks
@@ -25,14 +25,37 @@ export const ApiInterceptor = {
 // -------------------- //
 //   Header Builder
 // -------------------- //
-const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+
+const getHeaders = (
+  customHeaders?: HeadersInit,
+  body?: BodyInit | null
+): HeadersInit => {
   const token = TokenManager.getAccessToken();
-  return {
-    "Content-Type": "application/json",
+
+  const headers: HeadersInit = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...customHeaders,
   };
+
+  // Don't set Content-Type for FormData.
+  // The browser will set it automatically.
+  if (!(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
 };
+
+
+
+// const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+//   const token = TokenManager.getAccessToken();
+//   return {
+//     "Content-Type": "application/json",
+//     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+//     ...customHeaders,
+//   };
+// };
 
 // -------------------- //
 //  Timeout Helper
@@ -124,7 +147,8 @@ async function request<T = unknown>(
       fullUrl,
       {
         ...options,
-        headers: getHeaders(options.headers),
+        headers: getHeaders(options.headers, options.body),
+        // headers: getHeaders(options.headers),
         credentials: "include",
       },
       timeout
@@ -188,7 +212,16 @@ export const emrAPI = {
   get: <T = unknown>(url: string, timeout?: number) =>
     request<T>(url, { method: "GET" }, timeout),
   post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
-    request<T>(url, { method: "POST", body: JSON.stringify(data) }, timeout),
+  request<T>(
+    url,
+    {
+      method: "POST",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    },
+    timeout
+  ),
+  // post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
+  //   request<T>(url, { method: "POST", body: JSON.stringify(data) }, timeout),
   put: <T = unknown>(url: string, data: unknown, timeout?: number) =>
     request<T>(url, { method: "PUT", body: JSON.stringify(data) }, timeout),
   delete: <T = unknown>(url: string, timeout?: number) =>

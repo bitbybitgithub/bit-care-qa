@@ -21,6 +21,7 @@ import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
+import OffersDiscount from "../features/admin/OffersDiscount";
 
 
 
@@ -39,13 +40,13 @@ const Router = [
     path: "/",
     element: <MainLayout />,
     children: [
-      // clinic admin routes
+      // clinic admin routesy
       { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
       { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
-
+      { path: "clinic/offers", element: <OffersDiscount /> },
       { path: "/clinic/settings", element: <Profile /> },
 
       // clinic doctor routes
@@ -59,6 +60,7 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
+      { path: "/lab/offers", element: <OffersDiscount /> },
       { path: "/lab/labsetting", element: <LabProfile /> },
       { path: "/lab/service-management", element: <ServiceManagement /> },
 

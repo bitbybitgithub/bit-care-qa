@@ -5,6 +5,7 @@ import {
   FaClinicMedical,
   FaUserMd
 } from "react-icons/fa";
+import { FaGift } from "react-icons/fa";
 import { GrDocumentText } from "react-icons/gr";
 import { EntityType } from "./enum";
 import type { MenuItem, Role } from "../../types/common/sidebarTypes";
@@ -21,6 +22,7 @@ export const SIDEBAR_MENUS: Record<
       { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUserMd },
       { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: ScienceIcon },
       { title: "Pharmacy Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaClinicMedical },
+      { title: "Offers", link: "clinic/offers", icon: FaGift },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [
@@ -41,6 +43,7 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
+      { title: "Offers", link: "/lab/offers", icon: FaGift },
       { title: "Lab Setting", link: "/lab/labsetting", icon: FaCog },
       { title: "Service Management", link: "/lab/service-management", icon: FaCog },
     ],

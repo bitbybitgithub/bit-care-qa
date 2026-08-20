@@ -1,31 +1,24 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Tabs, Tab, Paper } from "@mui/material";
 import { toast } from "react-toastify";
 import {
-  deleteLabPackageApi,
   getLabPackageListApi,
   getLabTestListApi,
   getlabtestserviceApi,
-  saveLabPackageApi,
 } from "../../api/labApis/LabApi";
 import type {
-  LabTest,
   LabCategory,
   SelectedTest,
   LabTestApiResponse,
-  SaveLabPackageRequest,
 } from "../../types/labType/LabTestInterfaces";
 import { getSessionItem } from "../../context/sessions/userSession";
 import LabTestManagement from "./LabTestManagement";
 import LabPackageManagement from "./LabPackageManagement";
-import LabPackagePopUp from "./LabPackagePopUp";
-import { useLoader } from "../../context/LoaderContext";
 import LabTestSelectionPopup from "./LabTestSelectionPopup";
 const ServiceManagement: React.FC = () => {
-  const userId = getSessionItem("user", "user_id");
-  const labId = getSessionItem("user", "lab_id");
-
-  // Navigation
+  const [labId] = useState(() => getSessionItem("user", "lab_id"));
+  const [userId] = useState(() => getSessionItem("user", "user_id"));
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"tests" | "packages">("tests");
   // Test Management
   const [labTests, setLabTests] = useState<LabCategory[]>([]);
@@ -40,11 +33,8 @@ const ServiceManagement: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   // Dialogs
   // Loading
-  const { loading, setLoading } = useLoader();
-  const fetchAllFetchingRef = useRef(false);
 
   const transformLabTests = (data: unknown): LabCategory[] => {
-    // Accept either an object mapping category->tests or a flat array of tests
     if (Array.isArray(data)) {
       const arr = data as LabTestApiResponse[];
       const grouped: Record<string, LabTestApiResponse[]> = {};
@@ -85,7 +75,6 @@ const ServiceManagement: React.FC = () => {
 
   const fetchLabServices = async () => {
     const response = await getlabtestserviceApi();
-    console.log("getlabtestserviceApi response:", response);
     const formattedData = transformLabTests(response);
     setLabTests(formattedData);
     return formattedData;
@@ -146,8 +135,6 @@ const ServiceManagement: React.FC = () => {
 
   const fetchAll = async () => {
     try {
-      if (fetchAllFetchingRef.current) return;
-      fetchAllFetchingRef.current = true;
       setLoading(true);
       if (!labId) {
         setLabTests([]);
@@ -163,7 +150,6 @@ const ServiceManagement: React.FC = () => {
       toast.error("Failed to load Service Management");
     } finally {
       setLoading(false);
-      fetchAllFetchingRef.current = false;
     }
   };
 
@@ -171,6 +157,13 @@ const ServiceManagement: React.FC = () => {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [labId]);
+
+  useEffect(() => {
+    console.log("ServiceManagement MOUNT");
+    return () => {
+      console.log("ServiceManagement UNMOUNT");
+    };
+  }, []);
 
   return (
     <div className="h-auto md:mt-1">
@@ -219,16 +212,18 @@ const ServiceManagement: React.FC = () => {
           }}
         />
       )}
-      <LabTestSelectionPopup
-        open={addTestPopupOpen}
-        onClose={() => setAddTestPopupOpen(false)}
-        labTests={labTests}
-        selectedTests={selectedTests}
-        labId={labId}
-        userId={userId}
-        doorStepService={isOn}
-        onSaved={fetchAll}
-      />
+      {addTestPopupOpen && (
+        <LabTestSelectionPopup
+          open={addTestPopupOpen}
+          onClose={() => setAddTestPopupOpen(false)}
+          labTests={labTests}
+          selectedTests={selectedTests}
+          labId={labId}
+          userId={userId}
+          doorStepService={isOn}
+          onSaved={fetchAll}
+        />
+      )}
       {activeTab === "packages" && (
         <LabPackageManagement
           packages={packages}

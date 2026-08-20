@@ -1,644 +1,242 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  Checkbox,
-  Button,
-  Chip,
-  Divider,
-  TextField,
-  InputAdornment,
-  FormControlLabel,
-  styled,
-  Switch,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Tabs, Tab, Paper } from "@mui/material";
 import { toast } from "react-toastify";
 import {
+  deleteLabPackageApi,
+  getLabPackageListApi,
   getLabTestListApi,
   getlabtestserviceApi,
-  saveAvailableLabApi,
+  saveLabPackageApi,
 } from "../../api/labApis/LabApi";
 import type {
   LabTest,
   LabCategory,
   SelectedTest,
   LabTestApiResponse,
-  LabTestItemRequest,
+  SaveLabPackageRequest,
 } from "../../types/labType/LabTestInterfaces";
 import { getSessionItem } from "../../context/sessions/userSession";
-import ArrowDropDownRoundedIcon from "@mui/icons-material/ArrowDropDownRounded";
+import LabTestManagement from "./LabTestManagement";
+import LabPackageManagement from "./LabPackageManagement";
+import LabPackagePopUp from "./LabPackagePopUp";
+import { useLoader } from "../../context/LoaderContext";
+import LabTestSelectionPopup from "./LabTestSelectionPopup";
 const ServiceManagement: React.FC = () => {
-  const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [expandedAccordion, setExpandedAccordion] = useState<string | false>(
-    false,
-  );
-  const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
   const userId = getSessionItem("user", "user_id");
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [labTests, setLabTests] = useState<LabCategory[]>([]);
-  const [isOn, setIsOn] = useState(false);
   const labId = getSessionItem("user", "lab_id");
 
-  const transformLabTests = (
-    data: Record<string, LabTestApiResponse[]>,
-  ): LabCategory[] => {
-    return Object.entries(data).map(([categoryName, tests]) => ({
-      category: categoryName,
-      tests: tests
-        .filter((t) => t.is_active === "1")
-        .map((test) => ({
+  // Navigation
+  const [activeTab, setActiveTab] = useState<"tests" | "packages">("tests");
+  // Test Management
+  const [labTests, setLabTests] = useState<LabCategory[]>([]);
+  const [savedLabTests, setSavedLabTests] = useState<any[]>([]);
+  const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
+  const [addTestPopupOpen, setAddTestPopupOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [isOn, setIsOn] = useState(false);
+  // Package Management
+  const [packages, setPackages] = useState<any[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  // Dialogs
+  // Loading
+  const { loading, setLoading } = useLoader();
+  const fetchAllFetchingRef = useRef(false);
+
+  const transformLabTests = (data: unknown): LabCategory[] => {
+    // Accept either an object mapping category->tests or a flat array of tests
+    if (Array.isArray(data)) {
+      const arr = data as LabTestApiResponse[];
+      const grouped: Record<string, LabTestApiResponse[]> = {};
+      arr.forEach((t) => {
+        const key = t.category_name || "Uncategorized";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(t);
+      });
+      return Object.entries(grouped).map(([categoryName, tests]) => ({
+        category: categoryName,
+        tests: tests.map((test) => ({
           id: String(test.test_id),
           name: test.test_name,
-          categoryId: test.category_id,
+          categoryId: Number(test.category_id),
+          tatHours: test.tat_hours,
+          homeService: test.home_service === "1",
+          description: test.test_description,
+          code: test.test_code,
         })),
+      }));
+    }
+
+    // If it's already a mapping
+    const obj = data as Record<string, LabTestApiResponse[]>;
+    return Object.entries(obj || {}).map(([categoryName, tests]) => ({
+      category: categoryName,
+      tests: tests.map((test) => ({
+        id: String(test.test_id),
+        name: test.test_name,
+        categoryId: Number(test.category_id),
+        tatHours: test.tat_hours,
+        homeService: test.home_service === "1",
+        description: test.test_description,
+        code: test.test_code,
+      })),
     }));
   };
-  useEffect(() => {
-    const fetchlist = async () => {
-      try {
-        const res: any = await getlabtestserviceApi();
-        const formattedData = transformLabTests(res);
-        setLabTests(formattedData);
-      } catch (error: unknown) {
-        console.warn("Request failed:", error);
-      }
-    };
-    fetchlist();
-  }, []);
 
-  // const fetchSavedLabTests = async () => {
-  //   try {
-  //     const res: any = await getLabTestListApi(Number(labId));
-  //     console.log("get test list", res);
-  //     if (!res.data) return;
-  //     const savedTests = res.data;
-  //     setIsOn(
-  //       savedTests.some((t: any) => t.home_service === "1") ? true : false,
-  //     );
-  //     const selected: SelectedTest[] = [];
-  //     labTests.forEach((category) => {
-  //       category.tests.forEach((test) => {
-  //         const exists = savedTests.find(
-  //           (s: any) => String(s.test_id) === test.id,
-  //         );
-  //         if (exists) {
-  //           selected.push({
-  //             category: category.category,
-  //             testId: test.id,
-  //             categoryId: test.categoryId,
-  //             testName: test.name,
-  //             price: exists.price ? String(exists.price) : "",
-  //           });
-  //         }
-  //       });
-  //     });
-
-  //     setSelectedTests(selected);
-  //   } catch (error) {
-  //     console.error("Failed to bind saved tests", error);
-  //   }
-  // };
-
-  const fetchSavedLabTests = async () => {
-    try {
-      const res: any = await getLabTestListApi(Number(labId));
-      const savedTests = res?.data || [];
-      const activeSavedTests = savedTests.filter(
-        (test: any) => test.is_active === "1",
-      );
-      setIsUpdateMode(activeSavedTests.length > 0);
-
-      setIsOn(activeSavedTests.some((test: any) => test.home_service === "1"));
-      const selected: SelectedTest[] = [];
-      labTests.forEach((category) => {
-        category.tests.forEach((test) => {
-          const exists = activeSavedTests.find(
-            (savedTest: any) => String(savedTest.test_id) === test.id,
-          );
-          if (exists) {
-            selected.push({
-              category: category.category,
-              categoryId: test.categoryId,
-              testId: test.id,
-              testName: test.name,
-              price:
-                exists.price !== null && exists.price !== undefined
-                  ? String(exists.price)
-                  : "",
-              priceError: "",
-            });
-          }
-        });
-      });
-
-      setSelectedTests(selected);
-    } catch (error) {
-      console.error("Failed to bind saved tests", error);
-    }
+  const fetchLabServices = async () => {
+    const response = await getlabtestserviceApi();
+    console.log("getlabtestserviceApi response:", response);
+    const formattedData = transformLabTests(response);
+    setLabTests(formattedData);
+    return formattedData;
   };
 
-  useEffect(() => {
-    if (labTests.length > 0) {
-      fetchSavedLabTests();
-    }
-  }, [labTests]);
-
-  React.useEffect(() => {
-    if (!search) return;
-    const searchLower = search.toLowerCase();
-    const matchedCategory = labTests.find((group) =>
-      group.tests.some((test) => test.name.toLowerCase().includes(searchLower)),
-    );
-    if (matchedCategory) {
-      setExpandedAccordion(matchedCategory.category);
-    }
-  }, [search]);
-
-  const selectedSet = useMemo(
-    () => new Set(selectedTests.map((t) => t.testId)),
-    [selectedTests],
-  );
-
-  const isChecked = (id: string) => selectedSet.has(id);
-
-  const handleToggle = (category: string, test: LabTest, checked: boolean) => {
-    if (checked) {
-      setSelectedTests((prev) => [
-        ...prev,
-        {
-          category,
-          testId: test.id,
-          categoryId: test.categoryId,
-          testName: test.name,
-          price: "",
-        },
-      ]);
-    } else {
-      setSelectedTests((prev) => prev.filter((t) => t.testId !== test.id));
-    }
-  };
-
-  const groupedTests = selectedTests.reduce<Record<string, SelectedTest[]>>(
-    (acc, test) => {
-      acc[test.category] = acc[test.category] || [];
-      acc[test.category].push(test);
-      return acc;
-    },
-    {},
-  );
-
-  const getCategoryTestIds = (category: LabCategory) =>
-    category.tests.map((t) => t.id);
-
-  const isCategoryChecked = (category: LabCategory) =>
-    getCategoryTestIds(category).every((id) => selectedSet.has(id));
-
-  const isCategoryIndeterminate = (category: LabCategory) => {
-    const ids = getCategoryTestIds(category);
-    const selectedCount = ids.filter((id) => selectedSet.has(id)).length;
-    return selectedCount > 0 && selectedCount < ids.length;
-  };
-
-  const handleSelectAll = (category: LabCategory, checked: boolean) => {
-    if (checked) {
-      setSelectedTests((prev) => {
-        const existingIds = new Set(prev.map((p) => p.testId));
-
-        const newOnes: SelectedTest[] = category.tests
-          .filter((t) => !existingIds.has(t.id))
-          .map((t) => ({
-            category: category.category,
-            testId: t.id,
-            categoryId: t.categoryId,
-            testName: t.name,
-            price: "",
-            priceError: "",
-          }));
-
-        return [...prev, ...newOnes];
-      });
-    } else {
-      setSelectedTests((prev) =>
-        prev.filter((t) => t.category !== category.category),
-      );
-    }
-  };
-
-  const StyledSwitch = styled(Switch)(({ theme }) => ({
-    width: 52,
-    height: 28,
-    padding: 0,
-    display: "flex",
-    "& .MuiSwitch-switchBase": {
-      padding: 2,
-      "&.Mui-checked": {
-        transform: "translateX(24px)",
-        color: "#fff",
-        "& + .MuiSwitch-track": {
-          backgroundColor: theme.palette.primary.main,
-          opacity: 1,
-        },
-      },
-    },
-    "& .MuiSwitch-thumb": {
-      width: 24,
-      height: 24,
-      boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-    },
-    "& .MuiSwitch-track": {
-      borderRadius: 28 / 2,
-      backgroundColor: "#ccc",
-      opacity: 1,
-    },
-  }));
-
-  const handlePriceChange = (testId: string, value: string) => {
-    if (value !== "" && !/^\d*\.?\d{0,2}$/.test(value)) {
+  const fetchSavedTests = async (formattedData: LabCategory[]) => {
+    if (!labId) {
+      setSavedLabTests([]);
+      setSelectedTests([]);
       return;
     }
-
-    setSelectedTests((prev) =>
-      prev.map((test) => {
-        if (test.testId !== testId) {
-          return test;
+    const response = await getLabTestListApi(Number(labId));
+    console.log("getLabTestListApi response:", response);
+    const savedTests = (response as any)?.data || [];
+    setSavedLabTests(savedTests);
+    const selected: SelectedTest[] = [];
+    formattedData.forEach((category) => {
+      category.tests.forEach((test) => {
+        const exists = savedTests.find(
+          (savedTest: any) => String(savedTest.test_id) === test.id,
+        );
+        if (exists) {
+          selected.push({
+            category: category.category,
+            categoryId: test.categoryId,
+            testId: test.id,
+            testName: test.name,
+            code: test.code,
+            price:
+              exists.price !== null && exists.price !== undefined
+                ? String(exists.price)
+                : "",
+            priceError: "",
+          });
         }
-        let priceError = "";
-        if (value === "") {
-          priceError = "Price is required";
-        } else {
-          const price = Number(value);
-          if (price < 5) {
-            priceError = "Minimum price is ₹5";
-          } else if (price > 10000) {
-            priceError = "Maximum price is ₹10,000";
-          }
-        }
-        return {
-          ...test,
-          price: value,
-          priceError,
-        };
-      }),
-    );
-  };
-
-  const handleConfirmSavelist = async () => {
-    try {
-      if (!labId) {
-        toast.error("Lab ID not found");
-        return;
-      }
-      if (selectedTests.length === 0) {
-        toast.error("Please select at least one test");
-        return;
-      }
-      const hasEmptyPrice = selectedTests.some(
-        (test) => test.price.trim() === "",
-      );
-      if (hasEmptyPrice) {
-        toast.error("Please enter price for all selected tests");
-        return;
-      }
-      const hasInvalidPrice = selectedTests.some((test) => {
-        const price = Number(test.price);
-        return isNaN(price) || price < 5 || price > 10000;
       });
-
-      if (hasInvalidPrice) {
-        toast.error("Price for every test must be between ₹5 and ₹10,000");
-        return;
-      }
-      const tests = selectedTests.map((test) => ({
-        test_id: Number(test.testId),
-        category_id: Number(test.categoryId),
-        price: Number(test.price),
-      }));
-      const payload: LabTestItemRequest = {
-        lab_id: Number(labId),
-        tests,
-        door_step_service: isOn,
-        created_by: userId,
-      };
-      const res = await saveAvailableLabApi(payload);
-      if (res.success) {
-        toast.success(res.message);
-        setSearch("");
-        setOpenDialog(false);
-        setExpandedAccordion(false);
-      } else {
-        toast.error(res.message);
-      }
-    } catch (error) {
-      console.error("Save lab tests failed:", error);
-      toast.error("Failed to save laboratory tests");
+    });
+    setSelectedTests(selected);
+    setIsUpdateMode(selected.length > 0);
+    if (savedTests.length > 0) {
+      setIsOn(savedTests[0].home_service === "1");
     }
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsOn(event.target.checked);
+  const fetchPackages = async () => {
+    if (!labId) {
+      setPackages([]);
+      return;
+    }
+    const response = await getLabPackageListApi(Number(labId));
+    console.log("lab package response", response);
+    if (response.success) {
+      setPackages(response.data || []);
+    } else {
+      setPackages([]);
+    }
   };
 
+  const fetchAll = async () => {
+    try {
+      if (fetchAllFetchingRef.current) return;
+      fetchAllFetchingRef.current = true;
+      setLoading(true);
+      if (!labId) {
+        setLabTests([]);
+        setSavedLabTests([]);
+        setSelectedTests([]);
+        setPackages([]);
+        return;
+      }
+      const formattedData = await fetchLabServices();
+      await Promise.all([fetchSavedTests(formattedData), fetchPackages()]);
+    } catch (error) {
+      console.error("Failed to load Service Management", error);
+      toast.error("Failed to load Service Management");
+    } finally {
+      setLoading(false);
+      fetchAllFetchingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [labId]);
+
   return (
-    <div className="h-auto md:mt-1 px-5 py-2 bg-[var(--color-surface-alt)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)]  transition-all">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-3  p-2 bg-[var(--color-surface-alt)]">
-          <div className="flex flex-col md:ml-3 md:flex-row md:items-center md:justify-between gap-4">
-            <FormControlLabel
-              control={<StyledSwitch checked={isOn} onChange={handleChange} />}
-              label="Door-step's services"
-              sx={{
-                gap: 2,
-                color: "var(--color-primary-dark)",
-                "& .MuiFormControlLabel-label": {
-                  fontSize: "1.5rem",
-                  fontWeight: 600,
-                },
-              }}
-            />
-
-            <TextField
-              size="small"
-              placeholder="Search tests..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full md:w-72"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </div>
-        </div>
-
-        {labTests.map((group, index) => {
-          const searchLower = search.toLowerCase();
-          const filteredTests = group.tests.filter(
-            (test) =>
-              test.name.toLowerCase().includes(searchLower) ||
-              group.category.toLowerCase().includes(searchLower),
-          );
-
-          if (
-            !group.category.toLowerCase().includes(searchLower) &&
-            filteredTests.length === 0
-          ) {
-            return null;
-          }
-
-          const testsToShow = group.category.toLowerCase().includes(searchLower)
-            ? group.tests
-            : filteredTests;
-
-          const count = selectedTests.filter(
-            (t) => t.category === group.category,
-          ).length;
-
-          return (
-            <Accordion
-              key={group.category}
-              expanded={expandedAccordion === group.category}
-              onChange={(_, isExpanded) =>
-                setExpandedAccordion(isExpanded ? group.category : false)
-              }
-              sx={{
-                backgroundColor:
-                  count !== 0 ? "var(--color-bg)" : "var(--color-bg)",
-                borderRadius: "var(--radius-lg)",
-              }}
-              disableGutters
-              className="mb-2  border rounded-[var(--radius-lg)]  border-[var(--color-primary)] hover:shadow-md transition before:hidden"
-            >
-              <AccordionSummary
-                className="rounded-[var(--radius-lg)] from-white to-blue-50 hover:from-blue-50 hover:to-blue-100"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="text-[var(--color-primary-dark)]">
-                    <ArrowDropDownRoundedIcon sx={{ fontSize: 32 }} />
-                  </div>
-
-                  <div className="font-semibold text-[var(--color-text)]">
-                    {group.category}
-                  </div>
-
-                  {count > 0 && (
-                    <Chip size="small" label={count} color="primary" />
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Checkbox
-                    checked={isCategoryChecked(group)}
-                    // indeterminate={isCategoryIndeterminate(group)}
-                    onChange={(e) => handleSelectAll(group, e.target.checked)}
-                    sx={{
-                      "&.Mui-checked": {
-                        color: "#2563eb",
-                      },
-                    }}
-                  />
-                  <span className="text-[var(--color-text)] font-medium">
-                    Select All
-                  </span>
-                </div>
-              </AccordionSummary>
-
-              <Divider />
-
-              <AccordionDetails>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                  {testsToShow.map((test) => (
-                    <label
-                      key={test.id}
-                      className={`flex items-center gap-0 p-0 rounded-[var(--radius-lg)] cursor-pointer border transition-all ${
-                        isChecked(test.id)
-                          ? "border-blue-500  shadow-sm bg-pink-100"
-                          : "border-slate-200 bg-[var(--color-surface-alt)] hover:border-blue-300 hover:bg-[var(--color-bg)] hover:shadow-sm"
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isChecked(test.id)}
-                        sx={{
-                          "&.Mui-checked": {
-                            color: "#2563eb",
-                          },
-                        }}
-                        onChange={(e) =>
-                          handleToggle(group.category, test, e.target.checked)
-                        }
-                      />
-                      <span className="font-semibold text-[var(--color-text)] ">
-                        {test.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
-
-        <div className="mt-2  bg-[var(--color-surface-alt)]  rounded-[var(--radius-lg)]  transition-all p-2 flex flex-col sm:flex-row gap-4 justify-between items-center">
-          <Typography className="text-slate-600">
-            {selectedTests.length === 0 ? (
-              "No tests selected"
-            ) : (
-              <Chip
-                icon={<CheckCircleIcon />}
-                label={`${selectedTests.length} Tests Selected`}
-                color="primary"
-                className="mt-0 ml-1 "
-              />
-            )}
-          </Typography>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outlined"
-              className="!rounded-xl"
-              onClick={() => setSelectedTests([])}
-              disabled={selectedTests.length === 0}
-            >
-              Clear All
-            </Button>
-
-            <Button
-              variant="contained"
-              color="primary"
-              className="rounded-[var(--radius-lg)] py-3 text-[var(--font-body)] font-semibold shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all"
-              onClick={() => {
-                setOpenDialog(true);
-                setExpandedAccordion(false);
-              }}
-              disabled={selectedTests.length === 0}
-            >
-              {isUpdateMode ? "Update" : "Confirm"}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        maxWidth="sm"
-        fullWidth
+    <div className="h-auto md:mt-1">
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 2,
+          borderRadius: 1,
+          border: "1px solid #e5e7eb",
+          backgroundColor: "white",
+        }}
       >
-        <div className="flex items-center justify-between px-5 py-3 ">
-          <Typography
-            sx={{ color: "var(--color-primary)" }}
-            variant="h6"
-            fontWeight={600}
-          >
-            Selected Laboratory Tests
-          </Typography>
+        <Tabs
+          value={activeTab}
+          onChange={(_, value) => setActiveTab(value)}
+          sx={{
+            px: 2,
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 700,
+              minHeight: 58,
+            },
+          }}
+        >
+          <Tab value="tests" label="Laboratory Tests" />
+          <Tab value="packages" label="Laboratory Packages" />
+        </Tabs>
+      </Paper>
 
-          <Button
-            onClick={() => setOpenDialog(false)}
-            sx={{ fontSize: "24px" }}
-          >
-            ✕
-          </Button>
-        </div>
-
-        <DialogContent sx={{ px: 3, py: 2 }}>
-          {Object.entries(groupedTests).map(([category, tests]) => (
-            <div key={category} className="mb-2">
-              <Typography
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  color: "var(--color-primary)",
-                }}
-              >
-                {category}
-              </Typography>
-
-              <div className="border border-[var(--color-border)] rounded-md overflow-hidden">
-                {tests.map((test, index) => (
-                  <div
-                    key={test.testId}
-                    className={`flex items-center justify-between gap-3 px-3 py-1
-                ${
-                  index % 2 === 0
-                    ? "bg-gray-300"
-                    : "bg-[var(--color-surface-alt)]"
-                }
-              `}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        flex: 1,
-                      }}
-                    >
-                      {test.testName}
-                    </Typography>
-                    <TextField
-                      size="small"
-                      type="text"
-                      placeholder="Price"
-                      value={test.price}
-                      error={Boolean(test.priceError)}
-                      helperText={test.priceError || undefined}
-                      onChange={(e) =>
-                        handlePriceChange(test.testId, e.target.value)
-                      }
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">₹</InputAdornment>
-                          ),
-                          inputProps: {
-                            inputMode: "decimal",
-                          },
-                        },
-                      }}
-                      sx={{
-                        width: 180,
-
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "var(--color-surface-alt)",
-                        },
-
-                        "& .MuiFormHelperText-root": {
-                          marginLeft: 0,
-                          marginRight: 0,
-                          fontSize: "11px",
-                          whiteSpace: "nowrap",
-                        },
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #eee" }}>
-          <Button variant="contained" onClick={handleConfirmSavelist}>
-            {isUpdateMode ? "Update & Save" : "Confirm & Save"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {activeTab === "tests" && (
+        <LabTestManagement
+          data={{
+            selectedTests,
+            search,
+          }}
+          actions={{
+            setSearch,
+            setSelectedTests,
+          }}
+          labId={labId}
+          userId={userId}
+          onUpdated={fetchAll}
+          loading={loading}
+          onAddNewTest={() => {
+            setAddTestPopupOpen(true);
+          }}
+        />
+      )}
+      <LabTestSelectionPopup
+        open={addTestPopupOpen}
+        onClose={() => setAddTestPopupOpen(false)}
+        labTests={labTests}
+        selectedTests={selectedTests}
+        labId={labId}
+        userId={userId}
+        doorStepService={isOn}
+        onSaved={fetchAll}
+      />
+      {activeTab === "packages" && (
+        <LabPackageManagement
+          packages={packages}
+          savedLabTests={savedLabTests}
+          loading={loading}
+          onRefresh={fetchAll}
+        />
+      )}
     </div>
   );
 };

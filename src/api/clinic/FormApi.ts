@@ -73,7 +73,7 @@ export const uploadOfferImageApi = async (file: File) => {
   formData.append("folder", "offers");
 
   const response = await fetch(
-    "http://cliniccareapi.bitbybitsolutions.co.in/api/common/upload-report?folder=offers",
+    "https://cliniccareapi.bitbybitsolutions.co.in/api/common/upload-report?folder=offers",
     {
       method: "POST",
       body: formData,

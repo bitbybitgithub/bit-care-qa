@@ -3,11 +3,11 @@ import { TokenManager } from "../api/auth/tokenManager";
 import type { RefreshToken } from "../types/types";
 import { getSocket } from "../context/socket";
 
-//export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
+export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
 //export const BASE_URL = "https://qacliniccareapi.bitbybitsolutions.co.in/api";
-export const BASE_URL = "http://localhost:8989/api";
+//export const BASE_URL = "http://localhost:8989/api";
 
-// -------------------- //  
+// -------------------- //
 //  Interceptor Hooks
 // -------------------- //
 type InterceptorHooks = {
@@ -28,7 +28,7 @@ export const ApiInterceptor = {
 
 const getHeaders = (
   customHeaders?: HeadersInit,
-  body?: BodyInit | null
+  body?: BodyInit | null,
 ): HeadersInit => {
   const token = TokenManager.getAccessToken();
 
@@ -46,8 +46,6 @@ const getHeaders = (
   return headers;
 };
 
-
-
 // const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
 //   const token = TokenManager.getAccessToken();
 //   return {
@@ -63,7 +61,7 @@ const getHeaders = (
 const fetchWithTimeout = (
   url: string,
   options: RequestInit,
-  timeout = 20000
+  timeout = 20000,
 ): Promise<Response> => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -82,7 +80,7 @@ let isRefreshing = false;
 let refreshQueue: (() => void)[] = [];
 
 const refreshAccessToken = async (
-  payload?: RefreshToken
+  payload?: RefreshToken,
 ): Promise<string | null> => {
   if (isRefreshing) {
     await new Promise<void>((resolve) => refreshQueue.push(resolve));
@@ -137,7 +135,7 @@ async function request<T = unknown>(
   url: string,
   options: RequestInit = {},
   timeout = 30000,
-  retry = true
+  retry = true,
 ): Promise<T> {
   const fullUrl = `${BASE_URL}${url}`;
   interceptors.onRequestStart?.(fullUrl);
@@ -151,7 +149,7 @@ async function request<T = unknown>(
         // headers: getHeaders(options.headers),
         credentials: "include",
       },
-      timeout
+      timeout,
     );
 
     // Handle 401 -> try refresh
@@ -212,14 +210,14 @@ export const emrAPI = {
   get: <T = unknown>(url: string, timeout?: number) =>
     request<T>(url, { method: "GET" }, timeout),
   post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
-  request<T>(
-    url,
-    {
-      method: "POST",
-      body: data instanceof FormData ? data : JSON.stringify(data),
-    },
-    timeout
-  ),
+    request<T>(
+      url,
+      {
+        method: "POST",
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      },
+      timeout,
+    ),
   // post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
   //   request<T>(url, { method: "POST", body: JSON.stringify(data) }, timeout),
   put: <T = unknown>(url: string, data: unknown, timeout?: number) =>

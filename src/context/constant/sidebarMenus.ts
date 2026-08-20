@@ -3,7 +3,7 @@ import {
   FaUsers,
   FaCog,
   FaClinicMedical,
-  FaUserMd
+  FaUserMd,
 } from "react-icons/fa";
 import { FaGift } from "react-icons/fa";
 import { GrDocumentText } from "react-icons/gr";
@@ -19,10 +19,22 @@ export const SIDEBAR_MENUS: Record<
     Admin: [
       { title: "Dashboard", link: "/clinic/dashboard", icon: FaHome },
       { title: "Users", link: "/clinic/users", icon: FaUsers },
-      { title: "Doctor Empanelment", link: "/clinic/DoctorEmpanelment", icon: FaUserMd },
-      { title: "Lab Empanelment", link: "/clinic/labEmpanelment", icon: ScienceIcon },
-      { title: "Pharmacy Empanelment", link: "/clinic/pharmaEmpanelment", icon: FaClinicMedical },
-      { title: "Offers", link: "clinic/offers", icon: FaGift },
+      {
+        title: "Doctor Empanelment",
+        link: "/clinic/DoctorEmpanelment",
+        icon: FaUserMd,
+      },
+      {
+        title: "Lab Empanelment",
+        link: "/clinic/labEmpanelment",
+        icon: ScienceIcon,
+      },
+      {
+        title: "Pharmacy Empanelment",
+        link: "/clinic/pharmaEmpanelment",
+        icon: FaClinicMedical,
+      },
+      { title: "Offers", link: "/clinic/offers", icon: FaGift },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [
@@ -45,31 +57,35 @@ export const SIDEBAR_MENUS: Record<
       { title: "Users", link: "/lab/users", icon: FaUsers },
       { title: "Offers", link: "/lab/offers", icon: FaGift },
       { title: "Lab Setting", link: "/lab/labsetting", icon: FaCog },
-      { title: "Service Management", link: "/lab/service-management", icon: FaCog },
+      {
+        title: "Service Management",
+        link: "/lab/service-management",
+        icon: FaCog,
+      },
     ],
-    Staff: [
-      { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
-    ],
+    Staff: [{ title: "Dashboard", link: "/lab/dashboard", icon: FaHome }],
   },
 
   [EntityType.Pharmacy]: {
     Admin: [
       { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
       { title: "Users", link: "/pharmacy/users", icon: FaUsers },
-      { title: "Pharma Setting", link: "/pharmacy/pharmacysettings", icon: FaCog },
+      {
+        title: "Pharma Setting",
+        link: "/pharmacy/pharmacysettings",
+        icon: FaCog,
+      },
     ],
-    Staff: [
-      { title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome },
-    ],
+    Staff: [{ title: "Dashboard", link: "/pharmacy/dashboard", icon: FaHome }],
   },
-    [EntityType.Doctor]: {
-     Doctor: [
+  [EntityType.Doctor]: {
+    Doctor: [
       { title: "Doctor Dashboard", link: "/doctor/dashboard", icon: FaHome },
       { title: "Profile", link: "/doctor/profile", icon: FaUsers },
     ],
   },
-   [EntityType.Support]: {
-     support: [
+  [EntityType.Support]: {
+    support: [
       { title: "Support Dashboard", link: "/support/dashboard", icon: FaHome },
     ],
   },

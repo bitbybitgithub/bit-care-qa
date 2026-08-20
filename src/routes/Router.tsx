@@ -23,9 +23,6 @@ import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
 import OffersDiscount from "../features/admin/OffersDiscount";
 
-
-
-
 const Router = [
   {
     path: "/",
@@ -46,7 +43,7 @@ const Router = [
       { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
-      { path: "clinic/offers", element: <OffersDiscount /> },
+      { path: "/clinic/offers", element: <OffersDiscount /> },
       { path: "/clinic/settings", element: <Profile /> },
 
       // clinic doctor routes
@@ -64,17 +61,14 @@ const Router = [
       { path: "/lab/labsetting", element: <LabProfile /> },
       { path: "/lab/service-management", element: <ServiceManagement /> },
 
-
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
       { path: "/pharmacy/pharmacysettings", element: <PharmaSetting /> },
 
-
       //  SupportTeam routes
-      { path: '/support/dashboard', element: <SupportDashboard/> }
+      { path: "/support/dashboard", element: <SupportDashboard /> },
 
-      
       // { path: "/patients-records", element: <ComingSoon /> },
       // { path: "/add-diagnosis", element: <ComingSoon /> },
       // { path: "/manage-medication", element: <ComingSoon /> },
@@ -89,8 +83,7 @@ const Router = [
       //   element: <ConsultationInProgress />,
       // },
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
-      // 
-      
+      //
     ],
   },
 ];

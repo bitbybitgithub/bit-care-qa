@@ -7,8 +7,18 @@ import { FaRupeeSign } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 import { savePayment } from "../../api/paymentApi/PaymentAPI";
-import type { SavePaymentRequest } from "../../types/paymentTypes";
+import {
+  getRazorpayPublicKey,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "../../api/paymentApi/RazorpayApi";
+import type {
+  SavePaymentRequest,
+  PaymentMethod,
+} from "../../types/paymentTypes";
+import type { VerifyRazorpayPaymentRequest } from "../../types/razorpayTypes";
 import { getDoctorFeesApi } from "../../api/clinic/ClinicEmpanelmentApis";
+import type { RazorpayOptions, RazorpayPaymentResponse } from "../../types/razorpayGlobal";
 interface Props {
   patient: Patient | null;
   onClose?: () => void;
@@ -24,47 +34,68 @@ const methods = [
   {
     key: "ONLINE",
     icon: Smartphone,
-    disabled: true,
+    disabled: false,
   },
 ];
 
-const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess }) => {
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") {
+      reject(new Error("Razorpay checkout cannot be loaded in this environment"));
+      return;
+    }
+
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Failed to load Razorpay checkout script"));
+    document.body.appendChild(script);
+  });
+};
+
+const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose, onPaymentSuccess }) => {
   const [amount, setAmount] = useState(0);
   const [remarks, setRemarks] = useState("");
-  const [transactionId, setTransactionId] = useState("");
   const [method, setMethod] = useState("CASH");
   const [loading, setLoading] = useState(false);
   const [consultationFee, setConsultationFee] = useState(0);
 
   const userId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
-  useEffect(() => {
-    if (patient) {
-      const fee = Number(patient.consultation_fees);
-      setConsultationFee(fee);
-      if (!isNaN(fee) && fee != 0) {
-        setAmount(fee);
-      } else {
-        //Calling api to fetch the fee amount for that doctor
-        getDoctorFees();
-      }
-    }
-  }, [patient]);
 
-  const getDoctorFees = async () => {
-  if (!patient?.raw?.doctor_id || !clinicId) return;
-  try {
-    const fee = await getDoctorFeesApi(
-      Number(patient.raw.doctor_id),
-      Number(clinicId)
-    );
-    setAmount(fee);
+  useEffect(() => {
+    if (!patient) return;
+
+    const fee = Number(patient.consultation_fees);
     setConsultationFee(fee);
-  } catch (err) {
-    console.error("Failed to fetch doctor fees", err);
-    setAmount(0);
-  }
-};
+
+    if (!isNaN(fee) && fee !== 0) {
+      setAmount(fee);
+      return;
+    }
+
+    const fetchDoctorFees = async () => {
+      if (!patient?.raw?.doctor_id || !clinicId) return;
+      try {
+        const fee = await getDoctorFeesApi(
+          Number(patient.raw.doctor_id),
+          Number(clinicId)
+        );
+        setAmount(fee);
+        setConsultationFee(fee);
+      } catch (error) {
+        console.error("Failed to fetch doctor fees", error);
+        setAmount(0);
+      }
+    };
+
+    fetchDoctorFees();
+  }, [patient, clinicId]);
 
 
   const handleSubmit = async () => {
@@ -76,7 +107,7 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
     }
 
     if (method === "ONLINE") {
-      toast.error("Online payment not available");
+      await handleOnlinePayment();
       return;
     }
 
@@ -89,8 +120,8 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
         doctor_id: Number(patient.raw?.doctor_id),
         clinic_id: clinicId,
         amount: Number(amount),
-        payment_method: method as "CASH" | "ONLINE",
-        bank_transaction_id: transactionId || undefined,
+        payment_method: method as PaymentMethod,
+        bank_transaction_id: undefined,
         payment_gateway: "",
         payment_status: "SUCCESS",
         remarks: remarks || undefined,
@@ -103,9 +134,128 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
         onPaymentSuccess?.(patient.appointment_id);
       }
       onClose?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error.message || "Payment failed");
+      const message = error instanceof Error ? error.message : "Payment failed";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOnlinePayment = async () => {
+    if (!patient) return;
+
+    try {
+      setLoading(true);
+      await loadRazorpayScript();
+
+      const publicKeyResponse = await getRazorpayPublicKey();
+      console.log({publicKeyResponse})
+      const publicKey =
+        publicKeyResponse.key ||
+        publicKeyResponse.publicKey ||
+        publicKeyResponse.data?.key ||
+        publicKeyResponse.data?.publicKey ||
+        publicKeyResponse.data?.keyId;
+
+      if (!publicKey) {
+        throw new Error("Unable to load Razorpay public key");
+      }
+
+      const orderResponse = await createRazorpayOrder({
+        amount: Number(amount) * 100,
+        currency: "INR",
+        receipt: String(patient.appointment_id),
+        notes: {
+          appointment_id: String(patient.appointment_id),
+          patient_id: String(patient.raw?.patient_id || ""),
+          doctor_id: String(patient.raw?.doctor_id || ""),
+        },
+      });
+
+      const razorpayOrderId = orderResponse.id || orderResponse.order_id || orderResponse.data.order_id;
+      if (!razorpayOrderId) {
+        throw new Error(orderResponse.message || "Unable to create payment order");
+      }
+
+      const options: RazorpayOptions = {
+        key: publicKey,
+        amount: orderResponse.amount || orderResponse?.data.amount || Number(amount) * 100,
+        currency: orderResponse.currency || orderResponse?.data.currency || "INR",
+        name: "BITCARE",
+        description: "Appointment payment",
+        order_id: razorpayOrderId,
+        prefill: {
+          name: patient.name || undefined,
+          contact: patient.raw?.mobile_no || undefined,
+        },
+        notes: {
+          appointment_id: String(patient.appointment_id),
+          patient_id: String(patient.raw?.patient_id || ""),
+        },
+        theme: {
+          color: "var(--color-primary)",
+        },
+        handler: async (response: RazorpayPaymentResponse) => {
+          try {
+            const verifyPayload: VerifyRazorpayPaymentRequest = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              appointment_id: patient.appointment_id,
+              patient_id: Number(patient.raw?.patient_id),
+              doctor_id: Number(patient.raw?.doctor_id),
+              clinic_id: clinicId,
+              amount: Number(amount),
+            };
+
+            const verifyRes = await verifyRazorpayPayment(verifyPayload);
+            const success = verifyRes.success || verifyRes.sucess;
+
+            if (!success) {
+              throw new Error(verifyRes.message || "Payment verification failed");
+            }
+
+            const payload: SavePaymentRequest = {
+              appointment_id: patient.appointment_id,
+              patient_id: Number(patient.raw?.patient_id),
+              doctor_id: Number(patient.raw?.doctor_id),
+              clinic_id: clinicId,
+              amount: Number(amount),
+              payment_method: method as PaymentMethod,
+              bank_transaction_id: response.razorpay_payment_id,
+              payment_gateway: "RAZORPAY",
+              payment_status: "SUCCESS",
+              remarks: remarks || undefined,
+              created_by: userId,
+            };
+
+            const saved = await savePayment(payload);
+            toast.success(saved?.message || "Payment completed successfully");
+            if (patient?.appointment_id) {
+              onPaymentSuccess?.(patient.appointment_id);
+            }
+            onClose?.();
+          } catch (verifyError) {
+            console.error(verifyError);
+            const message = verifyError instanceof Error ? verifyError.message : "Payment verification failed";
+            toast.error(message);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Online payment failed";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -245,10 +395,10 @@ const PaymentDrawer: React.FC<Props> = memo(({ patient, onClose,onPaymentSuccess
           variant="contained"
           size="small"
           fullWidth
-          disabled={loading || method === "ONLINE"}
+          disabled={loading}
           onClick={handleSubmit}
         >
-          {method === "ONLINE" ? "Coming Soon" : "Pay"}
+          {method === "ONLINE" ? "Pay Online" : "Pay"}
         </Button>
       </div>
     </div>

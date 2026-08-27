@@ -288,7 +288,7 @@ const validateForm = () => {
           ...formData,
 
             // Logged-in user/session data
-            //center_id: user.clinic_id,           
+            center_id: user.clinic_id,           
             center_name: user.full_name,
             center_type: user.entity_name,
             created_by:user.role,

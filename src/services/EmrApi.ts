@@ -5,7 +5,6 @@ import { getSocket } from "../context/socket";
 
 export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
 //export const BASE_URL = "https://qacliniccareapi.bitbybitsolutions.co.in/api";
-
 //export const BASE_URL = "http://localhost:8989/api";
 
 // -------------------- //

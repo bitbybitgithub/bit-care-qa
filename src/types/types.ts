@@ -19,7 +19,7 @@ export interface OfferForm {
   // center_name: string;
   // center_type: string;
 
-  //center_id?: number;
+  center_id?: number;
 
   center_name?: string;
   center_type?: string;

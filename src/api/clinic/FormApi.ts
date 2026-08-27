@@ -30,7 +30,7 @@ export const offersdiscountApi = async (formData: OfferForm) => {
       // center_name: formData.center_name,
       // center_type: formData.center_type,
 
-     // center_id: formData.center_id,
+      center_id: formData.center_id,
       center_name: formData.center_name,
       center_type: formData.center_type,
 

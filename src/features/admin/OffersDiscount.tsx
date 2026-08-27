@@ -544,6 +544,11 @@ const validateForm = () => {
             onChange={handleChange}
             error={!!errors.coupon_code}
             helperText={errors.coupon_code}
+            slotProps={{
+              htmlInput: {
+                maxLength: 15,
+              },
+            }}
           />
 
         </div>

@@ -87,7 +87,6 @@ const ServiceManagement: React.FC = () => {
       return;
     }
     const response = await getLabTestListApi(Number(labId));
-    console.log("getLabTestListApi response:", response);
     const savedTests = (response as any)?.data || [];
     setSavedLabTests(savedTests);
     const selected: SelectedTest[] = [];
@@ -125,7 +124,6 @@ const ServiceManagement: React.FC = () => {
       return;
     }
     const response = await getLabPackageListApi(Number(labId));
-    console.log("lab package response", response);
     if (response.success) {
       setPackages(response.data || []);
     } else {
@@ -157,13 +155,6 @@ const ServiceManagement: React.FC = () => {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [labId]);
-
-  useEffect(() => {
-    console.log("ServiceManagement MOUNT");
-    return () => {
-      console.log("ServiceManagement UNMOUNT");
-    };
-  }, []);
 
   return (
     <div className="h-auto md:mt-1">

@@ -61,7 +61,6 @@ export const updateAvailableLabTestApi = async (
   payload: UpdateLabTestItemRequest,
 ): Promise<SaveLabTestItem> => {
   try {
-    console.log("Update existing tests payload:", payload);
     const response = await emrAPI.post<SaveLabTestItem>(
       "/lab/update-available-lab-test",
       payload,
@@ -135,9 +134,8 @@ export const saveLabPackageApi = async (
   payload: SaveLabPackageRequest,
 ): Promise<any> => {
   try {
-    console.log("saveLabPackageApi payload:", payload);
-    // const response = await emrAPI.post("/lab/save-lab-package", payload);
-    // return response;
+    const response = await emrAPI.post("/lab/save-lab-package", payload);
+    return response;
   } catch (error) {
     console.error("saveLabPackageApi error:", error);
     throw error;

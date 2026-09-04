@@ -4,6 +4,10 @@ import {
   Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   InputAdornment,
@@ -57,8 +61,26 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
   const { selectedTests, search } = data;
   const { setSearch, setSelectedTests } = actions;
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [testToDelete, setTestToDelete] = useState<SelectedTest | null>(null);
+  const [baselineTests, setBaselineTests] = useState<SelectedTest[]>([]);
+
+  useEffect(() => {
+    const currentIds = selectedTests
+      .map((test) => String(test.testId))
+      .sort()
+      .join(",");
+    const baselineIds = baselineTests
+      .map((test) => String(test.testId))
+      .sort()
+      .join(",");
+
+    if (currentIds !== baselineIds) {
+      setBaselineTests(selectedTests.map((test) => ({ ...test })));
+    }
+  }, [selectedTests, baselineTests]);
 
   const categories = useMemo(() => {
     const categoryMap = new Map<
@@ -134,7 +156,104 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
   };
 
   const handleDeleteTest = (testId: string) => {
-    setSelectedTests((prev) => prev.filter((test) => test.testId !== testId));
+    const test = selectedTests.find(
+      (item) => String(item.testId) === String(testId),
+    );
+    if (test) {
+      setTestToDelete(test);
+    }
+  };
+
+  const handlePriceFieldBlur = (testId: string) => {
+    const currentTest = selectedTests.find(
+      (item) => String(item.testId) === String(testId),
+    );
+    const priceValue = String(currentTest?.price ?? "").trim();
+
+    if (!priceValue) {
+      return;
+    }
+
+    const numericValue = Number(priceValue);
+    if (
+      Number.isNaN(numericValue) ||
+      !/^\d*\.?\d{0,2}$/.test(priceValue) ||
+      numericValue < 5 ||
+      numericValue > 10000
+    ) {
+      return;
+    }
+
+    setEditingTestId((prev) => (prev === testId ? null : prev));
+  };
+
+  const submitLabTestChange = async (
+    operationType: "U" | "D",
+    testsToSubmit: SelectedTest[],
+  ) => {
+    if (!labId || !userId) {
+      toast.error("Lab ID or user ID not found");
+      return false;
+    }
+    const payload: UpdateLabTestItemRequest = {
+      lab_id: Number(labId),
+      operation_type: operationType,
+      tests: testsToSubmit.map((test) => ({
+        test_id: Number(test.testId),
+        category_id: Number(test.categoryId),
+        price: Number(test.price || 0),
+        ...(operationType === "D"
+          ? {
+              is_active: "0",
+            }
+          : {}),
+      })),
+      modified_by: Number(userId),
+    };
+
+    const response = await updateAvailableLabTestApi(payload);
+    if (!response.success) {
+      toast.error(response.message);
+      return false;
+    }
+    toast.success(
+      response.message ||
+        (operationType === "U"
+          ? "Lab tests updated successfully"
+          : "Lab test deleted successfully"),
+    );
+    return true;
+  };
+
+  const confirmDeleteTest = async () => {
+    if (!testToDelete || !labId || !userId) {
+      return;
+    }
+    try {
+      setDeleteLoading(true);
+      const success = await submitLabTestChange("D", [testToDelete]);
+      if (!success) {
+        return;
+      }
+      setSelectedTests((prev) =>
+        prev.filter(
+          (test) => String(test.testId) !== String(testToDelete.testId),
+        ),
+      );
+      setBaselineTests((prev) =>
+        prev.filter(
+          (test) => String(test.testId) !== String(testToDelete.testId),
+        ),
+      );
+      setTestToDelete(null);
+      setEditingTestId(null);
+      await onUpdated();
+    } catch (error) {
+      console.error("Delete laboratory test failed:", error);
+      toast.error("Failed to delete laboratory test");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleUpdateTests = async () => {
@@ -151,39 +270,46 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         toast.error("No laboratory tests configured");
         return;
       }
-      const hasEmptyPrice = selectedTests.some(
+      const dirtyTests = selectedTests.filter((test) => {
+        const original = baselineTests.find(
+          (item) => String(item.testId) === String(test.testId),
+        );
+        if (!original) {
+          return true;
+        }
+        return (
+          String(original.price ?? "") !== String(test.price ?? "") ||
+          Number(original.categoryId) !== Number(test.categoryId) ||
+          original.testName !== test.testName
+        );
+      });
+      if (dirtyTests.length === 0) {
+        toast.info("No test changes to save");
+        return;
+      }
+      const hasEmptyPrice = dirtyTests.some(
         (test) => !test.price || test.price.trim() === "",
       );
       if (hasEmptyPrice) {
-        toast.error("Please enter price for all tests");
+        toast.error("Please enter price for all edited tests");
         return;
       }
-      const hasInvalidPrice = selectedTests.some((test) => {
+      const hasInvalidPrice = dirtyTests.some((test) => {
         const price = Number(test.price);
         return isNaN(price) || price < 5 || price > 10000;
       });
       if (hasInvalidPrice) {
-        toast.error("Price for every test must be between ₹5 and ₹10,000");
+        toast.error("Price for edited tests must be between ₹5 and ₹10,000");
         return;
       }
-      const payload: UpdateLabTestItemRequest = {
-        lab_id: Number(labId),
-        tests: selectedTests.map((test) => ({
-          test_id: Number(test.testId),
-          category_id: Number(test.categoryId),
-          price: Number(test.price),
-        })),
-        modified_by: Number(userId),
-      };
-      console.log("Updating existing tests:", payload);
       setUpdateLoading(true);
-      const response = await updateAvailableLabTestApi(payload);
-      if (!response.success) {
-        toast.error(response.message);
+      const success = await submitLabTestChange("U", dirtyTests);
+      if (!success) {
         return;
       }
-      toast.success(response.message);
+      setEditingTestId(null);
       await onUpdated();
+      setBaselineTests(selectedTests.map((test) => ({ ...test })));
       setSearch("");
     } catch (error) {
       console.error("Update laboratory tests failed:", error);
@@ -429,6 +555,13 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                               onChange={(e) =>
                                 handlePriceChange(test.testId, e.target.value)
                               }
+                              onBlur={() => handlePriceFieldBlur(test.testId)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handlePriceFieldBlur(test.testId);
+                                }
+                              }}
                               error={Boolean(test.priceError)}
                               helperText={test.priceError}
                               sx={{
@@ -478,8 +611,12 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
             </Box>
             {/* ================= SAVE ================= */}
             <Stack direction="row" justifyContent="flex-end" mt={3}>
-              <Button variant="contained" onClick={handleUpdateTests}>
-                Save Changes
+              <Button
+                variant="contained"
+                onClick={handleUpdateTests}
+                disabled={updateLoading}
+              >
+                {updateLoading ? "Saving..." : "Save Changes"}
               </Button>
             </Stack>
           </>
@@ -514,6 +651,37 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
           </Box>
         )}
       </Paper>
+
+      <Dialog
+        open={Boolean(testToDelete)}
+        onClose={() => setTestToDelete(null)}
+        maxWidth="sm"
+        className="text-center"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete Test</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Are you sure you want to delete{" "}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <strong>{testToDelete?.testName}?</strong>
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button variant="outlined" onClick={() => setTestToDelete(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={confirmDeleteTest}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? "Deleting..." : "Delete Test"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

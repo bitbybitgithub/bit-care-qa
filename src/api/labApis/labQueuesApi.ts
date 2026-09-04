@@ -35,7 +35,6 @@ export async function getPendingQueueAsync(
       //days: 60,
     },
   );
-  console.log("lab records response", response);
   return response.data;
 }
 

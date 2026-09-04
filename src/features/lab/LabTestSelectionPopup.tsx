@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Divider,
   FormControlLabel,
+  IconButton,
   InputAdornment,
   Paper,
   Stack,
@@ -18,6 +19,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -49,8 +51,6 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
   doorStepService,
   onSaved,
 }) => {
-  console.log("Lab test", labTests);
-  console.log("selected test", selectedTests);
   const [activeCategory, setActiveCategory] = useState(0);
   const [search, setSearch] = useState("");
   const [newSelectedTests, setNewSelectedTests] = useState<SelectedTest[]>([]);
@@ -312,6 +312,16 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         <Typography variant="body2" color="text.secondary">
           Select tests that you want to add to your laboratory.
         </Typography>
+        <IconButton
+          sx={{
+            position: "absolute",
+            right: 10,
+            top: 10,
+          }}
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       {/* ================= CONTENT ================= */}
       <DialogContent

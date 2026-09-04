@@ -1,9 +1,8 @@
 import axios from "axios";
-import { PincodeUrl } from "../utils/Utils"; 
+import { PincodeUrl } from "../utils/Utils";
 
 export const getPincodeDetails = async (pincode: string) => {
   try {
-
     const response = await axios.get(`${PincodeUrl}${pincode}`);
     console.log("Pincode API Response:", response.data);
     if (response.data && response.data[0].Status === "Success") {
@@ -16,6 +15,8 @@ export const getPincodeDetails = async (pincode: string) => {
   }
 };
 
+//Do not delete this code, it is used in the to fetch pincode details.
+//  if the above api serive is down then use this .
 
 // export const getPincodeDetails = async (pincode: string) => {
 //   try {

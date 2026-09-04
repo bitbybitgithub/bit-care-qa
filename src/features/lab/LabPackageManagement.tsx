@@ -20,7 +20,6 @@ import {
   IconButton,
   InputAdornment,
   Paper,
-  Skeleton,
   Stack,
   Table,
   TableBody,
@@ -57,14 +56,15 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [packagePopupOpen, setPackagePopupOpen] = useState(false);
-  const isEditMode = Boolean(selectedPackage);
+  const [isEditMode, setIsEditMode] = useState(false);
   const filteredPackages = useMemo(() => {
     return packages.filter((pkg) => {
+      if (!pkg?.package_id || !pkg?.package_name) return false;
       const keyword = search.toLowerCase();
 
       return (
         pkg.package_name.toLowerCase().includes(keyword) ||
-        pkg.package_code.toLowerCase().includes(keyword)
+        pkg.package_code?.toLowerCase().includes(keyword)
       );
     });
   }, [packages, search]);
@@ -74,19 +74,15 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
       setExpanded(isExpanded ? packageId : false);
     };
 
-  const handleDeletePackage = (pkg: any) => {
-    setSelectedPackage(pkg);
-    setDeleteDialogOpen(true);
-  };
-
   const handleEditPackage = (pkg: any) => {
-    console.log("Editing package:", pkg);
     setSelectedPackage(pkg);
+    setIsEditMode(true);
     setPackagePopupOpen(true);
   };
 
   const handleCreatePackage = () => {
     setSelectedPackage(null);
+    setIsEditMode(false);
     setPackagePopupOpen(true);
   };
 
@@ -148,11 +144,6 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
           test_id: Number(test.test_id),
         })),
       };
-
-      console.log(
-        selectedPackage ? "Updating package:" : "Creating package:",
-        payload,
-      );
       // CREATE
       if (!selectedPackage) {
         const response = await saveLabPackageApi(payload);
@@ -174,6 +165,7 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
       }
       setPackagePopupOpen(false);
       setSelectedPackage(null);
+      setIsEditMode(false);
       await onRefresh();
     } catch (error) {
       console.error("Save package failed:", error);
@@ -184,7 +176,6 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
   return (
     <Box sx={{ p: 2, backgroundColor: "#f9fafb" }}>
       {/* Header */}
-
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -226,41 +217,7 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
           </Button>
         </Stack>
       </Stack>
-      {/* Loading */}
-      {loading ? (
-        <Stack spacing={2}>
-          {[1, 2, 3].map((item) => (
-            <Paper
-              key={item}
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: "1px solid #E5E7EB",
-              }}
-            >
-              {/* Header */}
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Box flex={1}>
-                  <Skeleton variant="text" width={260} height={36} />
-                  <Skeleton variant="text" width={180} height={24} />
-                </Box>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Skeleton variant="rounded" width={80} height={28} />
-                  <Skeleton variant="text" width={90} height={32} />
-                  <Skeleton variant="circular" width={36} height={36} />
-                  <Skeleton variant="circular" width={36} height={36} />
-                  <Skeleton variant="circular" width={36} height={36} />
-                </Stack>
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      ) : filteredPackages.length === 0 ? (
+      {filteredPackages.length === 0 ? (
         <Paper
           sx={{
             p: 8,
@@ -494,7 +451,6 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
         >
           Delete Package
         </DialogTitle>
-
         <DialogContent>
           <Typography color="text.secondary" mb={3}>
             Are you sure you want to delete this package?
@@ -571,14 +527,10 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
           <Button
             variant="contained"
             color="error"
-            onClick={() => {
-              if (!selectedPackage) return;
-              handleDeletePackage(selectedPackage);
-              setDeleteDialogOpen(false);
-              setSelectedPackage(null);
-            }}
+            onClick={confirmDeletePackage}
+            disabled={deleteLoading}
           >
-            Delete Package
+            {deleteLoading ? "Deleting..." : "Delete Package"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -588,7 +540,9 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
         onClose={() => {
           setPackagePopupOpen(false);
           setSelectedPackage(null);
+          setIsEditMode(false);
         }}
+        isEditMode={isEditMode}
         savedLabTests={savedLabTests}
         selectedPackage={selectedPackage}
         loading={loading}

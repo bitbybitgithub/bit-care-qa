@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Dialog, Drawer } from "@mui/material";
+import { Box, Button, Dialog, Drawer, Tooltip } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -24,6 +24,10 @@ const normalizeStatus = (s: string) => {
     case "PROCESSING":
     case "IN_PROGRESS":
       return "Processing";
+    case "REPORTING":
+    case "REPORTING_PENDING":
+    case "REPORTING PENDING":
+      return "Reporting Pending";
     case "COMPLETED":
       return "Completed";
     default:
@@ -32,7 +36,7 @@ const normalizeStatus = (s: string) => {
 };
 
 interface Props {
-  mode?: "pending" | "processing" | "reporting"|"completed";
+  mode?: "pending" | "processing" | "reporting" | "completed";
   searchTerm?: string;
 }
 
@@ -49,6 +53,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [testsDialogRow, setTestsDialogRow] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -152,6 +157,15 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, currentPage]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [resolvedMode, searchTerm]);
+
+  useEffect(() => {
+    const lastPage = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    setCurrentPage((page) => Math.min(page, lastPage));
+  }, [filteredRows.length]);
+
   /* ---------------- ACTIONS ---------------- */
   const updateStatus = async (
     row: any,
@@ -206,9 +220,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       console.error("Upload failed:", error);
 
       const backendMessage =
-        error?.response?.data?.message || 
-        error?.response?.data?.error || 
-        error?.message || 
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
         "File upload failed";
 
       toast.error(backendMessage);
@@ -262,11 +276,111 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     }
   };
 
+  const formatAppointmentType = (appointmentType?: string) => {
+    switch (appointmentType?.toUpperCase()) {
+      case "LAB_VISIT":
+        return "LAB VISIT";
+      case "WALK_IN":
+        return "WALK IN";
+      case "HOME_VISIT":
+        return "HOME VISIT";
+      default:
+        return appointmentType || "-";
+    }
+  };
+
+  const renderReferredBy = (row: any) => {
+    const bookingSource = row.booking_source?.toUpperCase();
+    const isSelfBooking = bookingSource === "LAB";
+    const isClinicBooking = bookingSource === "CLINIC";
+    const source = isSelfBooking
+      ? "SELF"
+      : isClinicBooking
+        ? "CLINIC"
+        : row.booking_source;
+
+    const clinicDetails = (
+      <span className="flex flex-col gap-1 p-1 text-xs">
+        <span>Clinic: {row.clinic_name || "-"}</span>
+        <span>Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "-"}</span>
+      </span>
+    );
+
+    return (
+      <div className="flex h-full w-full flex-col justify-center gap-1 text-xs leading-tight">
+        <Tooltip title={isClinicBooking ? clinicDetails : ""} arrow>
+          <span
+            className="w-fit rounded-full px-2 py-0.5 font-semibold"
+            style={{
+              backgroundColor: isSelfBooking
+                ? "var(--color-success-light, #e4f5ed)"
+                : "var(--color-primary-light, #e8f0ff)",
+              color: "var(--color-primary)",
+            }}
+          >
+            {source}
+          </span>
+        </Tooltip>
+        {/* {isSelfBooking && <span>Self Booking</span>} */}
+      </div>
+    );
+  };
+
+  const renderTestsOrPackage = (row: any) => {
+    if (row.is_package === "1" || row.is_package === 1) {
+      const packageTests = Array.isArray(row.package_tests)
+        ? row.package_tests
+        : [];
+      return (
+        <div className="flex flex-col gap-1 text-xs leading-tight">
+          <span className="font-semibold">Package</span>
+          <span>{row.package_name || row.package_code || "-"}</span>
+          {row.package_total_tests && (
+            <span>{row.package_total_tests} Tests Included</span>
+          )}
+          {packageTests.length > 0 && (
+            <span>
+              {packageTests
+                .map((test: any) => test.test_name || test.name || test)
+                .join(", ")}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    const tests = Array.isArray(row.test_details) ? row.test_details : [];
+    return (
+      <div className="flex flex-col gap-1 text-xs leading-tight">
+        <span className="font-semibold">Individual Tests ({tests.length})</span>
+        {tests.map((test: any, index: number) => (
+          <span key={test.test_id ?? index}>
+            • {test.test_name || test.name || `Test ${test.test_id}`}
+          </span>
+        ))}
+        {!tests.length && <span>-</span>}
+      </div>
+    );
+  };
+
+  const hasTestsOrPackage = (row: any) => {
+    const hasPackage =
+      row.is_package === "1" ||
+      row.is_package === 1 ||
+      row.package_id ||
+      row.package_name ||
+      row.package_code;
+    const hasTests = Array.isArray(row.test_details) && row.test_details.length;
+
+    return Boolean(hasPackage || hasTests);
+  };
+
   const commonColumns: GridColDef[] = [
     {
       field: "patient_name",
       headerName: "Patient Name",
       flex: 1.5,
+      minWidth: 150,
       renderCell: (p) => (
         <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
@@ -276,10 +390,32 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         </h1>
       ),
     },
-    { field: "result_status", headerName: "Status", flex: 1 },
-    { field: "contact_no", headerName: "Contact Number", flex: 1 },
-    { field: "clinic_name", headerName: "Clinic Name", flex: 1 },
-    { field: "doctor_name", headerName: "Doctor Name", flex: 1 },
+    {
+      field: "contact_no",
+      headerName: "Contact Number",
+      flex: 1,
+      minWidth: 130,
+    },
+    {
+      field: "appointment_type",
+      headerName: "Appointment Type",
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (_value, row) => formatAppointmentType(row.appointment_type),
+    },
+    {
+      field: "referred_by",
+      headerName: "Referred/Self",
+      flex: 1.2,
+      minWidth: 130,
+      renderCell: (p) => renderReferredBy(p.row),
+    },
+    {
+      field: "result_status",
+      headerName: "Status",
+      flex: 1,
+      minWidth: 110,
+    },
   ];
 
   const columns: GridColDef[] = useMemo(() => {
@@ -290,6 +426,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           field: "action",
           headerName: "Action",
           flex: 1,
+          minWidth: 110,
           renderCell: (p) => (
             <Button
               size="small"
@@ -308,15 +445,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         {
           field: "action",
           headerName: "Action",
-          width: 200,
+          width: 260,
           renderCell: (p) => (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => openViewPrescription(p.row)}
-            >
-              View Prescription
-            </Button>
+            <div className="flex h-full w-full flex-wrap items-center justify-center gap-2">
+              {p.row.prescription_url && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => openViewPrescription(p.row)}
+                >
+                  View Prescription
+                </Button>
+              )}
+              {hasTestsOrPackage(p.row) && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setTestsDialogRow(p.row)}
+                >
+                  View
+                </Button>
+              )}
+            </div>
           ),
         },
         {
@@ -334,22 +484,23 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           ),
         },
       ];
-if (resolvedMode === "completed")
+    if (resolvedMode === "completed")
       return [
         ...commonColumns,
         {
           field: "action",
-          headerName: "Prescription",
+          headerName: "Action",
           width: 200,
-          renderCell: (p) => (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => openViewPrescription(p.row)}
-            >
-              View Prescription
-            </Button>
-          ),
+          renderCell: (p) =>
+            p.row.prescription_url ? (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => openViewPrescription(p.row)}
+              >
+                View Prescription
+              </Button>
+            ) : null,
         },
         {
           field: "complete",
@@ -368,9 +519,37 @@ if (resolvedMode === "completed")
       ];
     return [
       ...commonColumns,
+
+      {
+        field: "view",
+        headerName: "Action",
+        width: 260,
+        renderCell: (p) => (
+          <div className="flex items-center gap-2">
+            {p.row.prescription_url && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => openViewPrescription(p.row)}
+              >
+                View Prescription
+              </Button>
+            )}
+            {hasTestsOrPackage(p.row) && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setTestsDialogRow(p.row)}
+              >
+                View
+              </Button>
+            )}
+          </div>
+        ),
+      },
       {
         field: "action",
-        headerName: "Action",
+        headerName: "Upload",
         width: 180,
         renderCell: (p) => (
           <Button
@@ -391,8 +570,9 @@ if (resolvedMode === "completed")
         <DataGrid
           rows={pagedRows}
           columns={columns}
-          // getRowId={(row) => `${row.appointment_id}_${row.patient_id}`}
-          getRowId={(row) => `${row.appointment_id}_${row.patient_id}_${row.created_date}`}
+          getRowId={(row) => row.lab_record_id}
+          paginationMode="server"
+          rowCount={filteredRows.length}
           paginationModel={{ page: currentPage - 1, pageSize: PAGE_SIZE }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
           rowHeight={64}
@@ -449,6 +629,27 @@ if (resolvedMode === "completed")
             setPdfUrl(null);
           }}
         />
+      </Dialog>
+
+      <Dialog
+        open={Boolean(testsDialogRow)}
+        onClose={() => setTestsDialogRow(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Tests / Package</h2>
+            <button
+              onClick={() => setTestsDialogRow(null)}
+              className="text-xl"
+              aria-label="Close tests and package dialog"
+            >
+              ×
+            </button>
+          </div>
+          {testsDialogRow && renderTestsOrPackage(testsDialogRow)}
+        </div>
       </Dialog>
 
       <Drawer

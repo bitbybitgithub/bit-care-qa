@@ -252,8 +252,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg mx-4">
+    <div className="fixed inset-0 z-[var(--z-modal)] flex items-start justify-center overflow-y-auto bg-[var(--color-surface-alt)]/40 px-4 py-6 backdrop-blur-sm sm:py-8">
+      <div className="relative my-auto w-full max-w-lg">
         {saving && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 rounded-[var(--radius-lg)]">
             <CircularProgress size={40} thickness={4} />
@@ -435,36 +435,28 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               </Button>
             </FormControl>
 
-            {selectedTests.length > 0 && (
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-semibold">Selected Tests</span>
-                  <span className="text-sm font-semibold text-[var(--color-primary)]">
-                    {selectedTests.length} selected
-                  </span>
-                </div>
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-primary)] bg-[var(--color-bg)]/40 p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm font-semibold">Selected Tests</span>
+                <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-1 text-xs font-semibold text-white">
+                  {selectedTests.length} selected
+                </span>
+              </div>
 
-                <div className="flex flex-col gap-2">
+              {selectedTests.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
                   {selectedTests.map((test) => (
-                    <div
+                    <span
                       key={test.test_id}
-                      className="flex items-center gap-2 rounded-md bg-[var(--color-bg)] px-2 py-1.5"
+                      className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-primary)] bg-[var(--color-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)]"
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {test.test_name}
-                        </p>
-                        <p className="text-xs text-[var(--color-text-secondary)]">
-                          {test.test_code || test.category_name || "Lab test"}
-                        </p>
-                      </div>
-                      <span className="whitespace-nowrap text-sm font-semibold text-[var(--color-primary)]">
-                        ₹{test.price}
+                      <span className="truncate">
+                        {test.test_code || test.test_name}
                       </span>
                       <IconButton
                         type="button"
                         size="small"
-                        aria-label={`Remove ${test.test_name}`}
+                        aria-label={`Remove ${test.test_code || test.test_name}`}
                         onClick={() =>
                           setSelectedTests((current) =>
                             current.filter(
@@ -473,27 +465,35 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                             ),
                           )
                         }
+                        sx={{
+                          padding: 0,
+                          color: "var(--color-primary)",
+                        }}
                       >
-                        <DeleteOutlineIcon fontSize="small" color="error" />
+                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                       </IconButton>
-                    </div>
+                    </span>
                   ))}
                 </div>
+              ) : (
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                  Select at least one test to continue.
+                </p>
+              )}
 
-                <div className="mt-3 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
-                  <span className="font-semibold">Total Amount</span>
-                  <span className="text-lg font-bold text-[var(--color-primary)]">
-                    ₹{totalAmount}
-                  </span>
-                </div>
+              <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
+                <span className="font-semibold">Total Amount</span>
+                <span className="text-lg font-bold text-[var(--color-primary)]">
+                  ₹{totalAmount}
+                </span>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="flex justify-center gap-4 mt-6">
             <Button
               type="submit"
-              disabled={saving}
+              disabled={saving || selectedTests.length === 0}
               variant="contained"
               className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
             >

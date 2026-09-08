@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Dialog, Drawer, Tooltip } from "@mui/material";
+import { Box, Button, Chip, Dialog, Drawer, Tooltip } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import type { Patient } from "../patient-document-management/types/patient";
+import { FaTimes } from "react-icons/fa";
 
 const PAGE_SIZE = 10;
 
@@ -327,23 +328,52 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   };
 
   const renderTestsOrPackage = (row: any) => {
-    if (row.is_package === "1" || row.is_package === 1) {
+    const isPackage =
+      row.is_package === "1" ||
+      row.is_package === 1 ||
+      Boolean(row.package_id || row.package_name || row.package_code);
+
+    if (isPackage) {
       const packageTests = Array.isArray(row.package_tests)
         ? row.package_tests
         : [];
       return (
-        <div className="flex flex-col gap-1 text-xs leading-tight">
-          <span className="font-semibold">Package</span>
-          <span>{row.package_name || row.package_code || "-"}</span>
-          {row.package_total_tests && (
-            <span>{row.package_total_tests} Tests Included</span>
-          )}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                Package
+              </span>
+              <Chip
+                size="small"
+                label={`${row.package_total_tests || packageTests.length || 0} tests`}
+                sx={{
+                  backgroundColor: "#dbeafe",
+                  color: "#1d4ed8",
+                  fontWeight: 700,
+                }}
+              />
+            </div>
+            <p className="text-lg font-bold text-slate-900">
+              {row.package_name || row.package_code || "Unnamed package"}
+            </p>
+          </div>
           {packageTests.length > 0 && (
-            <span>
-              {packageTests
-                .map((test: any) => test.test_name || test.name || test)
-                .join(", ")}
-            </span>
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                Included tests
+              </p>
+              <div className="grid gap-2">
+                {packageTests.map((test: any, index: number) => (
+                  <div
+                    key={test.test_id ?? index}
+                    className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+                  >
+                    {test.test_name || test.name || `Test ${test.test_id}`}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       );
@@ -351,14 +381,41 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
     const tests = Array.isArray(row.test_details) ? row.test_details : [];
     return (
-      <div className="flex flex-col gap-1 text-xs leading-tight">
-        <span className="font-semibold">Individual Tests ({tests.length})</span>
-        {tests.map((test: any, index: number) => (
-          <span key={test.test_id ?? index}>
-            • {test.test_name || test.name || `Test ${test.test_id}`}
-          </span>
-        ))}
-        {!tests.length && <span>-</span>}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
+              Test
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">
+              Individual test{tests.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <Chip
+            size="small"
+            label={`${tests.length} ${tests.length === 1 ? "test" : "tests"}`}
+            sx={{
+              backgroundColor: "#d1fae5",
+              color: "#047857",
+              fontWeight: 700,
+            }}
+          />
+        </div>
+        <div className="grid gap-2">
+          {tests.map((test: any, index: number) => (
+            <div
+              key={test.test_id ?? index}
+              className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+            >
+              {test.test_name || test.name || `Test ${test.test_id}`}
+            </div>
+          ))}
+          {!tests.length && (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              No test details available.
+            </p>
+          )}
+        </div>
       </div>
     );
   };
@@ -636,19 +693,43 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         onClose={() => setTestsDialogRow(null)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            backgroundColor: "#f8fafc",
+            overflow: "hidden",
+          },
+        }}
       >
-        <div className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Tests / Package</h2>
+        <div>
+          <div className="flex items-center justify-between bg-[var(--color-primary)] px-5 py-4 text-white">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                Order details
+              </p>
+              <h2 className="mt-1 text-xl font-bold">
+                {testsDialogRow &&
+                (testsDialogRow.is_package === "1" ||
+                  testsDialogRow.is_package === 1 ||
+                  testsDialogRow.package_id ||
+                  testsDialogRow.package_name ||
+                  testsDialogRow.package_code)
+                  ? "Package details"
+                  : "Test details"}
+              </h2>
+            </div>
             <button
               onClick={() => setTestsDialogRow(null)}
-              className="text-xl"
+              // className="rounded-full px-2 text-2xl leading-none text-white transition hover:bg-white/50"
+              className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
               aria-label="Close tests and package dialog"
             >
-              ×
+              <FaTimes />
             </button>
           </div>
-          {testsDialogRow && renderTestsOrPackage(testsDialogRow)}
+          <div className="p-5">
+            {testsDialogRow && renderTestsOrPackage(testsDialogRow)}
+          </div>
         </div>
       </Dialog>
 
@@ -682,13 +763,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
 
             <button
               onClick={closeUpload}
-              className="p-2 rounded-full"
+              className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+              aria-label="Close tests and package dialog"
               style={{
                 backgroundColor: "var(--color-surface)",
                 color: "var(--color-primary)",
               }}
             >
-              ×
+              <FaTimes />
             </button>
           </div>
 

@@ -152,7 +152,6 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
         otp_type: 2,
         mobile_number: contact,
       });
-      console.log("verifyPatientpApi response:", res);
       if (!res.isOtpValid) {
         setError({ ...error, otp: "Please enter valid OTP" });
         setEditedAfterOtp(true);

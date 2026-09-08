@@ -39,6 +39,38 @@ export const getLabTestListApi = async (labId: number) => {
   }
 };
 
+export interface SaveLabAppointmentPayload {
+  lab_id: number;
+  patient_id: number;
+  test_details:
+    | {
+        test_id: number;
+        category_id: number;
+        test_price: number;
+      }[]
+    | null;
+  total_amount: number;
+  appointment_date: string;
+  appointment_type: "LAB_VISIT" | "HOME_VISIT" | "WALK_IN";
+  booking_source: "PATIENT" | "LAB";
+  source: "APP" | "WEB";
+  remarks?: string | null;
+  created_by: number;
+  is_package: boolean;
+  package_id: number | null;
+}
+
+export const saveLabAppointmentApi = async (
+  payload: SaveLabAppointmentPayload,
+) => {
+  try {
+    return await emrAPI.post("/lab/save-lab-appointment", payload);
+  } catch (error) {
+    console.error("saveLabAppointmentApi error:", error);
+    throw error;
+  }
+};
+
 /* ===================== */
 export const saveAvailableLabApi = async (
   payload: LabTestItemRequest,

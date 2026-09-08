@@ -1,4 +1,4 @@
-import { FaSearch, FaUserPlus } from "react-icons/fa";
+import { FaSearch, FaUserPlus, FaTimes, FaUser } from "react-icons/fa";
 import { useState, type JSX } from "react";
 import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
@@ -6,6 +6,9 @@ import { TfiAnnouncement } from "react-icons/tfi";
 import SidebarBg from "../../assets/SidebarBg.png";
 import LabQueues from "./LabQueues";
 import { Module, Roles } from "../../context/constant/enum";
+import LabWalkInVerificationModal from "./components/LabWalkInVerificationModal";
+import LabWalkInRegisterForm from "./components/LabWalkInRegisterForm";
+import type { Patient } from "../../types/patientType/patientTypeInterfaces";
 export interface DashboardCard {
   id: number;
   title: string;
@@ -21,6 +24,11 @@ const LabDashboard = () => {
   const [queueSearch, setQueueSearch] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
   const [activeTab, setActiveTab] = useState("pendingQueue");
+  const [showWalkInModal, setShowWalkInModal] = useState(false);
+  const [walkInContact, setWalkInContact] = useState("");
+  const [walkInPatient, setWalkInPatient] = useState<Patient | null>(null);
+  const [showWalkInRegistration, setShowWalkInRegistration] = useState(false);
+  const isLabStaff = user === Roles.Staff;
 
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
@@ -48,7 +56,26 @@ const LabDashboard = () => {
     </button>
   );
 
+  const resetWalkInFlow = () => {
+    setShowWalkInModal(false);
+    setWalkInContact("");
+    setWalkInPatient(null);
+    setShowWalkInRegistration(false);
+  };
+
   const quickActions = [
+    ...(isLabStaff
+      ? [
+          {
+            label: "Add Walk-In Patient",
+            icon: <FaUserPlus />,
+            onClick: () => {
+              resetWalkInFlow();
+              setShowWalkInModal(true);
+            },
+          },
+        ]
+      : []),
     {
       label: "Add New User",
       icon: <FaUserPlus />,
@@ -175,17 +202,32 @@ const LabDashboard = () => {
             ))}
           </div>
 
-          <div className="relative w-full sm:w-74">
-            <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
-            <input
-              value={queueSearch}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
-                setQueueSearch(value);
-              }}
-              placeholder="Search by Patient Name"
-              className="w-full pl-10 pr-3 py-2 rounded-lg border border-[var(--color-primary)]"
-            />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {isLabStaff && (
+              <button
+                onClick={() => {
+                  resetWalkInFlow();
+                  setShowWalkInModal(true);
+                }}
+                className="flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition hover:opacity-90"
+              >
+                <FaUserPlus />
+                Add Walk-In Patient
+              </button>
+            )}
+
+            <div className="relative w-full sm:w-74">
+              <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
+              <input
+                value={queueSearch}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                  setQueueSearch(value);
+                }}
+                placeholder="Search by Patient Name"
+                className="w-full pl-10 pr-3 py-2 rounded-lg border border-[var(--color-primary)]"
+              />
+            </div>
           </div>
         </div>
 
@@ -196,9 +238,9 @@ const LabDashboard = () => {
                 ? "processing"
                 : activeTab === "ReportingQueue"
                   ? "reporting"
-                : activeTab ==="CompletedQueue"
-                ?"completed"
-                  : "pending"
+                  : activeTab === "CompletedQueue"
+                    ? "completed"
+                    : "pending"
             }
             searchTerm={queueSearch}
           />
@@ -207,6 +249,38 @@ const LabDashboard = () => {
 
       {showAddUser && (
         <AddUser module={module} onClose={() => setShowAddUser(false)} />
+      )}
+
+      {showWalkInModal && (
+        <LabWalkInVerificationModal
+          open={showWalkInModal}
+          onClose={() => {
+            setShowWalkInModal(false);
+            setWalkInContact("");
+          }}
+          onPatientSelect={(patient, contact) => {
+            setShowWalkInModal(false);
+            setWalkInContact(contact);
+            setWalkInPatient(patient);
+            setShowWalkInRegistration(true);
+          }}
+        />
+      )}
+
+      {showWalkInRegistration && (
+        <LabWalkInRegisterForm
+          contact={walkInContact}
+          onClose={() => {
+            setShowWalkInRegistration(false);
+            setWalkInContact("");
+          }}
+          onSuccess={() => {
+            setShowWalkInRegistration(false);
+            setWalkInContact("");
+            setWalkInPatient(null);
+          }}
+          patientData={walkInPatient}
+        />
       )}
     </div>
   );

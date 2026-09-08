@@ -1,9 +1,9 @@
 //src\types\types.ts
 import { Dayjs } from "dayjs";
 export interface FormDataBase {
-  entityType:number;
-  userId:number;
-  otp:number;
+  entityType: number;
+  userId: number;
+  otp: number;
   name: string;
   email: string;
   phone: string;
@@ -11,66 +11,34 @@ export interface FormDataBase {
   PINCode: string;
   area: string;
   district: string;
-  state: string;  
+  state: string;
 }
 
 export interface OfferForm {
-  // center_id: number;
-  // center_name: string;
-  // center_type: string;
-
   center_id?: number;
-
+  entity_type?: number;
   center_name?: string;
   center_type?: string;
-
   offer_title: string;
   offer_description: string;
-
-  // Temporary field for upload only
   offer_image: File | null;
-
-  // Database fields
   offer_image_path: string;
   offer_image_guid: string;
   offer_image_name: string;
-
   discount_percentage: number | "";
-
   coupon_code: string;
-
   start_date: string;
   end_date: string;
-
   priority: number;
-
-  created_by: string;
+  created_by: number;
 }
 
-// export interface OfferForm{
-//   // clinic_id: number,
-//   // clinic_name: string,
-//   offer_title:string,
-//   offer_description:string,
-//   offer_image: File | null,
-//   //offer_image:string,
-//   //discount_percentage:number,
-//   discount_percentage: number | "";
-//   coupon_code:string,
-//   start_date:string,
-//   end_date:string,
-//   priority:number,
-//   created_by: string,
-//   // status: boolean
-// }
-
-
 export interface ResetPassword {
-  phone?:string,
-  userId?:number;
-  username?:string;
-  newPassword?:string;
-  confirmPassword?:string;
+  phone?: string;
+  userId?: number;
+  username?: string;
+  newPassword?: string;
+  confirmPassword?: string;
 }
 // ==========================
 // User / API Types
@@ -104,33 +72,35 @@ export interface RegexCollection {
   [key: string]: RegExp;
 }
 
-  export interface PostOffice {
-    Name: string;
-    District: string;
-    Block: string;
-    State: string;
-  }
-  // Request interfaces
-  // Interfaces moved to src/utils/sendOtpAndVerify.tsx to avoid duplication.
-  export type LocationItem = {
+export interface PostOffice {
+  Name: string;
+  District: string;
+  Block: string;
+  State: string;
+}
+// Request interfaces
+// Interfaces moved to src/utils/sendOtpAndVerify.tsx to avoid duplication.
+export type LocationItem = {
   Block?: string;
   State?: string;
   District?: string;
-  Name?:string;
+  Name?: string;
 };
 
 // ==========================
 // Validation Errors (Generic)
 // ==========================
-export type ValidationErrors<T = FormDataBase> = Partial<Record<keyof T, string>> & {
+export type ValidationErrors<T = FormDataBase> = Partial<
+  Record<keyof T, string>
+> & {
   general?: string; // global errors
 };
 
-export type ResetPassErrors<T = ResetPassword> = Partial<Record<keyof T, string>> & {
+export type ResetPassErrors<T = ResetPassword> = Partial<
+  Record<keyof T, string>
+> & {
   general?: string; // global errors
 };
-
-
 
 /* -------------------- API Models -------------------- */
 export interface BreakTime {
@@ -161,10 +131,9 @@ export interface DeleteDoctorAvailabilityResponse {
   message: string;
 }
 
-
-export interface RefreshToken{
-   ip_address: string;
-   platform: string;
+export interface RefreshToken {
+  ip_address: string;
+  platform: string;
 }
 /* -------------------- Frontend Models -------------------- */
 export interface BlockedSlot {

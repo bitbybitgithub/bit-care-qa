@@ -57,10 +57,12 @@ export interface SaveLabTestItem {
 
 export interface UpdateLabTestItemRequest {
   lab_id: number;
+  operation_type: "U" | "D";
   tests: {
     test_id: number;
     category_id: number;
     price: number;
+    is_active?: "0" | "1";
   }[];
   modified_by: number;
 }

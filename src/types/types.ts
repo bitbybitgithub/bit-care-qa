@@ -31,7 +31,7 @@ export interface OfferForm {
   end_date: string;
   priority: number;
 
-  created_by: string;
+  created_by: number;
 }
 
 

@@ -30,8 +30,61 @@ export interface OfferForm {
   start_date: string;
   end_date: string;
   priority: number;
-  created_by: number;
+
+  created_by: string;
 }
+
+
+export interface BlogFormData {
+  blog_id?: number;
+  created_date?: string;
+  title: string;
+  short_description: string;
+  content: string;
+
+  // Temporary field for upload only
+  featured_image: File | null;
+
+  // Database fields
+  featured_image_path: string;
+  featured_image_guid: string;
+  featured_image_name: string;
+
+  category_id: number | "";
+  status: boolean;
+
+  clinic_id: number | "";
+  created_by: number | "";
+  modified_by: number | null;
+}
+
+export interface BlogListResponse {
+  success: boolean;
+  data: BlogFormData[];
+}
+
+export interface BlogByIdResponse {
+  success: boolean;
+  data: BlogFormData;
+}
+
+// export interface OfferForm{
+//   // clinic_id: number,
+//   // clinic_name: string,
+//   offer_title:string,
+//   offer_description:string,
+//   offer_image: File | null,
+//   //offer_image:string,
+//   //discount_percentage:number,
+//   discount_percentage: number | "";
+//   coupon_code:string,
+//   start_date:string,
+//   end_date:string,
+//   priority:number,
+//   created_by: string,
+//   // status: boolean
+// }
+
 
 export interface ResetPassword {
   phone?: string;

@@ -22,7 +22,8 @@ import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
 import OffersDiscount from "../features/admin/OffersDiscount";
-
+import Blogs from "../features/admin/Blogs";
+import BlogsList from "../features/list-blogs/BlogsList";
 const Router = [
   {
     path: "/",
@@ -31,6 +32,9 @@ const Router = [
       { path: "/", element: <Navigate to="/login" /> },
       { path: "/register", element: <Registration /> },
       { path: "/login", exact: true, element: <Login /> },
+      { path: "/blog", element: <Blogs /> },
+      { path: "/bloglist", element: <BlogsList /> },
+      { path: "/blog/:blogId", element: <BlogsList /> },
     ],
   },
   {
@@ -44,6 +48,8 @@ const Router = [
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
       { path: "/clinic/offers", element: <OffersDiscount /> },
+      { path: "/clinic/blog", element: <Blogs /> },
+      { path: "/clinic/bloglist", element: <BlogsList /> },
       { path: "/clinic/settings", element: <Profile /> },
 
       // clinic doctor routes

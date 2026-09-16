@@ -28,6 +28,9 @@ export interface VerifyRazorpayPaymentRequest {
   razorpay_payment_id: string;
   razorpay_signature: string;
   appointment_id?: number;
+  lab_record_id?: number;
+  lab_appointment_id?: number;
+  lab_id?: number;
   patient_id?: number;
   doctor_id?: number;
   clinic_id?: number;

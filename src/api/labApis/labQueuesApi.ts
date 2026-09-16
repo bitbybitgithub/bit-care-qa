@@ -10,6 +10,26 @@ export interface SaveReportResponse {
   success: boolean;
   message: string;
 }
+export interface SaveLabPaymentRequest {
+  lab_appointment_id: number;
+  lab_id: number;
+  patient_id: number;
+  amount: number;
+  payment_method: "CASH" | "ONLINE";
+  bank_transaction_id?: string;
+  payment_gateway?: string;
+  payment_status: "SUCCESS" | "FAILED";
+  remarks?: string;
+  created_by: number;
+}
+
+export interface SaveLabPaymentResponse {
+  success?: boolean;
+  sucess?: boolean;
+  message?: string;
+  transaction_id?: string;
+}
+
 export const savereportAsync = async (payload: {
   lab_record_id: number;
   lab_id: number;
@@ -57,4 +77,18 @@ export const getLabReportsByLabId = async (payload: {
     payload,
   );
   return response;
+};
+
+export const saveLabPaymentAsync = async (
+  payload: SaveLabPaymentRequest,
+): Promise<SaveLabPaymentResponse> => {
+  const response = await emrAPI.post<SaveLabPaymentResponse>(
+    "/payments/save-lab-payment",
+    payload,
+  );
+  const result = response;
+  if (!result?.success && !result?.sucess) {
+    throw new Error(result?.message || "Lab payment failed");
+  }
+  return result;
 };

@@ -14,6 +14,7 @@ import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import type { Patient } from "../patient-document-management/types/patient";
 import { FaTimes } from "react-icons/fa";
+import LabPayment from "./LabPayment";
 
 const PAGE_SIZE = 10;
 
@@ -49,6 +50,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<any>(null);
+  const [paymentRow, setPaymentRow] = useState<any>(null);
   const [reportMap, setReportMap] = useState<Record<string, any[]>>({});
 
   const [openPdf, setOpenPdf] = useState(false);
@@ -62,6 +64,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
+      console.log("peding data", apiData);
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -198,6 +201,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const closeUpload = () => {
     setActiveRow(null);
     setReportMap({});
+  };
+
+  const handlePaymentSuccess = (labRecordId: number) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        Number(row.lab_record_id) === labRecordId
+          ? { ...row, is_fee_paid: "1" }
+          : row,
+      ),
+    );
   };
 
   const uploadTestFile = async (appointment_id: string, file: File) => {
@@ -468,6 +481,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       renderCell: (p) => renderReferredBy(p.row),
     },
     {
+      field: "payment_status",
+      headerName: "Payment Status",
+      flex: 1,
+      minWidth: 140,
+      sortable: false,
+      filterable: false,
+      renderCell: (p) =>
+        String(p.row.is_fee_paid) === "1" ? (
+          <Button size="small" variant="outlined" disabled>
+            Paid
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setPaymentRow(p.row)}
+          >
+            Make Payment
+          </Button>
+        ),
+    },
+    {
       field: "result_status",
       headerName: "Status",
       flex: 1,
@@ -687,6 +722,44 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           }}
         />
       </Dialog>
+
+      <Drawer
+        anchor="right"
+        open={Boolean(paymentRow)}
+        onClose={() => setPaymentRow(null)}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 460, md: 520 },
+            maxWidth: "100vw",
+            backgroundColor: "var(--color-bg)",
+          },
+        }}
+      >
+        {paymentRow && (
+          <LabPayment
+            patientId={paymentRow.patient_id}
+            patientName={paymentRow.patient_name}
+            labId={paymentRow.lab_id}
+            labRecordId={paymentRow.lab_record_id}
+            labAppointmentId={paymentRow.lab_appointment_id}
+            appointmentId={paymentRow.appointment_id}
+            doctorId={paymentRow.doctor_id}
+            clinicId={paymentRow.clinic_id}
+            testDetails={paymentRow.test_details || []}
+            packageDetails={{
+              isPackage: paymentRow.is_package,
+              id: paymentRow.package_id,
+              name: paymentRow.package_name,
+              code: paymentRow.package_code,
+              description: paymentRow.package_description,
+              price: paymentRow.package_price,
+              tests: paymentRow.package_tests,
+            }}
+            onClose={() => setPaymentRow(null)}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
+      </Drawer>
 
       <Dialog
         open={Boolean(testsDialogRow)}

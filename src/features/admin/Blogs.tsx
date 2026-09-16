@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -14,13 +13,13 @@ import {
   Typography,
 } from "@mui/material";
 
-import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
-import type{BlogFormData} from "../../types/types"
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import type { BlogFormData } from "../../types/types";
 
 // Use your existing session function
 import { getSession } from "../../context/sessions/userSession";
-import bitcarelogo from "../../assets/BitCareLogo.png"
+import bitcarelogo from "../../assets/BitCareLogo.png";
 import {
   offersdiscountApi,
   uploadOfferImageApi,
@@ -32,8 +31,6 @@ import {
   uploadBlogImageApi,
 } from "../../api";
 
-
-
 const BlogForm: React.FC = () => {
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
@@ -41,8 +38,7 @@ const BlogForm: React.FC = () => {
     content: "",
 
     // Temporary field for upload only
-   featured_image: null,
-
+    featured_image: null,
 
     featured_image_path: "",
     featured_image_guid: "",
@@ -56,7 +52,7 @@ const BlogForm: React.FC = () => {
 
     clinic_id: 58,
     created_by: 160,
-     modified_by: null,
+    modified_by: null,
   });
 
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
@@ -80,8 +76,8 @@ const BlogForm: React.FC = () => {
         created_by: sessionUser.user_id ?? "",
       }));
     }
-  }, []);  
-  
+  }, []);
+
   // ---------------------------------------------------------
   // Quill configuration
   // ---------------------------------------------------------
@@ -113,7 +109,7 @@ const BlogForm: React.FC = () => {
   // ---------------------------------------------------------
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -132,10 +128,7 @@ const BlogForm: React.FC = () => {
   // Handle Select
   // ---------------------------------------------------------
 
-  const handleSelectChange = (
-    e: any,
-    field: "category_id" | "author_id"
-  ) => {
+  const handleSelectChange = (e: any, field: "category_id" | "author_id") => {
     setFormData((prev) => ({
       ...prev,
       [field]: e.target.value,
@@ -167,33 +160,26 @@ const BlogForm: React.FC = () => {
   // Handle status
   // ---------------------------------------------------------
 
-    const handleStatusChange = (e: any) => {
-      const isPublished = e.target.value === "published";
+  const handleStatusChange = (e: any) => {
+    const isPublished = e.target.value === "published";
 
-      setFormData((prev) => ({
-        ...prev,
-        status: true,
-      }));
-    };
+    setFormData((prev) => ({
+      ...prev,
+      status: true,
+    }));
+  };
 
   // ---------------------------------------------------------
   // Handle featured image
   // ---------------------------------------------------------
 
-  const handleImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
 
     // Validate image type
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
     if (!allowedTypes.includes(file.type)) {
       setErrors((prev) => ({
@@ -203,7 +189,6 @@ const BlogForm: React.FC = () => {
 
       return;
     }
-    
 
     // Validate image size - 5 MB
     if (file.size > 5 * 1024 * 1024) {
@@ -221,7 +206,7 @@ const BlogForm: React.FC = () => {
 
     setFormData((prev) => ({
       ...prev,
-       featured_image: file,
+      featured_image: file,
       featured_image_name: file.name,
     }));
 
@@ -243,14 +228,11 @@ const BlogForm: React.FC = () => {
     }
 
     if (!formData.short_description.trim()) {
-      newErrors.short_description =
-        "Short description is required.";
+      newErrors.short_description = "Short description is required.";
     }
 
     // Remove HTML from Quill content for validation
-    const plainContent = formData.content
-      .replace(/<(.|\n)*?>/g, "")
-      .trim();
+    const plainContent = formData.content.replace(/<(.|\n)*?>/g, "").trim();
 
     if (!plainContent) {
       newErrors.content = "Blog content is required.";
@@ -269,8 +251,7 @@ const BlogForm: React.FC = () => {
     }
 
     if (!formData.created_by) {
-      newErrors.created_by =
-        "Logged-in user information is missing.";
+      newErrors.created_by = "Logged-in user information is missing.";
     }
 
     if (!featuredImage) {
@@ -286,77 +267,70 @@ const BlogForm: React.FC = () => {
   // Save Blog
   // ---------------------------------------------------------
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-
-  const handleSubmit = async (
-  e: React.FormEvent
-) => {
-  e.preventDefault();
-
-  const updatedFormData = {
-    ...formData,
-    status: true,
-  };
-
-  setFormData(updatedFormData);
-
-  if (!validateForm()) {
-    return;
-  }
-
-  try {
-    console.log("BLOG DATA:", updatedFormData);
-    console.log("FEATURED IMAGE:", featuredImage);
-
-    // Step 1: Upload featured image
-    const uploadResponse = await uploadBlogImageApi(formData.featured_image);
-
-    console.log("Upload Response:", uploadResponse);
-    console.log("Files:", uploadResponse.files);
-    console.log("First File:", uploadResponse.files[0]);
-
-    // Step 2: Create blog data with uploaded image details
-    const blogData = {
-      ...updatedFormData,
-
-      featured_image_path:
-        uploadResponse.files[0].path +
-        "\\" +
-        uploadResponse.files[0].guid_name,
-
-      featured_image_guid:
-        uploadResponse.files[0].guid_name,
-
-      featured_image_name:
-        uploadResponse.files[0].file_name,
+    const updatedFormData = {
+      ...formData,
+      status: true,
     };
 
-    console.log("FINAL BLOG DATA:", blogData);
+    setFormData(updatedFormData);
 
-    // Step 3: Save blog
-    const res = await createBlogApi(blogData);
+    if (!validateForm()) {
+      return;
+    }
 
-    console.log("BLOG API RESPONSE:", res);
+    try {
+      console.log("BLOG DATA:", updatedFormData);
+      console.log("FEATURED IMAGE:", featuredImage);
 
-    alert("Blog published successfully.");
+      // Step 1: Upload featured image
+      const uploadResponse = await uploadBlogImageApi(formData.featured_image);
 
-    handleReset();
+      console.log("Upload Response:", uploadResponse);
+      console.log("Files:", uploadResponse.files);
+      console.log("First File:", uploadResponse.files[0]);
 
-  } catch (error: any) {
-    console.error("BLOG CREATE ERROR:", error);
+      // Step 2: Create blog data with uploaded image details
+      const blogData = {
+        ...updatedFormData,
 
-    const msg =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      "Something went wrong while saving the blog.";
+        featured_image_path:
+          uploadResponse.files[0].path +
+          "\\" +
+          uploadResponse.files[0].guid_name,
 
-    alert(msg);
-  }
-};
+        featured_image_guid: uploadResponse.files[0].guid_name,
+
+        featured_image_name: uploadResponse.files[0].file_name,
+      };
+
+      console.log("FINAL BLOG DATA:", blogData);
+
+      // Step 3: Save blog
+      const res = await createBlogApi(blogData);
+
+      console.log("BLOG API RESPONSE:", res);
+
+      alert("Blog published successfully.");
+
+      handleReset();
+    } catch (error: any) {
+      console.error("BLOG CREATE ERROR:", error);
+
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Something went wrong while saving the blog.";
+
+      alert(msg);
+    }
+  };
 
   // const handleSubmit = async (
-  //   e: React.FormEvent, 
+  //   e: React.FormEvent,
   // ) => {
   //   e.preventDefault();
 
@@ -415,7 +389,6 @@ const BlogForm: React.FC = () => {
       // Temporary field for upload only
       featured_image: null,
 
-
       featured_image_path: "",
       featured_image_guid: "",
       featured_image_name: "",
@@ -437,11 +410,7 @@ const BlogForm: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-       
-      }}
-    >
+    <Box sx={{}}>
       {/* =====================================================
           PAGE TITLE
       ====================================================== */}
@@ -460,7 +429,7 @@ const BlogForm: React.FC = () => {
             SECTION 1 - BASIC INFORMATION
         ==================================================== */}
 
-        <Card sx={{ mb: 2 , backgroundColor: "white"}}>
+        <Card sx={{ mb: 2, backgroundColor: "white" }}>
           <CardContent>
             <h2 className="relative flex items-center justify-center h-20  text-black text-2xl font-bold border border-gray-400 rounded-2xl mb-4">
               {/* Logo */}
@@ -469,16 +438,14 @@ const BlogForm: React.FC = () => {
                 alt="BitCare Logo"
                 className="absolute left-1.5 w-35 h-18 bg-white object-contain rounded-lg"
               />
-
-          {/* Title */}
-            Create Blog
-        </h2>
+              {/* Title */}
+              Create Blog
+            </h2>
 
             <Grid container spacing={2}>
-
               {/* Title */}
 
-              <Grid size={{ xs: 12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -490,15 +457,16 @@ const BlogForm: React.FC = () => {
                   helperText={errors.title}
                   placeholder="Enter blog title"
                   sx={{
-                "& .MuiInputBase-root": {
-                    backgroundColor: "#ffffff",
-                },}}
+                    "& .MuiInputBase-root": {
+                      backgroundColor: "#ffffff",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Short Description */}
 
-              <Grid size={{ xs: 12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   multiline
@@ -512,14 +480,15 @@ const BlogForm: React.FC = () => {
                   placeholder="Enter a short description"
                   size="small"
                   sx={{
-                "& .MuiInputBase-root": {
-                    backgroundColor: "#ffffff",
-                },}}
+                    "& .MuiInputBase-root": {
+                      backgroundColor: "#ffffff",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Category */}
-{/* 
+              {/* 
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl
                   fullWidth
@@ -610,80 +579,65 @@ const BlogForm: React.FC = () => {
             </Grid>
           </CardContent>
         </Card>
-        
 
         {/* ===================================================
             SECTION 2 - FEATURED IMAGE
         ==================================================== */}
 
-        <Card sx={{ mb: 2,backgroundColor: "#ffffff", border: "1px solid #e0e0e0", }}>
-          <CardContent >
-                <Typography
-                variant="h6"
-                fontWeight={600}
-                mb={2}
-                
-                >
-                Blog Banner
+        <Card
+          sx={{
+            mb: 2,
+            backgroundColor: "#ffffff",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} mb={2}>
+              Blog Banner
+            </Typography>
+
+            <Button variant="outlined" component="label">
+              Upload Blog Banner
+              <input
+                type="file"
+                hidden
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+              />
+            </Button>
+
+            {errors.featured_image && (
+              <Typography color="error" variant="body2" mt={1}>
+                {errors.featured_image}
+              </Typography>
+            )}
+
+            {imagePreview && (
+              <Box mt={3}>
+                <Typography variant="body2" mb={1} fontWeight={600}>
+                  Preview
                 </Typography>
 
-                <Button
-                variant="outlined"
-                component="label"
-                >
-                Upload Blog Banner
-
-                <input
-                    type="file"
-                    hidden
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageChange}
+                <Box
+                  component="img"
+                  src={imagePreview}
+                  alt="Featured"
+                  sx={{
+                    width: "300px",
+                    maxHeight: "200px",
+                    objectFit: "cover",
+                    borderRadius: 2,
+                    border: "1px solid #ddd",
+                  }}
                 />
-                </Button>
+              </Box>
+            )}
 
-                {errors.featured_image && (
-                <Typography
-                    color="error"
-                    variant="body2"
-                    mt={1}
-                >
-                    {errors.featured_image}
-                </Typography>
-                )}
-
-                {imagePreview && (
-                <Box mt={3}>
-                    <Typography
-                    variant="body2"
-                    mb={1}
-                    fontWeight={600}
-                    >
-                    Preview
-                    </Typography>
-
-                    <Box
-                    component="img"
-                    src={imagePreview}
-                    alt="Featured"
-                    sx={{
-                        width: "300px",
-                        maxHeight: "200px",
-                        objectFit: "cover",
-                        borderRadius: 2,
-                        border: "1px solid #ddd",
-                    }}
-                    />
-                </Box>
-                )}
-
-                {formData.featured_image_name && (
-                <Typography
-                    variant="body2"
-                    mt={1}
-                >
-                    Selected: {formData.featured_image_name}
-                </Typography>
-                )}
+            {formData.featured_image_name && (
+              <Typography variant="body2" mt={1}>
+                Selected: {formData.featured_image_name}
+              </Typography>
+            )}
           </CardContent>
         </Card>
 
@@ -691,13 +645,15 @@ const BlogForm: React.FC = () => {
             SECTION 3 - BLOG CONTENT
         ==================================================== */}
 
-        <Card sx={{ mb: 2, backgroundColor: "#ffffff", border: "1px solid #e0e0e0", }}>
+        <Card
+          sx={{
+            mb: 2,
+            backgroundColor: "#ffffff",
+            border: "1px solid #e0e0e0",
+          }}
+        >
           <CardContent>
-            <Typography
-              variant="h6"
-              fontWeight={600}
-              mb={2}
-            >
+            <Typography variant="h6" fontWeight={600} mb={2}>
               Blog Content
             </Typography>
 
@@ -723,11 +679,7 @@ const BlogForm: React.FC = () => {
             </Box>
 
             {errors.content && (
-              <Typography
-                color="error"
-                variant="body2"
-                mt={1}
-              >
+              <Typography color="error" variant="body2" mt={1}>
                 {errors.content}
               </Typography>
             )}
@@ -738,58 +690,48 @@ const BlogForm: React.FC = () => {
             SECTION 4 - PUBLISHING
         ==================================================== */}
 
-        <Card sx={{ mb: 3,backgroundColor: "#ffffff", border: "1px solid #e0e0e0",}}>
+        <Card
+          sx={{
+            mb: 3,
+            backgroundColor: "#ffffff",
+            border: "1px solid #e0e0e0",
+          }}
+        >
           <CardContent>
-            <Typography
-              variant="h6"
-              fontWeight={600}
-              mb={2}
-            >
+            <Typography variant="h6" fontWeight={600} mb={2}>
               Publishing
             </Typography>
 
             <Grid container spacing={3}>
-
               {/* Category */}
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl
                   fullWidth
                   error={!!errors.category_id}
-                   size="small"
-                   sx={{
+                  size="small"
+                  sx={{
                     "& .MuiInputBase-root": {
-                        backgroundColor: "#ffffff",
-                    },}}
+                      backgroundColor: "#ffffff",
+                    },
+                  }}
                 >
                   <InputLabel>Category</InputLabel>
 
                   <Select
                     value={formData.category_id}
                     label="Category"
-                    onChange={(e) =>
-                      handleSelectChange(e, "category_id")
-                    }
+                    onChange={(e) => handleSelectChange(e, "category_id")}
                   >
-                    <MenuItem value={1}>
-                      Diabetes
-                    </MenuItem>
+                    <MenuItem value={1}>Diabetes</MenuItem>
 
-                    <MenuItem value={2}>
-                      Cardiology
-                    </MenuItem>
+                    <MenuItem value={2}>Cardiology</MenuItem>
 
-                    <MenuItem value={3}>
-                      Nutrition
-                    </MenuItem>
+                    <MenuItem value={3}>Nutrition</MenuItem>
                   </Select>
 
                   {errors.category_id && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ ml: 2 }}
-                    >
+                    <Typography variant="caption" color="error" sx={{ ml: 2 }}>
                       {errors.category_id}
                     </Typography>
                   )}
@@ -799,12 +741,15 @@ const BlogForm: React.FC = () => {
               {/* Status */}
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl fullWidth
-                size="small"
-                   sx={{
+                <FormControl
+                  fullWidth
+                  size="small"
+                  sx={{
                     "& .MuiInputBase-root": {
-                        backgroundColor: "#ffffff",
-                    },}}>
+                      backgroundColor: "#ffffff",
+                    },
+                  }}
+                >
                   <InputLabel>Status</InputLabel>
 
                   <Select
@@ -812,9 +757,7 @@ const BlogForm: React.FC = () => {
                     label="Status"
                     onChange={handleStatusChange}
                   >
-                    <MenuItem value="published">
-                      Published
-                    </MenuItem>
+                    <MenuItem value="published">Published</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -852,25 +795,13 @@ const BlogForm: React.FC = () => {
             BUTTONS
         ==================================================== */}
 
-        <Box
-          display="flex"
-          justifyContent="center"
-          gap={2}
-          mb={2}
-        >
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-          >
+        <Box display="flex" justifyContent="center" gap={2} mb={2}>
+          <Button variant="contained" onClick={handleSubmit}>
             Save Blog
           </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={handleReset}
-          >
+          <Button variant="outlined" color="inherit" onClick={handleReset}>
             Reset
-          </Button>         
+          </Button>
         </Box>
       </form>
     </Box>

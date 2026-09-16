@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Dialog, Drawer } from "@mui/material";
+import { Box, Button, Chip, Dialog, Drawer, Tooltip } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -13,6 +13,8 @@ import { toast } from "react-toastify";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import type { Patient } from "../patient-document-management/types/patient";
+import { FaTimes } from "react-icons/fa";
+import LabPayment from "./LabPayment";
 
 const PAGE_SIZE = 10;
 
@@ -24,6 +26,10 @@ const normalizeStatus = (s: string) => {
     case "PROCESSING":
     case "IN_PROGRESS":
       return "Processing";
+    case "REPORTING":
+    case "REPORTING_PENDING":
+    case "REPORTING PENDING":
+      return "Reporting Pending";
     case "COMPLETED":
       return "Completed";
     default:
@@ -32,7 +38,7 @@ const normalizeStatus = (s: string) => {
 };
 
 interface Props {
-  mode?: "pending" | "processing" | "reporting"|"completed";
+  mode?: "pending" | "processing" | "reporting" | "completed";
   searchTerm?: string;
 }
 
@@ -44,11 +50,13 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<any>(null);
+  const [paymentRow, setPaymentRow] = useState<any>(null);
   const [reportMap, setReportMap] = useState<Record<string, any[]>>({});
 
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [testsDialogRow, setTestsDialogRow] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -56,6 +64,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
+      console.log("peding data", apiData);
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -152,6 +161,15 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return filteredRows.slice(start, start + PAGE_SIZE);
   }, [filteredRows, currentPage]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [resolvedMode, searchTerm]);
+
+  useEffect(() => {
+    const lastPage = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    setCurrentPage((page) => Math.min(page, lastPage));
+  }, [filteredRows.length]);
+
   /* ---------------- ACTIONS ---------------- */
   const updateStatus = async (
     row: any,
@@ -185,6 +203,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     setReportMap({});
   };
 
+  const handlePaymentSuccess = (labRecordId: number) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        Number(row.lab_record_id) === labRecordId
+          ? { ...row, is_fee_paid: "1" }
+          : row,
+      ),
+    );
+  };
+
   const uploadTestFile = async (appointment_id: string, file: File) => {
     if (!activeRow) return;
     try {
@@ -206,9 +234,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       console.error("Upload failed:", error);
 
       const backendMessage =
-        error?.response?.data?.message || 
-        error?.response?.data?.error || 
-        error?.message || 
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
         "File upload failed";
 
       toast.error(backendMessage);
@@ -262,11 +290,167 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     }
   };
 
+  const formatAppointmentType = (appointmentType?: string) => {
+    switch (appointmentType?.toUpperCase()) {
+      case "LAB_VISIT":
+        return "LAB VISIT";
+      case "WALK_IN":
+        return "WALK IN";
+      case "HOME_VISIT":
+        return "HOME VISIT";
+      default:
+        return appointmentType || "-";
+    }
+  };
+
+  const renderReferredBy = (row: any) => {
+    const bookingSource = row.booking_source?.toUpperCase();
+    const isSelfBooking = bookingSource === "LAB";
+    const isClinicBooking = bookingSource === "CLINIC";
+    const source = isSelfBooking
+      ? "SELF"
+      : isClinicBooking
+        ? "CLINIC"
+        : row.booking_source;
+
+    const clinicDetails = (
+      <span className="flex flex-col gap-1 p-1 text-xs">
+        <span>Clinic: {row.clinic_name || "-"}</span>
+        <span>Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "-"}</span>
+      </span>
+    );
+
+    return (
+      <div className="flex h-full w-full flex-col justify-center gap-1 text-xs leading-tight">
+        <Tooltip title={isClinicBooking ? clinicDetails : ""} arrow>
+          <span
+            className="w-fit rounded-full px-2 py-0.5 font-semibold"
+            style={{
+              backgroundColor: isSelfBooking
+                ? "var(--color-success-light, #e4f5ed)"
+                : "var(--color-primary-light, #e8f0ff)",
+              color: "var(--color-primary)",
+            }}
+          >
+            {source}
+          </span>
+        </Tooltip>
+        {/* {isSelfBooking && <span>Self Booking</span>} */}
+      </div>
+    );
+  };
+
+  const renderTestsOrPackage = (row: any) => {
+    const isPackage =
+      row.is_package === "1" ||
+      row.is_package === 1 ||
+      Boolean(row.package_id || row.package_name || row.package_code);
+
+    if (isPackage) {
+      const packageTests = Array.isArray(row.package_tests)
+        ? row.package_tests
+        : [];
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                Package
+              </span>
+              <Chip
+                size="small"
+                label={`${row.package_total_tests || packageTests.length || 0} tests`}
+                sx={{
+                  backgroundColor: "#dbeafe",
+                  color: "#1d4ed8",
+                  fontWeight: 700,
+                }}
+              />
+            </div>
+            <p className="text-lg font-bold text-slate-900">
+              {row.package_name || row.package_code || "Unnamed package"}
+            </p>
+          </div>
+          {packageTests.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                Included tests
+              </p>
+              <div className="grid gap-2">
+                {packageTests.map((test: any, index: number) => (
+                  <div
+                    key={test.test_id ?? index}
+                    className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+                  >
+                    {test.test_name || test.name || `Test ${test.test_id}`}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const tests = Array.isArray(row.test_details) ? row.test_details : [];
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
+              Test
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">
+              Individual test{tests.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <Chip
+            size="small"
+            label={`${tests.length} ${tests.length === 1 ? "test" : "tests"}`}
+            sx={{
+              backgroundColor: "#d1fae5",
+              color: "#047857",
+              fontWeight: 700,
+            }}
+          />
+        </div>
+        <div className="grid gap-2">
+          {tests.map((test: any, index: number) => (
+            <div
+              key={test.test_id ?? index}
+              className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+            >
+              {test.test_name || test.name || `Test ${test.test_id}`}
+            </div>
+          ))}
+          {!tests.length && (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              No test details available.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const hasTestsOrPackage = (row: any) => {
+    const hasPackage =
+      row.is_package === "1" ||
+      row.is_package === 1 ||
+      row.package_id ||
+      row.package_name ||
+      row.package_code;
+    const hasTests = Array.isArray(row.test_details) && row.test_details.length;
+
+    return Boolean(hasPackage || hasTests);
+  };
+
   const commonColumns: GridColDef[] = [
     {
       field: "patient_name",
       headerName: "Patient Name",
       flex: 1.5,
+      minWidth: 150,
       renderCell: (p) => (
         <h1 className="font-[var(--font-weight-semibold)]">
           {p.row.patient_name}{" "}
@@ -276,10 +460,54 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         </h1>
       ),
     },
-    { field: "result_status", headerName: "Status", flex: 1 },
-    { field: "contact_no", headerName: "Contact Number", flex: 1 },
-    { field: "clinic_name", headerName: "Clinic Name", flex: 1 },
-    { field: "doctor_name", headerName: "Doctor Name", flex: 1 },
+    {
+      field: "contact_no",
+      headerName: "Contact Number",
+      flex: 1,
+      minWidth: 130,
+    },
+    {
+      field: "appointment_type",
+      headerName: "Appointment Type",
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (_value, row) => formatAppointmentType(row.appointment_type),
+    },
+    {
+      field: "referred_by",
+      headerName: "Referred/Self",
+      flex: 1.2,
+      minWidth: 130,
+      renderCell: (p) => renderReferredBy(p.row),
+    },
+    {
+      field: "payment_status",
+      headerName: "Payment Status",
+      flex: 1,
+      minWidth: 140,
+      sortable: false,
+      filterable: false,
+      renderCell: (p) =>
+        String(p.row.is_fee_paid) === "1" ? (
+          <Button size="small" variant="outlined" disabled>
+            Paid
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setPaymentRow(p.row)}
+          >
+            Make Payment
+          </Button>
+        ),
+    },
+    {
+      field: "result_status",
+      headerName: "Status",
+      flex: 1,
+      minWidth: 110,
+    },
   ];
 
   const columns: GridColDef[] = useMemo(() => {
@@ -290,6 +518,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           field: "action",
           headerName: "Action",
           flex: 1,
+          minWidth: 110,
           renderCell: (p) => (
             <Button
               size="small"
@@ -308,15 +537,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         {
           field: "action",
           headerName: "Action",
-          width: 200,
+          width: 260,
           renderCell: (p) => (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => openViewPrescription(p.row)}
-            >
-              View Prescription
-            </Button>
+            <div className="flex h-full w-full flex-wrap items-center justify-center gap-2">
+              {p.row.prescription_url && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => openViewPrescription(p.row)}
+                >
+                  View Prescription
+                </Button>
+              )}
+              {hasTestsOrPackage(p.row) && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setTestsDialogRow(p.row)}
+                >
+                  View
+                </Button>
+              )}
+            </div>
           ),
         },
         {
@@ -334,22 +576,23 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           ),
         },
       ];
-if (resolvedMode === "completed")
+    if (resolvedMode === "completed")
       return [
         ...commonColumns,
         {
           field: "action",
-          headerName: "Prescription",
+          headerName: "Action",
           width: 200,
-          renderCell: (p) => (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => openViewPrescription(p.row)}
-            >
-              View Prescription
-            </Button>
-          ),
+          renderCell: (p) =>
+            p.row.prescription_url ? (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => openViewPrescription(p.row)}
+              >
+                View Prescription
+              </Button>
+            ) : null,
         },
         {
           field: "complete",
@@ -368,9 +611,37 @@ if (resolvedMode === "completed")
       ];
     return [
       ...commonColumns,
+
+      {
+        field: "view",
+        headerName: "Action",
+        width: 260,
+        renderCell: (p) => (
+          <div className="flex items-center gap-2">
+            {p.row.prescription_url && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => openViewPrescription(p.row)}
+              >
+                View Prescription
+              </Button>
+            )}
+            {hasTestsOrPackage(p.row) && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setTestsDialogRow(p.row)}
+              >
+                View
+              </Button>
+            )}
+          </div>
+        ),
+      },
       {
         field: "action",
-        headerName: "Action",
+        headerName: "Upload",
         width: 180,
         renderCell: (p) => (
           <Button
@@ -391,8 +662,9 @@ if (resolvedMode === "completed")
         <DataGrid
           rows={pagedRows}
           columns={columns}
-          // getRowId={(row) => `${row.appointment_id}_${row.patient_id}`}
-          getRowId={(row) => `${row.appointment_id}_${row.patient_id}_${row.created_date}`}
+          getRowId={(row) => row.lab_record_id}
+          paginationMode="server"
+          rowCount={filteredRows.length}
           paginationModel={{ page: currentPage - 1, pageSize: PAGE_SIZE }}
           onPaginationModelChange={(m) => setCurrentPage(m.page + 1)}
           rowHeight={64}
@@ -453,6 +725,89 @@ if (resolvedMode === "completed")
 
       <Drawer
         anchor="right"
+        open={Boolean(paymentRow)}
+        onClose={() => setPaymentRow(null)}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 460, md: 520 },
+            maxWidth: "100vw",
+            backgroundColor: "var(--color-bg)",
+          },
+        }}
+      >
+        {paymentRow && (
+          <LabPayment
+            patientId={paymentRow.patient_id}
+            patientName={paymentRow.patient_name}
+            labId={paymentRow.lab_id}
+            labRecordId={paymentRow.lab_record_id}
+            labAppointmentId={paymentRow.lab_appointment_id}
+            appointmentId={paymentRow.appointment_id}
+            doctorId={paymentRow.doctor_id}
+            clinicId={paymentRow.clinic_id}
+            testDetails={paymentRow.test_details || []}
+            packageDetails={{
+              isPackage: paymentRow.is_package,
+              id: paymentRow.package_id,
+              name: paymentRow.package_name,
+              code: paymentRow.package_code,
+              description: paymentRow.package_description,
+              price: paymentRow.package_price,
+              tests: paymentRow.package_tests,
+            }}
+            onClose={() => setPaymentRow(null)}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
+      </Drawer>
+
+      <Dialog
+        open={Boolean(testsDialogRow)}
+        onClose={() => setTestsDialogRow(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            backgroundColor: "#f8fafc",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <div>
+          <div className="flex items-center justify-between bg-[var(--color-primary)] px-5 py-4 text-white">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                Order details
+              </p>
+              <h2 className="mt-1 text-xl font-bold">
+                {testsDialogRow &&
+                (testsDialogRow.is_package === "1" ||
+                  testsDialogRow.is_package === 1 ||
+                  testsDialogRow.package_id ||
+                  testsDialogRow.package_name ||
+                  testsDialogRow.package_code)
+                  ? "Package details"
+                  : "Test details"}
+              </h2>
+            </div>
+            <button
+              onClick={() => setTestsDialogRow(null)}
+              // className="rounded-full px-2 text-2xl leading-none text-white transition hover:bg-white/50"
+              className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+              aria-label="Close tests and package dialog"
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <div className="p-5">
+            {testsDialogRow && renderTestsOrPackage(testsDialogRow)}
+          </div>
+        </div>
+      </Dialog>
+
+      <Drawer
+        anchor="right"
         open={Boolean(activeRow)}
         onClose={closeUpload}
         PaperProps={{
@@ -481,13 +836,14 @@ if (resolvedMode === "completed")
 
             <button
               onClick={closeUpload}
-              className="p-2 rounded-full"
+              className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+              aria-label="Close tests and package dialog"
               style={{
                 backgroundColor: "var(--color-surface)",
                 color: "var(--color-primary)",
               }}
             >
-              ×
+              <FaTimes />
             </button>
           </div>
 

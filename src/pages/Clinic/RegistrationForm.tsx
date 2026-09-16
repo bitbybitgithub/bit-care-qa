@@ -210,7 +210,7 @@ const RegistrationForm = () => {
       setFormData((p) => ({
         ...p,
         state: first.State || "",
-        district: first.Name || "",
+        district: first.District || "",
         area: first.Name || "",
       }));
 
@@ -476,7 +476,7 @@ const RegistrationForm = () => {
             />
             <FieldErrorText error={errors.state} />
           </FormControl>
-{/* 
+
           <FormControl>
             <TextField
               value={formData.district}
@@ -491,7 +491,7 @@ const RegistrationForm = () => {
               }}
             />
             <FieldErrorText error={errors.district} />
-          </FormControl> */}
+          </FormControl>
 
           <FormControl fullWidth>
             <Autocomplete

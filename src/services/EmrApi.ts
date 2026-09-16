@@ -25,14 +25,35 @@ export const ApiInterceptor = {
 // -------------------- //
 //   Header Builder
 // -------------------- //
-const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+
+const getHeaders = (
+  customHeaders?: HeadersInit,
+  body?: BodyInit | null,
+): HeadersInit => {
   const token = TokenManager.getAccessToken();
-  return {
-    "Content-Type": "application/json",
+
+  const headers: HeadersInit = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...customHeaders,
   };
+
+  // Don't set Content-Type for FormData.
+  // The browser will set it automatically.
+  if (!(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
 };
+
+// const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
+//   const token = TokenManager.getAccessToken();
+//   return {
+//     "Content-Type": "application/json",
+//     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+//     ...customHeaders,
+//   };
+// };
 
 // -------------------- //
 //  Timeout Helper
@@ -40,7 +61,7 @@ const getHeaders = (customHeaders?: HeadersInit): HeadersInit => {
 const fetchWithTimeout = (
   url: string,
   options: RequestInit,
-  timeout = 20000
+  timeout = 20000,
 ): Promise<Response> => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -59,7 +80,7 @@ let isRefreshing = false;
 let refreshQueue: (() => void)[] = [];
 
 const refreshAccessToken = async (
-  payload?: RefreshToken
+  payload?: RefreshToken,
 ): Promise<string | null> => {
   if (isRefreshing) {
     await new Promise<void>((resolve) => refreshQueue.push(resolve));
@@ -114,7 +135,7 @@ async function request<T = unknown>(
   url: string,
   options: RequestInit = {},
   timeout = 30000,
-  retry = true
+  retry = true,
 ): Promise<T> {
   const fullUrl = `${BASE_URL}${url}`;
   interceptors.onRequestStart?.(fullUrl);
@@ -124,10 +145,11 @@ async function request<T = unknown>(
       fullUrl,
       {
         ...options,
-        headers: getHeaders(options.headers),
+        headers: getHeaders(options.headers, options.body),
+        // headers: getHeaders(options.headers),
         credentials: "include",
       },
-      timeout
+      timeout,
     );
 
     // Handle 401 -> try refresh
@@ -188,7 +210,16 @@ export const emrAPI = {
   get: <T = unknown>(url: string, timeout?: number) =>
     request<T>(url, { method: "GET" }, timeout),
   post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
-    request<T>(url, { method: "POST", body: JSON.stringify(data) }, timeout),
+    request<T>(
+      url,
+      {
+        method: "POST",
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      },
+      timeout,
+    ),
+  // post: <T = unknown>(url: string, data: unknown, timeout?: number) =>
+  //   request<T>(url, { method: "POST", body: JSON.stringify(data) }, timeout),
   put: <T = unknown>(url: string, data: unknown, timeout?: number) =>
     request<T>(url, { method: "PUT", body: JSON.stringify(data) }, timeout),
   delete: <T = unknown>(url: string, timeout?: number) =>

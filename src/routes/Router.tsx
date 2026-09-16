@@ -14,17 +14,16 @@ import PatientDocManagementPage from "../features/patient-document-management/pa
 
 import LabDashboard from "../features/lab/LabDashboard";
 import PharmacyDashboard from "../features/pharma/PharmacyDashboard";
-// import ServiceManagement from "../features/lab/ServiceManagement";
+import ServiceManagement from "../features/lab/ServiceManagement";
 import LabProfile from "../features/lab/LabProfile";
 import LabEmpanelment from "../features/lab/LabEmpanelment";
 import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
-
-
-
-
+import OffersDiscount from "../features/admin/OffersDiscount";
+import Blogs from "../features/admin/Blogs";
+import BlogsList from "../features/list-blogs/BlogsList";
 const Router = [
   {
     path: "/",
@@ -33,19 +32,24 @@ const Router = [
       { path: "/", element: <Navigate to="/login" /> },
       { path: "/register", element: <Registration /> },
       { path: "/login", exact: true, element: <Login /> },
+      { path: "/blog", element: <Blogs /> },
+      { path: "/bloglist", element: <BlogsList /> },
+      { path: "/blog/:blogId", element: <BlogsList /> },
     ],
   },
   {
     path: "/",
     element: <MainLayout />,
     children: [
-      // clinic admin routes
+      // clinic admin routesy
       { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
       { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
-
+      { path: "/clinic/offers", element: <OffersDiscount /> },
+      { path: "/clinic/blog", element: <Blogs /> },
+      { path: "/clinic/bloglist", element: <BlogsList /> },
       { path: "/clinic/settings", element: <Profile /> },
 
       // clinic doctor routes
@@ -59,20 +63,18 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
+      { path: "/lab/offers", element: <OffersDiscount /> },
       { path: "/lab/labsetting", element: <LabProfile /> },
-      // { path: "/lab/service-management", element: <ServiceManagement /> },
-
+      { path: "/lab/service-management", element: <ServiceManagement /> },
 
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
       { path: "/pharmacy/pharmacysettings", element: <PharmaSetting /> },
 
-
       //  SupportTeam routes
-      { path: '/support/dashboard', element: <SupportDashboard/> }
+      { path: "/support/dashboard", element: <SupportDashboard /> },
 
-      
       // { path: "/patients-records", element: <ComingSoon /> },
       // { path: "/add-diagnosis", element: <ComingSoon /> },
       // { path: "/manage-medication", element: <ComingSoon /> },
@@ -87,8 +89,7 @@ const Router = [
       //   element: <ConsultationInProgress />,
       // },
       // { path: '/walkin-register', element: <WalkInRegisterForm /> },
-      // 
-      
+      //
     ],
   },
 ];

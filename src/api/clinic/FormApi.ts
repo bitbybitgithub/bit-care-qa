@@ -1,5 +1,11 @@
-import type { FormDataBase, OfferForm,BlogFormData,BlogListResponse,BlogByIdResponse} from "../../types/types";
-import { emrAPI } from "../../services/EmrApi";
+import type {
+  FormDataBase,
+  OfferForm,
+  BlogFormData,
+  BlogListResponse,
+  BlogByIdResponse,
+} from "../../types/types";
+import { BASE_URL, emrAPI } from "../../services/EmrApi";
 
 export const registerApi = async (formData: FormDataBase) => {
   try {
@@ -62,7 +68,7 @@ export const uploadOfferImageApi = async (file: File) => {
   formData.append("folder", "offers");
 
   const response = await fetch(
-    "https://cliniccareapi.bitbybitsolutions.co.in/api/common/upload-report?folder=offers",
+    `${BASE_URL}/common/upload-report?folder=offers`,
     {
       method: "POST",
       body: formData,
@@ -78,7 +84,7 @@ export const uploadOfferImageApi = async (file: File) => {
   return data;
 };
 
-export const createBlogApi = async (formData: BlogFormData ) => {
+export const createBlogApi = async (formData: BlogFormData) => {
   const blogData = {
     clinic_id: formData.clinic_id,
 
@@ -97,14 +103,10 @@ export const createBlogApi = async (formData: BlogFormData ) => {
     modified_by: formData.modified_by,
   };
 
-  const response = await emrAPI.post<any>(
-    `/admin/blogs`,
-    blogData
-  );
+  const response = await emrAPI.post<any>(`/admin/blogs`, blogData);
 
   return response;
 };
-
 
 export const uploadBlogImageApi = async (file: File) => {
   const formData = new FormData();
@@ -113,11 +115,11 @@ export const uploadBlogImageApi = async (file: File) => {
   formData.append("folder", "blogs");
 
   const response = await fetch(
-    "https://cliniccareapi.bitbybitsolutions.co.in/api/common/upload-report?folder=blogs",
+    `${BASE_URL}/common/upload-report?folder=blogs`,
     {
       method: "POST",
       body: formData,
-    }
+    },
   );
 
   const data = await response.json();

@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import {
- Button,
+  Button,
   Box,
   Card,
   CardContent,
@@ -12,7 +11,8 @@ import {
 
 import { getBlogListApi, getBlogByIdApi } from "../../api";
 import type { BlogFormData } from "../../types/types";
-import { useNavigate, useParams  } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { BASE_URL } from "../../services/EmrApi";
 
 // interface Blog {
 //   blog_id: number;
@@ -29,10 +29,10 @@ import { useNavigate, useParams  } from "react-router-dom";
 
 const BlogsList: React.FC = () => {
   const categoryNames: Record<number, string> = {
-  1: "Diabetes",
-  2: "Cardiology",
-  3: "Nutrition",
-};  
+    1: "Diabetes",
+    2: "Cardiology",
+    3: "Nutrition",
+  };
   const navigate = useNavigate();
   const { blogId } = useParams();
 
@@ -43,72 +43,72 @@ const BlogsList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-//   useEffect(() => {
-//     const fetchBlogs = async () => {
-//       try {
-//         setLoading(true);
-//         setError("");
+  //   useEffect(() => {
+  //     const fetchBlogs = async () => {
+  //       try {
+  //         setLoading(true);
+  //         setError("");
 
-//         const response = await getBlogListApi();
+  //         const response = await getBlogListApi();
 
-//         console.log("BLOG LIST RESPONSE:", response);
-//         console.log("BLOG LIST DATA:", response.data);
+  //         console.log("BLOG LIST RESPONSE:", response);
+  //         console.log("BLOG LIST DATA:", response.data);
 
-//         setBlogs(response.data);
-//       } catch (error) {
-//         console.error("GET BLOG LIST ERROR:", error);
+  //         setBlogs(response.data);
+  //       } catch (error) {
+  //         console.error("GET BLOG LIST ERROR:", error);
 
-//         setError("Unable to load blogs.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
+  //         setError("Unable to load blogs.");
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
 
-//     fetchBlogs();
-//   }, []);
+  //     fetchBlogs();
+  //   }, []);
 
   useEffect(() => {
-  const fetchBlogs = async () => {
-    try {
-      setLoading(true);
-      setError("");
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-      if (blogId) {
-        const response = await getBlogByIdApi(blogId);
+        if (blogId) {
+          const response = await getBlogByIdApi(blogId);
 
-        console.log("BLOG DETAILS RESPONSE:", response);
-        console.log("BLOG DETAILS DATA:", response.data);
+          console.log("BLOG DETAILS RESPONSE:", response);
+          console.log("BLOG DETAILS DATA:", response.data);
 
-        setBlog(response.data);
-      } else {
-        const response = await getBlogListApi();
+          setBlog(response.data);
+        } else {
+          const response = await getBlogListApi();
 
-        console.log("BLOG LIST RESPONSE:", response);
-        console.log("BLOG LIST DATA:", response.data);
+          console.log("BLOG LIST RESPONSE:", response);
+          console.log("BLOG LIST DATA:", response.data);
 
-        setBlogs(response.data);
+          setBlogs(response.data);
+        }
+      } catch (error) {
+        console.error("GET BLOG ERROR:", error);
+
+        setError("Unable to load blog.");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("GET BLOG ERROR:", error);
+    };
 
-      setError("Unable to load blog.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchBlogs();
-}, [blogId]);
+    fetchBlogs();
+  }, [blogId]);
 
   return (
     <Box
-      sx={{       
+      sx={{
         margin: "0 auto",
         padding: {
           xs: "20px",
           md: "35px 25px",
         },
-         backgroundColor: "#ffffff",
+        backgroundColor: "#ffffff",
       }}
     >
       {/* PAGE HEADER */}
@@ -150,10 +150,7 @@ const BlogsList: React.FC = () => {
       {/* LOADING */}
 
       {loading && (
-        <Typography
-          textAlign="center"
-          color="text.secondary"
-        >
+        <Typography textAlign="center" color="text.secondary">
           Loading blogs...
         </Typography>
       )}
@@ -161,10 +158,7 @@ const BlogsList: React.FC = () => {
       {/* ERROR */}
 
       {!loading && error && (
-        <Typography
-          textAlign="center"
-          color="error"
-        >
+        <Typography textAlign="center" color="error">
           {error}
         </Typography>
       )}
@@ -172,142 +166,133 @@ const BlogsList: React.FC = () => {
       {/* NO BLOGS */}
 
       {!loading && !error && !blogId && blogs.length === 0 && (
-        <Typography
-          textAlign="center"
-          color="text.secondary"
-        >
+        <Typography textAlign="center" color="text.secondary">
           No blogs available.
         </Typography>
       )}
 
       {/* BLOG DETAILS */}
 
-        {!loading && !error && blogId && blog && (
+      {!loading && !error && blogId && blog && (
         <Card
-            sx={{
+          sx={{
             maxWidth: "1000px",
             margin: "0 auto",
             backgroundColor: "#ffffff",
             borderRadius: "16px",
             overflow: "hidden",
             boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
-            }}
+          }}
         >
-            <Box
+          <Box
             component="img"
-            src={`https://cliniccareapi.bitbybitsolutions.co.in/api/blog-images/${blog.featured_image_guid}`}
+            src={`${BASE_URL}/blog-images/${blog.featured_image_guid}`}
             alt={blog.title}
             sx={{
-                width: "100%",
-                height: "400px",
-                objectFit: "cover",
-                display: "block",
+              width: "100%",
+              height: "400px",
+              objectFit: "cover",
+              display: "block",
             }}
-            />
+          />
 
-            <CardContent
+          <CardContent
             sx={{
-                padding: {
+              padding: {
                 xs: "20px",
                 md: "40px",
-                },
-                backgroundColor: "#ffffff",
+              },
+              backgroundColor: "#ffffff",
             }}
-            >
-            
+          >
             <Box
-            sx={{
+              sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 1.5,
                 gap: 1,
-            }}
+              }}
             >
-            <Chip
-            label={categoryNames[Number(blog.category_id)]}
-            size="small"
-            sx={{
-            fontWeight: 600,
-            mb: 2,
-            }}
-            />
-            <Typography
-                variant="body2"
-                color="text.primary"
-                sx={{ mb: 2 }}
-            >
-                {blog.created_date
-                ? new Date(blog.created_date).toLocaleDateString("en-GB")
-                : ""}
-            </Typography>                   
-            </Box>
-            
-            <Typography
-                variant="h3"
-                fontWeight={700}
+              <Chip
+                label={categoryNames[Number(blog.category_id)]}
+                size="small"
                 sx={{
+                  fontWeight: 600,
+                  mb: 2,
+                }}
+              />
+              <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
+                {blog.created_date
+                  ? new Date(blog.created_date).toLocaleDateString("en-GB")
+                  : ""}
+              </Typography>
+            </Box>
+
+            <Typography
+              variant="h3"
+              fontWeight={700}
+              sx={{
                 mb: 2,
                 lineHeight: 1.3,
                 color: "#000000",
-                }}
+              }}
             >
-                {blog.title}
+              {blog.title}
             </Typography>
 
             <Typography
-                variant="h6"
-                sx={{
+              variant="h6"
+              sx={{
                 mb: 3,
                 lineHeight: 1.6,
                 color: "#000000",
-                }}
+              }}
             >
-                {blog.short_description}
+              {blog.short_description}
             </Typography>
 
             <Box
-                sx={{
+              sx={{
                 color: "#000000",
                 lineHeight: 1.8,
                 backgroundColor: "#ffffff",
-                }}
-                dangerouslySetInnerHTML={{
+              }}
+              dangerouslySetInnerHTML={{
                 __html: blog.content,
-                }}
+              }}
             />
-            </CardContent>
+          </CardContent>
         </Card>
-        )}
+      )}
 
-        {/* BACK TO BLOGS */}
+      {/* BACK TO BLOGS */}
 
-        {blogId && (
-            <Box
+      {blogId && (
+        <Box
+          sx={{
+            mb: 1,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/bloglist")}
             sx={{
-                mb: 1,
-                
+              color: "text.secondary",
+              borderColor: "secondary",
             }}
-            >
-            <Button
-                variant="outlined"
-                onClick={() => navigate("/bloglist")}
-                sx={{
-                color: "text.secondary",
-                borderColor: "secondary",
-            }}
-            >
-                ← Back to Blogs
-            </Button>
-            </Box>
-        )}
+          >
+            ← Back to Blogs
+          </Button>
+        </Box>
+      )}
 
       {/* BLOG CARDS */}
 
       {!loading && !error && !blogId && blogs.length > 0 && (
         <Grid container spacing={3}>
           {blogs.map((blog, index) => (
-            <Grid           
+            <Grid
               key={blog.blog_id ?? index}
               size={{
                 xs: 12,
@@ -328,8 +313,7 @@ const BlogsList: React.FC = () => {
 
                   "&:hover": {
                     transform: "translateY(-5px)",
-                    boxShadow:
-                      "0 10px 25px rgba(0,0,0,0.14)",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.14)",
                   },
                 }}
               >
@@ -337,7 +321,7 @@ const BlogsList: React.FC = () => {
 
                 <Box
                   component="img"
-                  src={`http://localhost:8989/api/blog-images/${blog.featured_image_guid}`}
+                  src={`${BASE_URL}/blog-images/${blog.featured_image_guid}`}
                   alt={blog.title}
                   sx={{
                     width: "100%",
@@ -360,32 +344,31 @@ const BlogsList: React.FC = () => {
 
                   <Box
                     sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 1.5,
-                        gap: 1,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1.5,
+                      gap: 1,
                     }}
-                    >
+                  >
                     <Chip
-                        label={categoryNames[Number(blog.category_id)]}
-                        size="small"
-                        sx={{
+                      label={categoryNames[Number(blog.category_id)]}
+                      size="small"
+                      sx={{
                         fontWeight: 600,
-                        }}
+                      }}
                     />
 
-                    <Typography
-                        variant="caption"
-                        color="text.primary"
-                    >
-                        {blog.created_date
-                        ? new Date(blog.created_date).toLocaleDateString("en-GB")
+                    <Typography variant="caption" color="text.primary">
+                      {blog.created_date
+                        ? new Date(blog.created_date).toLocaleDateString(
+                            "en-GB",
+                          )
                         : ""}
                     </Typography>
-                    </Box>
+                  </Box>
 
-                    {/* <Typography
+                  {/* <Typography
                     variant="caption"
                     color="text.primary"
                     sx={{ mb: 1 }}
@@ -463,8 +446,8 @@ const BlogsList: React.FC = () => {
                         fontSize: "14px",
                         cursor: "pointer",
                       }}
-                    //   onClick={() => console.log("SELECTED BLOG ID:", blog.blog_id)}
-                    onClick={() => navigate(`/blog/${blog.blog_id}`)}
+                      //   onClick={() => console.log("SELECTED BLOG ID:", blog.blog_id)}
+                      onClick={() => navigate(`/blog/${blog.blog_id}`)}
                     >
                       Read Article →
                     </Typography>
@@ -480,4 +463,3 @@ const BlogsList: React.FC = () => {
 };
 
 export default BlogsList;
-

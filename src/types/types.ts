@@ -12,6 +12,8 @@ export interface FormDataBase {
   area: string;
   district: string;
   state: string;
+  latitude: string;
+  longitude : string;
 }
 
 export interface OfferForm {

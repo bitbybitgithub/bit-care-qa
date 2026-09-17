@@ -28,6 +28,7 @@ import { validateRegistration } from "../../context/constant/ErrorHandler";
 import Regex from "../../context/constant/Regex";
 import { CheckCircleIcon } from "lucide-react";
 import WelcomePage from "../../components/common/WelcomePage";
+import { useDeviceDetails } from "../../hooks/useDeviceDetails";
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState<FormDataBase>({
@@ -42,6 +43,8 @@ const RegistrationForm = () => {
     area: "",
     district: "",
     state: "",
+    latitude : "",
+    longitude : ""
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -68,6 +71,12 @@ const RegistrationForm = () => {
   const [entityLoading, setEntityLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
 
+  const {
+    deviceDetails,
+  } = useDeviceDetails();
+
+
+
   useEffect(() => {
     const fetchEntities = async () => {
       setEntityLoading(true);
@@ -86,6 +95,11 @@ const RegistrationForm = () => {
             }));
 
           setEntityList(formattedEntities);
+          setFormData({
+            ...formData,
+            latitude: String(deviceDetails.location.latitude),
+            longitude: String(deviceDetails.location.longitude),
+          });
         } else {
           toast.error(res.error || "Failed to load Center types");
         }
@@ -97,7 +111,7 @@ const RegistrationForm = () => {
     };
 
     fetchEntities();
-  }, []);
+  }, [deviceDetails]);
 
   /* ---------------- INPUT CHANGE HANDLERS ---------------- */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

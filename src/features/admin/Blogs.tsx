@@ -13,20 +13,14 @@ import {
   Typography,
 } from "@mui/material";
 
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import type { BlogFormData } from "../../types/types";
 
 // Use your existing session function
 import { getSession } from "../../context/sessions/userSession";
 import bitcarelogo from "../../assets/BitCareLogo.png";
 import {
-  offersdiscountApi,
-  uploadOfferImageApi,
-  getEntityTypes,
-  getPincodeDetails,
-  registerApi,
-  type Entity,
   createBlogApi,
   uploadBlogImageApi,
 } from "../../api";

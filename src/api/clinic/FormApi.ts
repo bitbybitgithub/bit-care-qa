@@ -13,6 +13,8 @@ export const registerApi = async (formData: FormDataBase) => {
       city: formData.area,
       district: formData.district,
       state: formData.state,
+      latitude: formData.latitude,
+      longitude : formData.longitude
     };
     const response = await emrAPI.post<any>(
       "/onboard/register",

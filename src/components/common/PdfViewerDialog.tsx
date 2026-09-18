@@ -63,7 +63,6 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
   };
 
   const documentFile = useMemo(() => pdfUrl, [pdfUrl]);
-
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
@@ -144,7 +143,6 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
     },
   };
 
-
   return (
     <Dialog
       open={open}
@@ -162,7 +160,6 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
         },
       }}
     >
-
       <Box
         px={2}
         py={1}
@@ -350,6 +347,12 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           <Document
             file={documentFile}
             onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={(error) => {
+              console.error("PDF LOAD ERROR:", error);
+            }}
+            onSourceError={(error) => {
+              console.error("PDF SOURCE ERROR:", error);
+            }}
             loading={<CircularProgress />}
           >
             <Box

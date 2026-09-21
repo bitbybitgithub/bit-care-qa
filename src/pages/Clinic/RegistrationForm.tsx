@@ -43,8 +43,8 @@ const RegistrationForm = () => {
     area: "",
     district: "",
     state: "",
-    latitude : "",
-    longitude : ""
+    latitude: "",
+    longitude: "",
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -71,10 +71,7 @@ const RegistrationForm = () => {
   const [entityLoading, setEntityLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
 
-
-   const {
-    deviceDetails,
-  } = useDeviceDetails();
+  const { deviceDetails } = useDeviceDetails();
 
   console.log({ deviceDetails });
   console.log({ formData });

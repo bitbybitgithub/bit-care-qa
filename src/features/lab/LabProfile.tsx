@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Button } from "@mui/material";
+import { Button, FormControlLabel, Switch, Tooltip } from "@mui/material";
 import { toast } from "react-toastify";
 
 import UploadControl from "../../components/common/UploadControl";
@@ -39,6 +39,7 @@ const LabProfile: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [logoImg, setLogoImg] = useState<string | null>(null);
   const [fileerror, setFileError] = useState<string | null>(null);
+  const [codEnabled, setCodEnabled] = useState(false);
 
   useEffect(() => {
     if (!labid) return;
@@ -46,7 +47,6 @@ const LabProfile: React.FC = () => {
     const loadProfile = async () => {
       try {
         const data = await fetchLabProfile(Number(labid));
-
         const days: OperationalDay[] = data.operational_days.map((d: any) => ({
           lab_id: labid,
           lab_opt_id: d.lab_opt_id,
@@ -70,6 +70,12 @@ const LabProfile: React.FC = () => {
         if (data.lab?.logo) {
           setLogoImg(Base64ToImage(data.lab.logo));
         }
+
+        setCodEnabled(
+          data.lab?.is_cod === true ||
+            data.lab?.is_cod === 1 ||
+            data.lab?.is_cod === "1",
+        );
       } catch {
         toast.error("Failed to load lab profile");
       }
@@ -82,8 +88,8 @@ const LabProfile: React.FC = () => {
     (lab_opt_id: number | string, labId: number | string, active: boolean) => {
       setOperationalDays((prev) =>
         prev.map((d) =>
-          d.lab_opt_id === lab_opt_id ? { ...d, is_active: active ? 1 : 0 } : d
-        )
+          d.lab_opt_id === lab_opt_id ? { ...d, is_active: active ? 1 : 0 } : d,
+        ),
       );
 
       if (!active) {
@@ -94,7 +100,7 @@ const LabProfile: React.FC = () => {
         });
       }
     },
-    []
+    [],
   );
 
   const updateDayShifts = useCallback(
@@ -104,7 +110,7 @@ const LabProfile: React.FC = () => {
         [lab_opt_id]: shifts,
       }));
     },
-    []
+    [],
   );
 
   const handleFileChange = (file: File | null) => {
@@ -148,7 +154,7 @@ const LabProfile: React.FC = () => {
         };
       });
 
-      const res = await saveLabShift(labid, operations);
+      const res = await saveLabShift(labid, operations, codEnabled);
       res.success
         ? toast.success("Shifts saved successfully")
         : toast.error("Failed to save shifts");
@@ -162,7 +168,7 @@ const LabProfile: React.FC = () => {
       <section className="mb-6">
         <h3 className="mb-3 font-semibold">Lab Branding</h3>
 
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-start gap-6">
           <div
             className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] overflow-hidden"
             aria-hidden={!!(preview || logoImg) ? "false" : "true"}
@@ -180,7 +186,7 @@ const LabProfile: React.FC = () => {
           </div>
 
           {!logoImg && (
-            <div className="flex flex-col w-full">
+            <div className="flex min-w-[260px] max-w-5xl flex-1 flex-col">
               <label className="block font-medium text-[var(--color-text-secondary)] mb-2">
                 Upload Lab Logo
               </label>
@@ -196,6 +202,20 @@ const LabProfile: React.FC = () => {
               {fileerror && <p className="text-red-500 text-sm">{fileerror}</p>}
             </div>
           )}
+          <div className="flex min-h-24 min-w-36 items-center rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] px-4">
+            <Tooltip title="Enable COD to accept Cash on Delivery payments.">
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={codEnabled}
+                    onChange={(event) => setCodEnabled(event.target.checked)}
+                    inputProps={{ "aria-label": "Enable cash on delivery" }}
+                  />
+                }
+                label="COD"
+              />
+            </Tooltip>
+          </div>
         </div>
       </section>
 

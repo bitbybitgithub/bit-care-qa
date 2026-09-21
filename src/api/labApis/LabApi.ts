@@ -136,11 +136,13 @@ export const uploadLabLogo = (formData: FormData): Promise<any> => {
 export const saveLabShift = async (
   labid: number | string,
   operations: SaveLabShiftPayload["operations"],
+  cod: boolean,
 ): Promise<any> => {
   try {
     const response = await emrAPI.post("/lab/save-lab-shifts", {
       lab_id: labid,
       operations,
+      cod,
     });
 
     return response;

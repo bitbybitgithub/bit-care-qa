@@ -70,6 +70,7 @@ export interface LabProfileData {
   lab: {
     lab_id: number;
     logo?: string;
+    is_cod?: number | string | boolean;
   };
   operational_days: any[];
 }
@@ -77,6 +78,7 @@ export interface LabProfileData {
 export interface SaveLabShiftPayload {
   lab_id: number | string;
   operations: any[];
+  cod: boolean;
 }
 
 export interface LabListItem {

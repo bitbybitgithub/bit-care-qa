@@ -17,7 +17,11 @@ export async function fetchPatientInfo(patient_id: number): Promise<Consultation
 
 export const addEPrescription = async (payload: any) => {
   try {
-    const res:any = await emrAPI.post(`/doctors/ePrescription/addEPrescription`, payload);
+    const finalPayload = {
+      document_type: "PRESCRIPTIONS_BITCARE",
+      ...payload,
+    };
+    const res: any = await emrAPI.post(`/doctors/ePrescription/addEPrescription`, finalPayload);
     return res.data;
   } catch (error: any) {
     console.error("Error adding prescription:", error);

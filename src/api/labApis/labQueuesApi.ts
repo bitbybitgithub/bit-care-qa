@@ -37,6 +37,7 @@ export const savereportAsync = async (payload: {
   file_guid_name: string;
   created_by: number;
   file_name: string;
+  document_type?: string;
 }): Promise<SaveReportResponse> => {
   const response = await emrAPI.post<SaveReportResponse>(
     "/lab/save-report",

@@ -19,6 +19,7 @@ import {
   saveSOAPDetails,
 } from "../../../api/PatientApi";
 import { formatEnumText } from "../../../utils/FormatText";
+import { DOCUMENT_TYPES } from "../../../types/common/uploadReport.types";
 
 interface ConsultationProps {
   patientInfo: Patient;
@@ -63,6 +64,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
     prescription: "",
     appointment_id: Number(patientInfo?.raw?.appointment_id),
     created_by: userId.toString(),
+    document_type: DOCUMENT_TYPES.PRESCRIPTIONS_BITCARE,
   });
 
   useEffect(() => {

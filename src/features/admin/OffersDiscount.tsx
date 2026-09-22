@@ -165,7 +165,7 @@ const OffersDiscount = () => {
         offer_image_name: uploadedFile.file_name,
       };
       const res = await offersdiscountApi(offerData);
-      toast.success(res.message);
+      toast.success(res.data.message);
       handleReset();
     } catch (err: any) {
       const msg =

@@ -24,6 +24,7 @@ import {
   createBlogApi,
   uploadBlogImageApi,
 } from "../../api";
+import { toast } from "react-toastify";
 
 const BlogForm: React.FC = () => {
   const [formData, setFormData] = useState<BlogFormData>({
@@ -307,7 +308,9 @@ const BlogForm: React.FC = () => {
 
       console.log("BLOG API RESPONSE:", res);
 
-      alert("Blog published successfully.");
+      toast.success(
+        res?.data?.message || "Blog published successfully."
+      );
 
       handleReset();
     } catch (error: any) {
@@ -319,54 +322,10 @@ const BlogForm: React.FC = () => {
         error?.message ||
         "Something went wrong while saving the blog.";
 
-      alert(msg);
+      toast.error(msg);
     }
   };
 
-  // const handleSubmit = async (
-  //   e: React.FormEvent,
-  // ) => {
-  //   e.preventDefault();
-
-  //   // Set status before validation
-  //   const updatedFormData = {
-  //   ...formData,
-  //   status: true,
-  //  };
-
-  //   setFormData(updatedFormData);
-
-  //   if (!validateForm()) {
-  //     return;
-  //   }
-
-  //   try {
-  //     console.log("BLOG DATA:", updatedFormData);
-  //     console.log("FEATURED IMAGE:", featuredImage);
-
-  //     /*
-  //      * Here you can:
-  //      *
-  //      * 1. Upload featuredImage
-  //      * 2. Get:
-  //      *    featured_image_path
-  //      *    featured_image_guid
-  //      *    featured_image_name
-  //      *
-  //      * 3. Send blog data to API
-  //      *
-  //      * Example:
-  //      *
-  //      * await createBlogApi(updatedFormData);
-  //      */
-
-  //     alert("Blog published successfully.");
-  //   } catch (error) {
-  //     console.error("BLOG CREATE ERROR:", error);
-
-  //     alert("Something went wrong while saving the blog.");
-  //   }
-  // };
 
   // ---------------------------------------------------------
   // Reset form
@@ -697,6 +656,7 @@ const BlogForm: React.FC = () => {
             </Typography>
 
             <Grid container spacing={3}>
+
               {/* Category */}
 
               <Grid size={{ xs: 12, md: 6 }}>

@@ -64,7 +64,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
-      console.log("peding data", apiData);
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -357,7 +356,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 ? "var(--color-success-light, #e4f5ed)"
                 : "var(--color-primary-light, #e8f0ff)",
               color: "var(--color-primary)",
-            }}>
+            }}
+          >
             {source}
           </span>
         </Tooltip>
@@ -371,11 +371,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       row.is_package === "1" ||
       row.is_package === 1 ||
       Boolean(row.package_id || row.package_name || row.package_code);
-
     if (isPackage) {
       const packageTests = Array.isArray(row.package_tests)
         ? row.package_tests
         : [];
+      const packageActualPrice = Number(row.package_actual_price || 0);
+      const packagePrice = Number(row.package_price || 0);
+      const packageDiscount = Number(row.package_discount_amount || 0);
+      const packageDiscountPercentage = Number(
+        row.package_discount_percentage || 0,
+      );
       return (
         <div className="space-y-4">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
@@ -385,7 +390,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               </span>
               <Chip
                 size="small"
-                label={`${row.package_total_tests || packageTests.length || 0} tests`}
+                label={`${row.package_total_tests || packageTests.length || 0} ${
+                  (row.package_total_tests || packageTests.length || 0) === 1
+                    ? "test"
+                    : "tests"
+                }`}
                 sx={{
                   backgroundColor: "#dbeafe",
                   color: "#1d4ed8",
@@ -396,6 +405,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <p className="text-lg font-bold text-slate-900">
               {row.package_name || row.package_code || "Unnamed package"}
             </p>
+            {row.package_description && (
+              <p className="mt-1 text-sm text-slate-600">
+                {row.package_description}
+              </p>
+            )}
           </div>
           {packageTests.length > 0 && (
             <div className="space-y-2">
@@ -406,18 +420,61 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 {packageTests.map((test: any, index: number) => (
                   <div
                     key={test.test_id ?? index}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
-                    {test.test_name || test.name || `Test ${test.test_id}`}
+                    className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+                  >
+                    <span>
+                      {test.test_name || test.name || `Test ${test.test_id}`}
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      ₹{Number(test.test_price || 0).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
+              <div className="mt-3 space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                {/* Actual Amount */}
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Actual Amount</span>
+                  <span className="font-semibold">
+                    ₹{packageActualPrice.toFixed(2)}
+                  </span>
+                </div>
+                {packageDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>
+                      Discount
+                      {packageDiscountPercentage > 0
+                        ? ` (${packageDiscountPercentage}%)`
+                        : ""}
+                    </span>
+                    <span className="font-semibold">
+                      - ₹{packageDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-blue-200 pt-3 text-base font-bold text-slate-900">
+                  <span>Total Amount</span>
+                  <span className="text-blue-700">
+                    ₹{packagePrice.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {!packageTests.length && (
+            <div className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">
+              No package test details available.
             </div>
           )}
         </div>
       );
     }
-
     const tests = Array.isArray(row.test_details) ? row.test_details : [];
+    const testTotal = tests.reduce(
+      (total: number, test: any) => total + Number(test.test_price || 0),
+      0,
+    );
+
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 p-4">
@@ -426,7 +483,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               Test
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-800">
-              Individual test{tests.length === 1 ? "" : "s"}
+              Individual test
+              {tests.length === 1 ? "" : "s"}
             </p>
           </div>
           <Chip
@@ -439,20 +497,36 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             }}
           />
         </div>
-        <div className="grid gap-2">
-          {tests.map((test: any, index: number) => (
-            <div
-              key={test.test_id ?? index}
-              className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
-              {test.test_name || test.name || `Test ${test.test_id}`}
+        {tests.length > 0 && (
+          <div className="grid gap-2">
+            {tests.map((test: any, index: number) => (
+              <div
+                key={test.test_id ?? index}
+                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+              >
+                <span>
+                  {test.test_name || test.name || `Test ${test.test_id}`}
+                </span>
+                <span className="font-semibold text-slate-800">
+                  ₹{Number(test.test_price || 0).toFixed(2)}
+                </span>
+              </div>
+            ))}
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <span className="text-sm font-bold text-slate-800">
+                Total Amount
+              </span>
+              <span className="text-base font-bold text-emerald-700">
+                ₹{testTotal.toFixed(2)}
+              </span>
             </div>
-          ))}
-          {!tests.length && (
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              No test details available.
-            </p>
-          )}
-        </div>
+          </div>
+        )}
+        {!tests.length && (
+          <p className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">
+            No test details available.
+          </p>
+        )}
       </div>
     );
   };
@@ -520,7 +594,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           <Button
             size="small"
             variant="outlined"
-            onClick={() => setPaymentRow(p.row)}>
+            onClick={() => setPaymentRow(p.row)}
+          >
             Make Payment
           </Button>
         ),
@@ -546,7 +621,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <Button
               size="small"
               variant="contained"
-              onClick={() => updateStatus(p.row, "Processing")}>
+              onClick={() => updateStatus(p.row, "Processing")}
+            >
               Start
             </Button>
           ),
@@ -566,7 +642,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={() => openViewPrescription(p.row)}>
+                  onClick={() => openViewPrescription(p.row)}
+                >
                   View Prescription
                 </Button>
               )}
@@ -574,7 +651,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => setTestsDialogRow(p.row)}>
+                  onClick={() => setTestsDialogRow(p.row)}
+                >
                   View
                 </Button>
               )}
@@ -589,7 +667,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <Button
               size="small"
               variant="contained"
-              onClick={() => updateStatus(p.row, "Reporting Pending")}>
+              onClick={() => updateStatus(p.row, "Reporting Pending")}
+            >
               Complete Test
             </Button>
           ),
@@ -598,19 +677,33 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     if (resolvedMode === "completed")
       return [
         ...commonColumns,
+        //
         {
           field: "action",
           headerName: "Action",
-          width: 200,
-          renderCell: (p) =>
-            p.row.prescription_url ? (
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => openViewPrescription(p.row)}>
-                View Prescription
-              </Button>
-            ) : null,
+          width: 260,
+          renderCell: (p) => (
+            <div className="flex h-full w-full flex-wrap items-center justify-center gap-2">
+              {p.row.prescription_url && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => openViewPrescription(p.row)}
+                >
+                  View Prescription
+                </Button>
+              )}
+              {hasTestsOrPackage(p.row) && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setTestsDialogRow(p.row)}
+                >
+                  View
+                </Button>
+              )}
+            </div>
+          ),
         },
         {
           field: "complete",
@@ -620,7 +713,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <Button
               size="small"
               variant="contained"
-              onClick={() => openViewReport(p.row)}>
+              onClick={() => openViewReport(p.row)}
+            >
               View Report
             </Button>
           ),
@@ -639,7 +733,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               <Button
                 size="small"
                 variant="contained"
-                onClick={() => openViewPrescription(p.row)}>
+                onClick={() => openViewPrescription(p.row)}
+              >
                 View Prescription
               </Button>
             )}
@@ -647,7 +742,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               <Button
                 size="small"
                 variant="outlined"
-                onClick={() => setTestsDialogRow(p.row)}>
+                onClick={() => setTestsDialogRow(p.row)}
+              >
                 View
               </Button>
             )}
@@ -662,7 +758,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           <Button
             size="small"
             variant="outlined"
-            onClick={(e) => openUpload(e, p.row)}>
+            onClick={(e) => openUpload(e, p.row)}
+          >
             Upload Test
           </Button>
         ),
@@ -724,7 +821,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         open={openPdf}
         onClose={() => setOpenPdf(false)}
         maxWidth="md"
-        fullWidth>
+        fullWidth
+      >
         <PdfViewerDialog
           open={openPdf}
           pdfUrl={pdfUrl}
@@ -746,7 +844,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             maxWidth: "100vw",
             backgroundColor: "var(--color-bg)",
           },
-        }}>
+        }}
+      >
         {paymentRow && (
           <LabPayment
             patientId={paymentRow.patient_id}
@@ -784,7 +883,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             backgroundColor: "#f8fafc",
             overflow: "hidden",
           },
-        }}>
+        }}
+      >
         <div>
           <div className="flex items-center justify-between bg-[var(--color-primary)] px-5 py-4 text-white">
             <div>
@@ -797,7 +897,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                   testsDialogRow.is_package === 1 ||
                   testsDialogRow.package_id ||
                   testsDialogRow.package_name ||
-                  testsDialogRow.package_code)
+                  testsDialogRow.package_code ||
+                  testsDialogRow.test_details)
                   ? "Package details"
                   : "Test details"}
               </h2>
@@ -806,7 +907,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               onClick={() => setTestsDialogRow(null)}
               // className="rounded-full px-2 text-2xl leading-none text-white transition hover:bg-white/50"
               className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
-              aria-label="Close tests and package dialog">
+              aria-label="Close tests and package dialog"
+            >
               <FaTimes />
             </button>
           </div>
@@ -826,18 +928,21 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             backgroundColor: "var(--color-surface)",
             boxShadow: "var(--shadow-lg)",
           },
-        }}>
+        }}
+      >
         <div className="flex flex-col h-full">
           <div
             className="flex items-center justify-between p-3 m-2 rounded-[var(--radius-lg)] sticky top-0 z-10"
-            style={{ backgroundColor: "var(--color-primary)" }}>
+            style={{ backgroundColor: "var(--color-primary)" }}
+          >
             <h2
               className="flex items-center gap-2"
               style={{
                 color: "var(--color-surface-alt)",
                 fontSize: "var(--font-h3)",
                 fontWeight: "var(--font-weight-medium)",
-              }}>
+              }}
+            >
               Upload Reports
             </h2>
 
@@ -848,7 +953,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               style={{
                 backgroundColor: "var(--color-surface)",
                 color: "var(--color-primary)",
-              }}>
+              }}
+            >
               <FaTimes />
             </button>
           </div>
@@ -868,7 +974,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 style={{
                   backgroundColor: "var(--color-bg)",
                   borderRadius: "var(--radius-md)",
-                }}>
+                }}
+              >
                 <div>
                   <b>Patient ID:</b> {activeRow?.patient_id}
                 </div>
@@ -920,13 +1027,15 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                     backgroundColor: "var(--color-bg)",
                     borderRadius: "var(--radius-md)",
                     border: `1px dashed var(--color-border)`,
-                  }}>
+                  }}
+                >
                   <div className="flex justify-between items-center">
                     <span
                       style={{
                         fontSize: "var(--font-xs)",
                         color: "var(--color-text-secondary)",
-                      }}>
+                      }}
+                    >
                       Drag & drop PDFs here
                     </span>
 
@@ -936,7 +1045,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                         fontSize: "var(--font-xs)",
                         color: "var(--color-primary)",
                         fontWeight: "var(--font-weight-medium)",
-                      }}>
+                      }}
+                    >
                       + Add PDF
                       <input
                         type="file"
@@ -962,7 +1072,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                           style={{
                             backgroundColor: "var(--color-surface)",
                             border: "1px solid var(--color-border)",
-                          }}>
+                          }}
+                        >
                           <span className="truncate">{file.originalName}</span>
 
                           <button
@@ -974,7 +1085,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                                 ].filter((_, i) => i !== index),
                               }));
                             }}
-                            className="text-red-500">
+                            className="text-red-500"
+                          >
                             ✕
                           </button>
                         </div>
@@ -991,12 +1103,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             style={{
               backgroundColor: "var(--color-bg)",
               borderColor: "var(--color-primary)",
-            }}>
+            }}
+          >
             <Button
               variant="outlined"
               fullWidth
               onClick={closeUpload}
-              className="text-[var(--color-primary)]">
+              className="text-[var(--color-primary)]"
+            >
               Cancel
             </Button>
 
@@ -1006,7 +1120,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               disabled={
                 uploading || !reportMap[activeRow?.lab_record_id]?.length
               }
-              onClick={handleSubmitReports}>
+              onClick={handleSubmitReports}
+            >
               {uploading ? "Uploading..." : "Submit Reports"}
             </Button>
           </div>

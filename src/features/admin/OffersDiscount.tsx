@@ -160,7 +160,7 @@ const OffersDiscount = () => {
         center_name: user.full_name,
         center_type: user.entity_name,
         created_by: user.user_id ?? 0,
-        offer_image_path: `${uploadedFile.path}\\${uploadedFile.guid_name}`,
+        offer_image_path: uploadedFile.path,
         offer_image_guid: uploadedFile.guid_name,
         offer_image_name: uploadedFile.file_name,
       };

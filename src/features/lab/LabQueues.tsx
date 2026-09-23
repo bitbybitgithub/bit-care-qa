@@ -8,7 +8,7 @@ import {
   savereportAsync,
 } from "../../api/labApis/labQueuesApi";
 import { getSessionItem } from "../../context/sessions/userSession";
-import { uploadPrescriptionReport } from "../../api/CommonApi/uploadFileApi";
+import { uploadReportFile } from "../../api/CommonApi/uploadFileApi";
 import { toast } from "react-toastify";
 import PdfViewerDialog from "../../components/common/PdfViewerDialog";
 import { getPdfFromServer } from "../../hooks/DownloadFileHook";
@@ -64,7 +64,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     const fetchData = async () => {
       const apiData = await getPendingQueueAsync(labId);
-      console.log("peding data", apiData);
       const normalized = apiData.map((r: any) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
@@ -213,23 +212,49 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     );
   };
 
+  const uploadPath = (type) => {
+    if (type.toLowerCase() == "self") {
+      return "REPORTS_LAB";
+    } else if (type.toLowerCase() == "patient") {
+      return "REPORTS_SELF";
+    } else if (type.toLowerCase() == "clinic") {
+      return "REPORTS_DOCTOR";
+    } else {
+      return "REPORTS_LAB";
+    }
+  };
+
   const uploadTestFile = async (appointment_id: string, file: File) => {
     if (!activeRow) return;
     try {
       setUploading(true);
-      const uploadRes = await uploadPrescriptionReport(file);
+      const path = uploadPath(activeRow?.booking_source);
+      const uploadRes = await uploadReportFile(file, path);
+      const uploadedFile = uploadRes?.files?.[0];
+      const guid =
+        uploadedFile?.guid_name ||
+        uploadedFile?.stored_file_name ||
+        (uploadRes as any)?.stored_file_name ||
+        "";
+      const originalName =
+        uploadedFile?.file_name ||
+        uploadedFile?.original_file_name ||
+        (uploadRes as any)?.original_file_name ||
+        file.name;
+      const filePath = uploadedFile?.path || (uploadRes as any)?.guid || "";
+
       setReportMap((prev) => ({
         ...prev,
         [appointment_id]: [
           ...(prev[appointment_id] || []),
           {
-            guid: uploadRes.stored_file_name,
-            originalName: uploadRes.original_file_name,
-            filePath: uploadRes.guid,
+            guid,
+            originalName,
+            filePath,
           },
         ],
       }));
-      toast.success(`${uploadRes.original_file_name} uploaded`);
+      toast.success(`${originalName} uploaded`);
     } catch (error: any) {
       console.error("Upload failed:", error);
 
@@ -254,7 +279,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     }
     try {
       const r = reports[0];
-
+      const path = uploadPath(activeRow?.booking_source);
       const saveResponse = await savereportAsync({
         lab_record_id: Number(activeRow.lab_record_id),
         lab_id: Number(activeRow.lab_id),
@@ -262,6 +287,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         file_guid_name: r.guid,
         file_name: r.originalName,
         created_by: user_id,
+        document_type: path,
       });
       const dbReportId = Number(saveResponse.report_id);
       if (Number.isNaN(dbReportId)) {
@@ -345,11 +371,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       row.is_package === "1" ||
       row.is_package === 1 ||
       Boolean(row.package_id || row.package_name || row.package_code);
-
     if (isPackage) {
       const packageTests = Array.isArray(row.package_tests)
         ? row.package_tests
         : [];
+      const packageActualPrice = Number(row.package_actual_price || 0);
+      const packagePrice = Number(row.package_price || 0);
+      const packageDiscount = Number(row.package_discount_amount || 0);
+      const packageDiscountPercentage = Number(
+        row.package_discount_percentage || 0,
+      );
       return (
         <div className="space-y-4">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
@@ -359,7 +390,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               </span>
               <Chip
                 size="small"
-                label={`${row.package_total_tests || packageTests.length || 0} tests`}
+                label={`${row.package_total_tests || packageTests.length || 0} ${
+                  (row.package_total_tests || packageTests.length || 0) === 1
+                    ? "test"
+                    : "tests"
+                }`}
                 sx={{
                   backgroundColor: "#dbeafe",
                   color: "#1d4ed8",
@@ -370,6 +405,11 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             <p className="text-lg font-bold text-slate-900">
               {row.package_name || row.package_code || "Unnamed package"}
             </p>
+            {row.package_description && (
+              <p className="mt-1 text-sm text-slate-600">
+                {row.package_description}
+              </p>
+            )}
           </div>
           {packageTests.length > 0 && (
             <div className="space-y-2">
@@ -380,19 +420,61 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 {packageTests.map((test: any, index: number) => (
                   <div
                     key={test.test_id ?? index}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+                    className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
                   >
-                    {test.test_name || test.name || `Test ${test.test_id}`}
+                    <span>
+                      {test.test_name || test.name || `Test ${test.test_id}`}
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      ₹{Number(test.test_price || 0).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
+              <div className="mt-3 space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                {/* Actual Amount */}
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Actual Amount</span>
+                  <span className="font-semibold">
+                    ₹{packageActualPrice.toFixed(2)}
+                  </span>
+                </div>
+                {packageDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>
+                      Discount
+                      {packageDiscountPercentage > 0
+                        ? ` (${packageDiscountPercentage}%)`
+                        : ""}
+                    </span>
+                    <span className="font-semibold">
+                      - ₹{packageDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-blue-200 pt-3 text-base font-bold text-slate-900">
+                  <span>Total Amount</span>
+                  <span className="text-blue-700">
+                    ₹{packagePrice.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {!packageTests.length && (
+            <div className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">
+              No package test details available.
             </div>
           )}
         </div>
       );
     }
-
     const tests = Array.isArray(row.test_details) ? row.test_details : [];
+    const testTotal = tests.reduce(
+      (total: number, test: any) => total + Number(test.test_price || 0),
+      0,
+    );
+
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 p-4">
@@ -401,7 +483,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               Test
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-800">
-              Individual test{tests.length === 1 ? "" : "s"}
+              Individual test
+              {tests.length === 1 ? "" : "s"}
             </p>
           </div>
           <Chip
@@ -414,21 +497,36 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             }}
           />
         </div>
-        <div className="grid gap-2">
-          {tests.map((test: any, index: number) => (
-            <div
-              key={test.test_id ?? index}
-              className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
-            >
-              {test.test_name || test.name || `Test ${test.test_id}`}
+        {tests.length > 0 && (
+          <div className="grid gap-2">
+            {tests.map((test: any, index: number) => (
+              <div
+                key={test.test_id ?? index}
+                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+              >
+                <span>
+                  {test.test_name || test.name || `Test ${test.test_id}`}
+                </span>
+                <span className="font-semibold text-slate-800">
+                  ₹{Number(test.test_price || 0).toFixed(2)}
+                </span>
+              </div>
+            ))}
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <span className="text-sm font-bold text-slate-800">
+                Total Amount
+              </span>
+              <span className="text-base font-bold text-emerald-700">
+                ₹{testTotal.toFixed(2)}
+              </span>
             </div>
-          ))}
-          {!tests.length && (
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              No test details available.
-            </p>
-          )}
-        </div>
+          </div>
+        )}
+        {!tests.length && (
+          <p className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">
+            No test details available.
+          </p>
+        )}
       </div>
     );
   };
@@ -579,20 +677,33 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     if (resolvedMode === "completed")
       return [
         ...commonColumns,
+        //
         {
           field: "action",
           headerName: "Action",
-          width: 200,
-          renderCell: (p) =>
-            p.row.prescription_url ? (
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => openViewPrescription(p.row)}
-              >
-                View Prescription
-              </Button>
-            ) : null,
+          width: 260,
+          renderCell: (p) => (
+            <div className="flex h-full w-full flex-wrap items-center justify-center gap-2">
+              {p.row.prescription_url && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => openViewPrescription(p.row)}
+                >
+                  View Prescription
+                </Button>
+              )}
+              {hasTestsOrPackage(p.row) && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setTestsDialogRow(p.row)}
+                >
+                  View
+                </Button>
+              )}
+            </div>
+          ),
         },
         {
           field: "complete",
@@ -786,7 +897,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                   testsDialogRow.is_package === 1 ||
                   testsDialogRow.package_id ||
                   testsDialogRow.package_name ||
-                  testsDialogRow.package_code)
+                  testsDialogRow.package_code ||
+                  testsDialogRow.test_details)
                   ? "Package details"
                   : "Test details"}
               </h2>

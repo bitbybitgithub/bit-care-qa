@@ -5,7 +5,7 @@ import type {
   BlogListResponse,
   BlogByIdResponse,
 } from "../../types/types";
-import { BASE_URL, emrAPI } from "../../services/EmrApi";
+import { emrAPI, BASE_URL } from "../../services/EmrApi";
 
 export const registerApi = async (formData: FormDataBase) => {
   try {
@@ -20,7 +20,7 @@ export const registerApi = async (formData: FormDataBase) => {
       district: formData.district,
       state: formData.state,
       latitude: formData.latitude,
-      longitude : formData.longitude
+      longitude: formData.longitude,
     };
     const response = await emrAPI.post<any>(
       "/onboard/register",
@@ -67,10 +67,10 @@ export const uploadOfferImageApi = async (file: File) => {
   const formData = new FormData();
 
   formData.append("file", file);
-  formData.append("folder", "offers");
+  formData.append("folder", "OFFERS");
 
   const response = await fetch(
-    `${BASE_URL}/common/upload-report?folder=offers`,
+    `${BASE_URL}/common/upload-report?folder=OFFERS`,
     {
       method: "POST",
       body: formData,
@@ -114,10 +114,10 @@ export const uploadBlogImageApi = async (file: File) => {
   const formData = new FormData();
 
   formData.append("file", file);
-  formData.append("folder", "blogs");
+  formData.append("folder", "BLOGS");
 
   const response = await fetch(
-    `${BASE_URL}/common/upload-report?folder=blogs`,
+    `${BASE_URL}/common/upload-report?folder=BLOGS`,
     {
       method: "POST",
       body: formData,

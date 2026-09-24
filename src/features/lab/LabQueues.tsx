@@ -15,6 +15,7 @@ import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import type { Patient } from "../patient-document-management/types/patient";
 import { FaTimes } from "react-icons/fa";
 import LabPayment from "./LabPayment";
+import { DOCUMENT_TYPES } from "../../types/common/uploadReport.types";
 
 const PAGE_SIZE = 10;
 

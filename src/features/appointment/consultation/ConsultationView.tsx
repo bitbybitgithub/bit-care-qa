@@ -118,11 +118,11 @@ const ConsultationView: React.FC<ConsultationProps> = ({
   const handleDispenseMedication = () => {
     if (tab == "prescription") {
       addEPrescription(prescriptionPayload).then(() =>
-        toast.success("Prescription saved successfully")
+        toast.success("Prescription saved successfully"),
       );
     } else if (tab == "consultation") {
       saveSOAPDetails(soapForm).then(() =>
-        toast.success("SOAP saved successfully")
+        toast.success("SOAP saved successfully"),
       );
     }
   };
@@ -158,7 +158,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
               DOB:{" "}
               {mappedPatient?.date_of_birth
                 ? new Date(mappedPatient.date_of_birth).toLocaleDateString(
-                    "en-GB"
+                    "en-GB",
                   )
                 : "-"}{" "}
               ({calculateAge(mappedPatient?.date_of_birth)} y/o)
@@ -242,7 +242,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
                 <Button
                   onClick={() =>
                     toast.info(
-                      "Follow-Up Module is Not Available at the moment!!!"
+                      "Follow-Up Module is Not Available at the moment!!!",
                     )
                   }
                   variant="contained"
@@ -255,7 +255,7 @@ const ConsultationView: React.FC<ConsultationProps> = ({
                   color="success"
                   onClick={() =>
                     toast.info(
-                      "Complete Button is Not Working at the moment!!!"
+                      "Complete Button is Not Working at the moment!!!",
                     )
                   }
                 >

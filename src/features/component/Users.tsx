@@ -16,13 +16,11 @@ const Users: React.FC = () => {
   const pharmacy_id = getSessionItem<number>("user", "pharmacy_id");
   const entity_type = getSessionItem<number>("user", "entity_type");
 
-
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUser, setShowAddUser] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-
 
   const getEntityId = useCallback((): number => {
     if (entity_name === "clinic") return clinic_id;
@@ -62,7 +60,7 @@ const Users: React.FC = () => {
   }, [fetchUsers]);
 
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleUserStatus = async (user: User) => {
@@ -76,8 +74,8 @@ const Users: React.FC = () => {
       prev.map((u) =>
         u.userid === user.userid
           ? { ...u, status: isActive ? "Inactive" : "Active" }
-          : u
-      )
+          : u,
+      ),
     );
     try {
       const result = await updateUsers({
@@ -85,18 +83,17 @@ const Users: React.FC = () => {
         status: !isActive,
         phone: user.phone,
         clinic_id: getEntityId(),
-        entity_type: entity_type,
       });
     } catch (error: unknown) {
       setUsers((prev) =>
         prev.map((u) =>
-          u.userid === user.userid ? { ...u, status: previousStatus } : u
-        )
+          u.userid === user.userid ? { ...u, status: previousStatus } : u,
+        ),
       );
 
       if (error instanceof AxiosError) {
         toast.error(
-          error.response?.data?.message || "Failed to update user status"
+          error.response?.data?.message || "Failed to update user status",
         );
       } else {
         toast.error("Failed to update user status");
@@ -105,7 +102,6 @@ const Users: React.FC = () => {
       setUpdatingId(null);
     }
   };
-
 
   return (
     <div>
@@ -154,8 +150,6 @@ const Users: React.FC = () => {
           onSuccess={fetchUsers}
         />
       )}
-
-
     </div>
   );
 };

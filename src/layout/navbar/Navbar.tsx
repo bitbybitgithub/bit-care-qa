@@ -4,10 +4,17 @@ import { Menu as MenuIcon } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { logoutApi } from "../../api";
-import { clearSession } from "../../context/sessions/userSession";
+import {
+  clearSession,
+  getSessionItem,
+} from "../../context/sessions/userSession";
 import { logout } from "../../redux";
 import { FaSignOutAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
+
+import { SIDEBAR_MENUS } from "../../context/constant/sidebarMenus";
+import { EntityType } from "../../context/constant/enum";
+import type { Role } from "../../types/common/sidebarTypes";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -16,7 +23,7 @@ interface HeaderProps {
 const AppBarStyled = styled(AppBar)(() => ({
   background: "var(--color-surface-alt)",
   borderBottom: "2px solid var(--color-primary)",
-  boxShadow:"var(--shadow-lg)"
+  boxShadow: "var(--shadow-lg)",
 }));
 
 const ToolbarStyled = styled(Toolbar)(() => ({
@@ -32,23 +39,23 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
+  const userrole = getSessionItem("user", "role");
+  const entity_type = getSessionItem("user", "entity_type");
+  const entity = entity_type as EntityType;
+  const role = userrole as Role;
 
-  // Convert path into readable title
-  const formatTitleHeader = (path: string) => {
-    const cleanedPath = path.replace(/^\/|\/$/g, "");
-    const words = cleanedPath.split(/[-/]+/);
-    const formatted = words
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-    return formatted || "Home";
-  };
+  const currentMenu = SIDEBAR_MENUS[entity]?.[role]?.find(
+    (menu) => menu.link === location.pathname,
+  );
 
-  const title = formatTitleHeader(location.pathname);
+  const title = currentMenu?.title || "Home";
 
   const handleLogout = async () => {
     setAnimatingOut(true);
+
     try {
       const res = await logoutApi();
+
       if (res.success) {
         dispatch(logout());
         clearSession("user");
@@ -66,6 +73,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const handleCancel = () => {
     setAnimatingOut(true);
+
     setTimeout(() => {
       setShowConfirm(false);
       setAnimatingOut(false);
@@ -75,21 +83,22 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
     <AppBarStyled position="sticky" elevation={0}>
       <ToolbarStyled className="!pl-2">
-        {/* -------- LEFT: Mobile Menu Icon -------- */}
-        <IconButton
-          color="inherit"
-          onClick={onMenuClick}
-          className="md:hidden"
-        >
+        {/* Mobile Menu */}
+        <IconButton color="inherit" onClick={onMenuClick} className="md:hidden">
           <MenuIcon className="text-[var(--color-text)]" size={22} />
         </IconButton>
 
-        {/* -------- CENTER: Title (flex-grow pushes logout to right) -------- */}
-        <h1 className="font-bold text-[var(--color-primary)] ml-2 md:ml-0 flex-grow" style={{fontSize:"var(--font-h3)"}}>
+        {/* Page Title */}
+        <h1
+          className="font-bold text-[var(--color-primary)] ml-2 md:ml-0 flex-grow"
+          style={{
+            fontSize: "var(--font-h3)",
+          }}
+        >
           {title}
         </h1>
 
-        {/* -------- RIGHT: Logout Button -------- */}
+        {/* Logout */}
         <button
           onClick={() => setShowConfirm(true)}
           className="flex cursor-pointer items-center bg-[var(--color-surface-alt)] gap-2 border-2 border-[var(--color-error)] text-[var(--color-error)] hover:text-[var(--color-surface-alt)] px-4 py-2 rounded-xl hover:bg-[var(--color-error)] transition"
@@ -99,7 +108,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
       </ToolbarStyled>
 
-      {/* -------- LOGOUT MODAL -------- */}
+      {/* Logout Modal */}
       {showConfirm && (
         <div className="fixed inset-0 flex justify-center items-start pt-10 z-50">
           <div
@@ -135,7 +144,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
               <button
                 onClick={handleLogout}
-                className="px-5 py-2 bg-[var(--color-error)] text-[var(--color-white)] rounded-lg hover:opacity-80 transition  cursor-pointer"
+                className="px-5 py-2 bg-[var(--color-error)] text-[var(--color-white)] rounded-lg hover:opacity-80 transition cursor-pointer"
               >
                 Logout
               </button>

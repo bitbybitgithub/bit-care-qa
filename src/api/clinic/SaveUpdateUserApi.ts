@@ -23,6 +23,7 @@ export const updateUsers = async (userData: {
   user_id: number;
   status: boolean;
   phone: string;
+  entity_id: number;
   clinic_id: number;
 }): Promise<{ success: boolean; message: string }> => {
   try {

@@ -82,6 +82,7 @@ const Users: React.FC = () => {
         user_id: user.userid,
         status: !isActive,
         phone: user.phone,
+        entity_id: entity_type,
         clinic_id: getEntityId(),
       });
     } catch (error: unknown) {

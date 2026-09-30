@@ -8,33 +8,31 @@ export const saveUsersAPI = async (doctorData: {
   phone: string;
   username: string;
   password: string;
-  created_by:string;
+  created_by: string;
 }) => {
   try {
     const response = await emrAPI.post("/clinics/add-user", doctorData);
-    return response; 
+    return response;
   } catch (error: any) {
     console.error("Error adding doctor:", error);
     throw error;
   }
 };
 
-
-
 export const updateUsers = async (userData: {
   user_id: number;
   status: boolean;
   phone: string;
+  entity_id: number;
   clinic_id: number;
-}): Promise<{success: boolean,message:string}> => {
+}): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await emrAPI.post<{success: boolean,message:string}>(
+    const response = await emrAPI.post<{ success: boolean; message: string }>(
       "/clinics/active-deactivate-user",
-      userData
+      userData,
     );
-    return response; 
+    return response;
   } catch (error: any) {
     throw error;
   }
 };
-

@@ -147,6 +147,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
             code: test.code,
             price: "",
             priceError: "",
+            discountPrice: "",
+            discountPriceError: "",
           },
         ];
       });
@@ -185,6 +187,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
             code: test.code,
             price: "",
             priceError: "",
+            discountPrice: "",
+            discountPriceError: "",
           }));
 
         return [...prev, ...newTests];
@@ -201,7 +205,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
   };
 
   const handlePriceChange = (testId: string, value: string) => {
-    if (value !== "" && !/^\d*\.?\d{0,2}$/.test(value)) {
+    if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
       return;
     }
     setNewSelectedTests((prev) =>
@@ -220,17 +224,60 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
             priceError = "Maximum price is ₹10,000";
           }
         }
+        let discountPriceError = test.discountPriceError;
+        if (test.discountPrice !== "" && value !== "") {
+          const discountPrice = Number(test.discountPrice);
+          if (discountPrice !== 0 && discountPrice < 5) {
+            discountPriceError = "Minimum discount price is ₹5";
+          } else if (discountPrice > 10000) {
+            discountPriceError = "Maximum discount price is ₹10,000";
+          } else if (discountPrice > Number(value)) {
+            discountPriceError = "Discount price cannot exceed test price";
+          } else {
+            discountPriceError = "";
+          }
+        }
         return {
           ...test,
           price: value,
           priceError,
+          discountPriceError,
         };
       }),
     );
   };
 
+  const handleDicountPriceChange = (testId: string, value: string) => {
+    if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
+      return;
+    }
+    setNewSelectedTests((prev) =>
+      prev.map((test) => {
+        if (String(test.testId) !== String(testId)) {
+          return test;
+        }
+        let discountPriceError = "";
+        if (value === "" || Number(value) === 0) {
+          discountPriceError = "";
+        } else {
+          const discountPrice = Number(value);
+          if (discountPrice !== 0 && discountPrice < 5) {
+            discountPriceError = "Minimum discount price is ₹5";
+          } else if (discountPrice > 10000) {
+            discountPriceError = "Maximum discount price is ₹10,000";
+          } else if (discountPrice > Number(test.price)) {
+            discountPriceError = "Discount price cannot exceed test price";
+          }
+        }
+        return {
+          ...test,
+          discountPrice: value,
+          discountPriceError,
+        };
+      }),
+    );
+  };
   const handleSaveNewTests = async () => {
-    debugger;
     try {
       if (!labId) {
         toast.error("Lab ID not found");
@@ -259,22 +306,50 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         toast.error("Price for every test must be between ₹5 and ₹10,000");
         return;
       }
+      const hasInvalidDiscountPrice = newSelectedTests.some((test) => {
+        const discountPrice = Number(test.discountPrice);
+        return (
+          isNaN(discountPrice) ||
+          (discountPrice !== 0 && discountPrice < 5) ||
+          discountPrice > 10000 ||
+          discountPrice > Number(test.price)
+        );
+      });
+      if (hasInvalidDiscountPrice) {
+        toast.error(
+          "Discount price must be ₹0 or between ₹5 and its test price",
+        );
+        return;
+      }
       const payload: LabTestItemRequest = {
         lab_id: Number(labId),
         tests: newSelectedTests.map((test) => ({
           test_id: Number(test.testId),
           category_id: Number(test.categoryId),
           price: Number(test.price),
+          discount_price: Number(test.discountPrice || 0),
+          payable_amount: Number(
+            (
+              Number(test.price) -
+              Number(test.discountPrice || 0)
+            ).toFixed(2),
+          ),
         })),
         created_by: Number(userId),
       };
       setSaving(true);
+
+      console.log("saveAvailableLabApi payload:", payload);
       const response = await saveAvailableLabApi(payload);
-      if (!response.success) {
-        toast.error(response.message);
+      if (
+        !response.success ||
+        response.success === "false" ||
+        response.success === "0"
+      ) {
+        toast.error(response.message || "Failed to save laboratory tests");
         return;
       }
-      toast.success(response.message);
+      toast.success(response.message || "Laboratory tests saved successfully");
       await onSaved();
       setNewSelectedTests([]);
       setSearch("");
@@ -558,6 +633,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                   </Stack>
                 </Stack>
               </Box>
+
               <Box
                 sx={{
                   p: 2,
@@ -572,12 +648,50 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                   },
                 }}
               >
+                <Stack
+                  direction="row"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  spacing={1}
+                  mb={1}
+                  sx={{ pr: 1 }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    textAlign="center"
+                    fontWeight={600}
+                    sx={{ width: 130 }}
+                  >
+                    Test Price
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    textAlign="center"
+                    fontWeight={600}
+                    sx={{ width: 8 }}
+                  >
+                    −
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    textAlign="center"
+                    fontWeight={600}
+                    sx={{ width: 130 }}
+                  >
+                    Discount Amount
+                  </Typography>
+                </Stack>
                 <Stack spacing={1.5}>
                   {filteredTests.map((test) => {
                     const checked = isSelected(test.id);
+
                     const selected = newSelectedTests.find(
                       (item) => String(item.testId) === String(test.id),
                     );
+
                     return (
                       <Paper
                         key={test.id}
@@ -600,10 +714,12 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                               )
                             }
                           />
+
                           <Box flex={1}>
                             <Typography fontWeight={600}>
                               {test.name}
                             </Typography>
+
                             <Stack direction="row" spacing={1} mt={0.5}>
                               <Chip
                                 label={test.code}
@@ -612,40 +728,85 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                               />
                             </Stack>
                           </Box>
+
                           {selected && (
-                            <TextField
-                              size="small"
-                              value={selected.price}
-                              error={Boolean(selected.priceError)}
-                              helperText={selected.priceError}
-                              onChange={(e) =>
-                                handlePriceChange(
-                                  selected.testId,
-                                  e.target.value,
-                                )
-                              }
-                              sx={{
-                                width: 130,
-                                "& .MuiFormHelperText-root": {
-                                  marginLeft: 0,
-                                  fontSize: 10,
-                                },
-                              }}
-                              slotProps={{
-                                input: {
-                                  startAdornment: (
-                                    <InputAdornment position="start">
-                                      ₹
-                                    </InputAdornment>
-                                  ),
-                                },
-                              }}
-                            />
+                            <>
+                              {/* Test Price */}
+                              <TextField
+                                size="small"
+                                value={selected.price}
+                                placeholder="Test Price"
+                                error={Boolean(selected.priceError)}
+                                helperText={selected.priceError}
+                                onChange={(e) =>
+                                  handlePriceChange(
+                                    selected.testId,
+                                    e.target.value,
+                                  )
+                                }
+                                sx={{
+                                  width: 130,
+                                  "& .MuiOutlinedInput-root": {
+                                    backgroundColor: "#fff",
+                                  },
+                                  "& .MuiFormHelperText-root": {
+                                    marginLeft: 0,
+                                    fontSize: 10,
+                                  },
+                                }}
+                                slotProps={{
+                                  input: {
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        ₹
+                                      </InputAdornment>
+                                    ),
+                                  },
+                                }}
+                              />
+                              <Typography className="text-red-600 text-2xl">
+                                -
+                              </Typography>
+                              {/* Discount Price */}
+                              <TextField
+                                size="small"
+                                value={selected.discountPrice}
+                                placeholder="Discount Amount"
+                                error={Boolean(selected.discountPriceError)}
+                                helperText={selected.discountPriceError}
+                                onChange={(e) =>
+                                  handleDicountPriceChange(
+                                    selected.testId,
+                                    e.target.value,
+                                  )
+                                }
+                                sx={{
+                                  width: 130,
+                                  "& .MuiOutlinedInput-root": {
+                                    backgroundColor: "#fff",
+                                  },
+                                  "& .MuiFormHelperText-root": {
+                                    marginLeft: 0,
+                                    fontSize: 10,
+                                  },
+                                }}
+                                slotProps={{
+                                  input: {
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        ₹
+                                      </InputAdornment>
+                                    ),
+                                  },
+                                }}
+                              />
+                            </>
                           )}
                         </Stack>
                       </Paper>
                     );
                   })}
+
                   {filteredTests.length === 0 && (
                     <Box
                       sx={{
@@ -683,7 +844,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                   alignItems="center"
                 >
                   <Box>
-                    <Typography fontWeight={700}>New Tests</Typography>
+                    <Typography fontWeight={700}>Selected New Tests</Typography>
                     <Typography variant="caption" color="text.secondary">
                       Selected to add
                     </Typography>
@@ -738,11 +899,63 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                         }}
                       >
                         <Typography fontWeight={600} fontSize={14}>
-                          {test.code}
+                          {test.testName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ₹{test.price || "0"}
+                          {test.code}
                         </Typography>
+                        <Stack spacing={0.5} mt={1}>
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Test Price
+                            </Typography>
+                            <Typography variant="body2">
+                              ₹{test.price || "—"}
+                            </Typography>
+                          </Stack>
+                          {Number(test.discountPrice || 0) > 0 && (
+                            <Stack
+                              direction="row"
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Discount Amount
+                              </Typography>
+                              <Typography variant="body2">
+                                − ₹{test.discountPrice}
+                              </Typography>
+                            </Stack>
+                          )}
+                          <Divider />
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                          >
+                            <Typography variant="caption" fontWeight={700}>
+                              Payable
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {test.price
+                                ? `₹${(
+                                    Number(test.price) -
+                                    Number(test.discountPrice || 0)
+                                  ).toFixed(2)}`
+                                : "—"}
+                            </Typography>
+                          </Stack>
+                        </Stack>
                       </Paper>
                     ))}
                   </Stack>
@@ -770,7 +983,10 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
             saving ||
             newSelectedTests.length === 0 ||
             newSelectedTests.some(
-              (test) => !test.price || Boolean(test.priceError),
+              (test) =>
+                !test.price ||
+                Boolean(test.priceError) ||
+                Boolean(test.discountPriceError),
             )
           }
         >

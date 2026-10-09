@@ -87,6 +87,7 @@ const ServiceManagement: React.FC = () => {
       return;
     }
     const response = await getLabTestListApi(Number(labId));
+    console.log("Saved Lab Tests Response:", response);
     const savedTests = (response as any)?.data || [];
     setSavedLabTests(savedTests);
     const selected: SelectedTest[] = [];
@@ -107,6 +108,20 @@ const ServiceManagement: React.FC = () => {
                 ? String(exists.price)
                 : "",
             priceError: "",
+            discountPrice:
+              exists.discount_price !== null &&
+              exists.discount_price !== undefined
+                ? String(exists.discount_price)
+                : "",
+            discountPriceError: "",
+            payableAmount:
+              exists.payable_amount !== null &&
+              exists.payable_amount !== undefined
+                ? String(exists.payable_amount)
+                : String(
+                    Number(exists.price || 0) -
+                      Number(exists.discount_price || 0),
+                  ),
           });
         }
       });

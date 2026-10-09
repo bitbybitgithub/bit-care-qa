@@ -1,12 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Chip, Dialog, Drawer, Tooltip } from "@mui/material";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Drawer,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
   getPendingQueueAsync,
+  updatePatientTestsApi,
   updateLabTestStatusAsync,
   savereportAsync,
 } from "../../api/labApis/labQueuesApi";
+import { getLabTestListApi } from "../../api/labApis/LabApi";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReportFile } from "../../api/CommonApi/uploadFileApi";
 import { toast } from "react-toastify";
@@ -17,6 +33,15 @@ import { FaTimes } from "react-icons/fa";
 import LabPayment from "./LabPayment";
 
 const PAGE_SIZE = 10;
+
+interface AvailablePatientTest {
+  test_id: number;
+  category_id: number;
+  test_name: string;
+  test_code?: string;
+  category_name?: string;
+  price: number;
+}
 
 /* ---------------- STATUS NORMALIZER ---------------- */
 const normalizeStatus = (s: string) => {
@@ -56,6 +81,18 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [prescriptionDialogRow, setPrescriptionDialogRow] =
+    useState<any>(null);
+  const [addingPatientTests, setAddingPatientTests] = useState(false);
+  const [availablePatientTests, setAvailablePatientTests] = useState<
+    AvailablePatientTest[]
+  >([]);
+  const [selectedPatientTests, setSelectedPatientTests] = useState<
+    AvailablePatientTest[]
+  >([]);
+  const [patientTestsLoading, setPatientTestsLoading] = useState(false);
+  const [savingPatientTests, setSavingPatientTests] = useState(false);
+  const [patientTestSearch, setPatientTestSearch] = useState("");
   const [testsDialogRow, setTestsDialogRow] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -83,11 +120,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     return "pending";
   }, [mode, location.pathname]);
 
-  const openViewPrescription = async (row: any) => {
+  const openViewPrescription = async (row: any, addTests = false) => {
     try {
       setSelectedPatient(row);
       setPdfUrl(null);
-      setOpenPdf(true);
+      setPrescriptionDialogRow(row);
+      setAddingPatientTests(addTests);
+      setAvailablePatientTests([]);
+      setSelectedPatientTests([]);
+      setPatientTestSearch("");
+      setPatientTestsLoading(addTests);
       setPdfLoading(true);
 
       const filePath = row.prescription_url;
@@ -99,12 +141,128 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       const url = await getPdfFromServer(filePath, fileName);
       setPdfUrl(url);
       setPdfLoading(false);
+      if (addTests) {
+        setPatientTestsLoading(true);
+        const response = await getLabTestListApi(Number(row.lab_id));
+        const tests = Array.isArray((response as any)?.data)
+          ? (response as any).data
+          : [];
+        const currentTestIds = new Set(
+          (Array.isArray(row.test_details) ? row.test_details : []).map(
+            (test: any) => Number(test.test_id),
+          ),
+        );
+        setAvailablePatientTests(
+          tests
+            .map((test: any) => ({
+              test_id: Number(test.test_id),
+              category_id: Number(test.category_id),
+              test_name: String(test.test_name || ""),
+              test_code: test.test_code,
+              category_name: test.category_name,
+              price: Number(test.price ?? test.test_price ?? 0),
+            }))
+            .filter(
+              (test: AvailablePatientTest) =>
+                !currentTestIds.has(test.test_id),
+            ),
+        );
+        setPatientTestsLoading(false);
+      }
     } catch (error) {
       console.error("PDF Load Error:", error);
-      toast.error("Failed to load prescription PDF");
+      console.error("Could not load prescription or available tests:", error);
+      toast.error(
+        addTests
+          ? "Failed to load prescription or available tests"
+          : "Failed to load prescription PDF",
+      );
       setPdfLoading(false);
-      setOpenPdf(false);
+      setPatientTestsLoading(false);
+      setPrescriptionDialogRow(null);
     }
+  };
+
+  const savePatientTests = async () => {
+    const row = prescriptionDialogRow;
+    if (!row || !selectedPatientTests.length) {
+      toast.error("Select at least one test");
+      return;
+    }
+    if (!row.lab_id || !row.patient_id || !row.lab_record_id || !row.lab_appointment_id) {
+      toast.error("Patient appointment details are missing");
+      return;
+    }
+    try {
+      setSavingPatientTests(true);
+      const response: any = await updatePatientTestsApi({
+        lab_id: Number(row.lab_id),
+        patient_id: Number(row.patient_id),
+        lab_record_id: Number(row.lab_record_id),
+        lab_appointment_id: Number(row.lab_appointment_id),
+        tests: selectedPatientTests.map((test) => ({
+          test_id: test.test_id,
+          category_id: test.category_id,
+          test_price: test.price,
+        })),
+        modified_by: Number(user_id),
+      });
+      if (
+        !response?.success ||
+        response.success === "false" ||
+        response.success === "0"
+      ) {
+        throw new Error(response?.message || "Failed to update patient tests");
+      }
+      const addedTests = selectedPatientTests.map((test) => ({
+        test_id: test.test_id,
+        category_id: test.category_id,
+        test_name: test.test_name,
+        test_code: test.test_code,
+        test_price: test.price,
+      }));
+      setRows((currentRows) =>
+        currentRows.map((item) =>
+          Number(item.lab_record_id) === Number(row.lab_record_id)
+            ? {
+                ...item,
+                test_details: [
+                  ...(Array.isArray(item.test_details) ? item.test_details : []),
+                  ...addedTests,
+                ],
+              }
+            : item,
+        ),
+      );
+      toast.success(response.message || "Patient tests updated successfully");
+      setPrescriptionDialogRow(null);
+      setSelectedPatientTests([]);
+    } catch (error: any) {
+      console.error("Update patient tests failed:", error);
+      toast.error(
+        error?.message || "Failed to save tests for this patient",
+      );
+    } finally {
+      setSavingPatientTests(false);
+    }
+  };
+
+  const filteredPatientTests = useMemo(() => {
+    const query = patientTestSearch.trim().toLowerCase();
+    if (!query) return availablePatientTests;
+    return availablePatientTests.filter(
+      (test) =>
+        test.test_name.toLowerCase().includes(query) ||
+        test.test_code?.toLowerCase().includes(query),
+    );
+  }, [availablePatientTests, patientTestSearch]);
+
+  const togglePatientTest = (test: AvailablePatientTest) => {
+    setSelectedPatientTests((current) =>
+      current.some((item) => item.test_id === test.test_id)
+        ? current.filter((item) => item.test_id !== test.test_id)
+        : [...current, test],
+    );
   };
 
   const openViewReport = async (row: any) => {
@@ -354,7 +512,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             style={{
               backgroundColor: isSelfBooking
                 ? "var(--color-success-light, #e4f5ed)"
-                : "var(--color-primary-light, #e8f0ff)",
+                : "var(--color-success-light, #e8f0ff)",
               color: "var(--color-primary)",
             }}
           >
@@ -566,7 +724,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     },
     {
       field: "appointment_type",
-      headerName: "Appointment Type",
+      headerName: "Appt Type",
       flex: 1,
       minWidth: 140,
       valueGetter: (_value, row) => formatAppointmentType(row.appointment_type),
@@ -577,34 +735,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       flex: 1.2,
       minWidth: 130,
       renderCell: (p) => renderReferredBy(p.row),
-    },
-    {
-      field: "payment_status",
-      headerName: "Payment Status",
-      flex: 1,
-      minWidth: 140,
-      sortable: false,
-      filterable: false,
-      renderCell: (p) =>
-        String(p.row.is_fee_paid) === "1" ? (
-          <Button size="small" variant="outlined" disabled>
-            Paid
-          </Button>
-        ) : (
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => setPaymentRow(p.row)}
-          >
-            Make Payment
-          </Button>
-        ),
-    },
-    {
-      field: "result_status",
-      headerName: "Status",
-      flex: 1,
-      minWidth: 110,
     },
   ];
 
@@ -627,6 +757,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             </Button>
           ),
         },
+        {
+          field: "payment_status",
+          headerName: "Payment Status",
+          flex: 1,
+          minWidth: 140,
+          sortable: false,
+          filterable: false,
+          renderCell: (p) =>
+            String(p.row.is_fee_paid) === "1" ? (
+              <Button size="small" variant="outlined" disabled>
+                Paid
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setPaymentRow(p.row)}
+              >
+                Make Payment
+              </Button>
+            ),
+        },
       ];
 
     if (resolvedMode === "processing")
@@ -642,9 +794,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={() => openViewPrescription(p.row)}
+                  onClick={() =>
+                    openViewPrescription(
+                      p.row,
+                      p.row.booking_source?.toUpperCase() === "CLINIC",
+                    )
+                  }
                 >
-                  View Prescription
+                  {p.row.booking_source?.toUpperCase() === "CLINIC"
+                    ? "Add Test"
+                    : "View Prescription"}
                 </Button>
               )}
               {hasTestsOrPackage(p.row) && (
@@ -669,9 +828,31 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               variant="contained"
               onClick={() => updateStatus(p.row, "Reporting Pending")}
             >
-              Complete Test
+              Sampling
             </Button>
           ),
+        },
+        {
+          field: "payment_status",
+          headerName: "Payment Status",
+          flex: 1,
+          minWidth: 140,
+          sortable: false,
+          filterable: false,
+          renderCell: (p) =>
+            String(p.row.is_fee_paid) === "1" ? (
+              <Button size="small" variant="outlined" disabled>
+                Paid
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setPaymentRow(p.row)}
+              >
+                Make Payment
+              </Button>
+            ),
         },
       ];
     if (resolvedMode === "completed")
@@ -719,6 +900,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             </Button>
           ),
         },
+        {
+          field: "payment_status",
+          headerName: "Payment Status",
+          flex: 1,
+          minWidth: 140,
+          sortable: false,
+          filterable: false,
+          renderCell: (p) =>
+            String(p.row.is_fee_paid) === "1" ? (
+              <Button size="small" variant="outlined" disabled>
+                Paid
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setPaymentRow(p.row)}
+              >
+                Make Payment
+              </Button>
+            ),
+        },
       ];
     return [
       ...commonColumns,
@@ -763,6 +966,28 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             Upload Test
           </Button>
         ),
+      },
+      {
+        field: "payment_status",
+        headerName: "Payment Status",
+        flex: 1,
+        minWidth: 140,
+        sortable: false,
+        filterable: false,
+        renderCell: (p) =>
+          String(p.row.is_fee_paid) === "1" ? (
+            <Button size="small" variant="outlined" disabled>
+              Paid
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setPaymentRow(p.row)}
+            >
+              Make Payment
+            </Button>
+          ),
       },
     ];
   }, [resolvedMode]);
@@ -816,6 +1041,168 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           }}
         />
       </Box>
+
+      <Dialog
+        open={Boolean(prescriptionDialogRow)}
+        onClose={() => setPrescriptionDialogRow(null)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{ sx: { height: "90vh", maxHeight: "90vh" } }}
+      >
+        <DialogTitle sx={{ borderBottom: "1px solid #e5e7eb" }}>
+          {addingPatientTests ? "Add Tests for Patient" : "Prescription and Tests"}
+          <Typography variant="body2" color="text.secondary">
+            {prescriptionDialogRow?.patient_name}
+          </Typography>
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            display: "flex",
+            gap: 2,
+            p: 2,
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              width: { xs: "100%", md: "42%" },
+              minWidth: 0,
+              overflowY: "auto",
+              pr: 1,
+            }}
+          >
+            {addingPatientTests ? (
+              <Box>
+                <Typography variant="h6" fontWeight={700} mb={1}>
+                  Add tests
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search tests..."
+                  value={patientTestSearch}
+                  onChange={(event) => setPatientTestSearch(event.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                {patientTestsLoading ? (
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress size={28} />
+                  </Box>
+                ) : filteredPatientTests.length ? (
+                  <Box className="space-y-2">
+                    {filteredPatientTests.map((test) => (
+                      <Box
+                        key={test.test_id}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 2,
+                          p: 1,
+                          mb: 1,
+                        }}
+                      >
+                        <Checkbox
+                          checked={selectedPatientTests.some(
+                            (selected) => selected.test_id === test.test_id,
+                          )}
+                          onChange={() => togglePatientTest(test)}
+                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography fontWeight={600}>
+                            {test.test_name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {test.test_code || ""}
+                            {test.category_name
+                              ? ` • ${test.category_name}`
+                              : ""}
+                          </Typography>
+                        </Box>
+                        <Typography fontWeight={700} color="primary">
+                          ₹{test.price.toFixed(2)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography color="text.secondary">
+                    No additional tests available.
+                  </Typography>
+                )}
+                {selectedPatientTests.length > 0 && (
+                  <Box mt={2}>
+                    <Typography fontWeight={700} mb={1}>
+                      Selected tests ({selectedPatientTests.length})
+                    </Typography>
+                    {selectedPatientTests.map((test) => (
+                      <Typography key={test.test_id} variant="body2">
+                        {test.test_name} — ₹{test.price.toFixed(2)}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            ) : (
+              prescriptionDialogRow && renderTestsOrPackage(prescriptionDialogRow)
+            )}
+          </Box>
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              flex: 1,
+              minWidth: 0,
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+              bgcolor: "#eef2f7",
+              borderRadius: 1,
+            }}
+          >
+            {pdfLoading ? (
+              <CircularProgress />
+            ) : pdfUrl ? (
+              <Box
+                component="iframe"
+                title="Prescription PDF"
+                src={pdfUrl}
+                sx={{ width: "100%", height: "100%", border: 0 }}
+              />
+            ) : (
+              <Typography color="text.secondary">
+                Prescription PDF is unavailable.
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ borderTop: "1px solid #e5e7eb", px: 3, py: 2 }}>
+          <Button
+            onClick={() => {
+              setPrescriptionDialogRow(null);
+              setSelectedPatientTests([]);
+            }}
+          >
+            Close
+          </Button>
+          {addingPatientTests && (
+            <Button
+              variant="contained"
+              disabled={
+                !selectedPatientTests.length ||
+                savingPatientTests ||
+                patientTestsLoading
+              }
+              onClick={savePatientTests}
+            >
+              {savingPatientTests
+                ? "Saving..."
+                : `Save ${selectedPatientTests.length} Test(s)`}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={openPdf}

@@ -29,6 +29,18 @@ export interface SaveLabPaymentResponse {
   message?: string;
   transaction_id?: string;
 }
+export interface UpdatePatientTestsRequest {
+  lab_id: number;
+  patient_id: number;
+  lab_record_id: number;
+  lab_appointment_id: number;
+  tests: {
+    test_id: number;
+    category_id: number;
+    test_price: number;
+  }[];
+  modified_by: number;
+}
 
 export const savereportAsync = async (payload: {
   lab_record_id: number;
@@ -92,4 +104,10 @@ export const saveLabPaymentAsync = async (
     throw new Error(result?.message || "Lab payment failed");
   }
   return result;
+};
+
+export const updatePatientTestsApi = async (
+  payload: UpdatePatientTestsRequest,
+) => {
+  return await emrAPI.post("/lab/update-patient-test", payload);
 };

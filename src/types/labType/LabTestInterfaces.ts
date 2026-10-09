@@ -26,6 +26,9 @@ export interface SelectedTest {
   testName: string;
   price: string;
   priceError?: string;
+  discountPrice: string;
+  discountPriceError?: string;
+  payableAmount?: string;
 }
 
 export interface LabTestApiResponse {
@@ -44,6 +47,8 @@ export interface LabTestPriceItem {
   test_id: number;
   category_id: number;
   price: number;
+  discount_price: number;
+  payable_amount: number;
 }
 export interface LabTestItemRequest {
   lab_id: number;
@@ -62,6 +67,8 @@ export interface UpdateLabTestItemRequest {
     test_id: number;
     category_id: number;
     price: number;
+    discount_price: number;
+    payable_amount: number;
     is_active?: "0" | "1";
   }[];
   modified_by: number;

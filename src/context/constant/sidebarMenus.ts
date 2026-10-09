@@ -6,7 +6,6 @@ import {
   FaUserMd,
 } from "react-icons/fa";
 import { FaGift } from "react-icons/fa";
-import { GrDocumentText } from "react-icons/gr";
 import { EntityType } from "./enum";
 import type { MenuItem, Role } from "../../types/common/sidebarTypes";
 import ScienceIcon from "@mui/icons-material/Science";

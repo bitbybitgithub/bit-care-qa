@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   Chip,
   Dialog,
   DialogActions,
@@ -29,7 +28,6 @@ import Loader from "../../components/shared/Loader/Loader";
 import { updateAvailableLabTestApi } from "../../api/labApis/LabApi";
 import type {
   SelectedTest,
-  LabTestItemRequest,
   UpdateLabTestItemRequest,
 } from "../../types/labType/LabTestInterfaces";
 
@@ -146,10 +144,55 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
             priceError = "Maximum price is ₹10,000";
           }
         }
+        let discountPriceError = test.discountPriceError;
+        if (test.discountPrice !== "" && value !== "") {
+          const discountPrice = Number(test.discountPrice);
+          if (discountPrice !== 0 && discountPrice < 5) {
+            discountPriceError = "Minimum discount price is ₹5";
+          } else if (discountPrice > 10000) {
+            discountPriceError = "Maximum discount price is ₹10,000";
+          } else if (discountPrice > Number(value)) {
+            discountPriceError = "Discount price cannot exceed test price";
+          } else {
+            discountPriceError = "";
+          }
+        }
         return {
           ...test,
           price: value,
           priceError,
+          discountPriceError,
+        };
+      }),
+    );
+  };
+
+  const handleDiscountPriceChange = (testId: string, value: string) => {
+    if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
+      return;
+    }
+    setSelectedTests((prev) =>
+      prev.map((test) => {
+        if (String(test.testId) !== String(testId)) {
+          return test;
+        }
+        let discountPriceError = "";
+        if (value === "" || Number(value) === 0) {
+          discountPriceError = "";
+        } else {
+          const discountPrice = Number(value);
+          if (discountPrice < 5) {
+            discountPriceError = "Minimum discount price is ₹5";
+          } else if (discountPrice > 10000) {
+            discountPriceError = "Maximum discount price is ₹10,000";
+          } else if (discountPrice > Number(test.price)) {
+            discountPriceError = "Discount price cannot exceed test price";
+          }
+        }
+        return {
+          ...test,
+          discountPrice: value,
+          discountPriceError,
         };
       }),
     );
@@ -162,29 +205,6 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
     if (test) {
       setTestToDelete(test);
     }
-  };
-
-  const handlePriceFieldBlur = (testId: string) => {
-    const currentTest = selectedTests.find(
-      (item) => String(item.testId) === String(testId),
-    );
-    const priceValue = String(currentTest?.price ?? "").trim();
-
-    if (!priceValue) {
-      return;
-    }
-
-    const numericValue = Number(priceValue);
-    if (
-      Number.isNaN(numericValue) ||
-      !/^\d*\.?\d{0,2}$/.test(priceValue) ||
-      numericValue < 5 ||
-      numericValue > 10000
-    ) {
-      return;
-    }
-
-    setEditingTestId((prev) => (prev === testId ? null : prev));
   };
 
   const submitLabTestChange = async (
@@ -202,6 +222,12 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         test_id: Number(test.testId),
         category_id: Number(test.categoryId),
         price: Number(test.price || 0),
+        discount_price: Number(test.discountPrice || 0),
+        payable_amount: Number(
+          (Number(test.price || 0) - Number(test.discountPrice || 0)).toFixed(
+            2,
+          ),
+        ),
         ...(operationType === "D"
           ? {
               is_active: "0",
@@ -211,9 +237,14 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
       modified_by: Number(userId),
     };
 
+    console.log("Submitting lab test Update payload:", payload);
     const response = await updateAvailableLabTestApi(payload);
-    if (!response.success) {
-      toast.error(response.message);
+    if (
+      !response.success ||
+      response.success === "false" ||
+      response.success === "0"
+    ) {
+      toast.error(response.message || "Failed to update laboratory tests");
       return false;
     }
     toast.success(
@@ -270,6 +301,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         toast.error("No laboratory tests configured");
         return;
       }
+      console.log("selectedTests : ", selectedTests);
       const dirtyTests = selectedTests.filter((test) => {
         const original = baselineTests.find(
           (item) => String(item.testId) === String(test.testId),
@@ -279,6 +311,8 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         }
         return (
           String(original.price ?? "") !== String(test.price ?? "") ||
+          String(original.discountPrice ?? "") !==
+            String(test.discountPrice ?? "") ||
           Number(original.categoryId) !== Number(test.categoryId) ||
           original.testName !== test.testName
         );
@@ -300,6 +334,21 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
       });
       if (hasInvalidPrice) {
         toast.error("Price for edited tests must be between ₹5 and ₹10,000");
+        return;
+      }
+      const hasInvalidDiscountPrice = dirtyTests.some((test) => {
+        const discountPrice = Number(test.discountPrice);
+        return (
+          isNaN(discountPrice) ||
+          (discountPrice !== 0 && discountPrice < 5) ||
+          discountPrice > 10000 ||
+          discountPrice > Number(test.price)
+        );
+      });
+      if (hasInvalidDiscountPrice) {
+        toast.error(
+          "Discount Amount for edited tests must be ₹0 or between ₹5 and its test price",
+        );
         return;
       }
       setUpdateLoading(true);
@@ -555,17 +604,13 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                               onChange={(e) =>
                                 handlePriceChange(test.testId, e.target.value)
                               }
-                              onBlur={() => handlePriceFieldBlur(test.testId)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  handlePriceFieldBlur(test.testId);
-                                }
-                              }}
                               error={Boolean(test.priceError)}
                               helperText={test.priceError}
                               sx={{
                                 width: 130,
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: "#fff",
+                                },
                                 "& .MuiFormHelperText-root": {
                                   fontSize: 10,
                                   marginLeft: 0,
@@ -587,6 +632,75 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                             </Typography>
                           )}
                         </Stack>
+                      </Stack>
+                      {(isEditing ||
+                        (test.discountPrice !== "" &&
+                          Number(test.discountPrice) > 0)) && (
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          marginTop={1}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Discount Amount
+                          </Typography>
+                          {isEditing ? (
+                            <TextField
+                              size="small"
+                              value={test.discountPrice}
+                              onChange={(e) =>
+                                handleDiscountPriceChange(
+                                  test.testId,
+                                  e.target.value,
+                                )
+                              }
+                              error={Boolean(test.discountPriceError)}
+                              helperText={test.discountPriceError}
+                              sx={{
+                                width: 130,
+                                "& .MuiOutlinedInput-root": {
+                                  backgroundColor: "#fff",
+                                },
+                                "& .MuiFormHelperText-root": {
+                                  fontSize: 10,
+                                  marginTop: 2,
+                                  marginLeft: 0,
+                                },
+                              }}
+                              slotProps={{
+                                input: {
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      ₹
+                                    </InputAdornment>
+                                  ),
+                                },
+                              }}
+                            />
+                          ) : (
+                            <Typography fontWeight={700} color="primary">
+                              ₹{test.discountPrice}
+                            </Typography>
+                          )}
+                        </Stack>
+                      )}
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        marginTop={1}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          Payable Amount
+                        </Typography>
+                        <Typography fontWeight={700} color="primary">
+                          ₹
+                          {(
+                            Number(test.price || 0) -
+                            Number(test.discountPrice || 0)
+                          ).toFixed(2)}
+                        </Typography>
                       </Stack>
                     </Paper>
                   );
@@ -610,15 +724,6 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
               )}
             </Box>
             {/* ================= SAVE ================= */}
-            <Stack direction="row" justifyContent="flex-end" mt={3}>
-              <Button
-                variant="contained"
-                onClick={handleUpdateTests}
-                disabled={updateLoading}
-              >
-                {updateLoading ? "Saving..." : "Save Changes"}
-              </Button>
-            </Stack>
           </>
         ) : (
           /* ================= NO TESTS ================= */
@@ -651,6 +756,30 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
           </Box>
         )}
       </Paper>
+      {(editingTestId !== null || Boolean(testToDelete)) && (
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          sx={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 1,
+            mt: 1,
+            px: 3,
+            py: 1.5,
+            backgroundColor: "white",
+            borderTop: "1px solid #e5e7eb",
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleUpdateTests}
+            disabled={updateLoading || Boolean(testToDelete)}
+          >
+            {updateLoading ? "Saving..." : "Save Changes"}
+          </Button>
+        </Stack>
+      )}
 
       <Dialog
         open={Boolean(testToDelete)}

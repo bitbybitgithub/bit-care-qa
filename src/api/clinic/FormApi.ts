@@ -7,7 +7,7 @@ import type {
 } from "../../types/types";
 import { emrAPI, BASE_URL } from "../../services/EmrApi";
 
-export const registerApi = async (formData: FormDataBase) => {
+export const registerApi = async (formData: any) => {
   try {
     const registerPayload = {
       entity_type: formData.entityType,
@@ -21,15 +21,21 @@ export const registerApi = async (formData: FormDataBase) => {
       state: formData.state,
       latitude: formData.latitude,
       longitude: formData.longitude,
+      working_start: formData.workingStart,
+      working_end: formData.workingEnd,
+      working_days: formData.workingDays, // 0 = Sunday ... 6 = Saturday
+      slot_duration: formData.slotDuration, // clinics only
+      lab_category: formData.labCategory, // labs only
     };
+ 
     const response = await emrAPI.post<any>(
       "/onboard/register",
-      registerPayload,
+      registerPayload
     );
     return response;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || error.message || "Registration failed",
+      error.response?.data?.message || error.message || "Registration failed"
     );
   }
 };

@@ -2,8 +2,8 @@
 import { Dayjs } from "dayjs";
 export interface FormDataBase {
   entityType: number;
-  userId: number;
-  otp: number;
+  userId?: number;
+  otp?: number;
   name: string;
   email: string;
   phone: string;
@@ -13,9 +13,13 @@ export interface FormDataBase {
   district: string;
   state: string;
   latitude: string;
-  longitude : string;
+  longitude: string;
+  workingStart?: string;
+  workingEnd?: string;
+  workingDays?: number[];
+  slotDuration?: number;
+  labCategory?: string;
 }
-
 export interface OfferForm {
   center_id?: number;
   entity_type?: number;

@@ -9,12 +9,10 @@ import {
   LinearProgress,
   Box,
   Typography,
-  FormHelperText,
-  FormControl,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaLock } from "react-icons/fa";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import type { ResetPassErrors } from "../../../types/types";
 import { usePasswordStrength } from "../../../components/common/usePasswordStrength";
@@ -23,7 +21,68 @@ import {
   verifyOtpApi,
 } from "../../../api/GenerateAndVerifyOtpApi";
 import { checkUserExists, resetPasswordApi  } from "../../../api/auth/CommonAuthApi";
-import { CheckCircleIcon } from "lucide-react";
+import { ArrowLeft, CheckCircleIcon } from "lucide-react";
+
+/* ---- Visual tokens (same look as the registration / login forms) ---- */
+const FOCUS_RING =
+  "outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] " +
+  "focus-visible:ring-offset-2";
+
+const LABEL_CLASS =
+  "mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-600";
+
+const inputSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "10px",
+    backgroundColor: "#f8fafc",
+    fontSize: 14,
+    minHeight: 40,
+    padding: "0 8px 0 14px",
+    transition: "background-color .15s",
+    "& fieldset": { borderColor: "#e2e8f0" },
+    "&:hover fieldset": { borderColor: "#cbd5e1" },
+    "&.Mui-focused": { backgroundColor: "#fff" },
+    "&.Mui-focused fieldset": {
+      borderColor: "var(--color-primary)",
+      borderWidth: "1.5px",
+    },
+    "&.Mui-error fieldset": { borderColor: "#dc2626" },
+    "&.Mui-disabled": { backgroundColor: "#f1f5f9" },
+  },
+  "& .MuiInputBase-input": {
+    padding: "9px 6px 9px 0",
+    fontSize: 14,
+    lineHeight: "22px",
+    boxSizing: "border-box",
+    height: "auto",
+    "&::placeholder": { color: "#94a3b8", opacity: 1 },
+    "&.Mui-disabled": { WebkitTextFillColor: "#334155" },
+  },
+  "& .MuiInputAdornment-positionStart": { marginRight: "10px" },
+  "& .MuiFormHelperText-root": {
+    minHeight: 16,
+    margin: "2px 2px 0",
+    fontSize: 11.5,
+    lineHeight: "16px",
+  },
+};
+
+const otpBoxSx = {
+  width: 44,
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "10px",
+    height: 44,
+    backgroundColor: "#f8fafc",
+    "& fieldset": { borderColor: "#e2e8f0" },
+    "&:hover fieldset": { borderColor: "#cbd5e1" },
+    "&.Mui-focused": { backgroundColor: "#fff" },
+    "&.Mui-focused fieldset": {
+      borderColor: "var(--color-primary)",
+      borderWidth: "1.5px",
+    },
+  },
+  "& .MuiInputBase-input": { padding: 0 },
+};
 
 interface ForgotPasswordProps {
   source: "resetPassword" | "forgottenPassword";
@@ -326,225 +385,200 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      noValidate
-      className="flex flex-col items-center justify-center h-full px-10 space-y-5 w-full"
-    >
-      <h1 className="text-2xl font-extrabold text-[var(--color-primary)]">
-        {showMobileBox ? "Create new Password" : "Reset Your Password"}
-      </h1>
+    <form onSubmit={handleSubmit} noValidate className="w-full">
+      {/* heading */}
+      <div className="mb-5">
+        <h2
+          className="font-[var(--font-weight-bold)] text-[var(--color-text)]"
+          style={{ fontSize: "var(--font-h3, 1.5rem)" }}>
+          {showMobileBox ? "Create new" : "Reset your"}{" "}
+          <span className="text-[var(--color-primary)]">password</span>
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {showUserIdField
+            ? "Verify your username with an OTP, then choose a new password."
+            : "Choose a new password to continue."}
+        </p>
+      </div>
 
       {showMobileBox && showUserIdField && (
-        <div className="w-full flex flex-col gap-2 ">
+        <div className="mb-1">
           {/* Username + Verify row */}
-          <div className="flex gap-2 items-start">
-            <FormControl fullWidth>
-              <TextField
-                fullWidth
-                placeholder="Enter Username"
-                size="small"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                onKeyDown={(e) => {
-                  if (e.key === " ") e.preventDefault();
-                }}
-                error={!!errors.username}
-                // disabled={isOtpVerified}
-                disabled={isUsernameLocked}
-                inputProps={{ maxLength: 25 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaUser className="text-[var(--color-text-secondary)]" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: isOtpVerified && (
-                                      <InputAdornment position="end">
-                                        <CheckCircleIcon style={{ color: "green" }} />
-                                      </InputAdornment>
-                                    ),
-                                    // inputProps: { maxLength: 10 },
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-                  "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-                  "& .MuiOutlinedInput-root.Mui-disabled.Mui-focused .MuiOutlinedInput-notchedOutline":
-                  {
-                    borderColor: "var(--color-border)",
-                  },
-                }}
-              />
-
-              <FormHelperText
-                error={!!errors.username}
-                sx={{
-                  minHeight: "20px",
-                  visibility: errors.username ? "visible" : "hidden",
-                }}
-              >
-                {errors.username}
-              </FormHelperText>
-            </FormControl>
+          <label htmlFor="reset-username" className={LABEL_CLASS}>
+            Username
+          </label>
+          <div className="flex items-start gap-2">
+            <TextField
+              id="reset-username"
+              fullWidth
+              placeholder="Enter username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === " ") e.preventDefault();
+              }}
+              error={!!errors.username}
+              helperText={errors.username || " "}
+              disabled={isUsernameLocked}
+              inputProps={{ maxLength: 25 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUser size={14} className="text-slate-400" />
+                  </InputAdornment>
+                ),
+                endAdornment: isOtpVerified && (
+                  <InputAdornment position="end">
+                    <CheckCircleIcon size={18} style={{ color: "#15803d" }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={inputSx}
+            />
 
             {!showOtp && !isOtpVerified && (
               <Button
-                variant="contained"
+                type="button"
                 size="small"
                 onClick={handleIsUserExist}
                 disabled={!formData.username || isOtpVerified}
                 sx={{
                   height: 40,
-                  minWidth: 100,
+                  minWidth: 84,
+                  borderRadius: "10px",
+                  textTransform: "none",
                   fontWeight: 600,
-                  backgroundColor: "var(--color-success)",
-                  color: "var(--color-white)",
                   whiteSpace: "nowrap",
-                  cursor:
-                    !formData.username || isOtpVerified ? "not-allowed" : "pointer",
-                  "&.Mui-disabled": {
-                    color: "var(--color-white)",
-                    backgroundColor: !isOtpVerified &&
-                      "var(--color-border)",
-                    cursor: "not-allowed",
-                    opacity: 1,
+                  backgroundColor: "var(--color-primary)",
+                  color: "var(--color-surface)",
+                  "&:hover": {
+                    backgroundColor: "var(--color-primary)",
+                    opacity: 0.92,
                   },
-                }}
-              >
-                {!isOtpVerified && "Verify"}
+                  "&.Mui-disabled": {
+                    backgroundColor: "#e2e8f0",
+                    color: "#94a3b8",
+                    cursor: "not-allowed",
+                    pointerEvents: "auto",
+                  },
+                }}>
+                Verify
               </Button>
             )}
           </div>
 
           {/* OTP section below username */}
           {showOtp && !isOtpVerified && (
-            <div className="w-[75%] flex flex-col gap-1 mt-0.5 ">
+            <div className="anim-fade-up mb-2 rounded-xl border border-slate-200 bg-[color-mix(in_srgb,var(--color-primary)_4%,white)] p-3">
+              <p className={`${LABEL_CLASS} text-center`}>Enter the 4-digit OTP</p>
 
-              {/* OTP + Resend inline */}
-              <div className="flex items-center gap-1">
-                {/* FIXED WIDTH OTP INPUT */}
+              <div className="flex justify-center gap-2.5">
+                {[0, 1, 2, 3].map((index) => (
+                  <TextField
+                    key={index}
+                    value={formData.otp[index] || ""}
+                    inputRef={(el) => (otpRefs.current[index] = el)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
 
-                <div className="flex gap-3 justify-center">
-                  {[0, 1, 2, 3].map((index) => (
-                    <TextField
-                      key={index}
-                      value={formData.otp[index] || ""}
-                      inputRef={(el) => (otpRefs.current[index] = el)}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
+                      const otpArray = formData.otp.split("");
 
+                      // allow clearing
+                      if (val === "") {
+                        otpArray[index] = "";
+                        setFormData((prev) => ({
+                          ...prev,
+                          otp: otpArray.join(""),
+                        }));
+
+                        return;
+                      }
+
+                      // set digit
+                      otpArray[index] = val[0];
+                      const newOtp = otpArray.join("").slice(0, 4);
+
+                      setFormData((prev) => ({ ...prev, otp: newOtp }));
+
+                      // move forward
+                      if (index < 3) {
+                        otpRefs.current[index + 1]?.focus();
+                      }
+
+                      if (newOtp.length === 4) {
+                        handleVerifyOtp(newOtp);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace") {
                         const otpArray = formData.otp.split("");
 
-                        // allow clearing
-                        if (val === "") {
+                        if (otpArray[index]) {
+                          // clear current
                           otpArray[index] = "";
                           setFormData((prev) => ({
                             ...prev,
                             otp: otpArray.join(""),
                           }));
-
-                          return;
+                        } else if (index > 0) {
+                          // move back
+                          otpRefs.current[index - 1]?.focus();
                         }
-
-                        // set digit
-                        otpArray[index] = val[0];
-                        const newOtp = otpArray.join("").slice(0, 4);
-
-                        setFormData((prev) => ({ ...prev, otp: newOtp }));
-
-                        // move forward
-                        if (index < 3) {
-                          otpRefs.current[index + 1]?.focus();
-                        }
-
-                        if (newOtp.length === 4) {
-                          handleVerifyOtp(newOtp);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Backspace") {
-                          const otpArray = formData.otp.split("");
-
-                          if (otpArray[index]) {
-                            // clear current
-                            otpArray[index] = "";
-                            setFormData((prev) => ({
-                              ...prev,
-                              otp: otpArray.join(""),
-                            }));
-                          } else if (index > 0) {
-                            // move back
-                            otpRefs.current[index - 1]?.focus();
-                          }
-                        }
-                      }}
-                      inputProps={{
-                        maxLength: 1,
-                        style: {
-                          textAlign: "center",
-                          fontSize: "18px",
-                          fontWeight: 600,
-                        },
-                      }}
-                      sx={{
-                        width: "40px",
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: "16px",
-                          height: "40px",
-                        },
-                      }}
-                    />
-                  ))}
-                </div>
-                {/* FIXED WIDTH BUTTON → NO LAYOUT SHIFT */}
-                <div className="w-[90px] flex justify-end">
-                  <Button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={resendCooldown > 0 || resendLoading}
-                    sx={{
-                      minWidth: "90px",
-                      maxWidth: "90px",
-                      padding: "6px 6px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      textTransform: "none",
-                      whiteSpace: "nowrap",
-                      color:
-                        resendCooldown > 0
-                          ? "var(--color-text-secondary)"
-                          : "var(--color-info)",
+                      }
                     }}
-                  >
-                    {resendLoading
-                      ? "Sending..."
-                      : resendCooldown > 0
-                        ? `Resend in ${resendCooldown}s`
-                        : "Resend OTP"}
-                  </Button>
-                </div>
+                    inputProps={{
+                      maxLength: 1,
+                      inputMode: "numeric",
+                      "aria-label": `OTP digit ${index + 1}`,
+                      style: {
+                        textAlign: "center",
+                        fontSize: "18px",
+                        fontWeight: 600,
+                      },
+                    }}
+                    sx={otpBoxSx}
+                  />
+                ))}
               </div>
 
+              <div className="mt-2 flex justify-center">
+                <Button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || resendLoading}
+                  sx={{
+                    padding: "4px 10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    whiteSpace: "nowrap",
+                    color: "var(--color-primary)",
+                    "&.Mui-disabled": { color: "#94a3b8" },
+                  }}>
+                  {resendLoading
+                    ? "Sending..."
+                    : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend OTP"}
+                </Button>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      <FormControl fullWidth >
+      {/* New password */}
+      <div className="mb-1">
+        <label htmlFor="reset-new-password" className={LABEL_CLASS}>
+          New password
+        </label>
         <TextField
-          placeholder="New password"
+          id="reset-new-password"
+          placeholder="Enter new password"
           name="newPassword"
           type={showPassword ? "text" : "password"}
-          variant="outlined"
           fullWidth
-          size="small"
           value={formData.newPassword}
           onKeyDown={(e) => {
             if (e.key === " ") e.preventDefault();
@@ -552,42 +586,47 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
           onChange={handleChange}
           disabled={!isOtpVerified}
           error={!!errors.newPassword}
+          helperText={errors.newPassword || " "}
           inputProps={{ maxLength: 25 }}
           InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <FaLock size={14} className="text-slate-400" />
+              </InputAdornment>
+            ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
+                  edge="end"
+                  size="small"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((p) => !p)}
-                  disabled={showMobileBox ? !isOtpVerified : false}
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  disabled={showMobileBox ? !isOtpVerified : false}>
+                  {showPassword ? (
+                    <VisibilityOff fontSize="small" />
+                  ) : (
+                    <Visibility fontSize="small" />
+                  )}
                 </IconButton>
               </InputAdornment>
             ),
           }}
+          sx={inputSx}
         />
-        <FormHelperText
-          error={!!errors.newPassword}
-          sx={{
-            minHeight: "20px",
-            visibility: errors.newPassword ? "visible" : "hidden",
-          }}
-        >
-          {errors.newPassword}
-        </FormHelperText>
-      </FormControl>
+      </div>
 
       {formData.newPassword && (
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", mb: 1.5 }}>
           <LinearProgress
             variant="determinate"
             value={passwordStrength.progress}
             sx={{
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: "#e0e0e0",
+              height: 5,
+              borderRadius: 3,
+              backgroundColor: "#eef2f6",
               "& .MuiLinearProgress-bar": {
                 backgroundColor: passwordStrength.color,
+                borderRadius: 3,
               },
             }}
           />
@@ -595,80 +634,103 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
             variant="body2"
             sx={{
               color: passwordStrength.color,
-              fontWeight: 500,
+              fontWeight: 600,
+              fontSize: 12,
               mt: 0.5,
-            }}
-          >
+            }}>
             Password strength: {passwordStrength.level}
           </Typography>
           <Typography
             variant="caption"
-            sx={{
-              color: "var(--color-text-secondary)",
-              display: "block",
-            }}
-          >
+            sx={{ color: "#64748b", display: "block", lineHeight: 1.3 }}>
             {passwordStrength.suggestion}
           </Typography>
         </Box>
       )}
 
-      <FormControl fullWidth>
+      {/* Confirm password */}
+      <div className="mb-3">
+        <label htmlFor="reset-confirm-password" className={LABEL_CLASS}>
+          Confirm password
+        </label>
         <TextField
-          placeholder="Confirm password"
+          id="reset-confirm-password"
+          placeholder="Re-enter new password"
           name="confirmPassword"
           type={showConfirm ? "text" : "password"}
-          variant="outlined"
           fullWidth
-          size="small"
           value={formData.confirmPassword}
           onChange={handleChange}
           disabled={!canConfirmPassword}
           inputProps={{ maxLength: 25 }}
           error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword || " "}
           InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <FaLock size={14} className="text-slate-400" />
+              </InputAdornment>
+            ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
+                  edge="end"
+                  size="small"
+                  aria-label={showConfirm ? "Hide password" : "Show password"}
                   onClick={() => setShowConfirm((p) => !p)}
-                  disabled={showMobileBox ? !isOtpVerified : false}
-                >
-                  {showConfirm ? <VisibilityOff /> : <Visibility />}
+                  disabled={showMobileBox ? !isOtpVerified : false}>
+                  {showConfirm ? (
+                    <VisibilityOff fontSize="small" />
+                  ) : (
+                    <Visibility fontSize="small" />
+                  )}
                 </IconButton>
               </InputAdornment>
             ),
           }}
+          sx={inputSx}
         />
-        <FormHelperText
-          error={!!errors.confirmPassword}
-          sx={{
-            minHeight: "20px",
-            visibility: errors.confirmPassword ? "visible" : "hidden",
-          }}
-        >
-          {errors.confirmPassword}
-        </FormHelperText>
-      </FormControl>
+      </div>
 
       <Button
         type="submit"
         fullWidth
+        disabled={loading}
+        aria-busy={loading}
         sx={{
+          minHeight: 44,
+          borderRadius: "10px",
+          textTransform: "none",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
           backgroundColor: "var(--color-primary)",
-          color: "var(--color-bg)",
-          "&:hover": { backgroundColor: "var(--color-primary)" },
-        }}
-      >
-        {loading ? <CircularProgress size={20} color="inherit" /> : "Save"}
+          color: "var(--color-surface)",
+          "&:hover": {
+            backgroundColor: "var(--color-primary)",
+            opacity: 0.92,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "var(--color-primary)",
+            color: "var(--color-surface)",
+            opacity: 0.7,
+          },
+        }}>
+        {loading ? (
+          <CircularProgress size={22} color="inherit" />
+        ) : (
+          "Save password"
+        )}
       </Button>
 
-      <div className="text-left mt-2 mb-3 w-full">
+      <div className="mt-4 flex justify-center">
         <button
           onClick={() => setSource(null)}
-          className="text-sm text-[var(--color-info)] hover:underline font-medium"
-          type="button"
-        >
-          Back
+          className={`flex items-center gap-1.5 rounded text-sm font-semibold text-[var(--color-primary)] hover:underline underline-offset-2 ${FOCUS_RING}`}
+          type="button">
+          <ArrowLeft size={15} aria-hidden />
+          Back to sign in
         </button>
       </div>
     </form>

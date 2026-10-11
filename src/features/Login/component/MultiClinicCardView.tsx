@@ -1,11 +1,16 @@
 import { Button } from "@mui/material";
 import { useState } from "react";
-import { FaArrowRight, FaHospital, FaTimes } from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa";
+import { Building2, Check } from "lucide-react";
 
 interface MultiClinicCardViewProps {
   clinicsList: any[];
   onClinicSelect: (clinic: any) => void;
 }
+
+const FOCUS_RING =
+  "outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] " +
+  "focus-visible:ring-offset-2";
 
 const MultiClinicCardView = ({
   clinicsList,
@@ -22,71 +27,28 @@ const MultiClinicCardView = ({
       .toUpperCase();
 
   return (
-    <div
-      className="relative p-5 flex flex-col gap-4 overflow-hidden"
-      style={{
-        background: "var(--color-surface)",
-      }}
-    >
-      {/* Subtle top-left orb — uses primary color, very faint */}
-      <div
-        className="absolute -top-8 -left-8 w-36 h-36 rounded-full pointer-events-none"
-        style={{
-          background: "var(--color-primary)",
-          opacity: 0.07,
-          filter: "blur(36px)",
-        }}
-      />
-      {/* Subtle bottom-right orb */}
-      <div
-        className="absolute -bottom-8 -right-8 w-28 h-28 rounded-full pointer-events-none"
-        style={{
-          background: "var(--color-primary)",
-          opacity: 0.05,
-          filter: "blur(28px)",
-        }}
-      />
+    <div className="relative overflow-hidden bg-[var(--color-surface)]">
+      {/* decorative motion (same language as the login / registration pages) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="anim-float-a absolute -left-16 -top-16 h-44 w-44 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_9%,transparent)]" />
+        <span className="anim-float-b absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)]" />
+        <span className="dot-grid anim-drift absolute right-4 top-4 h-14 w-14 text-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]" />
+      </div>
 
-      {/* Glass inner panel */}
-      <div
-        className="relative flex flex-col gap-4 rounded-2xl p-4"
-        style={{
-          background: "rgba(255,255,255,0.55)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.7)",
-          boxShadow:
-            "0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
-        }}
-      >
+      <div className="relative flex flex-col gap-4 p-5">
         {/* Header */}
-        <div
-          className="flex flex-col items-center gap-2 pb-3"
-          style={{ borderBottom: "1px solid rgba(0,0,0,0.07)" }}
-        >
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center"
-            style={{
-              background: "rgba(255,255,255,0.7)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-              border: "1px solid rgba(0,0,0,0.08)",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-            }}
-          >
-            <FaHospital size={20} style={{ color: "var(--color-primary)" }} />
-          </div>
-          <div className="text-center">
+        <div className="flex flex-col items-center gap-2 border-b border-slate-100 pb-4 text-center">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--color-primary)] text-[var(--color-surface)] shadow-sm">
+            <Building2 size={22} aria-hidden />
+          </span>
+          <div>
             <h2
-              className="text-base font-semibold"
-              style={{ color: "var(--color-text)" }}
-            >
-              Select a clinic
+              className="font-[var(--font-weight-bold)] text-[var(--color-text)]"
+              style={{ fontSize: "var(--font-h3, 1.25rem)" }}>
+              Select a{" "}
+              <span className="text-[var(--color-primary)]">clinic</span>
             </h2>
-            <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
+            <p className="mt-0.5 text-xs text-slate-500">
               Choose the clinic you want to log in to
             </p>
           </div>
@@ -94,143 +56,97 @@ const MultiClinicCardView = ({
 
         {/* Clinic list */}
         <div
-          className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-0.5"
+          role="radiogroup"
+          aria-label="Clinics"
+          className="flex max-h-60 flex-col gap-2 overflow-y-auto p-0.5 pr-1"
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "rgba(0,0,0,0.12) transparent",
-          }}
-        >
-          {clinicsList.map((clinic) => {
+          }}>
+          {clinicsList.map((clinic, i) => {
             const isSelected = selectedClinic?.clinic_id === clinic.clinic_id;
             return (
-              <div
+              <button
                 key={clinic.clinic_id}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
                 onClick={() => setSelectedClinic(clinic)}
-                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200"
-                style={{
-                  background: isSelected
-                    ? "rgba(255,255,255,0.75)"
-                    : "rgba(255,255,255,0.35)",
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
-                  border: isSelected
-                    ? "1.5px solid var(--color-primary)"
-                    : "1.5px solid rgba(0,0,0,0.07)",
-                  boxShadow: isSelected
-                    ? "0 0 0 3px rgba(var(--color-primary-rgb, 99,102,241),0.08)"
-                    : "none",
-                    transform: isSelected ? "translateY(-1px)" : "none",
-                  marginTop: isSelected ? "5px" : "0",
-                }}
-              >
+                style={{ animationDelay: `${i * 60}ms` }}
+                className={`anim-fade-up flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 motion-reduce:transition-none ${FOCUS_RING} ${
+                  isSelected
+                    ? "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_6%,white)] shadow-sm"
+                    : "border-slate-200 bg-white hover:border-[var(--color-primary)]/50"
+                }`}>
                 {/* Initials avatar */}
-                <div
-                  className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-semibold"
-                  style={{
-                    background: isSelected
-                      ? "var(--color-primary)"
-                      : "rgba(0,0,0,0.06)",
-                    color: isSelected
-                      ? "#fff"
-                      : "var(--color-text-secondary)",
-                    border: "1px solid rgba(0,0,0,0.06)",
-                  }}
-                >
+                <span
+                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-semibold ${
+                    isSelected
+                      ? "bg-[var(--color-primary)] text-[var(--color-surface)]"
+                      : "bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] text-[var(--color-primary)]"
+                  }`}>
                   {getInitials(clinic.clinic_name)}
-                </div>
+                </span>
 
                 {/* Info */}
-                <div className="flex flex-col min-w-0 flex-1">
+                <span className="flex min-w-0 flex-1 flex-col">
                   <span
-                    className="text-sm font-medium truncate"
-                    style={{
-                      color: isSelected
-                        ? "var(--color-primary)"
-                        : "var(--color-text)",
-                    }}
-                  >
+                    className={`truncate text-sm font-semibold ${
+                      isSelected
+                        ? "text-[var(--color-primary)]"
+                        : "text-[var(--color-text)]"
+                    }`}>
                     {clinic.clinic_name}
                   </span>
                   {clinic.address && (
-                    <span
-                      className="text-xs truncate mt-0.5"
-                      style={{ color: "var(--color-text-secondary)" }}
-                    >
+                    <span className="mt-0.5 truncate text-xs text-slate-500">
                       {clinic.address}
                     </span>
                   )}
-                </div>
+                </span>
 
-                {/* Radio dot */}
-                <div
-                  className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center transition-all"
-                  style={{
-                    border: isSelected
-                      ? "2px solid var(--color-primary)"
-                      : "2px solid rgba(0,0,0,0.18)",
-                  }}
-                >
-                  {isSelected && (
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ background: "var(--color-primary)" }}
-                    />
-                  )}
-                </div>
-              </div>
+                {/* Check */}
+                <span
+                  aria-hidden
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors motion-reduce:transition-none ${
+                    isSelected
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-surface)]"
+                      : "border-slate-300 text-transparent"
+                  }`}>
+                  <Check size={12} strokeWidth={3} />
+                </span>
+              </button>
             );
           })}
         </div>
 
         {/* Footer */}
-        <div
-          className="flex gap-3 pt-3"
-          style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
-        >
-          {/* <Button
-            variant="outlined"
-            fullWidth
-            onClick={() => onClinicSelect(null)}
-            startIcon={<FaTimes size={12} />}
-            sx={{
-              borderRadius: "10px",
-              py: 1,
-              fontWeight: 500,
-              textTransform: "none",
-              fontSize: "13px",
-              borderColor: "rgba(0,0,0,0.15)",
-              color: "var(--color-text-secondary)",
-              background: "rgba(255,255,255,0.5)",
-              backdropFilter: "blur(8px)",
-              "&:hover": {
-                borderColor: "rgba(0,0,0,0.25)",
-                background: "rgba(255,255,255,0.75)",
-              },
-            }}
-          >
-            Cancel\
-          </Button> */}
+        <div className="border-t border-slate-100 pt-4">
           <Button
-            variant="contained"
+            type="button"
             fullWidth
             disabled={!selectedClinic}
             endIcon={<FaArrowRight size={12} />}
             onClick={() => selectedClinic && onClinicSelect(selectedClinic)}
             sx={{
+              minHeight: 44,
               borderRadius: "10px",
-              py: 1,
-              fontWeight: 600,
               textTransform: "none",
-              fontSize: "13px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-surface)",
               "&:hover": {
-                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                backgroundColor: "var(--color-primary)",
+                opacity: 0.92,
+                boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
               },
               "&.Mui-disabled": {
-                background: "rgba(0,0,0,0.08)",
+                backgroundColor: "#e2e8f0",
+                color: "#94a3b8",
               },
-            }}
-          >
+            }}>
             Continue
           </Button>
         </div>

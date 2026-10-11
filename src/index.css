@@ -21,3 +21,54 @@ input[type="password"]::-ms-clear {
 input::-ms-reveal {
   display: none !important;
 }
+
+
+/* ---------- Decorative motion ---------- */
+@keyframes float-a {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(24px, 32px, 0) scale(1.06); }
+  100% { transform: translate3d(-12px, 14px, 0) scale(0.97); }
+}
+@keyframes float-b {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-28px, -24px, 0) scale(1.08); }
+  100% { transform: translate3d(14px, -10px, 0) scale(0.96); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes drift {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(10px, -14px, 0); }
+  100% { transform: translate3d(-6px, 8px, 0); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-12px) rotate(12deg); }
+}
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1);    opacity: .5; }
+  50%      { transform: scale(1.18); opacity: .15; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim-float-a   { animation: float-a 16s ease-in-out infinite alternate; }
+.anim-float-b   { animation: float-b 19s ease-in-out infinite alternate; }
+.anim-spin-slow { animation: spin-slow 60s linear infinite; }
+.anim-drift     { animation: drift 12s ease-in-out infinite alternate; }
+.anim-bob       { animation: bob 7s ease-in-out infinite; }
+.anim-pulse     { animation: pulse-soft 6s ease-in-out infinite; }
+.anim-fade-up   { animation: fade-up .6s cubic-bezier(.2,.7,.2,1) both; }
+
+.dot-grid {
+  background-image: radial-gradient(currentColor 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-float-a, .anim-float-b, .anim-spin-slow, .anim-drift,
+  .anim-bob, .anim-pulse, .anim-fade-up { animation: none !important; }
+}

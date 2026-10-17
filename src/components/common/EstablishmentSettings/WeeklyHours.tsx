@@ -27,11 +27,11 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
     <div className="w-full max-w-full overflow-hidden">
       {/* Top summary row matching Image 3 */}
       <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <p className="text-xs text-slate-500 font-medium">
+        <p className="text-xs sm:text-sm text-slate-500 font-medium">
           Regular single-shift operating hours:
         </p>
         <span
-          className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs"
+          className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 sm:px-3 py-1 rounded-full border border-emerald-200/80 shadow-2xs"
           aria-live="polite">
           {openCount} of {days.length} days open
         </span>
@@ -48,8 +48,8 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
               className={`py-3 px-2 sm:px-3 rounded-xl transition-all duration-200 ${
                 d.isOpen ? "hover:bg-slate-50/70" : "bg-slate-50/30 opacity-75 hover:opacity-90"
               }`}>
-              <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 sm:gap-x-4 gap-y-2.5 sm:grid-cols-[10.5rem_1fr_auto]">
-                {/* Left: Day Badge & Label (Image 3 Green Circle) */}
+              <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 sm:gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr_auto]">
+                {/* Left: Day Badge & Label */}
                 <div className="order-1 flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <div
                     className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs uppercase transition-colors duration-200 ${
@@ -61,18 +61,18 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                   </div>
                   <div className="min-w-0">
                     <p
-                      className={`text-xs sm:text-sm font-bold tracking-tight leading-tight truncate ${
-                        d.isOpen ? "text-slate-800" : "text-slate-500"
+                      className={`text-[13.5px] font-semibold tracking-tight leading-tight truncate ${
+                        d.isOpen ? "text-slate-800" : "text-slate-400"
                       }`}>
                       {d.day}
                     </p>
-                    <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
-                      {d.isOpen ? "Open for booking" : "Day off"}
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate font-normal">
+                      {d.isOpen ? "Open" : "Day off"}
                     </p>
                   </div>
                 </div>
 
-                {/* Center: Time inputs (Image 1 Green Circle) */}
+                {/* Center: Time inputs */}
                 <div className="order-3 col-span-2 min-w-0 sm:order-2 sm:col-span-1">
                   <AnimatePresence initial={false} mode="wait">
                     {d.isOpen ? (
@@ -82,16 +82,20 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.16 }}
-                        className="flex items-center gap-1.5 sm:gap-2 w-full max-w-xs sm:max-w-sm">
+                        className="flex items-center gap-2 sm:gap-2.5 w-full max-w-xs sm:max-w-sm">
                         <TextField
                           type="time"
                           size="small"
                           fullWidth
                           sx={{
                             ...fieldSx,
+                            "& .MuiOutlinedInput-root": {
+                              height: { xs: 34, sm: 36 },
+                              borderRadius: "10px",
+                            },
                             "& .MuiInputBase-input": {
                               padding: { xs: "6px 8px", sm: "7px 12px" },
-                              fontSize: { xs: 12, sm: 13 },
+                              fontSize: { xs: 12.5, sm: 13 },
                             },
                           }}
                           value={d.start}
@@ -108,9 +112,13 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                           fullWidth
                           sx={{
                             ...fieldSx,
+                            "& .MuiOutlinedInput-root": {
+                              height: { xs: 34, sm: 36 },
+                              borderRadius: "10px",
+                            },
                             "& .MuiInputBase-input": {
                               padding: { xs: "6px 8px", sm: "7px 12px" },
-                              fontSize: { xs: 12, sm: 13 },
+                              fontSize: { xs: 12.5, sm: 13 },
                             },
                           }}
                           value={d.end}
@@ -126,7 +134,7 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.16 }}
-                        className="text-xs font-medium text-slate-400 italic">
+                        className="text-xs sm:text-sm font-medium text-slate-400 italic">
                         Day off
                       </motion.p>
                     )}
@@ -136,7 +144,7 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                 {/* Right: Status label & Toggle switch */}
                 <div className="order-2 flex items-center gap-2 sm:order-3 justify-end shrink-0">
                   <span
-                    className={`w-11 sm:w-14 text-right text-xs font-bold ${
+                    className={`w-11 sm:w-14 text-right text-xs sm:text-sm font-bold ${
                       d.isOpen ? "text-emerald-600" : "text-slate-400"
                     }`}>
                     {d.isOpen ? "Open" : "Closed"}
@@ -159,7 +167,7 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
               </div>
 
               {error && (
-                <p role="alert" className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1 sm:ml-[11rem]">
+                <p role="alert" className="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1 sm:ml-[10rem]">
                   <AlertCircle size={13} className="shrink-0" />
                   {error}
                 </p>

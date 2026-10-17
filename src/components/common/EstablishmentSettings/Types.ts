@@ -28,6 +28,7 @@ export interface SettingsData {
   weekly: WeeklyDay[];
   cod?: boolean;
   reminders?: boolean;
+  slotDuration?: number;
   /** read-only rows shown under the logo (pharmacy name, email ...) */
   identity?: { label: string; value: string }[];
 }
@@ -42,11 +43,12 @@ export interface SaveInput {
   logoFile: File | null;
   cod: boolean;
   reminders: boolean;
+  slotDuration?: number;
   /** every day, current values */
   weekly: WeeklyDay[];
   /** only the days the user actually changed */
   weeklyChanges: WeeklyChange[];
-  changed: { logo: boolean; cod: boolean; reminders: boolean };
+  changed: { logo: boolean; cod: boolean; reminders: boolean; slotDuration?: boolean };
 }
 
 /**
@@ -61,6 +63,7 @@ export interface SettingsAdapter {
   capabilities: {
     cod: boolean;
     reminders: boolean;
+    slotDuration?: boolean;
     weekly: boolean;
     specialDates: boolean;
   };

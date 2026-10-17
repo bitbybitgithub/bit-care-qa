@@ -7,10 +7,11 @@ import {
   Check,
   Clock,
   Save,
+  Timer,
   Wallet,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { BrandingCard, Card, CodCard, RemindersCard } from "./Settingscards";
+import { BrandingCard, Card, CodCard, RemindersCard, SlotDurationCard } from "./Settingscards";
 import WeeklyHours from "./WeeklyHours";
 import SpecialDates from "./Specialdates";
 import type { SettingsAdapter, WeeklyChange, WeeklyDay } from "./Types";
@@ -39,10 +40,17 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [cod, setCod] = useState(false);
   const [reminders, setReminders] = useState(false);
+  const [slotDuration, setSlotDuration] = useState<number>(15);
   const [weekly, setWeekly] = useState<WeeklyDay[]>([]);
-  const [base, setBase] = useState<{ cod: boolean; reminders: boolean; weekly: WeeklyDay[] }>({
+  const [base, setBase] = useState<{
+    cod: boolean;
+    reminders: boolean;
+    slotDuration: number;
+    weekly: WeeklyDay[];
+  }>({
     cod: false,
     reminders: false,
+    slotDuration: 15,
     weekly: [],
   });
 
@@ -56,12 +64,19 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
       try {
         const data = await adapter.load();
         const days = sortWeekly(data.weekly);
+        const slot = data.slotDuration ?? 15;
         setLogoSrc(data.logoSrc ?? null);
         setIdentity(data.identity);
         setCod(!!data.cod);
         setReminders(!!data.reminders);
+        setSlotDuration(slot);
         setWeekly(days);
-        setBase({ cod: !!data.cod, reminders: !!data.reminders, weekly: days });
+        setBase({
+          cod: !!data.cod,
+          reminders: !!data.reminders,
+          slotDuration: slot,
+          weekly: days,
+        });
         setLogoFile(null);
         setLoadError(null);
       } catch (e) {
@@ -94,8 +109,14 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
     logo: !!logoFile,
     cod: cap.cod && cod !== base.cod,
     reminders: cap.reminders && reminders !== base.reminders,
+    slotDuration: !!cap.slotDuration && slotDuration !== base.slotDuration,
   };
-  const dirty = changed.logo || changed.cod || changed.reminders || weeklyChanges.length > 0;
+  const dirty =
+    changed.logo ||
+    changed.cod ||
+    changed.reminders ||
+    changed.slotDuration ||
+    weeklyChanges.length > 0;
 
   const errors = useMemo(() => {
     const touched = new Set(weeklyChanges.map((c) => c.day.id));
@@ -123,6 +144,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
     setWeekly(base.weekly);
     setCod(base.cod);
     setReminders(base.reminders);
+    setSlotDuration(base.slotDuration);
     setLogoFile(null);
     setAttempted(false);
   };
@@ -141,7 +163,15 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
 
     setSaving(true);
     try {
-      await adapter.save({ logoFile, cod, reminders, weekly, weeklyChanges, changed });
+      await adapter.save({
+        logoFile,
+        cod,
+        reminders,
+        slotDuration,
+        weekly,
+        weeklyChanges,
+        changed,
+      });
       toast.success("Settings saved successfully");
       setAttempted(false);
       await load(true);
@@ -191,50 +221,57 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="w-full max-w-full min-w-0 rounded-2xl bg-slate-50/60 p-3 sm:p-3 lg:p-3 space-y-4 sm:space-y-6 overflow-hidden">
-        {/* Top Header Section (Responsive for all screen sizes) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/80 pb-2">
-          <div className="min-w-0">
-            <span className="mb-1.5 inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-[#0070ba] border border-blue-100 shadow-2xs">
-              # {adapter.establishmentLabel} Management
-            </span>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#0070ba] text-white shadow-xs">
-                <Building2 size={18} />
-              </div>
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 tracking-tight truncate">
-                {adapter.establishmentLabel} Profile & Availability
-              </h2>
+      <div className="w-full max-w-full min-w-0 rounded-2xl bg-slate-50/60 p-2 sm:p-2.5 space-y-2.5 overflow-hidden">
+        {/* Top Header Section (Prominent & Clear Hierarchy) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/80 pb-2.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0070ba] text-white shadow-xs">
+              <Building2 size={19} />
             </div>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Configure your {adapter.establishmentLabel.toLowerCase()} branding, accepted payment methods,
-              automated reminders, and operating schedules.
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 tracking-tight truncate">
+                  {adapter.establishmentLabel} Profile & Availability
+                </h1>
+                <span className="hidden sm:inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-[#0070ba] border border-blue-100">
+                  #{adapter.establishmentLabel}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 truncate font-normal">
+                Configure your {adapter.establishmentLabel.toLowerCase()} branding, payments, reminders & schedule
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start md:self-center">
-            <span className="flex items-center gap-1.5 rounded-full bg-white px-2.5 sm:px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200/90 shadow-2xs">
-              <Clock size={13} className="text-[#0070ba]" />
-              Open Days: {openCount}/{weekly.length}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <span className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200 shadow-2xs">
+              <Clock size={12} className="text-[#0070ba]" />
+              Open: {openCount}/{weekly.length}
             </span>
+            {cap.slotDuration && (
+              <span className="flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200/80 shadow-2xs">
+                <Timer size={12} />
+                Slot: {slotDuration}m
+              </span>
+            )}
             {cap.cod && (
               <span
-                className={`flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold border shadow-2xs ${
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border shadow-2xs ${
                   cod
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
                     : "bg-slate-100 text-slate-500 border-slate-200/80"
                 }`}>
-                <Wallet size={13} />
-                {cod ? "COD Active" : "COD Disabled"}
+                <Wallet size={12} />
+                {cod ? "COD Active" : "No COD"}
               </span>
             )}
           </div>
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid gap-3 lg:grid-cols-12 items-start w-full min-w-0">
-          {/* Left Column: Branding, COD, Reminders */}
-          <div className="w-full min-w-0 lg:col-span-4 space-y-3">
+        <div className="grid gap-2.5 lg:grid-cols-12 items-start w-full min-w-0">
+          {/* Left Column: Branding, COD, Reminders, Slot Duration */}
+          <div className="w-full min-w-0 lg:col-span-4 space-y-2">
             <BrandingCard
               establishmentLabel={adapter.establishmentLabel}
               logoSrc={logoSrc}
@@ -257,21 +294,28 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                 onChange={setReminders}
               />
             )}
+
+            {cap.slotDuration && (
+              <SlotDurationCard
+                value={slotDuration}
+                onChange={setSlotDuration}
+              />
+            )}
           </div>
 
           {/* Right Column: Availability */}
           {showAvailability && (
             <div className="w-full min-w-0 lg:col-span-8">
               <Card
-                icon={<Clock size={18} />}
+                icon={<Clock size={16} />}
                 title={`${adapter.establishmentLabel} Availability`}
-                subtitle="Manage your weekly operating hours and special calendar date exceptions."
+                subtitle="Manage weekly operating hours and special date exceptions."
                 rightAction={
                   bothTabs && (
                     <div
                       role="tablist"
                       aria-label="Availability tabs"
-                      className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/70">
+                      className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/70">
                       <button
                         type="button"
                         role="tab"
@@ -279,12 +323,12 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                         aria-selected={tab === "weekly"}
                         aria-controls="panel-weekly"
                         onClick={() => setTab("weekly")}
-                        className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
+                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
                           tab === "weekly"
                             ? "bg-white text-[#0070ba] shadow-xs"
                             : "text-slate-500 hover:text-slate-800"
                         }`}>
-                        <Clock size={13} />
+                        <Clock size={12} />
                         <span>Weekly Hours</span>
                       </button>
                       <button
@@ -294,12 +338,12 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                         aria-selected={tab === "special"}
                         aria-controls="panel-special"
                         onClick={() => setTab("special")}
-                        className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
+                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
                           tab === "special"
                             ? "bg-white text-[#0070ba] shadow-xs"
                             : "text-slate-500 hover:text-slate-800"
                         }`}>
-                        <Calendar size={13} />
+                        <Calendar size={12} />
                         <span>Special Dates</span>
                       </button>
                     </div>
@@ -349,39 +393,42 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
           )}
         </div>
 
-        {/* Sticky Save & Discard Footer Bar (Responsive) */}
-        <div className="sticky bottom-3 sm:bottom-4 z-40 mt-5 sm:mt-6 rounded-2xl border border-slate-200/90 bg-white/95 px-4 sm:px-5 py-3 sm:py-3.5 shadow-lg backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full max-w-full">
-          <div className="flex items-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-medium" role="status" aria-live="polite">
+        {/* Sticky Save & Discard Footer Bar (Compact & Responsive) */}
+        <div className="sticky bottom-1 z-40 mt-2 sm:mt-2.5 rounded-xl border border-slate-200/90 bg-white/95 px-3 sm:px-4 py-1.5 sm:py-2 shadow-md backdrop-blur-md flex flex-row items-center justify-between gap-2 w-full max-w-full">
+          <div className="flex items-center gap-2 text-xs font-medium min-w-0" role="status" aria-live="polite">
             {dirty ? (
               <>
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" aria-hidden />
-                <span className="font-semibold text-amber-900 leading-tight">
-                  You have unsaved changes in your settings or schedule.
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" aria-hidden />
+                <span className="font-semibold text-amber-900 truncate text-[11px] sm:text-xs">
+                  Unsaved changes in settings or schedule.
                 </span>
               </>
             ) : (
               <>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-2xs shrink-0">
-                  <Check size={12} strokeWidth={2.5} aria-hidden />
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-2xs shrink-0">
+                  <Check size={10} strokeWidth={2.5} aria-hidden />
                 </span>
-                <span className="font-medium text-slate-500 leading-tight">
+                <span className="font-medium text-slate-500 truncate text-[11px] sm:text-xs">
                   All changes saved in your settings and schedule.
                 </span>
               </>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
             <Button
               type="button"
               disabled={!dirty || saving}
               onClick={discard}
+              size="small"
               sx={{
                 textTransform: "none",
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 600,
                 color: "#64748b",
-                borderRadius: "10px",
+                borderRadius: "8px",
+                height: 30,
+                px: 1.5,
                 "&:hover": { backgroundColor: "#f1f5f9", color: "#1e293b" },
               }}>
               Discard
@@ -391,27 +438,29 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
               disabled={!dirty || saving}
               onClick={save}
               aria-busy={saving}
+              size="small"
               sx={{
-                minWidth: { xs: 120, sm: 140 },
-                height: 38,
-                borderRadius: "12px",
+                minWidth: { xs: 100, sm: 120 },
+                height: 30,
+                borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                fontSize: 13,
+                fontSize: 12,
                 backgroundColor: "#0070ba",
                 color: "#fff",
                 boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
+                gap: 0.75,
+                px: 2,
                 "&:hover": { backgroundColor: "#005a96" },
                 "&.Mui-disabled": { backgroundColor: "#0070ba", color: "#fff", opacity: 0.45 },
               }}>
               {saving ? (
-                <CircularProgress size={18} color="inherit" />
+                <CircularProgress size={14} color="inherit" />
               ) : (
                 <>
-                  <Save size={15} />
+                  <Save size={13} />
                   <span>Save Settings</span>
                 </>
               )}

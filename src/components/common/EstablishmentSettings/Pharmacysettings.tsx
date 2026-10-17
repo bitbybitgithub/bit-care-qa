@@ -134,14 +134,6 @@ const PharmacySettings: React.FC = () => {
           logoSrc: toLogoSrc(profile?.pharma_logo),
           weekly,
           cod: isCod,
-          identity: profile
-            ? [
-                { label: "Pharmacy name", value: profile.pharma_name },
-                { label: "Email address", value: profile.email },
-                { label: "Phone number", value: profile.phone },
-                { label: "Address", value: profile.address },
-              ]
-            : undefined,
         };
       },
 

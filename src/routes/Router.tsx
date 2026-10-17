@@ -24,6 +24,9 @@ import SupportDashboard from "../features/internalusers/support/pages/SupportDas
 import OffersDiscount from "../features/admin/OffersDiscount";
 import Blogs from "../features/admin/Blogs";
 import BlogsList from "../features/list-blogs/BlogsList";
+import ClinicSettings from "../components/common/EstablishmentSettings/Clinicsettings";
+import LabSettings from "../components/common/EstablishmentSettings/Labsettings";
+import PharmacySettings from "../components/common/EstablishmentSettings/Pharmacysettings";
 const Router = [
   {
     path: "/",
@@ -50,7 +53,7 @@ const Router = [
       { path: "/clinic/offers", element: <OffersDiscount /> },
       { path: "/clinic/blog", element: <Blogs /> },
       { path: "/clinic/bloglist", element: <BlogsList /> },
-      { path: "/clinic/settings", element: <Profile /> },
+      { path: "/clinic/settings", element: <ClinicSettings /> },
 
       // clinic doctor routes
       { path: "/doctor/dashboard", element: <DocDashboard /> },
@@ -64,13 +67,15 @@ const Router = [
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
       { path: "/lab/offers", element: <OffersDiscount /> },
-      { path: "/lab/labsetting", element: <LabProfile /> },
+      { path: "/lab/labsetting", element: <LabSettings /> },
       { path: "/lab/service-management", element: <ServiceManagement /> },
 
       // pharmacy routes
       { path: "/pharmacy/users", element: <Users /> },
       { path: "/pharmacy/dashboard", element: <PharmacyDashboard /> },
-      { path: "/pharmacy/pharmacysettings", element: <PharmaSetting /> },
+      { path: "/pharmacy/pharmacysettings", element: <PharmacySettings /> },
+      { path: "/pharmacy/settings", element: <PharmacySettings /> },
+      { path: "/pharmacy/pharmasettings", element: <PharmacySettings /> },
 
       //  SupportTeam routes
       { path: "/support/dashboard", element: <SupportDashboard /> },

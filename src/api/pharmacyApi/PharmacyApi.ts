@@ -65,14 +65,17 @@ export async function getpharmaprofileinfo(
 ): Promise<PharmaProfileInfoResponse> {
   const response = await emrAPI.post<{
     success: boolean;
-    data: PharmaProfileInfoResponse;
+    data: PharmaProfileInfoResponse[] | PharmaProfileInfoResponse;
     message: string;
   }>("/pharmacy/get-pharma-profile-info", {
     pharmacy_id: pharmaID,
     login_id: login_id,
   });
-  return response.data[0];
-};
+  if (Array.isArray(response.data)) {
+    return response.data[0];
+  }
+  return response.data;
+}
 
 export async function verifyPharmaPassword(
   userID: number,
@@ -86,18 +89,22 @@ export async function verifyPharmaPassword(
     user_id: userID,
     current_password,
   });
-  return response
-};
-
+  return response;
+}
 
 export async function savePharmaProfileInfo(
   pharmacyID: number,
   profileLogo?: File,
+  isCod?: boolean,
 ): Promise<{ success: boolean; message: string }> {
   const formData = new FormData();
   formData.append("pharmacy_id", String(pharmacyID));
   if (profileLogo) {
     formData.append("logo", profileLogo);
+  }
+  if (isCod !== undefined) {
+    formData.append("is_cod", isCod ? "1" : "0");
+    formData.append("cod", isCod ? "1" : "0");
   }
   try {
     const { data } = await axios.post<{
@@ -115,6 +122,40 @@ export async function savePharmaProfileInfo(
       message:
         error?.response?.data?.message || "Error saving profile",
     };
+  }
+}
+
+export async function getPharmaScheduleApi(pharmaId: number): Promise<any[]> {
+  try {
+    const res = await emrAPI.post<{ success: boolean; data: any[] }>(
+      "/pharmacy/get-pharma-schedule",
+      { pharmacy_id: pharmaId },
+    );
+    if (res && Array.isArray(res.data)) {
+      return res.data;
+    }
+    if (Array.isArray(res as any)) {
+      return res as any;
+    }
+  } catch (err) {
+    console.warn("Could not fetch pharmacy schedule from server:", err);
+  }
+  return [];
+}
+
+export async function savePharmaScheduleApi(
+  pharmaId: number,
+  operations: unknown[],
+): Promise<any> {
+  try {
+    const res = await emrAPI.post("/pharmacy/save-pharma-schedule", {
+      pharmacy_id: pharmaId,
+      operations,
+    });
+    return res;
+  } catch (err) {
+    console.warn("Could not save pharmacy schedule to server:", err);
+    return null;
   }
 }
 

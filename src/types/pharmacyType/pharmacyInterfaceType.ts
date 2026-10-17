@@ -50,6 +50,8 @@ export interface PharmaProfileInfoResponse {
   state: string;
   pharma_logo: string | null;
   password_hash: string;
+  is_cod?: boolean | number | string;
+  cod?: boolean | number | string;
 };
 
 export interface PharmaApiItem {

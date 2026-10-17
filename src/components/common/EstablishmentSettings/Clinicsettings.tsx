@@ -34,7 +34,7 @@ const ClinicSettings: React.FC = () => {
       entityId: clinicId,
       establishmentLabel: "Clinic",
       hoursLabel: "Consultation hours",
-      capabilities: { cod: true, reminders: true, weekly: true, specialDates: true },
+      capabilities: { cod: true, reminders: true, slotDuration: true, weekly: true, specialDates: true },
 
       async load() {
         const data = await fetchClinicProfile(Number(clinicId));
@@ -42,6 +42,9 @@ const ClinicSettings: React.FC = () => {
           operational_hrs: data.operational_hrs || undefined,
           patient_demand: data.patient_demand || undefined,
         };
+
+        const rawSlot = data.slot_duration ?? localStorage.getItem(`clinic_slot_duration_${clinicId}`);
+        const slotDuration = rawSlot ? Number(rawSlot) : 15;
 
         const weekly: WeeklyDay[] = data.operational_days.map((d) => {
           const first = pickFirstShift(data.shifts ?? [], d.co_id);
@@ -64,14 +67,20 @@ const ClinicSettings: React.FC = () => {
           weekly,
           cod: toBool(data.is_cod),
           reminders: Number(data.patient_reminder) === 1,
+          slotDuration,
         };
       },
 
       async save(input) {
         const id = Number(clinicId);
 
-        // profile (logo / COD / reminders)
-        if (input.changed.logo || input.changed.cod || input.changed.reminders) {
+        // profile (logo / COD / reminders / slotDuration)
+        if (
+          input.changed.logo ||
+          input.changed.cod ||
+          input.changed.reminders ||
+          input.changed.slotDuration
+        ) {
           const fd = new FormData();
           if (input.logoFile) fd.append("clinic_logo", input.logoFile);
           fd.append("clinic_id", String(id));
@@ -81,6 +90,10 @@ const ClinicSettings: React.FC = () => {
             fd.append("patient_demand", extras.current.patient_demand);
           fd.append("is_cod", String(input.cod));
           fd.append("patient_reminder", input.reminders ? "1" : "0");
+          if (input.slotDuration !== undefined) {
+            fd.append("slot_duration", String(input.slotDuration));
+            localStorage.setItem(`clinic_slot_duration_${clinicId}`, String(input.slotDuration));
+          }
           await updateClinicProfile(fd);
         }
 

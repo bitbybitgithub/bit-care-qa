@@ -21,6 +21,7 @@ export interface ClinicProfileData {
   patient_demand: string;
   patient_reminder: number;
   is_cod: boolean | number | string;
+  slot_duration?: number | string;
   logo?: string;
   operational_days: OperationalDay[];
   shifts: ShiftPayload[];

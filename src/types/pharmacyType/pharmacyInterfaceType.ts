@@ -65,6 +65,8 @@ export interface PharmaApiItem {
   city?: string;
   state?: string;
 
-  status: "Active" | "Inactive";
+  distance_km?: number | null;
+
+  status?: "Active" | "Inactive";
   is_active: "1" | "0";
 }

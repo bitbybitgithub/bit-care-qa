@@ -154,9 +154,14 @@ export const saveLabShift = async (
 
 /* ===================== */
 
-export const getActiveLabListApi = async () => {
+export const getActiveLabListApi = async (payload?: {
+  search?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+}) => {
   try {
-    const response = await emrAPI.get("/lab/get-lab-list");
+    const response = await emrAPI.post("/lab/get-lab-list", payload ?? {});
     return response;
   } catch (error) {
     console.error("getActiveLabListApi error:", error);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RiContactsFill } from "react-icons/ri";
 import ScienceIcon from "@mui/icons-material/Science";
 import { FaClinicMedical } from "react-icons/fa";
@@ -17,6 +17,7 @@ interface PartnerItem {
   state?: string;
   address?: string;
   alreadyMapped?: boolean;
+  distance_km?: number | null;
 }
 
 interface Props {
@@ -25,12 +26,51 @@ interface Props {
   placeholder: string;
   buttonText: string;
   onSubmit: (ids: number[]) => Promise<void>;
+  onSearchChange?: (text: string) => void;
 }
 
-const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
+const AddPartner = ({
+  data,
+  placeholder,
+  buttonText,
+  onSubmit,
+  onSearchChange,
+}: Props) => {
   const [selected, setSelected] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const onSearchChangeRef = useRef(onSearchChange);
+  onSearchChangeRef.current = onSearchChange;
+
+  const isFirstRender = useRef(true);
+  const lastSearchedRef = useRef("");
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // If search is cleared, reset immediately without waiting 2 seconds
+    if (search === "") {
+      if (lastSearchedRef.current !== "") {
+        lastSearchedRef.current = "";
+        onSearchChangeRef.current?.("");
+      }
+      return;
+    }
+
+    // Debounce when user is typing, suppressing redundant searches
+    const timer = setTimeout(() => {
+      const trimmed = search.trim();
+      if (trimmed !== lastSearchedRef.current) {
+        lastSearchedRef.current = trimmed;
+        onSearchChangeRef.current?.(trimmed);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const toggleSelect = (id: number, disabled?: boolean) => {
     if (disabled) return;
@@ -51,9 +91,11 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
     }
   };
 
-  const filtered = data.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = onSearchChange
+    ? data
+    : data.filter((item) =>
+        item.name.toLowerCase().includes(search.toLowerCase()),
+      );
 
   return (
     <div className="p-6 bg-[var(--color-surface-alt)]">
@@ -167,11 +209,10 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                 )}
               </div>
               <div
-                className={`px-4 pb-3
+                className={`px-4 pb-3 flex items-center justify-between
   ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
 `}
               >
-                {" "}
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-medium
             ${
@@ -189,6 +230,12 @@ const AddPartner = ({ data, placeholder, buttonText, onSubmit }: Props) => {
                       ? "Selected"
                       : "Available"}
                 </span>
+
+                {item.distance_km != null && (
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    📍 {item.distance_km} km away
+                  </span>
+                )}
               </div>
             </div>
           );

@@ -109,7 +109,9 @@ export interface LabApiItem {
   city?: string;
   state?: string;
 
-  status: "Active" | "Inactive";
+  distance_km?: number | null;
+
+  status?: "Active" | "Inactive";
   is_patient_reffered?: boolean;
   is_active: "0" | "1";
 }

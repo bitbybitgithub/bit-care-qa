@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
@@ -19,17 +19,42 @@ const PharmaEmpanelment = () => {
   const [loading, setLoading] = useState(false);
   const clinicId = getSessionItem("user", "clinic_id");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-  const fetchPharmas = async () => {
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  const userLocationRef = useRef(userLocation);
+  userLocationRef.current = userLocation;
+
+  const fetchPharmas = async (
+    search?: string,
+    coords: { latitude: number; longitude: number } | null = userLocationRef.current,
+  ) => {
     try {
       setLoading(true);
-      const res = await getActivePharmaListApi();
-      setPharmas(res.data);
+      const payload: {
+        search?: string;
+        latitude?: number;
+        longitude?: number;
+      } = {};
+      if (search && search.trim()) payload.search = search.trim();
+      if (coords) {
+        payload.latitude = coords.latitude;
+        payload.longitude = coords.longitude;
+      }
+      const res: any = await getActivePharmaListApi(payload);
+      setPharmas(res?.data || (Array.isArray(res) ? res : []));
     } catch (err) {
       console.error("Pharma list error", err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearchChange = useCallback((text: string) => {
+    fetchPharmas(text, userLocationRef.current);
+  }, []);
 
   const fetchPharmaByClinicId = async () => {
     try {
@@ -42,13 +67,31 @@ const PharmaEmpanelment = () => {
 
   const mappedIds = new Set(mappedPharmas.map((p) => p.pharma_id));
 
+  // Initial page load: fetch location and default pharmacies
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          };
+          setUserLocation(coords);
+          fetchPharmas("", coords);
+        },
+        (err) => {
+          console.warn("Location error:", err);
+          fetchPharmas("", null);
+        },
+      );
+    } else {
+      fetchPharmas("", null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPharmaByClinicId();
   }, [clinicId]);
-
-  useEffect(() => {
-    fetchPharmas();
-  }, []);
 
   const handleSubmitPharma = async (ids: number[]) => {
     if (!clinicId) {
@@ -222,11 +265,13 @@ const handlePharmaStatus = async (item: any) => {
               city: p.city,
               state: p.state,
               alreadyMapped: mappedIds.has(p.pharma_id),
+              distance_km: p.distance_km,
             }))}
             icon={<LocalPharmacyIcon className="text-[var(--color-info)]" />}
             placeholder="Search pharmacy..."
             buttonText="Selected Pharmacy"
             onSubmit={handleSubmitPharma}
+            onSearchChange={handleSearchChange}
           />
         )}
       </div>

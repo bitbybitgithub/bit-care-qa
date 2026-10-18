@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -21,17 +21,42 @@ const LabEmpanelment = () => {
   const [loading, setLoading] = useState(false);
   const clinicId = getSessionItem("user", "clinic_id");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-  const fetchLabs = async () => {
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  const userLocationRef = useRef(userLocation);
+  userLocationRef.current = userLocation;
+
+  const fetchLabs = async (
+    search?: string,
+    coords: { latitude: number; longitude: number } | null = userLocationRef.current,
+  ) => {
     try {
-      setLoading(true)
-      const res = await getActiveLabListApi();
-      setLabs((res as { data: LabApiItem[] }).data);
+      setLoading(true);
+      const payload: {
+        search?: string;
+        latitude?: number;
+        longitude?: number;
+      } = {};
+      if (search && search.trim()) payload.search = search.trim();
+      if (coords) {
+        payload.latitude = coords.latitude;
+        payload.longitude = coords.longitude;
+      }
+      const res: any = await getActiveLabListApi(payload);
+      setLabs(res?.data || (Array.isArray(res) ? res : []));
     } catch (err) {
       console.error("Lab list error", err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearchChange = useCallback((text: string) => {
+    fetchLabs(text, userLocationRef.current);
+  }, []);
 
   const fetchMappedLabByClinicId = async () => {
     try {
@@ -45,8 +70,26 @@ const LabEmpanelment = () => {
     }
   };
 
+  // Initial page load: fetch location and default labs
   useEffect(() => {
-    fetchLabs();
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          };
+          setUserLocation(coords);
+          fetchLabs("", coords);
+        },
+        (err) => {
+          console.warn("Location error:", err);
+          fetchLabs("", null);
+        },
+      );
+    } else {
+      fetchLabs("", null);
+    }
   }, []);
 
   useEffect(() => {
@@ -227,11 +270,13 @@ const LabEmpanelment = () => {
               city: l.city,
               state: l.state,
               alreadyMapped: mappedLabIds.has(l.lab_id),
+              distance_km: l.distance_km,
             }))}
             icon={<ScienceIcon className="text-[var(--color-info)]" />}
             placeholder="Search labs..."
             buttonText="Selected Labs"
             onSubmit={handleSubmitLabs}
+            onSearchChange={handleSearchChange}
           />
         )}
       </div>

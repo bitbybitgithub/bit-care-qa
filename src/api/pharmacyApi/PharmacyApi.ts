@@ -48,9 +48,14 @@ export async function updatePharmaPatientStatus(
 
   return response;
 }
-export const getActivePharmaListApi = async () => {
+export const getActivePharmaListApi = async (payload?: {
+  search?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+}) => {
   try {
-    const response = await emrAPI.get<ApiResponse<any[]>>("/pharmacy/get-pharma-list");
+    const response = await emrAPI.post("/pharmacy/get-pharma-list", payload ?? {});
     return response;
   } catch (error) {
     console.error("getActivePharmaListApi error:", error);

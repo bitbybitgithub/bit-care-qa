@@ -1,40 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, CircularProgress, TextField } from "@mui/material";
 import { MdClose } from "react-icons/md";
 import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiCalendarEventLine,
-  RiSparklingLine,
+  RiTimeLine,
 } from "react-icons/ri";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import { toast } from "react-toastify";
+import "./FollowUpCalender.css";
 import {
   getAppointmentSlots,
   getfollowupData,
   saveAppointment,
   updateFollowUp,
   type AppointmentSlot,
+  type DoctorFeeDuration,
+  type FollowUpAppointmentDetails,
+  type SaveAppointmentResponse,
+  type UpdateFollowUpResponse,
 } from "../../../api";
 import { AppointmentStatus } from "../../../context/constant/enum";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import { formatDateDDMMYYYY } from "../../../utils/DateUtils";
+import type { Patient } from "../../../types/patientType/patientTypeInterfaces";
+
+dayjs.extend(customParseFormat);
+
+const parseCalendarDate = (value?: string | null): dayjs.Dayjs | null => {
+  if (!value) return null;
+  const isoDate = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+  const parsed = isoDate
+    ? dayjs(isoDate, "YYYY-MM-DD", true)
+    : dayjs(value, "DD-MM-YYYY", true);
+  return parsed.isValid() ? parsed : null;
+};
+
+const normalizeId = (value?: number | string | null): number | null => {
+  if (value == null || value === "") return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+};
+
+const normalizeBit = (value: boolean | number | string): boolean =>
+  value === true || value === 1 || value === "1" || value === "true";
+
+const normalizeTime = (value?: string | null): string | null => {
+  if (!value) return null;
+  const match = value.match(/^(\d{1,2}):(\d{2})/);
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : null;
+};
+
 interface Props {
-  patient: any;
+  patient: Patient;
   onClose?: () => void;
-  onSave?: (data: any) => void;
+  onSave?: (data: SaveAppointmentResponse | UpdateFollowUpResponse) => void;
 }
 
-const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
+const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
   const today = dayjs();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [loading, setLoading] = useState(false);
+  const submissionInProgress = useRef(false);
   const [followUpReason, setFollowUpReason] = useState("");
+  const [reasonValidationAttempted, setReasonValidationAttempted] =
+    useState(false);
 
-  const [followUps, setFollowUps] = useState<any[]>([]);
-  const [selectedFollowUp, setSelectedFollowUp] = useState<any>(null);
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [followUps, setFollowUps] = useState<FollowUpAppointmentDetails[]>([]);
+  const [rootId, setRootId] = useState<number | null>(null);
+  const [rootAppointmentDate, setRootAppointmentDate] =
+    useState<dayjs.Dayjs | null>(null);
+  const [feeDurationDays, setFeeDurationDays] = useState<number | null>(null);
 
   const userId = getSessionItem("user", "user_id");
   const clinicId = getSessionItem("user", "clinic_id");
@@ -44,424 +83,837 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose }) => {
   const daysInMonth = currentMonth.daysInMonth();
 
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const formatDate = (d: string) => dayjs(d).format("YYYY-MM-DD");
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(
     null,
   );
   const [doctorSlots, setDoctorSlots] = useState<AppointmentSlot[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchFollowups = async () => {
       try {
-        if (!patient?.appointment_id || !patient?.patient_id) return;
+        const appointmentId = Number(patient?.appointment_id);
+        const patientId = Number(patient?.patient_id);
+        const clinicIdNumber = Number(clinicId);
+        const doctorId = Number(patient?.raw?.doctor_id);
+
+        if (
+          !Number.isInteger(appointmentId) ||
+          appointmentId <= 0 ||
+          !Number.isInteger(patientId) ||
+          patientId <= 0 ||
+          !Number.isInteger(clinicIdNumber) ||
+          clinicIdNumber <= 0 ||
+          !Number.isInteger(doctorId) ||
+          doctorId <= 0
+        ) {
+          if (isMounted) {
+            setFollowUps([]);
+            setRootId(null);
+            setRootAppointmentDate(null);
+            setFeeDurationDays(null);
+          }
+          return;
+        }
 
         const res = await getfollowupData(
-          Number(patient.appointment_id),
-          Number(patient.patient_id),
-          Number(clinicId),
+          appointmentId,
+          patientId,
+          clinicIdNumber,
+          doctorId,
         );
-        const data = (res || []).map((f: any) => ({
-          ...f,
-          appointment_id: Number(f.new_appointment_id),
-          patient_id: Number(f.patient_id),
+        console.log("get follow up details", res);
+        if (!isMounted) return;
+
+        // 1. Normalize follow-up appointment records
+        const records = (res?.follow_up_appointments || []).map((record) => ({
+          ...record,
+          new_appointment_id: normalizeId(record.new_appointment_id),
+          appointment_id: normalizeId(record.appointment_id),
+          patient_id: normalizeId(record.patient_id) ?? record.patient_id,
+          parent_appt_id: normalizeId(record.parent_appt_id),
+          is_follow_up: normalizeBit(record.is_follow_up),
+          is_visited: normalizeBit(record.is_visited),
+          is_fee_applicable: normalizeBit(record.is_fee_applicable),
+          is_fee_paid: normalizeBit(record.is_fee_paid),
+          is_fee_duration_exceeded:
+            record.is_fee_duration_exceeded == null
+              ? null
+              : normalizeBit(record.is_fee_duration_exceeded),
         }));
-        setFollowUps(data);
+        setFollowUps(records);
+
+        // 2. Resolve Root Appointment ID and Date
+        let resolvedRootId: number | null = null;
+        let resolvedRootDate: dayjs.Dayjs | null = null;
+
+        if (res?.root_appointment) {
+          resolvedRootId = normalizeId(res.root_appointment.appointment_id);
+          resolvedRootDate = parseCalendarDate(
+            res.root_appointment.appointment_date,
+          );
+        }
+
+        // Fallback trace from records or patient if root_appointment not provided
+        if (!resolvedRootId || !resolvedRootDate) {
+          const parentIds = [
+            ...new Set(
+              records
+                .map((r) => normalizeId(r.parent_appt_id))
+                .filter((id): id is number => id !== null),
+            ),
+          ];
+          if (parentIds.length === 1) {
+            resolvedRootId = parentIds[0];
+            const pRec = records.find(
+              (r) =>
+                normalizeId(r.parent_appt_id) === resolvedRootId &&
+                r.parent_appt_date,
+            );
+            if (pRec?.parent_appt_date) {
+              resolvedRootDate = parseCalendarDate(pRec.parent_appt_date);
+            }
+          } else if (parentIds.length === 0) {
+            // Patient has no follow-ups yet; check if patient itself is the root
+            const patientParentId = normalizeId(
+              patient?.raw?.appt_follow_up_id,
+            );
+            if (!patientParentId) {
+              resolvedRootId = normalizeId(patient?.appointment_id);
+              const pDate =
+                patient?.appointmentDate || patient?.raw?.appointment_date;
+              if (pDate) {
+                resolvedRootDate = parseCalendarDate(pDate);
+              }
+            }
+          }
+        }
+
+        setRootId(resolvedRootId);
+        setRootAppointmentDate(resolvedRootDate);
+
+        // 3. Resolve Doctor Fee Duration
+        let feeDurationVal: number | null = null;
+        if (res?.doctor_fee_duration != null) {
+          if (typeof res.doctor_fee_duration === "object") {
+            const dur = (res.doctor_fee_duration as DoctorFeeDuration)
+              .fees_duration;
+            if (dur != null && !isNaN(Number(dur))) {
+              feeDurationVal = Number(dur);
+            }
+          } else if (!isNaN(Number(res.doctor_fee_duration))) {
+            feeDurationVal = Number(res.doctor_fee_duration);
+          }
+        }
+        if (feeDurationVal == null) {
+          const fromRecord = records.find(
+            (r) => r.fees_duration != null,
+          )?.fees_duration;
+          if (fromRecord != null && !isNaN(Number(fromRecord))) {
+            feeDurationVal = Number(fromRecord);
+          }
+        }
+        setFeeDurationDays(feeDurationVal);
+
+        // 4. Prefill reason if active pending follow-up exists
+        const pending = records.find(
+          (r) =>
+            normalizeBit(r.is_follow_up) &&
+            !normalizeBit(r.is_visited) &&
+            (!("status" in r) ||
+              String(r.status || "").toLowerCase() !== "cancelled"),
+        );
+        if (pending?.follow_up_reason) {
+          setFollowUpReason((prev) => prev || (pending.follow_up_reason ?? ""));
+        }
       } catch (error) {
-        console.error("Failed to fetch followups", error);
+        console.error("Failed to fetch follow-ups:", error);
+        toast.error("Unable to load follow-up appointment details.");
+        if (isMounted) {
+          setFollowUps([]);
+          setRootId(null);
+          setRootAppointmentDate(null);
+          setFeeDurationDays(null);
+        }
       }
     };
 
     fetchFollowups();
-  }, [patient]);
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    patient?.appointment_id,
+    patient?.patient_id,
+    patient?.raw?.doctor_id,
+    patient?.raw?.appt_follow_up_id,
+    patient?.appointmentDate,
+    patient?.raw?.appointment_date,
+    clinicId,
+  ]);
 
-  const hasFollowUp = followUps.some((f) => f.is_follow_up == "1");
+  // Active unvisited pending follow-up (eligible for reschedule or conflict resolution)
+  const pendingFollowUp = followUps.find(
+    (record) =>
+      normalizeBit(record.is_follow_up) &&
+      !normalizeBit(record.is_visited) &&
+      (!("status" in record) ||
+        String(record.status || "").toLowerCase() !== "cancelled"),
+  );
+  const pendingFollowUpId = pendingFollowUp
+    ? normalizeId(
+        pendingFollowUp.new_appointment_id ?? pendingFollowUp.appointment_id,
+      )
+    : null;
 
-  const futureFollowUps = followUps
-    .filter((f) => dayjs(f.follow_up_date).isAfter(dayjs().startOf("day")))
-    .sort((a, b) => dayjs(a.follow_up_date).diff(dayjs(b.follow_up_date)));
-  const nextFollowUp = futureFollowUps[0];
+  const existingFollowUps = followUps.filter((record) =>
+    normalizeBit(record.is_follow_up),
+  );
 
-  const existingFollowUp = followUps.find((f) => f.is_follow_up === "1");
   const isPrevDisabled =
     currentMonth.isSame(today, "month") ||
     currentMonth.isBefore(today, "month");
-
-  const formatTime = (date: Date) => date.toTimeString().slice(0, 5);
 
   const days: (dayjs.Dayjs | null)[] = [];
   for (let i = 0; i < startDay; i++) days.push(null);
   for (let i = 1; i <= daysInMonth; i++) days.push(currentMonth.date(i));
 
-  const handleSelect = async (date: dayjs.Dayjs) => {
-  if (date.isBefore(today.startOf("day"))) {
-    toast.error("Past date not allowed");
-    return;
-  }
-  setSelectedDate(date);
-  setSelectedSlot(null);
-  const selected = followUps.find(
-    (f) => formatDate(f.follow_up_date) === date.format("YYYY-MM-DD")
+  // Calculate validity deadline from verified root appointment date + fee duration
+  const lastFollowUpDate =
+    rootAppointmentDate && feeDurationDays !== null && feeDurationDays >= 0
+      ? rootAppointmentDate.add(feeDurationDays, "day")
+      : null;
+
+  const rootIsValid = Boolean(
+    rootId &&
+    rootAppointmentDate &&
+    feeDurationDays !== null &&
+    lastFollowUpDate,
   );
-  if (selected) {
-    setFollowUpReason(selected.follow_up_reason);
-    setSelectedFollowUp(selected);
-    setIsUpdateMode(true);
-  } else {
-    setFollowUpReason("");
-    setSelectedFollowUp(null);
-    setIsUpdateMode(false);
-  }
-  try {
-    setSlotsLoading(true);
 
-    const res = await getAppointmentSlots({
-      doctorId: Number(patient.raw?.doctor_id),
-      clinicId: Number(clinicId),
-      date: date.format("YYYY-MM-DD"),
-    });
+  const isSelectedDateAfterFeeDuration =
+    !!selectedDate &&
+    !!lastFollowUpDate &&
+    selectedDate.isAfter(lastFollowUpDate, "day");
 
-    if (res.success) {
-      const availableSlots = res.slots.filter(
-        (slot) => slot.status === "AVAILABLE"
-      );
-
-      setDoctorSlots(availableSlots);
-      if (
-        selected &&
-        selected.start_time &&
-        selected.end_time
-      ) {
-        const existingSlot = availableSlots.find(
-          (slot) =>
-            slot.start === selected.start_time.substring(0, 5) &&
-            slot.end === selected.end_time.substring(0, 5)
-        );
-
-        if (existingSlot) {
-          setSelectedSlot(existingSlot);
-        }
-      }
-    } else {
-      setDoctorSlots([]);
+  const handleSelect = async (date: dayjs.Dayjs) => {
+    if (date.isBefore(today.startOf("day"))) {
+      toast.error("Past date not allowed");
+      return;
     }
-  } catch (error) {
-    console.error("Failed to fetch slots", error);
-    setDoctorSlots([]);
-  } finally {
-    setSlotsLoading(false);
-  }
-};
+    if (rootAppointmentDate && date.isBefore(rootAppointmentDate, "day")) {
+      toast.error(
+        "The selected date cannot be before the original appointment date.",
+      );
+      return;
+    }
 
-  const handleSubmit = async () => {
+    setSelectedDate(date);
+    setSelectedSlot(null);
+
+    const selectedRecord = existingFollowUps.find(
+      (record) =>
+        parseCalendarDate(record.follow_up_date)?.format("YYYY-MM-DD") ===
+        date.format("YYYY-MM-DD"),
+    );
+
+    if (selectedRecord && selectedRecord.follow_up_reason) {
+      setFollowUpReason(selectedRecord.follow_up_reason);
+    }
+
+    try {
+      setSlotsLoading(true);
+
+      const res = await getAppointmentSlots({
+        doctorId: Number(patient.raw?.doctor_id),
+        clinicId: Number(clinicId),
+        date: date.format("YYYY-MM-DD"),
+      });
+
+      if (res.success) {
+        const availableSlots = res.slots
+          .filter((slot) => slot.status === "AVAILABLE")
+          .map((slot) => ({
+            ...slot,
+            start: normalizeTime(slot.start) ?? slot.start,
+            end: normalizeTime(slot.end) ?? slot.end,
+          }));
+
+        setDoctorSlots(availableSlots);
+
+        if (
+          selectedRecord &&
+          selectedRecord.start_time &&
+          selectedRecord.end_time
+        ) {
+          const existingStart = normalizeTime(selectedRecord.start_time);
+          const existingEnd = normalizeTime(selectedRecord.end_time);
+          const existingSlot = availableSlots.find(
+            (slot) => slot.start === existingStart && slot.end === existingEnd,
+          );
+
+          if (existingSlot) {
+            setSelectedSlot(existingSlot);
+          } else if (existingStart && existingEnd) {
+            const bookedSlot: AppointmentSlot = {
+              start: existingStart,
+              end: existingEnd,
+              status: "BOOKED",
+            };
+            setDoctorSlots((slots) => [...slots, bookedSlot]);
+            setSelectedSlot(bookedSlot);
+          }
+        }
+      } else {
+        setDoctorSlots([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch slots", error);
+      setDoctorSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handlePrimaryActionClick = () => {
+    if (submissionInProgress.current) return;
     if (!selectedDate) {
       toast.error("Please select follow-up date");
       return;
     }
-    if (!followUpReason.trim()) {
-      toast.error("Please enter reason for follow up");
+    if (selectedDate.isBefore(today.startOf("day"))) {
+      toast.error("Past date not allowed");
       return;
     }
     if (!selectedSlot) {
-      toast.error("Please select a slot");
+      toast.error("Please select an appointment slot");
       return;
     }
+    if (!followUpReason.trim()) {
+      setReasonValidationAttempted(true);
+      toast.error("Please enter reason for follow up");
+      return;
+    }
+    const patientId = Number(patient?.patient_id);
+    const doctorId = Number(patient?.raw?.doctor_id);
+    const clinicIdNumber = Number(clinicId);
+    const userIdNumber = Number(userId);
+
+    if (
+      !Number.isInteger(patientId) ||
+      patientId <= 0 ||
+      !Number.isInteger(doctorId) ||
+      doctorId <= 0 ||
+      !Number.isInteger(clinicIdNumber) ||
+      clinicIdNumber <= 0 ||
+      !Number.isInteger(userIdNumber) ||
+      userIdNumber <= 0
+    ) {
+      toast.error("Patient, doctor, clinic, or user details are missing");
+      return;
+    }
+    if (!rootIsValid || !lastFollowUpDate || !rootAppointmentDate) {
+      toast.error(
+        "Unable to verify the original appointment and follow-up deadline. Please refresh and try again.",
+      );
+      return;
+    }
+    if (selectedDate.isBefore(rootAppointmentDate, "day")) {
+      toast.error(
+        "The selected date cannot be before the original appointment date.",
+      );
+      return;
+    }
+
+    if (isSelectedDateAfterFeeDuration) {
+      void executeSaveRegularAppointment();
+    } else if (pendingFollowUp && pendingFollowUpId) {
+      void executeReschedule();
+    } else {
+      void executeSaveFollowUp();
+    }
+  };
+
+  const executeReschedule = async () => {
+    if (
+      submissionInProgress.current ||
+      !pendingFollowUpId ||
+      !selectedDate ||
+      !selectedSlot
+    ) {
+      return;
+    }
+
+    if (!followUpReason.trim()) {
+      setReasonValidationAttempted(true);
+      toast.error("Please enter reason for follow up");
+      return;
+    }
+
+    // Use the actual root/parent appointment values from your existing state.
+    if (!rootId || !rootAppointmentDate) {
+      toast.error("Original appointment details are missing.");
+      return;
+    }
+
+    const clinicIdNumber = Number(clinicId);
+    const userIdNumber = Number(userId);
+
+    submissionInProgress.current = true;
     setLoading(true);
+
     try {
-      if (isUpdateMode && selectedFollowUp) {
-        await updateFollowUp({
-          appointment_id: selectedFollowUp.new_appointment_id,
-          follow_up_date: selectedDate.format("YYYY-MM-DD"),
-          follow_up_reason: followUpReason,
-          clinic_id: clinicId,
-          start_time: selectedSlot.start,
-          end_time: selectedSlot.end,
-          modified_by: userId,
-        });
-
-        toast.success("Follow-up updated successfully");
-      } else {
-        const now = new Date();
-        const endTime = new Date(now.getTime() + 30 * 60000);
-
-        const appointmentData = {
-          patient_id: patient.patient_id,
-          doctor_id: patient.raw?.doctor_id || 0,
-          clinic_id: clinicId,
-          patient_name: patient.name,
-          doctor_name: patient.doctor,
-          gender: patient.gender,
-          appointment_date: selectedDate.format("YYYY-MM-DD"),
-          start_time: formatTime(now),
-          end_time: formatTime(endTime),
-          status: AppointmentStatus.Scheduled,
-          source: "web",
-          reason: followUpReason,
-          date_of_birth: patient.date_of_birth,
-          mobile_number: patient.mobile_number,
-          user_id: userId,
-          follow_up_id: patient.appointment_id,
-          is_follow_up: true,
-        };
-
-        await saveAppointment(appointmentData);
-        toast.success("Follow-up created successfully");
+      const response = await updateFollowUp({
+        appointment_id: pendingFollowUpId,
+        follow_up_date: selectedDate.format("YYYY-MM-DD"),
+        follow_up_reason: followUpReason.trim(),
+        clinic_id: clinicIdNumber,
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+        modified_by: userIdNumber,
+        parent_appt_id: Number(rootId),
+        parent_appointment_date: rootAppointmentDate.format("YYYY-MM-DD"),
+      });
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to reschedule follow-up");
       }
 
-      onClose?.();
+      toast.success("Follow-up appointment rescheduled successfully");
+
+      if (onSave) onSave(response);
+      else onClose?.();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save follow-up");
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to reschedule follow-up",
+      );
     } finally {
+      submissionInProgress.current = false;
       setLoading(false);
     }
   };
 
-  const handleFollowUpUpdate = async () => {
-    setLoading(true);
-    if (!selectedDate) {
-      toast.error("Please select follow-up date");
-      return;
-    }
+  const executeSaveFollowUp = async () => {
+    if (submissionInProgress.current || !selectedDate || !selectedSlot) return;
     if (!followUpReason.trim()) {
+      setReasonValidationAttempted(true);
       toast.error("Please enter reason for follow up");
       return;
     }
-    if (!selectedSlot) {
-      toast.error("Please select a slot");
-      return;
-    }
-    if (!existingFollowUp) {
-      toast.error("No follow-up available to update");
-      return;
-    }
-    const existingDate = dayjs(existingFollowUp.follow_up_date).format(
-      "YYYY-MM-DD",
-    );
-    const newDate = selectedDate.format("YYYY-MM-DD");
+    const patientId = Number(patient?.patient_id);
+    const doctorId = Number(patient?.raw?.doctor_id);
+    const clinicIdNumber = Number(clinicId);
+    const userIdNumber = Number(userId);
 
-      const existingStart = existingFollowUp.start_time?.substring(0, 5);
-
-      const isSameDate = existingDate === newDate;
-      const isSameSlot = existingStart === selectedSlot.start;
-
-      if (isSameDate && isSameSlot) {
-        toast.error("No changes detected");
-        return;
-      }
+    submissionInProgress.current = true;
+    setLoading(true);
     try {
-      await updateFollowUp({
-        appointment_id: existingFollowUp.new_appointment_id,
-        follow_up_date: newDate,
-        follow_up_reason: followUpReason,
-        modified_by: userId,
-        clinic_id: clinicId,
+      const response = await saveAppointment({
+        patient_id: patientId,
+        doctor_id: doctorId,
+        clinic_id: clinicIdNumber,
+        patient_name: patient.name,
+        doctor_name: patient.doctor ?? "",
+        gender: patient.gender,
+        appointment_date: selectedDate.format("YYYY-MM-DD"),
         start_time: selectedSlot.start,
         end_time: selectedSlot.end,
+        status: AppointmentStatus.Scheduled,
+        source: "web",
+        reason: followUpReason.trim(),
+        date_of_birth: patient.date_of_birth
+          ? String(patient.date_of_birth)
+          : null,
+        mobile_number: patient.mobile_number,
+        user_id: userIdNumber,
+        follow_up_id: rootId,
+        parent_appt_id: rootId,
+        parent_appointment_date:
+          rootAppointmentDate?.format("YYYY-MM-DD") ?? null,
+        is_follow_up: true,
       });
 
-      toast.success("Appointment updated successfully");
-      onClose?.();
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to create follow-up");
+      }
+      toast.success("Follow-up created successfully");
+      if (onSave) onSave(response);
+      else onClose?.();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update follow-up");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save follow-up",
+      );
+    } finally {
+      submissionInProgress.current = false;
+      setLoading(false);
     }
   };
 
+  const executeSaveRegularAppointment = async () => {
+    if (submissionInProgress.current || !selectedDate || !selectedSlot) return;
+    const patientId = Number(patient?.patient_id);
+    const doctorId = Number(patient?.raw?.doctor_id);
+    const clinicIdNumber = Number(clinicId);
+    const userIdNumber = Number(userId);
+
+    if (!followUpReason.trim()) {
+      setReasonValidationAttempted(true);
+      toast.error("Please enter reason for follow up");
+      return;
+    }
+    const supersededId = pendingFollowUp ? pendingFollowUpId : null;
+
+    submissionInProgress.current = true;
+    setLoading(true);
+    try {
+      const response = await saveAppointment({
+        patient_id: patientId,
+        doctor_id: doctorId,
+        clinic_id: clinicIdNumber,
+        patient_name: patient.name,
+        doctor_name: patient.doctor ?? "",
+        gender: patient.gender,
+        appointment_date: selectedDate.format("YYYY-MM-DD"),
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+        status: AppointmentStatus.Scheduled,
+        source: "web",
+        reason: followUpReason.trim(),
+        date_of_birth: patient.date_of_birth
+          ? String(patient.date_of_birth)
+          : null,
+        mobile_number: patient.mobile_number,
+        user_id: userIdNumber,
+        // Tell the backend this is a regular appointment.
+        is_follow_up: false,
+        follow_up_id: null,
+        parent_appt_id: null,
+        parent_appointment_date: null,
+
+        // Identify the pending follow-up row to convert.
+        superseded_appointment_id: pendingFollowUpId ?? null,
+      });
+
+      if (!response?.success) {
+        throw new Error(
+          response?.message || "Failed to create regular appointment",
+        );
+      }
+
+      if (supersededId) {
+        toast.success(
+          "Regular appointment created and previous pending follow-up cancelled successfully.",
+        );
+      } else {
+        toast.success("Regular appointment created successfully.");
+      }
+      if (onSave) onSave(response);
+      else onClose?.();
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create regular appointment",
+      );
+    } finally {
+      submissionInProgress.current = false;
+      setLoading(false);
+    }
+  };
+
+  const reasonField = (
+    <TextField
+      label="Reason for follow up"
+      placeholder="Enter reason for follow up"
+      fullWidth
+      multiline
+      minRows={3}
+      required
+      value={followUpReason}
+      error={reasonValidationAttempted && !followUpReason.trim()}
+      helperText={
+        reasonValidationAttempted && !followUpReason.trim()
+          ? "Please enter a reason for follow up."
+          : undefined
+      }
+      onChange={(event) => {
+        setFollowUpReason(event.target.value);
+        if (event.target.value.trim()) setReasonValidationAttempted(false);
+      }}
+      sx={{
+        "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+          borderColor: "var(--follow-up-primary)",
+        },
+        "& .MuiInputLabel-root.Mui-focused": {
+          color: "var(--follow-up-primary)",
+        },
+      }}
+    />
+  );
+
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg)]">
-      <div className="flex items-center justify-between p-2 px-4 rounded-[var(--radius-lg)] bg-[var(--color-primary)] sticky z-10 m-2">
+    <div className="follow-up-calendar flex h-full min-h-0 flex-col bg-[var(--follow-up-background)]">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--follow-up-border)] bg-white px-5 py-4">
         <div>
-          <h2 className="text-[var(--color-surface-alt)] text-lg font-[var(--font-weight-medium)] flex items-center gap-2">
-            <RiSparklingLine /> Set Patient Follow Up
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--follow-up-navy)]">
+            <RiCalendarEventLine className="text-[var(--follow-up-primary)]" />
+            Set Patient Follow Up
           </h2>
-          <p className="text-blue-100 text-sm">{patient?.name}</p>
+          <p className="mt-0.5 text-sm text-slate-500">{patient?.name}</p>
         </div>
         <button
+          type="button"
           onClick={onClose}
-          className="text-[var(--color-primary)] hover:text-white p-2 rounded-md bg-[var(--color-surface)] hover:bg-[var(--color-primary-light)]"
+          aria-label="Close Set Patient Follow Up"
+          className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[var(--follow-up-navy)]"
         >
           <MdClose size={22} />
         </button>
-      </div>
+      </header>
 
-      {nextFollowUp && (
-        <div className="text-sm text-red-600 mt-3 font-medium text-center">
-          Your next scheduled appointment is on{" "}
-          {formatDateDDMMYYYY(nextFollowUp.follow_up_date)}
-        </div>
-      )}
-      <div className="flex-1 py-2 px-5 space-y-3 overflow-y-auto">
-        <div className="bg-[var(--color-surface-alt)]/80 backdrop-blur-lg rounded-3xl p-6 shadow-[var(--shadow-lg)] border border-white/40">
-          <div className="flex items-center justify-between mb-6">
+      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        {!rootIsValid && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
+            Unable to verify the original appointment date or follow-up period.
+            Follow-up scheduling is unavailable.
+          </div>
+        )}
+
+        {pendingFollowUp && (
+          <section className="rounded-xl border border-[var(--follow-up-border)] border-l-4 border-l-[var(--follow-up-red)] bg-white px-4 py-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Pending follow-up scheduled
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[var(--follow-up-navy)]">
+              {formatDateDDMMYYYY(pendingFollowUp.follow_up_date)}
+              {pendingFollowUp.start_time && pendingFollowUp.end_time
+                ? ` · ${normalizeTime(pendingFollowUp.start_time)} - ${normalizeTime(pendingFollowUp.end_time)}`
+                : ""}
+            </p>
+          </section>
+        )}
+
+        {isSelectedDateAfterFeeDuration && (
+          <section
+            role="status"
+            className="rounded-xl border border-amber-200 border-l-4 border-l-[var(--follow-up-amber)] bg-amber-50 p-3 text-sm text-amber-900"
+          >
+            <p>
+              Follow-up validity has expired. Standard consultation fees apply.
+            </p>
+            {pendingFollowUp && pendingFollowUpId && (
+              <p className="mt-1 font-medium">
+                Confirming will cancel the pending follow-up and book a regular
+                appointment.
+              </p>
+            )}
+          </section>
+        )}
+
+        <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-center justify-between">
             <button
+              type="button"
               disabled={isPrevDisabled}
+              aria-label="Previous month"
               onClick={() =>
                 !isPrevDisabled &&
                 setCurrentMonth(currentMonth.subtract(1, "month"))
               }
-              className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                isPrevDisabled ? "bg-gray-300" : ""
-              }`}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--follow-up-border)] text-[var(--follow-up-navy)] transition hover:bg-[var(--follow-up-background)] disabled:cursor-not-allowed disabled:text-slate-300"
             >
               <RiArrowLeftSLine size={20} />
             </button>
 
-            <div className="flex items-center gap-2 text-lg font-semibold text-gray-700">
-              <RiCalendarEventLine />
+            <h3 className="flex items-center gap-2 text-base font-semibold text-[var(--follow-up-navy)]">
+              <RiCalendarEventLine className="text-[var(--follow-up-primary)]" />
               {currentMonth.format("MMMM YYYY")}
-            </div>
+            </h3>
 
             <button
+              type="button"
+              aria-label="Next month"
               onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}
-              className="h-10 w-10 rounded-full"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--follow-up-border)] text-[var(--follow-up-navy)] transition hover:bg-[var(--follow-up-background)]"
             >
               <RiArrowRightSLine size={20} />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 text-xs font-semibold text-center text-gray-400 mb-4">
-            {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
-              <div key={d}>{d}</div>
+          <div className="mb-2 grid grid-cols-7 text-center text-xs font-semibold text-slate-500">
+            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+              <div key={`${day}-${index}`} className="py-2">
+                {day}
+              </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-4">
+          <div className="grid grid-cols-7 justify-items-center gap-y-1">
             {days.map((date, index) => {
-              if (!date) return <div key={index}></div>;
+              if (!date) return <div key={`empty-${index}`} />;
 
               const isPast = date.isBefore(today.startOf("day"));
-              const isSelected =
-                selectedDate && date.isSame(selectedDate, "day");
-
-              const followUpData = followUps.find(
-                (f) =>
-                  formatDate(f.follow_up_date) === date.format("YYYY-MM-DD"),
+              const isSelected = Boolean(
+                selectedDate && date.isSame(selectedDate, "day"),
+              );
+              const isPendingDate = Boolean(
+                pendingFollowUp &&
+                parseCalendarDate(pendingFollowUp.follow_up_date)?.isSame(
+                  date,
+                  "day",
+                ),
+              );
+              const isLastFollowUpDate = Boolean(
+                lastFollowUpDate?.isSame(date, "day"),
               );
 
-              const hasFollowUp = !!followUpData;
-
               return (
-                <button
-                  key={index}
-                  disabled={isPast}
-                  onClick={() => handleSelect(date)}
-                  title={followUpData?.follow_up_reason || ""}
-                  className={`
-                    h-11 w-11 rounded-full flex items-center justify-center cursor-pointer
-                    text-sm font-medium transition-all duration-300
-                    ${
-                      isPast
-                        ? "text-gray-300 cursor-none"
-                        : "hover:scale-110 hover:bg-[var(--color-primary)] hover:text-[var(--color-surface-alt)] "
-                    }
-                    ${hasFollowUp ? "bg-red-500 text-white" : "bg-blue-50"}
-                    ${isSelected ? "ring-2 ring-blue-600" : ""}
-                  `}
+                <div
+                  key={date.format("YYYY-MM-DD")}
+                  title={
+                    isLastFollowUpDate ? "Last valid follow-up date" : undefined
+                  }
+                  className="h-9 w-9 sm:h-10 sm:w-10"
                 >
-                  {date.date()}
-                </button>
+                  <button
+                    type="button"
+                    disabled={isPast}
+                    onClick={() => handleSelect(date)}
+                    aria-pressed={isSelected}
+                    aria-label={`${date.format("dddd, MMMM D, YYYY")}${
+                      isLastFollowUpDate ? ", last valid follow-up date" : ""
+                    }`}
+                    className={`flex h-full w-full items-center justify-center rounded-full text-sm font-medium transition ${
+                      isPast
+                        ? "cursor-not-allowed text-slate-300"
+                        : isSelected
+                          ? "bg-[var(--follow-up-primary)] text-white shadow-sm"
+                          : isPendingDate
+                            ? "bg-[var(--follow-up-red)] text-white hover:opacity-90"
+                            : "text-[var(--follow-up-navy)] hover:bg-teal-50"
+                    } ${
+                      isLastFollowUpDate
+                        ? "outline outline-2 outline-offset-1 outline-[var(--follow-up-amber)]"
+                        : ""
+                    }`}
+                  >
+                    {date.date()}
+                  </button>
+                </div>
               );
             })}
           </div>
-        </div>
+        </section>
+
         {selectedDate && (
-          <div className="bg-white rounded-[var(--radius-lg)] p-4 shadow-sm border">
-            <h3 className="font-semibold mb-3 text-gray-800">
-              Available Slots
+          <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold text-[var(--follow-up-navy)]">
+              <RiTimeLine className="text-[var(--follow-up-primary)]" />
+              Select Time Slot
             </h3>
 
             {slotsLoading ? (
-              <div className="flex justify-center py-4">
-                <CircularProgress size={25} />
+              <div className="flex justify-center py-5">
+                <CircularProgress
+                  size={25}
+                  sx={{ color: "var(--follow-up-primary)" }}
+                />
               </div>
             ) : doctorSlots.length === 0 ? (
-              <div className="text-center text-red-500 py-3">
+              <p className="py-3 text-center text-sm text-slate-500">
                 No slots available for this date
-              </div>
+              </p>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {doctorSlots.map((slot) => (
-                  <button
-                    key={`${slot.start}-${slot.end}`}
-                    onClick={() => setSelectedSlot(slot)}
-                    className={`
-                      p-2 rounded-lg border text-sm
-                      ${
-                        selectedSlot?.start === slot.start
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white hover:bg-blue-50"
-                      }
-                    `}
-                  >
-                    {slot.start} - {slot.end}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {doctorSlots.map((slot) => {
+                  const isSelected = selectedSlot?.start === slot.start;
+                  const isUnavailable = slot.status !== "AVAILABLE";
+
+                  return (
+                    <button
+                      key={`${slot.start}-${slot.end}`}
+                      type="button"
+                      disabled={isUnavailable}
+                      aria-pressed={isSelected}
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`rounded-lg border px-2 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed ${
+                        isSelected
+                          ? "border-[var(--follow-up-primary)] bg-[var(--follow-up-primary)] text-white"
+                          : isUnavailable
+                            ? "border-slate-200 bg-slate-100 text-slate-400"
+                            : "border-[var(--follow-up-border)] bg-white text-[var(--follow-up-navy)] hover:border-[var(--follow-up-primary)] hover:bg-teal-50"
+                      }`}
+                    >
+                      {slot.start} - {slot.end}
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </div>
+          </section>
         )}
-        <div>
-          <TextField
-            placeholder="Reason for Follow Up"
-            fullWidth
-            multiline
-            rows={3}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "#87ade9",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#2167d6",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1976d2",
-                  borderWidth: "3px",
-                },
-              },
-            }}
-            variant="outlined"
-            size="small"
-            value={followUpReason}
-            onChange={(e) => setFollowUpReason(e.target.value)}
-          />
-        </div>
-      </div>
 
-      <div className="flex gap-2 p-3 border-t border-[var(--color-primary)] bg-[var(--color-bg)] sticky bottom-0">
-        <Button variant="outlined" size="small" fullWidth onClick={onClose}>
+        <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm">
+          {reasonField}
+        </section>
+      </main>
+
+      <footer className="flex shrink-0 gap-3 border-t border-[var(--follow-up-border)] bg-white p-4">
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={onClose}
+          sx={{
+            borderColor: "var(--follow-up-border)",
+            color: "var(--follow-up-navy)",
+            textTransform: "none",
+          }}
+        >
           Cancel
         </Button>
-        {hasFollowUp ? (
-          <Button
-            variant="contained"
-            size="small"
-            fullWidth
-            disabled={loading}
-            onClick={handleFollowUpUpdate}
-          >
-            {loading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "Update Follow Up"
-            )}
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            size="small"
-            fullWidth
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "Save Follow Up"
-            )}
-          </Button>
-        )}
-      </div>
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handlePrimaryActionClick}
+          disabled={
+            loading ||
+            slotsLoading ||
+            !selectedDate ||
+            !selectedSlot ||
+            !rootIsValid ||
+            !lastFollowUpDate ||
+            Boolean(
+              selectedDate &&
+              rootAppointmentDate &&
+              selectedDate.isBefore(rootAppointmentDate, "day"),
+            )
+          }
+          sx={{
+            backgroundColor: "var(--follow-up-primary)",
+            "&:hover": { backgroundColor: "var(--follow-up-primary-hover)" },
+            textTransform: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {loading ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : isSelectedDateAfterFeeDuration ? (
+            "Create Regular Appointment"
+          ) : pendingFollowUp && pendingFollowUpId ? (
+            "Reschedule Follow Up"
+          ) : (
+            "Save Follow Up"
+          )}
+        </Button>
+      </footer>
     </div>
   );
 };

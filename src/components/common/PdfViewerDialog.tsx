@@ -35,6 +35,7 @@ interface PdfViewerDialogProps {
   pdfUrl: string | null;
   loading: boolean;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
@@ -42,6 +43,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
   pdfUrl,
   loading,
   onClose,
+  embedded = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -145,24 +147,8 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
   };
 
 
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="md"
-      fullScreen={isMobile}
-      TransitionComponent={Fade}
-      PaperProps={{
-        sx: {
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          height: isMobile ? "100%" : "90vh",
-        },
-      }}
-    >
-
+  const viewerContent = (
+    <>
       <Box
         px={2}
         py={1}
@@ -189,7 +175,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           Patient Prescription
         </Typography>
 
-        {!isMobile && (
+        {!isMobile && !embedded && (
           <Stack
             direction="row"
             spacing={1}
@@ -272,7 +258,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           </Stack>
         )}
 
-        {isMobile && (
+        {(isMobile || embedded) && (
           <Stack direction="row" spacing={0.5} alignItems="center">
             <IconButton
               size="small"
@@ -373,6 +359,43 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           </Document>
         )}
       </Box>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <Box
+        sx={{
+          height: "100%",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {viewerContent}
+      </Box>
+    );
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      fullScreen={isMobile}
+      TransitionComponent={Fade}
+      PaperProps={{
+        sx: {
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          height: isMobile ? "100%" : "90vh",
+        },
+      }}
+    >
+      {viewerContent}
     </Dialog>
   );
 };

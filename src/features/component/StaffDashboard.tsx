@@ -110,7 +110,7 @@ const StaffDashboard: React.FC = () => {
   }, [socket, activeTab]);
 
   useEffect(() => {
-    fetchDashboardStats(Number(uId),Number(clinicId))
+    fetchDashboardStats(Number(uId), Number(clinicId))
       .then((data) => {
         const mapped: DashboardCard[] = data
           .map((item) => ({
@@ -189,6 +189,7 @@ const StaffDashboard: React.FC = () => {
         patient_id: a.patient_id,
         patientId: a.patient_id,
         appointment_id: Number(a.appointment_id),
+        appointmentDate: a.appointment_date,
         name: a.patient_name,
         gender: a.gender,
         doctor: a.doctor_name,
@@ -200,6 +201,7 @@ const StaffDashboard: React.FC = () => {
         is_fee_paid: a.is_fee_paid,
         raw: {
           appointment_id: Number(a.appointment_id),
+          appointment_date: a.appointment_date,
           patient_id: a.patient_id,
           doctor_id: a.doctor_id,
           prescriptions: a.prescriptions,
@@ -245,7 +247,7 @@ const StaffDashboard: React.FC = () => {
             return "Follow-up set successfully";
           case "Make Payment":
             return "Payment completed successfully";
-          break;
+            break;
         }
       };
 
@@ -285,8 +287,7 @@ const StaffDashboard: React.FC = () => {
     [uId, clinicId],
   );
 
-const handlePaymentSuccess = useCallback(
-  (appointmentId: number) => {
+  const handlePaymentSuccess = useCallback((appointmentId: number) => {
     setPendingPatients((prev) =>
       prev.map((p) =>
         p.raw?.appointment_id === appointmentId
@@ -294,8 +295,8 @@ const handlePaymentSuccess = useCallback(
               ...p,
               is_fee_paid: "1",
             }
-          : p
-      )
+          : p,
+      ),
     );
     setCompletedPatients((prev) =>
       prev.map((p) =>
@@ -304,12 +305,10 @@ const handlePaymentSuccess = useCallback(
               ...p,
               is_fee_paid: "1",
             }
-          : p
-      )
+          : p,
+      ),
     );
-  },
-  []
-);
+  }, []);
 
   const resetModalState = () => {
     setContact("");

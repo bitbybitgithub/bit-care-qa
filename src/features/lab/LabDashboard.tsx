@@ -28,7 +28,7 @@ const LabDashboard = () => {
   const [walkInContact, setWalkInContact] = useState("");
   const [walkInPatient, setWalkInPatient] = useState<Patient | null>(null);
   const [showWalkInRegistration, setShowWalkInRegistration] = useState(false);
-  const isLabStaff = user === Roles.Staff;
+  const isLabStaff = user === Roles.Staff || user === Roles.Admin;
 
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
@@ -64,18 +64,6 @@ const LabDashboard = () => {
   };
 
   const quickActions = [
-    ...(isLabStaff
-      ? [
-          {
-            label: "Add Walk-In Patient",
-            icon: <FaUserPlus />,
-            onClick: () => {
-              resetWalkInFlow();
-              setShowWalkInModal(true);
-            },
-          },
-        ]
-      : []),
     {
       label: "Add New User",
       icon: <FaUserPlus />,
@@ -203,7 +191,7 @@ const LabDashboard = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            {isLabStaff && (
+            {isLabStaff && activeTab === "pendingQueue" && (
               <button
                 onClick={() => {
                   resetWalkInFlow();

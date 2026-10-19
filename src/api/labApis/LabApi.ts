@@ -47,6 +47,8 @@ export interface SaveLabAppointmentPayload {
         test_id: number;
         category_id: number;
         test_price: number;
+        discount_price?: number;
+        payable_amount?: number;
       }[]
     | null;
   total_amount: number;
@@ -58,6 +60,11 @@ export interface SaveLabAppointmentPayload {
   created_by: number;
   is_package: boolean;
   package_id: number | null;
+  visit_type?: "Preventive" | "Prescribed" | null;
+  doctor_name?: string | null;
+  doctor_mobile_number?: string | null;
+  prescription_guid_name?: string | null;
+  prescription_file_name?: string | null;
 }
 
 export const saveLabAppointmentApi = async (

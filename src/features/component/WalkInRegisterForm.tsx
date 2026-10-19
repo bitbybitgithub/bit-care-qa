@@ -25,7 +25,10 @@ import type {
   WalkinFormData,
   WalkInRegisterFormProps,
 } from "../../types/staffdashboardtype/StaffDashboardInterfaces";
-import { getMappedDoctorApi, type MappedDoctor } from "../../api/clinic/ClinicEmpanelmentApis";
+import {
+  getMappedDoctorApi,
+  type MappedDoctor,
+} from "../../api/clinic/ClinicEmpanelmentApis";
 
 const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,
@@ -70,7 +73,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     const fetchDoctors = async () => {
       try {
         setDoctorLoading(true);
-        const list = await getMappedDoctorApi(clinic_id)
+        const list = await getMappedDoctorApi(clinic_id);
         setDoctors(list as MappedDoctor[]);
       } catch (err) {
         console.error("Error fetching doctor list:", err);
@@ -187,10 +190,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       newValue = value.slice(0, 200);
     }
 
-    if (name === 'email') {
+    if (name === "email") {
       setFormData((prev) => ({ ...prev, [name]: newValue.toLowerCase() }));
-    }
-    else {
+    } else {
       setFormData((prev) => ({ ...prev, [name]: newValue }));
     }
 
@@ -226,7 +228,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         patientId = res.patientId;
       }
 
-      const selectedDoctor = doctors.find((d) => d.doctor_name === formData.doctor);
+      const selectedDoctor = doctors.find(
+        (d) => d.doctor_name === formData.doctor,
+      );
 
       const appointmentData = {
         patient_id: patientId,
@@ -243,14 +247,14 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         reason: formData.reason || "Regular checkup",
         date_of_birth: formData.dob,
         mobile_number: formData.phone || contact,
+        email: formData.email,
         user_id: Number(user_id),
       };
 
       const res = await saveAppointment(appointmentData);
-      if(res?.success){
-        toast.success(res?.message);
-      }
-      else{
+      if (!res?.success) {
+        throw new Error(res?.message || "Failed to save appointment.");
+      } else {
         toast.error(res?.message);
       }
 
@@ -277,7 +281,6 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   return (
     <div className="fixed inset-0 z-[var(--z-modal)] flex justify-center items-center bg-[var(--color-surface-alt)]/40 backdrop-blur-sm">
       <div className="relative w-full max-w-lg mx-4">
-
         {saving && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 rounded-[var(--radius-lg)]">
             <CircularProgress size={40} thickness={4} />
@@ -287,8 +290,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         <form
           onClick={(e) => e.stopPropagation()}
           onSubmit={handleSubmit}
-          className={`bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full p-6 transform transition-all ${saving ? "pointer-events-none opacity-80" : ""
-            }`}
+          className={`bg-[var(--color-surface)] border border-[var(--color-primary)] shadow-[var(--shadow-lg)] rounded-[var(--radius-lg)] w-full p-6 transform transition-all ${
+            saving ? "pointer-events-none opacity-80" : ""
+          }`}
         >
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
@@ -396,7 +400,9 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                   select
                   name="gender"
                   value={formData.gender}
-                  onChange={(e: React.ChangeEvent<any>) => handleChange(e as any)}
+                  onChange={(e: React.ChangeEvent<any>) =>
+                    handleChange(e as any)
+                  }
                   size="small"
                   helperText={errors.gender || " "}
                   error={!!errors.gender}
@@ -481,11 +487,14 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 <MenuItem value="">
                   <em>{doctorLoading ? "Loading..." : "Select Doctor"}</em>
                 </MenuItem>
-                {doctors.filter((d) => d.mapping_is_active ==true).map((d) => (
-                  <MenuItem key={d.doctor_id} value={d.doctor_name}>
-                    {d.doctor_name}{d.specialized_in ? ` (${d.specialized_in})` : ""}
-                  </MenuItem>
-                ))}
+                {doctors
+                  .filter((d) => d.mapping_is_active == true)
+                  .map((d) => (
+                    <MenuItem key={d.doctor_id} value={d.doctor_name}>
+                      {d.doctor_name}
+                      {d.specialized_in ? ` (${d.specialized_in})` : ""}
+                    </MenuItem>
+                  ))}
               </TextField>
             </FormControl>
 
@@ -518,7 +527,8 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               variant="contained"
               className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
             >
-              Submit            </Button>
+              Submit{" "}
+            </Button>
 
             <Button
               type="button"

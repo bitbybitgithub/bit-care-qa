@@ -42,6 +42,11 @@ export interface UpdatePatientTestsRequest {
   modified_by: number;
 }
 
+export interface UpdatePatientTestsResponse {
+  success?: boolean | string;
+  message?: string;
+}
+
 export const savereportAsync = async (payload: {
   lab_record_id: number;
   lab_id: number;
@@ -76,7 +81,6 @@ export const updateLabTestStatusAsync = async (payload: {
   status: string;
   user_id: number;
   lab_record_id: number;
-  report_id: number | number[];
 }) => {
   const respone = await emrAPI.post("/lab/update-lab-test-status", payload);
   return respone;
@@ -109,5 +113,8 @@ export const saveLabPaymentAsync = async (
 export const updatePatientTestsApi = async (
   payload: UpdatePatientTestsRequest,
 ) => {
-  return await emrAPI.post("/lab/update-patient-test", payload);
+  return await emrAPI.post<UpdatePatientTestsResponse>(
+    "/lab/update-patient-test",
+    payload,
+  );
 };

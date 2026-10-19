@@ -28,6 +28,7 @@ import {
 import { FaFilePrescription } from "react-icons/fa";
 import { Document, Page, pdfjs } from "react-pdf";
 import workerSrc from "pdfjs-dist/build/pdf.worker.mjs?url";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 interface PdfViewerDialogProps {
@@ -36,6 +37,8 @@ interface PdfViewerDialogProps {
   loading: boolean;
   onClose: () => void;
   embedded?: boolean;
+  title?: string;
+  onError?: (error: Error) => void;
 }
 
 const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
@@ -44,6 +47,8 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
   loading,
   onClose,
   embedded = false,
+  title = "Patient Prescription",
+  onError,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -59,25 +64,33 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
+  const onDocumentLoadSuccess = (pdf: PDFDocumentProxy) => {
+    setNumPages(pdf.numPages);
     setPage(1);
   };
-
   const documentFile = useMemo(() => pdfUrl, [pdfUrl]);
+  const pageWidth = Math.max(1, Math.min(containerWidth, 850));
+
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        const width = containerRef.current.offsetWidth - 40;
-        setContainerWidth(width > 300 ? width : 300);
+        const horizontalPadding = isMobile ? 16 : 32;
+        const availableWidth =
+          containerRef.current.clientWidth - horizontalPadding;
+        setContainerWidth(Math.max(1, availableWidth));
       }
     };
 
     updateWidth();
     window.addEventListener("resize", updateWidth);
+    const resizeObserver = new ResizeObserver(updateWidth);
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
 
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+      resizeObserver.disconnect();
+    };
+  }, [isMobile]);
 
   const zoomIn = () => setScale((s) => Math.min(s + 0.2, 3));
   const zoomOut = () => setScale((s) => Math.max(s - 0.2, 1));
@@ -148,11 +161,12 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
   const viewerContent = (
     <>
       <Box
-        px={2}
-        py={1}
+        px={embedded ? 1 : 2}
+        py={embedded ? 0.5 : 1}
         display="flex"
         alignItems="center"
         justifyContent="space-between"
+        gap={1}
         sx={{
           background: "var(--color-primary)",
           position: "relative",
@@ -165,12 +179,17 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
             display: "flex",
             alignItems: "center",
             gap: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontSize: embedded ? 14 : undefined,
           }}
         >
           <FaFilePrescription
             style={{ fontSize: "var(--font-h2)", color: "var(--color-white)" }}
           />
-          Patient Prescription
+          {title}
         </Typography>
 
         {!isMobile && !embedded && (
@@ -281,6 +300,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
             </IconButton>
 
             <IconButton
+              size="small"
               onClick={(e) => setMenuAnchor(e.currentTarget)}
               sx={{ color: "#fff" }}
             >
@@ -302,6 +322,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
         )}
 
         <IconButton
+          size={embedded ? "small" : "medium"}
           onClick={onClose}
           sx={{
             color: "#fff",
@@ -319,13 +340,14 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
         onTouchEnd={handleTouchEnd}
         sx={{
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
           background: "#eef2f7",
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          p: isMobile ? 1 : 3,
+          p: isMobile ? 1 : 2,
         }}
       >
         {loading && <CircularProgress />}
@@ -334,20 +356,21 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           <Document
             file={documentFile}
             onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(error) => {
-              console.error("PDF LOAD ERROR:", error);
-            }}
-            onSourceError={(error) => {
-              console.error("PDF SOURCE ERROR:", error);
-            }}
+            onLoadError={(error) =>
+              onError?.(
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to render PDF"),
+              )
+            }
             loading={<CircularProgress />}
           >
             <Box
               sx={{
                 background: "#fff",
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: "0 10px 35px rgba(0,0,0,0.12)",
+                borderRadius: 0,
+                overflow: "visible",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
                 transform: `scale(${scale})`,
                 transformOrigin: "top center",
                 transition: "transform 0.2s ease",
@@ -355,7 +378,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
             >
               <Page
                 pageNumber={page}
-                width={containerWidth}
+                width={pageWidth}
                 renderAnnotationLayer={false}
                 renderTextLayer={false}
               />

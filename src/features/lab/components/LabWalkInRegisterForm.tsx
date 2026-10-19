@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Button,
   FormControl,
@@ -13,17 +13,23 @@ import { IoCallOutline, IoPerson } from "react-icons/io5";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { toast } from "react-toastify";
 import { savePatient } from "../../../api/SavePatientApi";
-import { saveLabAppointmentApi } from "../../../api/labApis/LabApi";
+import { uploadPrescriptionFile } from "../../../api/CommonApi/uploadFileApi";
+import {
+  saveLabAppointmentApi,
+  type SaveLabAppointmentPayload,
+} from "../../../api/labApis/LabApi";
 import { getSessionItem } from "../../../context/sessions/userSession";
 import type {
   WalkinFormData,
   WalkInRegisterFormProps,
 } from "../../../types/staffdashboardtype/StaffDashboardInterfaces";
 import LabWalkInTestSelectionPopup, {
+  type LabWalkInPackage,
   type LabWalkInTest,
 } from "./LabWalkInTestSelectionPopup";
 
 type LabWalkInFormData = Omit<WalkinFormData, "doctor" | "reason">;
+type VisitType = "Preventive" | "Prescribed";
 
 const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   onClose,
@@ -43,6 +49,13 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const [age, setAge] = useState<number | "">("");
   const [testPopupOpen, setTestPopupOpen] = useState(false);
   const [selectedTests, setSelectedTests] = useState<LabWalkInTest[]>([]);
+  const [selectedPackages, setSelectedPackages] = useState<LabWalkInPackage[]>(
+    [],
+  );
+  const [visitType, setVisitType] = useState<VisitType>("Preventive");
+  const [doctorName, setDoctorName] = useState("");
+  const [doctorMobile, setDoctorMobile] = useState("");
+  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
 
   const today = new Date();
   const labId = Number(getSessionItem("user", "lab_id"));
@@ -55,10 +68,30 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const minDateObj = new Date();
   minDateObj.setFullYear(today.getFullYear() - 120);
   const minDate = minDateObj.toISOString().split("T")[0];
-  const totalAmount = selectedTests.reduce(
-    (total, test) => total + Number(test.price || 0),
-    0,
+
+  const selectionSummary = useMemo(
+    () => [
+      ...selectedTests.map((test) => ({
+        id: test.test_id,
+        type: "test" as const,
+        name: test.test_name,
+      })),
+      ...selectedPackages.map((pkg) => ({
+        id: pkg.package_id,
+        type: "package" as const,
+        name: pkg.package_name,
+      })),
+    ],
+    [selectedTests, selectedPackages],
   );
+
+  const totalSelectionCount = selectionSummary.length;
+  const totalAmount =
+    selectedTests.reduce((total, test) => total + Number(test.price || 0), 0) +
+    selectedPackages.reduce(
+      (total, pkg) => total + Number(pkg.package_price || 0),
+      0,
+    );
 
   useEffect(() => {
     if (!formData.dob) {
@@ -91,16 +124,22 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         phone: patientData.mobile_number || contact,
         gender: patientData?.gender?.toString() || "",
       });
-    } else {
-      setFormData({
-        name: "",
-        dob: "",
-        email: "",
-        phone: contact,
-        gender: "",
-      });
-      setSelectedTests([]);
+      return;
     }
+
+    setFormData({
+      name: "",
+      dob: "",
+      email: "",
+      phone: contact,
+      gender: "",
+    });
+    setSelectedTests([]);
+    setSelectedPackages([]);
+    setVisitType("Preventive");
+    setDoctorName("");
+    setDoctorMobile("");
+    setPrescriptionFile(null);
   }, [patientData, contact]);
 
   const validate = (data: LabWalkInFormData) => {
@@ -137,6 +176,32 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       newErrors.email = "Invalid email format";
     }
 
+    if (visitType === "Prescribed") {
+      if (!doctorName.trim()) {
+        newErrors.doctor_name = "Doctor name is required";
+      } else if (!NAME_REGEX.test(doctorName.trim())) {
+        newErrors.doctor_name = "Doctor name should contain only letters";
+      }
+
+      if (!doctorMobile.trim()) {
+        newErrors.doctor_mobile = "Doctor mobile number is required";
+      } else if (!MOBILE_REGEX.test(doctorMobile)) {
+        newErrors.doctor_mobile = "Enter valid Indian mobile number";
+      }
+
+      if (!prescriptionFile) {
+        newErrors.prescription = "Prescription is required";
+      }
+    }
+
+    if (!selectedTests.length && !selectedPackages.length) {
+      newErrors.selection = "Please select at least one test or package";
+    }
+
+    if (selectedTests.length > 0 && selectedPackages.length > 0) {
+      newErrors.selection = "Please select either tests or packages, not both";
+    }
+
     return newErrors;
   };
 
@@ -164,15 +229,29 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
     }
   };
 
+  const handlePrescriptionFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    setPrescriptionFile(file);
+    if (errors.prescription) {
+      setErrors((prev) => ({ ...prev, prescription: "" }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const validationErrors = validate(formData);
     setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length > 0) return;
-
-    if (!selectedTests.length) {
-      toast.error("Please select at least one test");
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error(
+        validationErrors.selection ||
+          validationErrors.doctor_name ||
+          validationErrors.doctor_mobile ||
+          validationErrors.prescription ||
+          "Please check the form details",
+      );
       return;
     }
 
@@ -201,27 +280,55 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         patientId = res.patientId;
       }
 
-      const appointmentResponse = await saveLabAppointmentApi({
+      let prescriptionGuid: string | null = null;
+      let prescriptionFileName: string | null = null;
+
+      if (visitType === "Prescribed") {
+        if (!prescriptionFile) {
+          throw new Error("Prescription is required");
+        }
+
+        const uploadResponse = await uploadPrescriptionFile(
+          prescriptionFile,
+          "PRESCRIPTIONS_BITCARE",
+        );
+        prescriptionGuid = uploadResponse?.guid ?? null;
+        prescriptionFileName =
+          uploadResponse?.original_file_name || prescriptionFile.name || null;
+      }
+
+      const selectedPackage = selectedPackages[0] ?? null;
+      const testDetails =
+        selectedTests.length > 0
+          ? selectedTests.map((test) => ({
+              test_id: Number(test.test_id),
+              category_id: Number(test.category_id),
+              test_price: Number(test.price),
+            }))
+          : null;
+
+      const payload: SaveLabAppointmentPayload = {
         lab_id: labId,
         patient_id: Number(patientId),
-        test_details: selectedTests.map((test) => ({
-          test_id: Number(test.test_id),
-          category_id: Number(test.category_id),
-          test_price: Number(test.price),
-        })),
-        total_amount: selectedTests.reduce(
-          (total, test) => total + Number(test.price),
-          0,
-        ),
+        test_details: testDetails,
+        total_amount: totalAmount,
         appointment_date: new Date().toISOString().split("T")[0],
         appointment_type: "WALK_IN",
         booking_source: "LAB",
         source: "WEB",
         remarks: null,
         created_by: userId,
-        is_package: false,
-        package_id: null,
-      });
+        is_package: Boolean(selectedPackage),
+        package_id: selectedPackage ? Number(selectedPackage.package_id) : null,
+        visit_type: visitType,
+        doctor_name: visitType === "Prescribed" ? doctorName.trim() : null,
+        doctor_mobile_number:
+          visitType === "Prescribed" ? doctorMobile.trim() : null,
+        prescription_guid_name: prescriptionGuid,
+        prescription_file_name: prescriptionFileName,
+      };
+
+      const appointmentResponse = await saveLabAppointmentApi(payload);
 
       if (!(appointmentResponse as any)?.success) {
         throw new Error(
@@ -240,6 +347,11 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         gender: "",
       });
       setSelectedTests([]);
+      setSelectedPackages([]);
+      setVisitType("Preventive");
+      setDoctorName("");
+      setDoctorMobile("");
+      setPrescriptionFile(null);
       setErrors({});
       onSuccess();
       onClose();
@@ -250,6 +362,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       setSaving(false);
     }
   };
+
+  const isPrescriptionRequired = visitType === "Prescribed";
 
   return (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-start justify-center overflow-y-auto bg-[var(--color-surface-alt)]/40 px-4 py-6 backdrop-blur-sm sm:py-8">
@@ -292,6 +406,33 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           </div>
 
           <div className="flex flex-col gap-y-3">
+            <FormControl fullWidth>
+              <TextField
+                select
+                value={visitType}
+                onChange={(event) => {
+                  const nextType = event.target.value as VisitType;
+                  setVisitType(nextType);
+                  if (nextType === "Preventive") {
+                    setDoctorName("");
+                    setDoctorMobile("");
+                    setPrescriptionFile(null);
+                  }
+                  setErrors((prev) => ({
+                    ...prev,
+                    doctor_name: "",
+                    doctor_mobile: "",
+                    prescription: "",
+                    selection: "",
+                  }));
+                }}
+                size="small"
+              >
+                <MenuItem value="Preventive">Preventive</MenuItem>
+                <MenuItem value="Prescribed">Prescribed</MenuItem>
+              </TextField>
+            </FormControl>
+
             <FormControl fullWidth>
               <TextField
                 name="name"
@@ -423,48 +564,140 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               />
             </FormControl>
 
+            {isPrescriptionRequired && (
+              <>
+                <FormControl fullWidth>
+                  <TextField
+                    name="doctor_name"
+                    placeholder="Doctor Name"
+                    value={doctorName}
+                    onChange={(event) => {
+                      const cleaned = event.target.value.replace(
+                        /[^A-Za-z\s.'-]/g,
+                        "",
+                      );
+                      setDoctorName(cleaned);
+                      if (errors.doctor_name) {
+                        setErrors((prev) => ({ ...prev, doctor_name: "" }));
+                      }
+                    }}
+                    size="small"
+                    error={!!errors.doctor_name}
+                    helperText={errors.doctor_name || " "}
+                  />
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <TextField
+                    name="doctor_mobile"
+                    placeholder="Doctor Mobile Number"
+                    value={doctorMobile}
+                    onChange={(event) => {
+                      const cleaned = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+                      setDoctorMobile(cleaned);
+                      if (errors.doctor_mobile) {
+                        setErrors((prev) => ({ ...prev, doctor_mobile: "" }));
+                      }
+                    }}
+                    size="small"
+                    error={!!errors.doctor_mobile}
+                    helperText={errors.doctor_mobile || " "}
+                    inputProps={{ maxLength: 10, inputMode: "tel" }}
+                  />
+                </FormControl>
+
+                <FormControl fullWidth error={!!errors.prescription}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    sx={{ justifyContent: "center" }}
+                  >
+                    {prescriptionFile
+                      ? "Change Prescription"
+                      : "Upload Prescription"}
+                    <input
+                      hidden
+                      type="file"
+                      accept=".pdf,image/png,image/jpeg,image/jpg"
+                      onChange={handlePrescriptionFileChange}
+                    />
+                  </Button>
+                  {prescriptionFile && (
+                    <div className="mt-2 flex items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-xs text-[var(--color-primary)]">
+                      <span className="truncate">{prescriptionFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPrescriptionFile(null);
+                          setErrors((prev) => ({
+                            ...prev,
+                            prescription: "Prescription is required",
+                          }));
+                        }}
+                        className="ml-2 text-red-500"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  <span className="text-xs text-red-600">
+                    {errors.prescription || " "}
+                  </span>
+                </FormControl>
+              </>
+            )}
+
             <FormControl fullWidth>
               <Button
                 type="button"
                 variant="outlined"
                 onClick={() => setTestPopupOpen(true)}
               >
-                {selectedTests.length
-                  ? `${selectedTests.length} test${selectedTests.length > 1 ? "s" : ""} selected`
-                  : "Select Tests"}
+                {totalSelectionCount
+                  ? `${totalSelectionCount} item${totalSelectionCount > 1 ? "s" : ""} selected`
+                  : "Select Tests / Packages"}
               </Button>
             </FormControl>
 
             <div className="rounded-[var(--radius-md)] border border-[var(--color-primary)] bg-[var(--color-bg)]/40 p-3">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold">Selected Tests</span>
+                <span className="text-sm font-semibold">Selected Items</span>
                 <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-1 text-xs font-semibold text-white">
-                  {selectedTests.length} selected
+                  {totalSelectionCount} selected
                 </span>
               </div>
 
-              {selectedTests.length > 0 ? (
+              {selectionSummary.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {selectedTests.map((test) => (
+                  {selectionSummary.map((item) => (
                     <span
-                      key={test.test_id}
+                      key={`${item.type}-${item.id}`}
                       className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-primary)] bg-[var(--color-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)]"
                     >
-                      <span className="truncate">
-                        {test.test_code || test.test_name}
-                      </span>
+                      <span className="truncate">{item.name}</span>
                       <IconButton
                         type="button"
                         size="small"
-                        aria-label={`Remove ${test.test_code || test.test_name}`}
-                        onClick={() =>
-                          setSelectedTests((current) =>
+                        aria-label={`Remove ${item.name}`}
+                        onClick={() => {
+                          if (item.type === "test") {
+                            setSelectedTests((current) =>
+                              current.filter(
+                                (selectedTest) =>
+                                  selectedTest.test_id !== item.id,
+                              ),
+                            );
+                            return;
+                          }
+                          setSelectedPackages((current) =>
                             current.filter(
-                              (selectedTest) =>
-                                selectedTest.test_id !== test.test_id,
+                              (selectedPackage) =>
+                                selectedPackage.package_id !== item.id,
                             ),
-                          )
-                        }
+                          );
+                        }}
                         sx={{
                           padding: 0,
                           color: "var(--color-primary)",
@@ -477,8 +710,12 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 </div>
               ) : (
                 <p className="text-sm text-[var(--color-text-secondary)]">
-                  Select at least one test to continue.
+                  Select at least one test or package to continue.
                 </p>
+              )}
+
+              {errors.selection && (
+                <p className="mt-2 text-xs text-red-600">{errors.selection}</p>
               )}
 
               <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
@@ -493,7 +730,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
           <div className="flex justify-center gap-4 mt-6">
             <Button
               type="submit"
-              disabled={saving || selectedTests.length === 0}
+              disabled={saving || totalSelectionCount === 0}
               variant="contained"
               className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
             >
@@ -515,8 +752,12 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         open={testPopupOpen}
         labId={labId}
         selectedTests={selectedTests}
+        selectedPackages={selectedPackages}
         onClose={() => setTestPopupOpen(false)}
-        onConfirm={setSelectedTests}
+        onConfirm={(tests, packages) => {
+          setSelectedTests(tests);
+          setSelectedPackages(packages ?? []);
+        }}
       />
     </div>
   );

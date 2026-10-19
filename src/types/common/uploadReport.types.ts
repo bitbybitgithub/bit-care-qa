@@ -55,6 +55,9 @@ export interface UploadReportResponse {
   message: string;
   folder?: UploadFolder;
   files: UploadedFile[];
+  guid?: string;
+  stored_file_name?: string;
+  original_file_name?: string;
 }
 
 export interface UploadPrescriptionResponse {

@@ -9,6 +9,13 @@ export interface LabQueueTest {
   name?: string;
 }
 
+export interface LabReport {
+  report_id: number;
+  report_file_name: string | null;
+  report_file_path: string | null;
+  report_guid_name: string | null;
+}
+
 export interface LabQueueRow {
   lab_record_id: number;
   patient_id: number;
@@ -45,6 +52,7 @@ export interface LabQueueRow {
   package_discount_amount?: number;
   package_discount_percentage?: number;
   package_total_tests?: number;
+  lab_reports?: LabReport[];
   [key: string]: unknown;
 }
 

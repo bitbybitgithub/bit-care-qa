@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Drawer, Tooltip } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
@@ -17,7 +17,12 @@ import LabQueueGrid from "./components/LabQueueGrid";
 import LabAddTestDialog from "./components/LabAddTestDialog";
 import LabPrescriptionDialog from "./components/LabPrescriptionDialog";
 import LabReportUploadDialog from "./components/LabReportUploadDialog";
-import type { LabQueueRow, LabReportFile } from "./components/LabQueueTypes";
+import LabReportViewerDialog from "./components/LabReportViewerDialog";
+import type {
+  LabQueueRow,
+  LabReport,
+  LabReportFile,
+} from "./components/LabQueueTypes";
 
 const PAGE_SIZE = 10;
 
@@ -118,12 +123,6 @@ function hasTestsOrPackage(row: LabQueueRow) {
   );
 }
 
-export interface LabReport {
-  report_id: number;
-  report_file_name: string | null;
-  report_file_path: string | null;
-  report_guid_name: string | null;
-}
 interface PaymentStatusButtonProps {
   paid: boolean;
   onMakePayment?: () => void;
@@ -192,6 +191,13 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [reportRow, setReportRow] = useState<LabQueueRow | null>(null);
+  const [selectedReport, setSelectedReport] = useState<LabReport | null>(null);
+  const [reportPdfUrl, setReportPdfUrl] = useState<string | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportRetry, setReportRetry] = useState(0);
+  const reportRequestId = useRef(0);
   const [addTestRow, setAddTestRow] = useState<LabQueueRow | null>(null);
   const [addTestViewOnly, setAddTestViewOnly] = useState(false);
   const [savedReports, setSavedReports] = useState<LabReportFile[]>([]);
@@ -250,31 +256,120 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     [openTestDetails],
   );
 
-  const openViewReport = useCallback(async (report: LabReport) => {
-    try {
-      setPdfUrl(null);
-      setOpenPdf(true);
-      setPdfLoading(true);
-      console.log("Report Data ", report);
-      const filePath = report.report_file_path;
-      const fileName = report.report_guid_name;
+  const openViewReport = useCallback((row: LabQueueRow) => {
+    reportRequestId.current += 1;
+    const reports = Array.isArray(row.lab_reports) ? row.lab_reports : [];
+    const firstPdf =
+      reports.find((report) =>
+        report.report_file_name?.toLowerCase().endsWith(".pdf"),
+      ) ?? null;
 
-      if (!filePath || !fileName) {
-        throw new Error("Report file not found");
+    setReportPdfUrl(null);
+    setReportError(null);
+    setReportLoading(false);
+    setReportRetry(0);
+    setSelectedReport(firstPdf);
+    setReportRow(row);
+  }, []);
+
+  const closeReportViewer = useCallback(() => {
+    reportRequestId.current += 1;
+    setReportRow(null);
+    setSelectedReport(null);
+    setReportPdfUrl(null);
+    setReportLoading(false);
+    setReportError(null);
+  }, []);
+
+  const selectReport = useCallback(
+    (report: LabReport) => {
+      if (
+        selectedReport?.report_id === report.report_id &&
+        selectedReport?.report_guid_name === report.report_guid_name
+      ) {
+        return;
       }
+      reportRequestId.current += 1;
+      setReportPdfUrl(null);
+      setReportError(null);
+      setSelectedReport(report);
+    },
+    [selectedReport],
+  );
 
-      const url = await getPdfFromServer(filePath, fileName);
-      console.log("Report PDF URL:", url);
-      setPdfUrl(url);
-    } catch (error) {
-      console.error("Report PDF Load Error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to load Report PDF",
-      );
-      setOpenPdf(false);
-    } finally {
-      setPdfLoading(false);
+  useEffect(() => {
+    if (!reportPdfUrl) return;
+    return () => URL.revokeObjectURL(reportPdfUrl);
+  }, [reportPdfUrl]);
+
+  useEffect(() => {
+    if (!reportRow || !selectedReport) {
+      setReportLoading(false);
+      setReportError(null);
+      setReportPdfUrl(null);
+      return;
     }
+
+    const requestId = ++reportRequestId.current;
+    let active = true;
+    const filePath = selectedReport.report_file_path;
+    const fileName = selectedReport.report_guid_name;
+
+    setReportPdfUrl(null);
+    setReportError(null);
+    if (!fileName || !fileName.toLowerCase().endsWith(".pdf")) {
+      setReportLoading(false);
+      setReportError(
+        "Only PDF reports with a valid filename can be previewed.",
+      );
+      return () => {
+        active = false;
+      };
+    }
+    if (!filePath?.trim()) {
+      setReportLoading(false);
+      setReportError("The selected report does not have a file path.");
+      return () => {
+        active = false;
+      };
+    }
+
+    setReportLoading(true);
+    const loadReport = async () => {
+      try {
+        const url = await getPdfFromServer(filePath, fileName);
+        if (!active || reportRequestId.current !== requestId) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        setReportPdfUrl(url);
+      } catch (error) {
+        if (!active || reportRequestId.current !== requestId) return;
+        console.error("Report PDF Load Error:", error);
+        setReportError(
+          error instanceof Error ? error.message : "Failed to load report PDF.",
+        );
+      } finally {
+        if (active && reportRequestId.current === requestId) {
+          setReportLoading(false);
+        }
+      }
+    };
+
+    void loadReport();
+    return () => {
+      active = false;
+    };
+  }, [reportRow, selectedReport, reportRetry]);
+
+  const retryReport = useCallback(() => {
+    setReportRetry((attempt) => attempt + 1);
+  }, []);
+
+  const handleReportPdfError = useCallback((error: Error) => {
+    setReportPdfUrl(null);
+    setReportLoading(false);
+    setReportError(error.message || "The selected PDF could not be displayed.");
   }, []);
 
   /* ---------------- FILTER ---------------- */
@@ -488,7 +583,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       throw new Error("Please upload a report before submitting.");
     }
     try {
-      console.log("save report", reportIds);
       await updateLabTestStatusAsync({
         lab_id: Number(activeRow.lab_id),
         status: "Completed",
@@ -772,6 +866,17 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
           setOpenPdf(false);
           setPdfUrl(null);
         }}
+      />
+      <LabReportViewerDialog
+        row={reportRow}
+        selectedReport={selectedReport}
+        pdfUrl={reportPdfUrl}
+        loading={reportLoading}
+        error={reportError}
+        onSelectReport={selectReport}
+        onRetry={retryReport}
+        onPdfError={handleReportPdfError}
+        onClose={closeReportViewer}
       />
       <LabAddTestDialog
         row={addTestRow}

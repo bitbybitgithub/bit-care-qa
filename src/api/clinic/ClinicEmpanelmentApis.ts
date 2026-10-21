@@ -2,26 +2,33 @@ import { emrAPI } from "../../services/EmrApi";
 
 //INTERFACES
 export interface MappedDoctor {
-  clinic_doctor_id: number;
-  clinic_id: number;
-  doctor_id: number;
-  mapping_is_active: boolean;
+  clinic_doctor_id?: number | string | null;
+  clinic_id?: number | string | null;
+  doctor_id: number | string;
+  mapping_is_active?: boolean | string | number | null;
   doctor_name: string;
-  qualification?: string;
-  specialized_in?: string;
-  license_no?: string;
-  signature_image_url?: string;
-  doctor_is_active: string | number | boolean;
-  experience?: number;
-  email?: string;
-  phone?: string;
-  address?: string;
-  pincode?: string;
-  city?: string;
-  district?: string;
-  state?: string;
-  profile_pic?: string;
-  doctor_code?: string;
+  name?: string;
+  qualification?: string | null;
+  specialized_in?: string | null;
+  specialization?: string | string[] | null;
+  license_no?: string | null;
+  signature_image_url?: string | null;
+  doctor_is_active?: string | number | boolean | null;
+  isActive?: string | number | boolean | null;
+  is_approved?: boolean | string | number | null;
+  approved_by?: string | null;
+  experience?: number | string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  pincode?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  profile_pic?: string | null;
+  doctor_code?: string | null;
+  consultation_fees?: number | string | null;
+  fees_duration?: number | string | null;
 }
 export interface MapDoctorClinicPayload {
   clinic_doctor_id?: number;
@@ -32,6 +39,21 @@ export interface MapDoctorClinicPayload {
   fees_duration: number;
   created_by?: string;
   modified_by?: string;
+}
+
+export interface UpdateDoctorClinicMappingPayload {
+  clinic_doctor_id: number;
+  is_active: "0" | "1";
+  consultation_fees?: number | null;
+  fees_duration?: number | null;
+  is_approved?: boolean;
+  approved_by?: string | null;
+}
+
+export interface UpdateDoctorClinicMappingResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
 }
 
 export interface MappedPharmacy {
@@ -103,7 +125,7 @@ export type SendReferralPayload =
   | LabReferralPayload
   | PharmacyReferralPayload;
 
-  export interface SendReferralResponse {
+export interface SendReferralResponse {
   referral_id: number;
   entity_type: number;
   created_at: string;
@@ -122,7 +144,6 @@ export interface MappedLab {
 
   status?: "Active" | "Inactive";
   is_patient_reffered?: boolean;
-
 }
 
 export interface UpdateDoctorStatusRequest {
@@ -137,21 +158,46 @@ export interface UpdateDoctorStatusResponse {
   success: boolean;
   message: string;
 }
+
 //API CALLS
 export async function getMappedDoctorApi(
-  clinicId: number,
+  clinicId: number | string,
 ): Promise<MappedDoctor[]> {
   const response = await emrAPI.post<{
     success: boolean;
     data: MappedDoctor[];
   }>("/clinics/get-doctor-by-clinicId", {
-    clinic_id: clinicId,
+    clinic_id: Number(clinicId),
   });
-    return response.data;
+  return response.data;
 }
+
+export async function getDoctorReqListApi(
+  clinicId: number | string,
+): Promise<MappedDoctor[]> {
+  const response = await emrAPI.post<{
+    success: boolean;
+    message?: string;
+    data: MappedDoctor[];
+  }>("/clinics/get-doctor-req-by-clinic", {
+    clinic_id: Number(clinicId),
+  });
+  return response.data;
+}
+
 export async function mapDoctorClinicApi(payload: MapDoctorClinicPayload) {
   const response = await emrAPI.post("/clinics/save-map-doctor-clinic", payload);
   return response;
+}
+
+export async function updateDoctorClinicMappingApi(
+  payload: UpdateDoctorClinicMappingPayload
+): Promise<UpdateDoctorClinicMappingResponse> {
+  const response = await emrAPI.post<UpdateDoctorClinicMappingResponse>(
+    "/clinics/update-map-doctor-clinic",
+    payload
+  );
+  return response.data || response;
 }
 
 export async function getDoctorFeesApi(

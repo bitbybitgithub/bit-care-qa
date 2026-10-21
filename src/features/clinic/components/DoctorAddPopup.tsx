@@ -53,6 +53,7 @@ interface Props {
   address: string;
   value?: boolean;
   setValue?: (v: boolean) => void;
+  submitText?: string;
 }
 
 const MiniSwitch = styled(Switch)(() => ({
@@ -102,14 +103,24 @@ const DoctorAddPopup = ({
   value,
   setValue,
   handleUpdate,
+  submitText,
 }: Props) => {
   useEffect(() => {
-    if (mode === "update" && doctor) {
-      setFee(doctor.consultation_fees?.toString() || "");
-      setDays(doctor.fees_duration?.toString() || "");
+    if (doctor) {
+      if (mode === "update") {
+        setFee(doctor.consultation_fees?.toString() || "");
+        setDays(doctor.fees_duration?.toString() || "");
 
-      if (setValue) {
-        setValue(doctor.is_active ?? true);
+        if (setValue) {
+          setValue(doctor.is_active ?? true);
+        }
+      } else {
+        if (doctor.consultation_fees) {
+          setFee(doctor.consultation_fees.toString());
+        }
+        if (doctor.fees_duration) {
+          setDays(doctor.fees_duration.toString());
+        }
       }
     }
   }, [doctor, mode]);
@@ -257,11 +268,16 @@ const DoctorAddPopup = ({
                 const num = Number(value);
                 if (value === "") {
                   setErrors((prev) => ({ ...prev, days: undefined }));
-                  return;}
-                if (num < 0 || num > 30) {setErrors((prev) => ({
-                    ...prev, days: "Days must be between 0 and 30",
+                  return;
+                }
+                if (num < 0 || num > 30) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    days: "Days must be between 0 and 30",
                   }));
-                } else {setErrors((prev) => ({ ...prev, days: undefined }));}
+                } else {
+                  setErrors((prev) => ({ ...prev, days: undefined }));
+                }
               }}
               InputProps={{
                 startAdornment: (
@@ -299,7 +315,7 @@ const DoctorAddPopup = ({
                 onClick={onSubmit}
                 className="normal-case px-6"
               >
-                {loading ? "Adding..." : "Add Doctor"}
+                {loading ? "Accepting..." : (submitText || "Accept Doctor")}
               </Button>
             )}
           </div>

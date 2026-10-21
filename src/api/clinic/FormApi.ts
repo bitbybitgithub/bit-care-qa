@@ -149,3 +149,32 @@ export const getBlogByIdApi = async (blogId: string) => {
   const response = await emrAPI.get<BlogByIdResponse>(`/blogs/${blogId}`);
   return response;
 };
+
+
+export const updateBlogApi = async (
+  blogId: string | number,
+  formData: BlogFormData,
+) => {
+  const blogData = {
+    clinic_id: formData.clinic_id,
+    title: formData.title,
+    short_description: formData.short_description,
+    content: formData.content,
+
+    featured_image_path: formData.featured_image_path,
+    featured_image_guid: formData.featured_image_guid,
+    featured_image_name: formData.featured_image_name,
+
+    category_id: formData.category_id,
+    status: formData.status,
+    modified_by: formData.modified_by,
+  };
+
+  const response = await emrAPI.put<any>(
+    `/blogs/${blogId}`,
+    blogData,
+  );
+
+  return response;
+};
+

@@ -20,13 +20,18 @@ import type { BlogFormData } from "../../types/types";
 // Use your existing session function
 import { getSession } from "../../context/sessions/userSession";
 import bitcarelogo from "../../assets/BitCareLogo.png";
-import {
-  createBlogApi,
-  uploadBlogImageApi,
-} from "../../api";
+import {createBlogApi,uploadBlogImageApi,getBlogByIdApi,updateBlogApi} from "../../api";
+import { useParams } from "react-router-dom";
+import { BASE_URL } from "../../services/EmrApi";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+interface BlogFormProps {
+  blogId?: string;
+}
 
 const BlogForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { blogId } = useParams<{ blogId: string }>();
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
     short_description: "",
@@ -55,23 +60,125 @@ const BlogForm: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // ---------------------------------------------------------
-  // Get logged-in user from session
-  // ---------------------------------------------------------
 
-  useEffect(() => {
-    const sessionUser = getSession("user");
+      
+    // ---------------------------------------------------------
+    // Get logged-in user from session and load blog for editing
+    // ---------------------------------------------------------
 
-    console.log(" AJ AJ AJA AJ ", sessionUser);
+   
+      useEffect(() => {
+        const sessionUser = getSession("user");
 
-    if (sessionUser) {
-      setFormData((prev) => ({
-        ...prev,
-        clinic_id: sessionUser.clinic_id ?? "",
-        created_by: sessionUser.user_id ?? "",
-      }));
-    }
-  }, []);
+        console.log("AJ AJ AJA AJ", sessionUser);
+
+        if (sessionUser) {
+          setFormData((prev) => ({
+            ...prev,
+            clinic_id: sessionUser.clinic_id ?? "",
+            created_by: sessionUser.user_id ?? "",
+            modified_by: sessionUser.user_id ?? null,
+          }));
+        }
+
+        // Load existing blog when Edit is clicked
+        const loadBlog = async () => {
+          if (!blogId) return;
+
+          try {
+            const response = await getBlogByIdApi(blogId);
+
+            console.log("BLOG DETAILS RESPONSE:", response);
+
+            // Your API returns the blog inside response.data
+            const blog = response.data;
+
+            if (!blog) {
+              toast.error("Blog details not found.");
+              return;
+            }
+
+            // Populate the existing form with blog details
+            setFormData((prev) => ({
+              ...prev,
+              title: blog.title ?? "",
+              short_description: blog.short_description ?? "",
+              content: blog.content ?? "",
+              category_id: blog.category_id
+                ? Number(blog.category_id)
+                : "",
+              status: blog.status ?? true,
+
+              clinic_id: blog.clinic_id
+                ? Number(blog.clinic_id)
+                : prev.clinic_id,
+
+              created_by: blog.created_by
+                ? Number(blog.created_by)
+                : prev.created_by,
+
+              modified_by: sessionUser?.user_id ?? null,
+
+              featured_image_path: blog.featured_image_path ?? "",
+              featured_image_guid: blog.featured_image_guid ?? "",
+              featured_image_name: blog.featured_image_name ?? "",
+            }));
+
+            // Display the existing featured image
+            // setImagePreview(
+            //   blog.featured_image_path
+            //     ? `${BASE_URL}/${blog.featured_image_path.replace(/\\/g, "/")}`
+            //     : ""
+            // );
+
+            
+              
+            const imageFileName = (
+              blog.featured_image_guid ||
+              blog.featured_image_path ||
+              ""
+            ).split(/[\\/]/).pop();
+
+            setImagePreview(
+              imageFileName
+                ? `${BASE_URL}/blog-images/${encodeURIComponent(imageFileName)}`
+                : ""
+            );
+
+
+
+            // No new image has been selected yet
+            setFeaturedImage(null);
+
+            console.log("BLOG LOADED FOR EDIT:", blog);
+          } catch (error) {
+            console.error("Failed to load blog:", error);
+            toast.error("Failed to load blog details.");
+          }
+        };
+
+        loadBlog();
+      }, [blogId]);
+
+
+
+  // // ---------------------------------------------------------
+  // // Get logged-in user from session
+  // // ---------------------------------------------------------
+
+  // useEffect(() => {
+  //   const sessionUser = getSession("user");
+
+  //   console.log(" AJ AJ AJA AJ ", sessionUser);
+
+  //   if (sessionUser) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       clinic_id: sessionUser.clinic_id ?? "",
+  //       created_by: sessionUser.user_id ?? "",
+  //     }));
+  //   }
+  // }, []);
 
   // ---------------------------------------------------------
   // Quill configuration
@@ -249,7 +356,11 @@ const BlogForm: React.FC = () => {
       newErrors.created_by = "Logged-in user information is missing.";
     }
 
-    if (!featuredImage) {
+    // if (!featuredImage) {
+    //   newErrors.featured_image = "Blog banner is required.";
+    // }
+
+    if (!featuredImage && !formData.featured_image_guid) {
       newErrors.featured_image = "Blog banner is required.";
     }
 
@@ -262,69 +373,144 @@ const BlogForm: React.FC = () => {
   // Save Blog
   // ---------------------------------------------------------
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    const updatedFormData = {
-      ...formData,
-      status: true,
-    };
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    setFormData(updatedFormData);
-
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      console.log("BLOG DATA:", updatedFormData);
-      console.log("FEATURED IMAGE:", featuredImage);
-
-      // Step 1: Upload featured image
-      const uploadResponse = await uploadBlogImageApi(formData.featured_image);
-
-      console.log("Upload Response:", uploadResponse);
-      console.log("Files:", uploadResponse.files);
-      console.log("First File:", uploadResponse.files[0]);
-
-      // Step 2: Create blog data with uploaded image details
-      const blogData = {
-        ...updatedFormData,
-
-        featured_image_path:
-          uploadResponse.files[0].path +
-          "\\" +
-          uploadResponse.files[0].guid_name,
-
-        featured_image_guid: uploadResponse.files[0].guid_name,
-
-        featured_image_name: uploadResponse.files[0].file_name,
+      const updatedFormData = {
+        ...formData,
+        status: true,
       };
 
-      console.log("FINAL BLOG DATA:", blogData);
+      setFormData(updatedFormData);
 
-      // Step 3: Save blog
-      const res = await createBlogApi(blogData);
+      if (!validateForm()) {
+        return;
+      }
 
-      console.log("BLOG API RESPONSE:", res);
+      try {
+        console.log("BLOG DATA:", updatedFormData);
+        console.log("FEATURED IMAGE:", featuredImage);
 
-      toast.success(
-        res?.data?.message || "Blog published successfully."
-      );
+        // Step 1: Keep existing image details unless a new image is selected
+        let blogData = {
+          ...updatedFormData,
+        };
 
-      handleReset();
-    } catch (error: any) {
-      console.error("BLOG CREATE ERROR:", error);
+        // Step 2: Upload image only when a new image is selected
+        if (featuredImage) {
+          const uploadResponse = await uploadBlogImageApi(featuredImage);
 
-      const msg =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "Something went wrong while saving the blog.";
+          console.log("Upload Response:", uploadResponse);
+          console.log("Files:", uploadResponse.files);
 
-      toast.error(msg);
-    }
-  };
+          const uploadedFile = uploadResponse.files[0];
+
+          blogData = {
+            ...updatedFormData,
+            featured_image_path:
+              uploadedFile.path + "\\" + uploadedFile.guid_name,
+            featured_image_guid: uploadedFile.guid_name,
+            featured_image_name: uploadedFile.file_name,
+          };
+        }
+
+        console.log("FINAL BLOG DATA:", blogData);
+
+        // Step 3: Create or update the blog
+        const res = blogId
+          ? await updateBlogApi(blogId, blogData)
+          : await createBlogApi(blogData);
+
+        console.log("BLOG API RESPONSE:", res);
+
+        toast.success(
+          res?.data?.message ||
+            (blogId
+              ? "Blog updated successfully."
+              : "Blog published successfully.")
+        );
+
+        navigate("/clinic/BlogTabs");
+
+        handleReset();
+      } catch (error: any) {
+        console.error("BLOG SAVE ERROR:", error);
+
+        const msg =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "Something went wrong while saving the blog.";
+
+        toast.error(msg);
+      }
+    };
+
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   const updatedFormData = {
+  //     ...formData,
+  //     status: true,
+  //   };
+
+  //   setFormData(updatedFormData);
+
+  //   if (!validateForm()) {
+  //     return;
+  //   }
+
+  //   try {
+  //     console.log("BLOG DATA:", updatedFormData);
+  //     console.log("FEATURED IMAGE:", featuredImage);
+
+  //     // Step 1: Upload featured image
+  //     const uploadResponse = await uploadBlogImageApi(formData.featured_image);
+
+  //     console.log("Upload Response:", uploadResponse);
+  //     console.log("Files:", uploadResponse.files);
+  //     console.log("First File:", uploadResponse.files[0]);
+
+  //     // Step 2: Create blog data with uploaded image details
+  //     const blogData = {
+  //       ...updatedFormData,
+
+  //       featured_image_path:
+  //         uploadResponse.files[0].path +
+  //         "\\" +
+  //         uploadResponse.files[0].guid_name,
+
+  //       featured_image_guid: uploadResponse.files[0].guid_name,
+
+  //       featured_image_name: uploadResponse.files[0].file_name,
+  //     };
+
+  //     console.log("FINAL BLOG DATA:", blogData);
+
+  //     // Step 3: Save blog
+  //     const res = await createBlogApi(blogData);
+
+  //     console.log("BLOG API RESPONSE:", res);
+
+  //     toast.success(
+  //       res?.data?.message || "Blog published successfully."
+  //     );
+
+  //     handleReset();
+  //   } catch (error: any) {
+  //     console.error("BLOG CREATE ERROR:", error);
+
+  //     const msg =
+  //       error?.response?.data?.message ||
+  //       error?.response?.data?.error ||
+  //       error?.message ||
+  //       "Something went wrong while saving the blog.";
+
+  //     toast.error(msg);
+  //   }
+  // };
 
 
   // ---------------------------------------------------------
@@ -440,95 +626,7 @@ const BlogForm: React.FC = () => {
                 />
               </Grid>
 
-              {/* Category */}
-              {/* 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl
-                  fullWidth
-                  error={!!errors.category_id}
-                   size="small"
-                   sx={{
-                    "& .MuiInputBase-root": {
-                        backgroundColor: "#ffffff",
-                    },}}
-                >
-                  <InputLabel>Category</InputLabel>
-
-                  <Select
-                    value={formData.category_id}
-                    label="Category"
-                    onChange={(e) =>
-                      handleSelectChange(e, "category_id")
-                    }
-                  >
-                    <MenuItem value={1}>
-                      Diabetes
-                    </MenuItem>
-
-                    <MenuItem value={2}>
-                      Cardiology
-                    </MenuItem>
-
-                    <MenuItem value={3}>
-                      Nutrition
-                    </MenuItem>
-                  </Select>
-
-                  {errors.category_id && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ ml: 2 }}
-                    >
-                      {errors.category_id}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid> */}
-
-              {/* Author */}
-
-              {/* <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl
-                  fullWidth
-                  error={!!errors.author_id}
-                  size="small"
-                   sx={{
-                    "& .MuiInputBase-root": {
-                        backgroundColor: "#ffffff",
-                    },}}
-                >
-                  <InputLabel>
-                    Author / Doctor
-                  </InputLabel>
-
-                  <Select
-                    value={formData.author_id}
-                    label="Author / Doctor"
-                    onChange={(e) =>
-                      handleSelectChange(e, "author_id")
-                    }
-                  >
-                    <MenuItem value={25}>
-                      Dr. ABC
-                    </MenuItem>
-
-                    <MenuItem value={26}>
-                      Dr. XYZ
-                    </MenuItem>
-                  </Select>
-
-                  {errors.author_id && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ ml: 2 }}
-                    >
-                      {errors.author_id}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid> */}
+              
             </Grid>
           </CardContent>
         </Card>
@@ -651,9 +749,9 @@ const BlogForm: React.FC = () => {
           }}
         >
           <CardContent>
-            <Typography variant="h6" fontWeight={600} mb={2}>
+            {/* <Typography variant="h6" fontWeight={600} mb={2}>
               Publishing
-            </Typography>
+            </Typography> */}
 
             <Grid container spacing={3}>
 
@@ -694,7 +792,7 @@ const BlogForm: React.FC = () => {
 
               {/* Status */}
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              {/* <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl
                   fullWidth
                   size="small"
@@ -714,33 +812,7 @@ const BlogForm: React.FC = () => {
                     <MenuItem value="published">Published</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-
-              {/* Published Date */}
-
-              {/* {formData.status && (
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                   sx={{
-                    "& .MuiInputBase-root": {
-                        backgroundColor: "#ffffff",
-                    },}}
-                    label="Published Date"
-                    value={
-                      formData.published_at
-                        ? new Date(
-                            formData.published_at
-                          ).toLocaleString()
-                        : ""
-                    }
-                    InputProps={{
-                      readOnly: true,
-                    }}
-                  />
-                </Grid>
-              )} */}
+              </Grid> */}
             </Grid>
           </CardContent>
         </Card>

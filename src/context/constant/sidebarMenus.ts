@@ -35,6 +35,7 @@ export const SIDEBAR_MENUS: Record<
       },
       { title: "Offers", link: "/clinic/offers", icon: FaGift },
       { title: "Blog", link: "/clinic/blog", icon: FaGift },
+      { title: "BlogTabs", link: "/clinic/BlogTabs", icon: FaGift },
       // { title: "Blog List", link: "/clinic/bloglist", icon: FaGift },
       { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
     ],

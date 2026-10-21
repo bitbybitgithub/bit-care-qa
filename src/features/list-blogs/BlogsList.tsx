@@ -11,8 +11,8 @@ import {
 
 import { getBlogListApi, getBlogByIdApi } from "../../api";
 import type { BlogFormData } from "../../types/types";
-import { useNavigate, useParams } from "react-router-dom";
-import { BASE_URL } from "../../services/EmrApi";
+import { useNavigate, useParams  } from "react-router-dom";
+import EditNoteIcon from '@mui/icons-material/EditNote';
 
 // interface Blog {
 //   blog_id: number;
@@ -186,7 +186,8 @@ const BlogsList: React.FC = () => {
         >
           <Box
             component="img"
-            src={`${BASE_URL}/blog-images/${blog.featured_image_guid}`}
+            // src={`https://cliniccareapi.bitbybitsolutions.co.in/api/blog-images/${blog.featured_image_guid}`}
+            src={`http://localhost:8989/api/blog-images/${blog.featured_image_guid}`}
             alt={blog.title}
             sx={{
               width: "100%",
@@ -268,18 +269,19 @@ const BlogsList: React.FC = () => {
 
       {/* BACK TO BLOGS */}
 
-      {blogId && (
-        <Box
-          sx={{
-            mb: 1,
-          }}
-        >
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/bloglist")}
+        {blogId && (
+            <Box
             sx={{
-              color: "text.secondary",
-              borderColor: "secondary",
+                mb: 1,
+                
+            }}
+            >
+            <Button
+                variant="outlined"
+                onClick={() => navigate("/clinic/BlogTabs")}
+                sx={{
+                color: "text.secondary",
+                borderColor: "secondary",
             }}
           >
             ← Back to Blogs
@@ -438,6 +440,9 @@ const BlogsList: React.FC = () => {
                     sx={{
                       marginTop: "auto",
                       paddingTop: "18px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                     }}
                   >
                     <Typography
@@ -451,6 +456,16 @@ const BlogsList: React.FC = () => {
                     >
                       Read Article →
                     </Typography>
+                    
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<EditNoteIcon />}
+                      onClick={() => {
+                        navigate(`/clinic/BlogTabs/blog/edit/${blog.blog_id}`);
+                      }}
+                    >
+                    </Button>
                   </Box>
                 </CardContent>
               </Card>

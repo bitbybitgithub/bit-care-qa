@@ -27,6 +27,7 @@ import BlogsList from "../features/list-blogs/BlogsList";
 import ClinicSettings from "../components/common/EstablishmentSettings/Clinicsettings";
 import LabSettings from "../components/common/EstablishmentSettings/Labsettings";
 import PharmacySettings from "../components/common/EstablishmentSettings/Pharmacysettings";
+import BlogTabs from "../features/admin/BlogTabs";
 const Router = [
   {
     path: "/",
@@ -52,6 +53,11 @@ const Router = [
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
       { path: "/clinic/offers", element: <OffersDiscount /> },
       { path: "/clinic/blog", element: <Blogs /> },
+      { path: "/clinic/BlogTabs", element: <BlogTabs /> },
+      {
+        path: "/clinic/BlogTabs/blog/edit/:blogId",
+        element: <Blogs />,
+      },
       { path: "/clinic/bloglist", element: <BlogsList /> },
       { path: "/clinic/settings", element: <ClinicSettings /> },
 

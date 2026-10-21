@@ -19,16 +19,23 @@ export const uploadPrescriptionFile = async (
   documentType: PrescriptionDocumentType = "PRESCRIPTIONS_BITCARE"
 ): Promise<UploadPrescriptionResponse> => {
   const formData = new FormData();
-  formData.append("file", file);
+
   formData.append("document_type", documentType);
+  formData.append("file", file, file.name);
 
   const response = await axios.post<UploadPrescriptionResponse>(
     `${BASE_URL}/doctors/upload-prescription`,
-    formData
+    formData,
+    {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "multipart/form-data",
+      },
+    }
   );
+
   return response.data;
 };
-
 // Backwards compatibility alias
 export const uploadPrescriptionReport = uploadPrescriptionFile;
 

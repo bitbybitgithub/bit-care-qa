@@ -6,6 +6,7 @@ import AvatarWithStatus from "../../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
+  clinic_doctor_id?: number;
   name: string;
   logo?: string;
   email?: string;
@@ -17,13 +18,21 @@ interface PartnerItem {
   specialization?: string;
   qualification?: string;
   experience?: number;
+  doctor_code?: string;
+  consultation_fees?: number;
+  fees_duration?: number;
   alreadyMapped?: boolean;
 }
 
 interface Props {
   data: PartnerItem[];
   placeholder: string;
-  onSubmit: (doctorId: number, fee: number, days: number) => Promise<void>;
+  onSubmit: (
+    doctorId: number,
+    fee: number,
+    days: number,
+    clinicDoctorId?: number
+  ) => Promise<void>;
 }
 
 const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
@@ -34,10 +43,10 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
   const [days, setDays] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const filtered = data.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = data?.filter((item) =>
+    (item.name || "").toLowerCase().includes(search.toLowerCase())
   );
-  const selectedDoctor = data.find((d) => d.id === selectedId);
+  const selectedDoctor = data?.find((d) => d.id === selectedId);
   const selectedDoctorAddress = selectedDoctor
     ? [selectedDoctor.address, selectedDoctor.city, selectedDoctor.state, selectedDoctor.pincode]
         .filter(Boolean)
@@ -46,6 +55,17 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
 
   const handleSelectDoctor = (id: number, alreadyMapped?: boolean) => {
     if (alreadyMapped) return;
+    const doc = data?.find((d) => d.id === id);
+    if (doc?.consultation_fees) {
+      setFee(doc.consultation_fees.toString());
+    } else {
+      setFee("");
+    }
+    if (doc?.fees_duration) {
+      setDays(doc.fees_duration.toString());
+    } else {
+      setDays("");
+    }
     setSelectedId(id);
   };
 
@@ -77,7 +97,12 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
     }
     try {
       setLoading(true);
-      await onSubmit(selectedId, feeNum, daysNum);
+      await onSubmit(
+        selectedId,
+        feeNum,
+        daysNum,
+        selectedDoctor?.clinic_doctor_id
+      );
       handleClose();
     } finally {
       setLoading(false);
@@ -102,7 +127,7 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {filtered.map((item) => (
+        {filtered?.map((item) => (
           <div
             key={item.id}
             onClick={() => handleSelectDoctor(item.id, item.alreadyMapped)}
@@ -121,7 +146,6 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
         ? "cursor-not-allowed"
         : "cursor-pointer hover:shadow-[var(--shadow-lg)]"
     }
- 
   `}
           >
             <div className="flex items-start gap-3 px-3 py-3 bg-[var(--color-primary)] text-white relative">
@@ -133,6 +157,11 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
               />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+                {item.doctor_code && (
+                  <span className="text-[10px] text-white/80 block">
+                    {item.doctor_code}
+                  </span>
+                )}
 
                 <div className="flex flex-wrap gap-1 mt-1 text-[10px]">
                   {item.specialization && (
@@ -171,9 +200,9 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
                 </div>
               )}
 
-              {item.address && (
+              {(item.address || item.city || item.state || item.pincode) && (
                 <div className="flex items-start gap-2">
-                  <MdLocationOn className="text-[var(--color-primary)]  shrink-0"/>
+                  <MdLocationOn className="text-[var(--color-primary)] shrink-0"/>
                   <p>
                     {[item.address, item.city, item.state, item.pincode]
                       .filter(Boolean)
@@ -185,13 +214,13 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
 
             <div className="px-4 pb-3 mt-auto">
               <span
-                className={`inline-block px-3 py-1 rounded-full text-xs ${
+                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                   item.alreadyMapped
                     ? "bg-red-100 text-red-600"
-                    : "bg-gray-100 text-[var(--color-text)]"
+                    : "bg-emerald-100 text-emerald-700"
                 }`}
               >
-                {item.alreadyMapped ? "Already Added" : "Available"}
+                {item.alreadyMapped ? "Already Added" : "Accept Request"}
               </span>
             </div>
           </div>
@@ -212,6 +241,7 @@ const MapDoctorToClinic = ({ data, placeholder, onSubmit }: Props) => {
           errors={errors}
           setErrors={setErrors}
           address={selectedDoctorAddress}
+          submitText="Accept Doctor"
         />
       )}
     </div>

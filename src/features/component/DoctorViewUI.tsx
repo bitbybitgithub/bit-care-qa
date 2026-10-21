@@ -12,7 +12,7 @@ import {
   MdOutlineEditNote,
 } from "react-icons/md";
 import DoctorAddPopup from "../clinic/components/DoctorAddPopup";
-import {mapDoctorClinicApi} from "../../api";
+import { updateDoctorClinicMappingApi } from "../../api";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { toast } from "react-toastify";
 import AvatarWithStatus from "../../components/common/AvatarWithStatus";
@@ -107,15 +107,15 @@ const DoctorViewUI = ({
       setLoading(true);
 
       const payload = {
-        clinic_doctor_id  : Number(selectedDoctor.clinic_doctor_id),
-        clinic_id: Number(clinicId),
-        doctor_id: selectedDoctor.id,
-        is_active: value ? "1" : "0",
+        clinic_doctor_id: Number(selectedDoctor.clinic_doctor_id),
+        is_active: (value ? "1" : "0") as "0" | "1",
         consultation_fees: feeNum,
         fees_duration: daysNum,
-        modified_by: String(userId),
+        is_approved: true,
+        approved_by: String(userId || ""),
       };
-      await mapDoctorClinicApi(payload);
+      await updateDoctorClinicMappingApi(payload);
+      toast.success("Doctor mapping updated successfully");
       handleClose();
     } catch (error) {
       console.error(error);
@@ -231,7 +231,7 @@ const sortedData = [...data].sort((a, b) => {
                   </div>
                 )}
 
-                {item.address && (
+                {(item.address || item.city || item.state) && (
                   <div className="flex items-start gap-2">
                     <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
                     <span>

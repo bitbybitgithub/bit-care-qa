@@ -2,35 +2,54 @@ import { emrAPI } from "../../services/EmrApi";
 
 //interfaces
 export interface DoctorList {
-  doctor_id: number;
-  clinic_id: number;
-  name: string;
-  qualification?: string;
-  specialization?: string;
-  license_no?: string;
-  isActive: string | number | boolean;
-  experience?: number;
-  email?: string;
-  phone?: string;
-  profile_pic?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
-  consultation_fees?: number;
-  fees_duration?: number;
+  doctor_id: number | string;
+  clinic_id?: number | string | null;
+  clinic_doctor_id?: number | string | null;
+  name?: string;
+  doctor_name?: string;
+  qualification?: string | null;
+  specialization?: string | string[] | null;
+  specialized_in?: string | null;
+  license_no?: string | null;
+  signature_image_url?: string | null;
+  isActive?: string | number | boolean;
+  doctor_is_active?: string | number | boolean;
+  mapping_is_active?: string | number | boolean;
+  experience?: number | string | null;
+  email?: string | null;
+  phone?: string | null;
+  profile_pic?: string | null;
+  address?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  consultation_fees?: number | string | null;
+  fees_duration?: number | string | null;
+  doctor_code?: string | null;
 }
 
 export interface MappedDoctorList {
-  doctor_id: number;
-  name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  doctor_code?: string;
-};
+  clinic_doctor_id?: number | string;
+  clinic_id?: number | string;
+  doctor_id: number | string;
+  doctor_name?: string;
+  name?: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  doctor_code?: string | null;
+  specialized_in?: string | null;
+  qualification?: string | null;
+  experience?: number | string | null;
+  consultation_fees?: number | string | null;
+  fees_duration?: number | string | null;
+  mapping_is_active?: string | number | boolean;
+}
 
 export interface DeleteDoctorRequest {
   clinic_id: number;
@@ -60,7 +79,6 @@ export const getDoctorListApi = async (): Promise<DoctorList[]> => {
   const response = await emrAPI.get<{ data: DoctorList[] }>("/doctors/getdoctorlist");
   return response.data;
 };
-
 
 export const deleteDoctorApi = async (
   payload: DeleteDoctorRequest

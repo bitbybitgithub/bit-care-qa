@@ -11,21 +11,8 @@ import {
 
 import { getBlogListApi, getBlogByIdApi } from "../../api";
 import type { BlogFormData } from "../../types/types";
-import { useNavigate, useParams  } from "react-router-dom";
-import EditNoteIcon from '@mui/icons-material/EditNote';
-
-// interface Blog {
-//   blog_id: number;
-//   clinic_id: number;
-//   title: string;
-//   short_description: string;
-//   featured_image_path: string;
-//   featured_image_guid: string;
-//   featured_image_name: string;
-//   category_id: number;
-//   status: boolean;
-//   created_date: string;
-// }
+import { useNavigate, useParams } from "react-router-dom";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 
 const BlogsList: React.FC = () => {
   const categoryNames: Record<number, string> = {
@@ -33,6 +20,7 @@ const BlogsList: React.FC = () => {
     2: "Cardiology",
     3: "Nutrition",
   };
+
   const navigate = useNavigate();
   const { blogId } = useParams();
 
@@ -42,30 +30,6 @@ const BlogsList: React.FC = () => {
   const [blog, setBlog] = useState<BlogFormData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-
-  //   useEffect(() => {
-  //     const fetchBlogs = async () => {
-  //       try {
-  //         setLoading(true);
-  //         setError("");
-
-  //         const response = await getBlogListApi();
-
-  //         console.log("BLOG LIST RESPONSE:", response);
-  //         console.log("BLOG LIST DATA:", response.data);
-
-  //         setBlogs(response.data);
-  //       } catch (error) {
-  //         console.error("GET BLOG LIST ERROR:", error);
-
-  //         setError("Unable to load blogs.");
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-
-  //     fetchBlogs();
-  //   }, []);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -90,7 +54,6 @@ const BlogsList: React.FC = () => {
         }
       } catch (error) {
         console.error("GET BLOG ERROR:", error);
-
         setError("Unable to load blog.");
       } finally {
         setLoading(false);
@@ -103,20 +66,37 @@ const BlogsList: React.FC = () => {
   return (
     <Box
       sx={{
+        minHeight: "100vh",
+        width: "100%",
         margin: "0 auto",
         padding: {
-          xs: "20px",
-          md: "35px 25px",
+         xs: "12px 16px",
+          sm: "16px 24px",
+          md: "20px 30px",
         },
+        boxSizing: "border-box",
         backgroundColor: "#ffffff",
       }}
     >
       {/* PAGE HEADER */}
-
       <Box
         sx={{
           textAlign: "center",
-          mb: 2,
+          mb: { xs: 4, md: 5 },
+          animation: "blogHeaderFade 0.6s ease-out both",
+          "@keyframes blogHeaderFade": {
+            from: {
+              opacity: 0,
+              transform: "translateY(12px)",
+            },
+            to: {
+              opacity: 1,
+              transform: "translateY(0)",
+            },
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+          },
         }}
       >
         <Typography
@@ -124,10 +104,13 @@ const BlogsList: React.FC = () => {
           fontWeight={700}
           sx={{
             fontSize: {
-              xs: "30px",
+              xs: "28px",
+              sm: "34px",
               md: "40px",
             },
-            mb: 1,
+            mb: 0,
+            color: "#202124",
+            letterSpacing: "-0.6px",
           }}
         >
           Health & Wellness Blogs
@@ -135,11 +118,12 @@ const BlogsList: React.FC = () => {
 
         <Typography
           variant="body1"
-          color="text.primary"
           sx={{
             maxWidth: "650px",
             margin: "0 auto",
-            fontSize: "16px",
+            fontSize: "15px",
+            lineHeight: 1.8,
+            color: "#626262",
           }}
         >
           Explore our latest health articles, expert insights, and helpful
@@ -148,7 +132,6 @@ const BlogsList: React.FC = () => {
       </Box>
 
       {/* LOADING */}
-
       {loading && (
         <Typography textAlign="center" color="text.secondary">
           Loading blogs...
@@ -156,7 +139,6 @@ const BlogsList: React.FC = () => {
       )}
 
       {/* ERROR */}
-
       {!loading && error && (
         <Typography textAlign="center" color="error">
           {error}
@@ -164,7 +146,6 @@ const BlogsList: React.FC = () => {
       )}
 
       {/* NO BLOGS */}
-
       {!loading && !error && !blogId && blogs.length === 0 && (
         <Typography textAlign="center" color="text.secondary">
           No blogs available.
@@ -172,36 +153,40 @@ const BlogsList: React.FC = () => {
       )}
 
       {/* BLOG DETAILS */}
-
       {!loading && !error && blogId && blog && (
         <Card
           sx={{
             maxWidth: "1000px",
             margin: "0 auto",
             backgroundColor: "#ffffff",
-            borderRadius: "16px",
+            borderRadius: "14px",
             overflow: "hidden",
-            boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
+            boxShadow: "0 5px 22px rgba(0,0,0,0.08)",
           }}
         >
           <Box
             component="img"
-            // src={`https://cliniccareapi.bitbybitsolutions.co.in/api/blog-images/${blog.featured_image_guid}`}
             src={`http://localhost:8989/api/blog-images/${blog.featured_image_guid}`}
             alt={blog.title}
             sx={{
               width: "100%",
-              height: "400px",
+              height: {
+                xs: "230px",
+                sm: "340px",
+                md: "440px",
+              },
               objectFit: "cover",
               display: "block",
+              backgroundColor: "#f3f4f6",
             }}
           />
 
           <CardContent
             sx={{
               padding: {
-                xs: "20px",
-                md: "40px",
+                xs: "22px",
+                sm: "30px",
+                md: "42px 48px",
               },
               backgroundColor: "#ffffff",
             }}
@@ -211,7 +196,8 @@ const BlogsList: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 1.5,
+                flexWrap: "wrap",
+                mb: 2,
                 gap: 1,
               }}
             >
@@ -220,10 +206,16 @@ const BlogsList: React.FC = () => {
                 size="small"
                 sx={{
                   fontWeight: 600,
-                  mb: 2,
+                  borderRadius: "6px",
+                  backgroundColor: "#f1f3f5",
+                  color: "#424242",
                 }}
               />
-              <Typography variant="body2" color="text.primary" sx={{ mb: 2 }}>
+
+              <Typography
+                variant="body2"
+                sx={{ color: "#777777" }}
+              >
                 {blog.created_date
                   ? new Date(blog.created_date).toLocaleDateString("en-GB")
                   : ""}
@@ -236,7 +228,12 @@ const BlogsList: React.FC = () => {
               sx={{
                 mb: 2,
                 lineHeight: 1.3,
-                color: "#000000",
+                fontSize: {
+                  xs: "26px",
+                  sm: "31px",
+                  md: "36px",
+                },
+                color: "#202124",
               }}
             >
               {blog.title}
@@ -246,8 +243,13 @@ const BlogsList: React.FC = () => {
               variant="h6"
               sx={{
                 mb: 3,
-                lineHeight: 1.6,
-                color: "#000000",
+                lineHeight: 1.8,
+                fontSize: {
+                  xs: "16px",
+                  md: "18px",
+                },
+                fontWeight: 400,
+                color: "#555555",
               }}
             >
               {blog.short_description}
@@ -255,9 +257,23 @@ const BlogsList: React.FC = () => {
 
             <Box
               sx={{
-                color: "#000000",
-                lineHeight: 1.8,
+                color: "#333333",
+                lineHeight: 1.9,
+                fontSize: "16px",
                 backgroundColor: "#ffffff",
+                overflowWrap: "anywhere",
+                "& img": {
+                  maxWidth: "100%",
+                  height: "auto",
+                },
+                "& h2, & h3": {
+                  color: "#202124",
+                  mt: 3,
+                  mb: 1.5,
+                },
+                "& p": {
+                  mb: 2,
+                },
               }}
               dangerouslySetInnerHTML={{
                 __html: blog.content,
@@ -268,20 +284,25 @@ const BlogsList: React.FC = () => {
       )}
 
       {/* BACK TO BLOGS */}
-
-        {blogId && (
-            <Box
+      {blogId && (
+        <Box
+          sx={{
+            maxWidth: "1000px",
+            margin: "20px auto 0",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/clinic/BlogTabs")}
             sx={{
-                mb: 1,
-                
-            }}
-            >
-            <Button
-                variant="outlined"
-                onClick={() => navigate("/clinic/BlogTabs")}
-                sx={{
-                color: "text.secondary",
-                borderColor: "secondary",
+              color: "#555555",
+              borderColor: "#d5d5d5",
+              borderRadius: "7px",
+              textTransform: "none",
+              "&:hover": {
+                borderColor: "#777777",
+                backgroundColor: "#f8f8f8",
+              },
             }}
           >
             ← Back to Blogs
@@ -290,9 +311,16 @@ const BlogsList: React.FC = () => {
       )}
 
       {/* BLOG CARDS */}
-
       {!loading && !error && !blogId && blogs.length > 0 && (
-        <Grid container spacing={3}>
+        <Grid
+          container
+          spacing={{ xs: 3, md: 3.5 }}
+          sx={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            alignItems: "stretch",
+          }}
+        >
           {blogs.map((blog, index) => (
             <Grid
               key={blog.blog_id ?? index}
@@ -307,126 +335,124 @@ const BlogsList: React.FC = () => {
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  borderRadius: "16px",
+                  borderRadius: "12px",
                   overflow: "hidden",
-                  border: "1px solid #e5e7eb",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
-                  transition: "all 0.25s ease",
+                  border: "1px solid #eeeeee",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.07)",
+
+                  animation: "blogCardFade 0.55s ease-out both",
+                  animationDelay: `${Math.min(index * 100, 500)}ms`,
+
+                  transition:
+                    "transform 0.3s ease, box-shadow 0.3s ease",
 
                   "&:hover": {
                     transform: "translateY(-5px)",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.14)",
+                    boxShadow: "0 12px 26px rgba(0,0,0,0.13)",
+                  },
+
+                  "@keyframes blogCardFade": {
+                    from: {
+                      opacity: 0,
+                      transform: "translateY(15px)",
+                    },
+                    to: {
+                      opacity: 1,
+                      transform: "translateY(0)",
+                    },
+                  },
+
+                  "@media (prefers-reduced-motion: reduce)": {
+                    animation: "none",
+                    transition: "none",
+                    "&:hover": {
+                      transform: "none",
+                    },
                   },
                 }}
               >
                 {/* BLOG IMAGE */}
-
                 <Box
-                  component="img"
-                  src={`${BASE_URL}/blog-images/${blog.featured_image_guid}`}
-                  alt={blog.title}
                   sx={{
                     width: "100%",
-                    height: "210px",
-                    objectFit: "cover",
-                    display: "block",
+                    height: {
+                      xs: "240px",
+                      sm: "250px",
+                      md: "290px",
+                    },
+                    overflow: "hidden",
+                    backgroundColor: "#f3f4f6",
+                    flexShrink: 0,
+                    "&:hover img": {
+                      transform: "scale(1.045)",
+                    },
+                    "@media (prefers-reduced-motion: reduce)": {
+                      "&:hover img": {
+                        transform: "none",
+                      },
+                    },
                   }}
-                />
+                >
+                  <Box
+                    component="img"
+                    src={`http://localhost:8989/api/blog-images/${blog.featured_image_guid}`}
+                    alt={blog.title}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                      transition: "transform 0.5s ease",
+                    }}
+                  />
+                </Box>
 
+                {/* BLOG CONTENT */}
                 <CardContent
                   sx={{
+                    position: "relative",
+                    zIndex: 1,
+                    width: "calc(100% - 36px)",
+                    boxSizing: "border-box",
+                    alignSelf: "center",
+                    marginTop: { xs: "-48px", md: "-58px" },
                     display: "flex",
                     flexDirection: "column",
                     flexGrow: 1,
-                    padding: "20px",
+                    padding: "18px 18px 22px",
                     backgroundColor: "#ffffff",
+                    borderRadius: "10px",
+                    boxShadow: "0 5px 18px rgba(0,0,0,0.10)",
+                    "&:last-child": {
+                      paddingBottom: "22px",
+                    },
                   }}
+
                 >
-                  {/* CATEGORY + DATE */}
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1.5,
-                      gap: 1,
-                    }}
-                  >
-                    <Chip
-                      label={categoryNames[Number(blog.category_id)]}
-                      size="small"
-                      sx={{
-                        fontWeight: 600,
-                      }}
-                    />
-
-                    <Typography variant="caption" color="text.primary">
-                      {blog.created_date
-                        ? new Date(blog.created_date).toLocaleDateString(
-                            "en-GB",
-                          )
-                        : ""}
-                    </Typography>
-                  </Box>
-
-                  {/* <Typography
-                    variant="caption"
-                    color="text.primary"
-                    sx={{ mb: 1 }}
-                    >
-                    Blog ID: {blog.blog_id} | Clinic ID: {blog.clinic_id}
-                    </Typography> */}
-
-                  {/* <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1.5,
-                      gap: 1,
-                    }}
-                  >
-                    <Chip
-                      label={`Category ${blog.category_id}`}
-                      size="small"
-                      sx={{
-                        fontWeight: 600,
-                      }}
-                    />
-
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      {new Date(
-                        blog.created_date
-                      ).toLocaleDateString()}
-                    </Typography>
-                  </Box> */}
-
                   {/* TITLE */}
-
                   <Typography
                     variant="h6"
-                    fontWeight={700}
+                    fontWeight={600}
                     sx={{
-                      mb: 1,
-                      lineHeight: 1.35,
+                      mb: 1.2,
+                      lineHeight: 1.4,
+                      fontSize: "17px",
+                      color: "#292929",
                     }}
                   >
                     {blog.title}
                   </Typography>
 
                   {/* SHORT DESCRIPTION */}
-
                   <Typography
                     variant="body2"
-                    color="text.primary"
                     sx={{
-                      lineHeight: 1.6,
+                      lineHeight: 1.75,
+                      fontSize: "13px",
+                      color: "#666666",
                       display: "-webkit-box",
-                      WebkitLineClamp: 3,
+                      WebkitLineClamp: 4,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                     }}
@@ -434,8 +460,7 @@ const BlogsList: React.FC = () => {
                     {blog.short_description}
                   </Typography>
 
-                  {/* READ ARTICLE */}
-
+                  {/* READ ARTICLE + EDIT */}
                   <Box
                     sx={{
                       marginTop: "auto",
@@ -443,28 +468,50 @@ const BlogsList: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
+                      gap: 1,
                     }}
                   >
                     <Typography
+                      component="span"
                       sx={{
-                        fontWeight: 600,
-                        fontSize: "14px",
+                        fontWeight: 500,
+                        fontSize: "13px",
+                        color: "#333333",
                         cursor: "pointer",
+                        textDecoration: "underline",
+                        textUnderlineOffset: "4px",
+                        transition: "color 0.2s ease",
+                        "&:hover": {
+                          color: "#1976d2",
+                        },
                       }}
-                      //   onClick={() => console.log("SELECTED BLOG ID:", blog.blog_id)}
                       onClick={() => navigate(`/blog/${blog.blog_id}`)}
                     >
                       Read Article →
                     </Typography>
-                    
+
                     <Button
                       variant="outlined"
                       size="small"
                       startIcon={<EditNoteIcon />}
                       onClick={() => {
-                        navigate(`/clinic/BlogTabs/blog/edit/${blog.blog_id}`);
+                        navigate(
+                          `/clinic/BlogTabs/blog/edit/${blog.blog_id}`
+                        );
+                      }}
+                      sx={{
+                        minWidth: "36px",
+                        borderRadius: "6px",
+                        borderColor: "#e0e0e0",
+                        color: "#555555",
+                        textTransform: "none",
+                        "&:hover": {
+                          borderColor: "#999999",
+                          backgroundColor: "#f8f8f8",
+                        },
                       }}
                     >
+                      Edit
                     </Button>
                   </Box>
                 </CardContent>

@@ -8,7 +8,7 @@ import BlogsList from '../list-blogs/BlogsList.tsx';
 // import BlogsList from "./BlogsList";
 
 const Blogs: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"view" | "add">("view");
+  const [activeTab, setActiveTab] = useState<"view" | "add">("add");
 
   return (
     <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">

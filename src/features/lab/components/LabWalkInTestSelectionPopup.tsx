@@ -86,7 +86,6 @@ const LabWalkInTestSelectionPopup: React.FC<Props> = ({
       setLoading(true);
       try {
         const response = await getLabTestListApi(labId);
-        console.log("response", response);
         const data = Array.isArray((response as any)?.data)
           ? (response as any).data
           : [];

@@ -122,7 +122,6 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
           clinicIdNumber,
           doctorId,
         );
-        console.log("get follow up details", res);
         if (!isMounted) return;
 
         // 1. Normalize follow-up appointment records

@@ -67,7 +67,6 @@ export default function LabAddTestDialog({
       setSearch("");
       try {
         const response = await getLabTestListApi(Number(row.lab_id));
-        console.log("getLabTestListApi", response);
         const responseData = (response as { data?: unknown })?.data;
         const tests = Array.isArray(responseData) ? responseData : [];
         const currentTestIds = new Set(
@@ -178,7 +177,6 @@ export default function LabAddTestDialog({
         })),
         modified_by: Number(getSessionItem("user", "user_id")),
       };
-      console.log("UpdatePatientTestsRequest payload:", payload);
       const response = await updatePatientTestsApi(payload);
       if (
         !response?.success ||
@@ -187,7 +185,6 @@ export default function LabAddTestDialog({
       ) {
         throw new Error(response?.message || "Failed to update patient tests");
       }
-      console.log("UpdatePatientTestsResponse:", response);
       onTestsAdded(row, selectedTests);
       toast.success("Tests added successfully");
       onClose();
@@ -202,7 +199,6 @@ export default function LabAddTestDialog({
       setSaving(false);
     }
   };
-  console.log("assignedTests", assignedTests);
   return (
     <Dialog
       open={Boolean(row)}

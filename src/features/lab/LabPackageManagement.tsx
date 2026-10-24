@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getSessionItem } from "../../context/sessions/userSession";
 import LabPackagePopUp from "./LabPackagePopUp";
 import { toast } from "react-toastify";
-import { deleteLabPackageApi, saveLabPackageApi } from "../../api";
+import { deleteLabPackageApi, saveUpadateLabPackageApi } from "../../api";
 import type { SaveLabPackageRequest } from "../../types/labType/LabTestInterfaces";
 
 interface LabPackageManagementProps {
@@ -124,45 +124,49 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
         toast.error("User ID not found");
         return;
       }
+      if (packageData.selectedTests.length === 0) {
+        toast.error("Please select at least one test");
+        return;
+      }
       const payload: SaveLabPackageRequest = {
         package_id: selectedPackage ? Number(selectedPackage.package_id) : 0,
         lab_id: Number(labId),
-        package_name: packageData.packageName,
+        package_name: packageData.packageName.trim(),
         description: packageData.description || "",
-        actual_price: packageData.actualPrice,
-        package_price: packageData.packagePrice,
-        discount_amount: packageData.discountAmount,
-        discount_percentage: packageData.discountPercentage,
+        actual_price: Number(packageData.actualPrice),
+        package_price: Number(packageData.packagePrice),
+        discount_amount: Number(packageData.discountAmount),
+        discount_percentage: Number(packageData.discountPercentage),
         created_by: Number(userId),
-        tests: packageData.selectedTests.map((test: any) => ({
+        tests: packageData.selectedTests.map((test) => ({
           test_id: Number(test.test_id),
         })),
       };
-      // CREATE
-      if (!selectedPackage) {
-        const response = await saveLabPackageApi(payload);
-        if (!response.success) {
-          const errorMsg =
-            response.message ||
-            (response.errors && response.errors.length > 0
-              ? response.errors[0].message
-              : "Failed to save package");
-          toast.error(errorMsg);
-          return;
-        }
-        toast.success(response.message || "Package saved successfully");
+      const response = await saveUpadateLabPackageApi(payload);
+      // Use response.data if saveLabPackageApi returns the Axios response.
+      const result = response.data ?? response;
+      if (!result.success) {
+        const errorMsg =
+          result.message ||
+          result.errors?.[0]?.message ||
+          "Failed to save package";
+        toast.error(errorMsg);
+        return;
       }
-      // UPDATE
-      else {
-        // Reserved for update API when available
-      }
+      toast.success(
+        result.message ||
+          (selectedPackage
+            ? "Package updated successfully"
+            : "Package saved successfully"),
+      );
       setPackagePopupOpen(false);
       setSelectedPackage(null);
       setIsEditMode(false);
       await onRefresh();
-    } catch (error) {
-      console.error("Save package failed:", error);
-      toast.error("Failed to save package");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to save or update package",
+      );
     }
   };
 
@@ -190,7 +194,8 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Bundle diagnostic tests together to offer patients curated packages at special pricing.
+              Bundle diagnostic tests together to offer patients curated
+              packages at special pricing.
             </p>
           </div>
 
@@ -264,7 +269,8 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
               {filteredPackages.map((pkg) => {
                 const isExpanded = expanded === pkg.package_id;
                 const savings =
-                  Number(pkg.actual_price || 0) - Number(pkg.package_price || 0);
+                  Number(pkg.actual_price || 0) -
+                  Number(pkg.package_price || 0);
                 const savingsPercent =
                   Number(pkg.actual_price || 0) > 0
                     ? Math.round((savings / Number(pkg.actual_price)) * 100)
@@ -317,7 +323,9 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
                               </span>
                               {savingsPercent > 0 && (
                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/50">
-                                  <LocalOfferOutlinedIcon sx={{ fontSize: 10 }} />
+                                  <LocalOfferOutlinedIcon
+                                    sx={{ fontSize: 10 }}
+                                  />
                                   {savingsPercent}% OFF
                                 </span>
                               )}
@@ -357,7 +365,9 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
                               }}
                               color="error"
                             >
-                              <DeleteOutlineOutlinedIcon sx={{ fontSize: 17 }} />
+                              <DeleteOutlineOutlinedIcon
+                                sx={{ fontSize: 17 }}
+                              />
                             </IconButton>
                           </Tooltip>
 
@@ -401,7 +411,9 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
                                 <thead>
                                   <tr className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                                     <th className="py-2 px-3">Test Name</th>
-                                    <th className="py-2 px-3 w-28">Test Code</th>
+                                    <th className="py-2 px-3 w-28">
+                                      Test Code
+                                    </th>
                                     <th className="py-2 px-3 w-36">Category</th>
                                     <th className="py-2 px-3 text-right w-24">
                                       Price
@@ -409,27 +421,29 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                  {pkg.tests?.map((test: any, index: number) => (
-                                    <tr
-                                      key={test.package_test_id || index}
-                                      className="hover:bg-slate-50/70 transition-colors"
-                                    >
-                                      <td className="py-2 px-3 font-medium text-slate-800">
-                                        {test.test_name}
-                                      </td>
-                                      <td className="py-2 px-3">
-                                        <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50">
-                                          {test.test_code || "—"}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3 text-slate-600">
-                                        {test.category_name}
-                                      </td>
-                                      <td className="py-2 px-3 text-right font-semibold text-slate-700">
-                                        ₹{test.test_price}
-                                      </td>
-                                    </tr>
-                                  ))}
+                                  {pkg.tests?.map(
+                                    (test: any, index: number) => (
+                                      <tr
+                                        key={test.package_test_id || index}
+                                        className="hover:bg-slate-50/70 transition-colors"
+                                      >
+                                        <td className="py-2 px-3 font-medium text-slate-800">
+                                          {test.test_name}
+                                        </td>
+                                        <td className="py-2 px-3">
+                                          <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50">
+                                            {test.test_code || "—"}
+                                          </span>
+                                        </td>
+                                        <td className="py-2 px-3 text-slate-600">
+                                          {test.category_name}
+                                        </td>
+                                        <td className="py-2 px-3 text-right font-semibold text-slate-700">
+                                          ₹{test.test_price}
+                                        </td>
+                                      </tr>
+                                    ),
+                                  )}
                                 </tbody>
                               </table>
                             </div>
@@ -450,8 +464,8 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
                                   Total Savings
                                 </span>
                                 <span className="text-xs font-bold text-emerald-800">
-                                  ₹{savings > 0 ? savings : 0} (
-                                  {savingsPercent}%)
+                                  ₹{savings > 0 ? savings : 0} ({savingsPercent}
+                                  %)
                                 </span>
                               </div>
 
@@ -489,7 +503,9 @@ const LabPackageManagement: React.FC<LabPackageManagementProps> = ({
           },
         }}
       >
-        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+        <DialogTitle
+          sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}
+        >
           <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
             <WarningAmberRoundedIcon sx={{ fontSize: 20 }} />
           </div>

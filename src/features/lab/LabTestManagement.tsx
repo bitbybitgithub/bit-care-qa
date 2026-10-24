@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import Loader from "../../components/shared/Loader/Loader";
 import { updateAvailableLabTestApi } from "../../api/labApis/LabApi";
 import type {
+  LabTestUpdateItem,
   SelectedTest,
   UpdateLabTestItemRequest,
 } from "../../types/labType/LabTestInterfaces";
@@ -204,81 +205,142 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
     }
   };
 
+  const getErrorMessage = (error: any, fallback: string) =>
+    error?.response?.data?.message ||
+    error?.response?.data?.errors?.[0]?.message ||
+    error?.message ||
+    fallback;
+
   const submitLabTestChange = async (
     operationType: "U" | "D",
     testsToSubmit: SelectedTest[],
-  ) => {
+  ): Promise<boolean> => {
     if (!labId || !userId) {
       toast.error("Lab ID or user ID not found");
       return false;
     }
-    const payload: UpdateLabTestItemRequest = {
-      lab_id: Number(labId),
-      operation_type: operationType,
-      tests: testsToSubmit.map((test) => ({
-        test_id: Number(test.testId),
-        category_id: Number(test.categoryId),
-        price: Number(test.price || 0),
-        discount_price: Number(test.discountPrice || 0),
-        payable_amount: Number(
-          (Number(test.price || 0) - Number(test.discountPrice || 0)).toFixed(
-            2,
-          ),
-        ),
-        ...(operationType === "D"
-          ? {
-              is_active: "0",
-            }
-          : {}),
-      })),
-      modified_by: Number(userId),
-    };
 
-    console.log("Submitting lab test Update payload:", payload);
-    const response = await updateAvailableLabTestApi(payload);
-    if (
-      !response.success ||
-      response.success === "false" ||
-      response.success === "0"
-    ) {
-      toast.error(response.message || "Failed to update laboratory tests");
+    if (testsToSubmit.length === 0) {
+      toast.error("Please select at least one test");
       return false;
     }
-    toast.success(
-      response.message ||
-        (operationType === "U"
-          ? "Lab tests updated successfully"
-          : "Lab test deleted successfully"),
-    );
-    return true;
+
+    let payload: UpdateLabTestItemRequest;
+
+    if (operationType === "D") {
+      payload = {
+        lab_id: Number(labId),
+        operation_type: "D",
+        tests: testsToSubmit.map((test) => ({
+          test_id: Number(test.testId),
+        })),
+        modified_by: Number(userId),
+      };
+    } else {
+      const tests: LabTestUpdateItem[] = testsToSubmit.map((test) => {
+        const price = Number(test.price || 0);
+        const discountPrice = Number(test.discountPrice || 0);
+
+        return {
+          test_id: Number(test.testId),
+          category_id: Number(test.categoryId),
+          price,
+          discount_price: discountPrice,
+          payable_amount: Number((price - discountPrice).toFixed(2)),
+        };
+      });
+
+      // Client-side validation (mirrors the backend validator)
+      for (const t of tests) {
+        if (
+          [t.test_id, t.category_id, t.price, t.discount_price].some(
+            Number.isNaN,
+          )
+        ) {
+          toast.error("Invalid test data");
+          return false;
+        }
+        if (t.price < 5 || t.price > 10000) {
+          toast.error("Price must be between 5 and 10000");
+          return false;
+        }
+        if (t.discount_price < 0 || t.discount_price > t.price) {
+          toast.error("Discount cannot be negative or exceed the price");
+          return false;
+        }
+      }
+
+      payload = {
+        lab_id: Number(labId),
+        operation_type: "U",
+        tests,
+        modified_by: Number(userId),
+      };
+    }
+
+    try {
+      const result: any = await updateAvailableLabTestApi(payload);
+
+      const isSuccess =
+        result?.success === true ||
+        result?.success === "true" ||
+        result?.success === 1 ||
+        result?.success === "1";
+
+      if (!isSuccess) {
+        toast.error(result?.message || "Failed to update laboratory tests");
+        return false;
+      }
+
+      toast.success(
+        result?.message ||
+          (operationType === "U"
+            ? "Lab tests updated successfully"
+            : "Lab test deleted successfully"),
+      );
+      return true;
+    } catch (error: any) {
+      console.error("Lab test change failed:", error);
+      toast.error(
+        getErrorMessage(
+          error,
+          operationType === "U"
+            ? "Failed to update laboratory tests"
+            : "Failed to delete laboratory test",
+        ),
+      );
+      return false;
+    }
   };
 
   const confirmDeleteTest = async () => {
     if (!testToDelete || !labId || !userId) {
       return;
     }
+
     try {
       setDeleteLoading(true);
+
       const success = await submitLabTestChange("D", [testToDelete]);
       if (!success) {
-        return;
+        return; // error toast already shown
       }
+
+      const removedId = String(testToDelete.testId);
       setSelectedTests((prev) =>
-        prev.filter(
-          (test) => String(test.testId) !== String(testToDelete.testId),
-        ),
+        prev.filter((test) => String(test.testId) !== removedId),
       );
       setBaselineTests((prev) =>
-        prev.filter(
-          (test) => String(test.testId) !== String(testToDelete.testId),
-        ),
+        prev.filter((test) => String(test.testId) !== removedId),
       );
       setTestToDelete(null);
       setEditingTestId(null);
+
       await onUpdated();
     } catch (error) {
+      // Only reached if onUpdated() or the state updates throw
       console.error("Delete laboratory test failed:", error);
-      toast.error("Failed to delete laboratory test");
+      toast.error("Test deleted, but the list could not be refreshed");
     } finally {
       setDeleteLoading(false);
     }
@@ -520,7 +582,8 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                       Number(test.price || 0) - Number(test.discountPrice || 0)
                     ).toFixed(2);
                     const hasDiscount =
-                      test.discountPrice !== "" && Number(test.discountPrice) > 0;
+                      test.discountPrice !== "" &&
+                      Number(test.discountPrice) > 0;
 
                     return (
                       <motion.div
@@ -555,7 +618,9 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                             {/* Action Buttons */}
                             <div className="flex items-center gap-0.5 shrink-0 -mt-1 -mr-1">
                               <Tooltip
-                                title={isEditing ? "Close Edit" : "Edit Pricing"}
+                                title={
+                                  isEditing ? "Close Edit" : "Edit Pricing"
+                                }
                                 arrow
                               >
                                 <IconButton
@@ -698,7 +763,9 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                           ) : (
                             <>
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">Test Price</span>
+                                <span className="text-slate-500">
+                                  Test Price
+                                </span>
                                 <span className="font-semibold text-slate-700">
                                   ₹{test.price || "0.00"}
                                 </span>
@@ -706,7 +773,9 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
 
                               {hasDiscount && (
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-slate-500">Discount</span>
+                                  <span className="text-slate-500">
+                                    Discount
+                                  </span>
                                   <span className="font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded text-[11px]">
                                     − ₹{test.discountPrice}
                                   </span>
@@ -742,8 +811,8 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
               No Laboratory Tests Configured
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4">
-              Get started by adding test services from the master catalog to make
-              them available in your lab.
+              Get started by adding test services from the master catalog to
+              make them available in your lab.
             </p>
             <button
               type="button"
@@ -808,7 +877,9 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
           },
         }}
       >
-        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+        <DialogTitle
+          sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}
+        >
           <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
             <WarningAmberRoundedIcon sx={{ fontSize: 20 }} />
           </div>
@@ -818,7 +889,8 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         </DialogTitle>
         <DialogContent sx={{ py: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Are you sure you want to remove this test from your laboratory catalogue?
+            Are you sure you want to remove this test from your laboratory
+            catalogue?
           </Typography>
           {testToDelete && (
             <div className="mt-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200">

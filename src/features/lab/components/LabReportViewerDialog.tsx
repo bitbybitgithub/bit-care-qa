@@ -44,7 +44,6 @@ export default function LabReportViewerDialog({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const reports = row?.lab_reports ?? [];
 
-  console.log("report names", reports);
   return (
     <Dialog
       open={Boolean(row)}

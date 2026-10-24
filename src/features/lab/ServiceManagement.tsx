@@ -87,7 +87,6 @@ const ServiceManagement: React.FC = () => {
       return;
     }
     const response = await getLabTestListApi(Number(labId));
-    console.log("Saved Lab Tests Response:", response);
     const savedTests = (response as any)?.data || [];
     setSavedLabTests(savedTests);
     const selected: SelectedTest[] = [];
@@ -225,7 +224,12 @@ const ServiceManagement: React.FC = () => {
         <div className="hidden sm:flex items-center gap-3 text-xs sm:text-sm text-slate-500 font-medium">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Total Active Services: <strong className="text-slate-700">{selectedTests.length + packages.length}</strong></span>
+            <span>
+              Total Active Services:{" "}
+              <strong className="text-slate-700">
+                {selectedTests.length + packages.length}
+              </strong>
+            </span>
           </div>
         </div>
       </div>

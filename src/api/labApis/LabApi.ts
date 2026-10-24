@@ -95,21 +95,21 @@ export const saveAvailableLabApi = async (
 };
 /* ===================== */
 
-/* ===================== */
 export const updateAvailableLabTestApi = async (
   payload: UpdateLabTestItemRequest,
 ): Promise<SaveLabTestItem> => {
   try {
-    const response = await emrAPI.post<SaveLabTestItem>(
+    const response: any = await emrAPI.post(
       "/lab/update-available-lab-test",
       payload,
     );
-    return response;
+    return (response?.data ?? response) as SaveLabTestItem;
   } catch (error) {
     console.error("updateAvailableLabTestApi error:", error);
     throw error;
   }
 };
+
 /* ===================== */
 
 export const fetchLabProfile = async (
@@ -176,7 +176,7 @@ export const getActiveLabListApi = async (payload?: {
   }
 };
 
-export const saveLabPackageApi = async (
+export const saveUpadateLabPackageApi = async (
   payload: SaveLabPackageRequest,
 ): Promise<any> => {
   try {

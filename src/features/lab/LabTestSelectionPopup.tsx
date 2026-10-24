@@ -51,7 +51,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
   const [newSelectedTests, setNewSelectedTests] = useState<SelectedTest[]>([]);
   const [saving, setSaving] = useState(false);
   // Mobile / Tablet Tab Switcher: "categories" | "tests" | "selected"
-  const [mobileTab, setMobileTab] = useState<"categories" | "tests" | "selected">("tests");
+  const [mobileTab, setMobileTab] = useState<
+    "categories" | "tests" | "selected"
+  >("tests");
 
   useEffect(() => {
     if (open) {
@@ -323,17 +325,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           price: Number(test.price),
           discount_price: Number(test.discountPrice || 0),
           payable_amount: Number(
-            (
-              Number(test.price) -
-              Number(test.discountPrice || 0)
-            ).toFixed(2),
+            (Number(test.price) - Number(test.discountPrice || 0)).toFixed(2),
           ),
         })),
         created_by: Number(userId),
       };
       setSaving(true);
 
-      console.log("saveAvailableLabApi payload:", payload);
       const response = await saveAvailableLabApi(payload);
       if (
         !response.success ||
@@ -394,7 +392,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
               Add New Tests to Catalogue
             </Typography>
             <Typography variant="body2" color="text.secondary" fontSize={13}>
-              Select tests from the master catalogue, set pricing, and publish them to your lab menu
+              Select tests from the master catalogue, set pricing, and publish
+              them to your lab menu
             </Typography>
           </div>
         </div>
@@ -402,7 +401,10 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         <IconButton
           size="medium"
           onClick={onClose}
-          sx={{ color: "var(--color-disabled)", "&:hover": { color: "var(--color-text)" } }}
+          sx={{
+            color: "var(--color-disabled)",
+            "&:hover": { color: "var(--color-text)" },
+          }}
         >
           <CloseIcon sx={{ fontSize: 22 }} />
         </IconButton>
@@ -456,8 +458,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
               All Tests Already Added
             </h3>
             <p className="text-sm text-slate-500 max-w-sm mt-1">
-              Every test available in the master catalog has already been added to
-              your laboratory.
+              Every test available in the master catalog has already been added
+              to your laboratory.
             </p>
           </div>
         ) : (
@@ -584,8 +586,16 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
               <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-slate-50/30">
                 {filteredTests.length === 0 ? (
                   <div className="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center">
-                    <SearchIcon sx={{ fontSize: 32, mb: 1, color: "var(--color-disabled)" }} />
-                    <div className="font-semibold text-slate-600">No tests found</div>
+                    <SearchIcon
+                      sx={{
+                        fontSize: 32,
+                        mb: 1,
+                        color: "var(--color-disabled)",
+                      }}
+                    />
+                    <div className="font-semibold text-slate-600">
+                      No tests found
+                    </div>
                     <div className="text-xs text-slate-400 mt-0.5">
                       No tests match your search query in this category.
                     </div>
@@ -783,13 +793,16 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                 {newSelectedTests.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
                     <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-2">
-                      <ScienceOutlinedIcon sx={{ fontSize: 24, color: "var(--color-disabled)" }} />
+                      <ScienceOutlinedIcon
+                        sx={{ fontSize: 24, color: "var(--color-disabled)" }}
+                      />
                     </div>
                     <div className="text-sm font-semibold text-slate-600">
                       No tests selected
                     </div>
                     <div className="text-xs text-slate-400 max-w-xs mt-1">
-                      Check tests from the catalog to configure prices and add them to your laboratory menu.
+                      Check tests from the catalog to configure prices and add
+                      them to your laboratory menu.
                     </div>
                   </div>
                 ) : (
@@ -804,7 +817,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                             {test.testName}
                           </div>
                           <div className="text-xs text-slate-400 mt-0.5">
-                            {test.code ? `${test.code} • ` : ""}{test.category}
+                            {test.code ? `${test.code} • ` : ""}
+                            {test.category}
                           </div>
                         </div>
 
@@ -827,7 +841,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       <Divider sx={{ my: 0.5 }} />
 
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-medium">Test Price:</span>
+                        <span className="text-slate-500 font-medium">
+                          Test Price:
+                        </span>
                         <span className="font-semibold text-slate-700">
                           {test.price ? `₹${test.price}` : "—"}
                         </span>
@@ -835,7 +851,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
 
                       {Number(test.discountPrice || 0) > 0 && (
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-medium">Discount Amount:</span>
+                          <span className="text-slate-500 font-medium">
+                            Discount Amount:
+                          </span>
                           <span className="font-semibold text-emerald-600">
                             − ₹{test.discountPrice}
                           </span>
@@ -871,7 +889,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           size="medium"
           variant="outlined"
           onClick={onClose}
-          sx={{ textTransform: "none", borderRadius: 2, px: 3, fontSize: 14, fontWeight: 600 }}
+          sx={{
+            textTransform: "none",
+            borderRadius: 2,
+            px: 3,
+            fontSize: 14,
+            fontWeight: 600,
+          }}
         >
           Cancel
         </Button>

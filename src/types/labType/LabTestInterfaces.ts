@@ -60,19 +60,31 @@ export interface SaveLabTestItem {
   message: string;
 }
 
-export interface UpdateLabTestItemRequest {
-  lab_id: number;
-  operation_type: "U" | "D";
-  tests: {
-    test_id: number;
-    category_id: number;
-    price: number;
-    discount_price: number;
-    payable_amount: number;
-    is_active?: "0" | "1";
-  }[];
-  modified_by: number;
+export interface LabTestUpdateItem {
+  test_id: number;
+  category_id: number;
+  price: number;
+  discount_price: number;
+  payable_amount: number;
 }
+
+export interface LabTestDeleteItem {
+  test_id: number;
+}
+
+export type UpdateLabTestItemRequest =
+  | {
+      lab_id: number;
+      operation_type: "U";
+      tests: LabTestUpdateItem[];
+      modified_by: number;
+    }
+  | {
+      lab_id: number;
+      operation_type: "D";
+      tests: LabTestDeleteItem[];
+      modified_by: number;
+    };
 export interface LabProfileData {
   lab: {
     lab_id: number;

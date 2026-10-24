@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState, type JSX } from "react";
 import {
-  Box,
   Button,
   Checkbox,
-  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -11,10 +9,6 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
-  List,
-  ListItemButton,
-  Paper,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -27,6 +21,9 @@ import HealthAndSafetyOutlinedIcon from "@mui/icons-material/HealthAndSafetyOutl
 import MedicationOutlinedIcon from "@mui/icons-material/MedicationOutlined";
 import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import type { SelectedPackageTest } from "../../types/labType/LabTestInterfaces";
 import Loader from "../../components/shared/Loader/Loader";
 
@@ -52,7 +49,6 @@ interface LabPackagePopUpProps {
   onRefresh: () => Promise<void>;
   onSavePackage: (packageData: {
     packageName: string;
-    // packageCode: string;
     description: string;
     packagePrice: number;
     selectedTests: any[];
@@ -69,7 +65,6 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
   isEditMode,
   selectedPackage,
   loading,
-  onRefresh,
   onSavePackage,
 }) => {
   const [packageName, setPackageName] = useState("");
@@ -79,9 +74,11 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
   const [packageNameError, setPackageNameError] = useState("");
   const [packagePriceError, setPackagePriceError] = useState("");
   const [selectedTestError, setSelectedTestError] = useState("");
-  const [packageCode, setPackageCode] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTests, setSelectedTests] = useState<SelectedPackageTest[]>([]);
+  // Mobile/Tablet tab switcher: "categories" | "tests" | "builder"
+  const [mobileTab, setMobileTab] = useState<"categories" | "tests" | "builder">("tests");
+
   const packageAmount = Number(packagePrice || 0);
 
   const resetForm = () => {
@@ -94,6 +91,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
     setPackagePriceError("");
     setSelectedTestError("");
     setSelectedTests([]);
+    setMobileTab("tests");
   };
 
   useEffect(() => {
@@ -130,55 +128,13 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
   }, [open]);
 
   const categoryIcons: Record<string, JSX.Element> = {
-    Hematology: (
-      <BloodtypeOutlinedIcon
-        sx={{
-          color: "#1976d2",
-        }}
-      />
-    ),
-    Biochemistry: (
-      <ScienceOutlinedIcon
-        sx={{
-          color: "#2e7d32",
-        }}
-      />
-    ),
-    Microbiology: (
-      <BiotechOutlinedIcon
-        sx={{
-          color: "#7b1fa2",
-        }}
-      />
-    ),
-    Immunology: (
-      <HealthAndSafetyOutlinedIcon
-        sx={{
-          color: "#ef6c00",
-        }}
-      />
-    ),
-    Hormones: (
-      <MedicationOutlinedIcon
-        sx={{
-          color: "#d32f2f",
-        }}
-      />
-    ),
-    "Urine & Stool": (
-      <WaterDropOutlinedIcon
-        sx={{
-          color: "#f9a825",
-        }}
-      />
-    ),
-    Others: (
-      <CategoryOutlinedIcon
-        sx={{
-          color: "#78909c",
-        }}
-      />
-    ),
+    Hematology: <BloodtypeOutlinedIcon sx={{ color: "var(--color-primary)", fontSize: 20 }} />,
+    Biochemistry: <ScienceOutlinedIcon sx={{ color: "var(--color-success)", fontSize: 20 }} />,
+    Microbiology: <BiotechOutlinedIcon sx={{ color: "var(--color-secondary)", fontSize: 20 }} />,
+    Immunology: <HealthAndSafetyOutlinedIcon sx={{ color: "var(--color-warning)", fontSize: 20 }} />,
+    Hormones: <MedicationOutlinedIcon sx={{ color: "var(--color-error)", fontSize: 20 }} />,
+    "Urine & Stool": <WaterDropOutlinedIcon sx={{ color: "var(--color-warning)", fontSize: 20 }} />,
+    Others: <CategoryOutlinedIcon sx={{ color: "var(--color-disabled)", fontSize: 20 }} />,
   };
 
   const totalTestPrice = useMemo(() => {
@@ -194,7 +150,6 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
 
   const savingPercentage = useMemo(() => {
     if (totalTestPrice === 0) return 0;
-
     return Math.round((discount / totalTestPrice) * 100);
   }, [discount, totalTestPrice]);
 
@@ -222,7 +177,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
     );
   }, [packageDisplayTests]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!activeCategory && categories.length > 0) {
       setActiveCategory(categories[0]);
     }
@@ -232,7 +187,8 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
     return packageDisplayTests.filter(
       (x) =>
         x.category_name === activeCategory &&
-        x.test_name.toLowerCase().includes(search.toLowerCase()),
+        (x.test_name.toLowerCase().includes(search.toLowerCase()) ||
+          (x.test_code && x.test_code.toLowerCase().includes(search.toLowerCase()))),
     );
   }, [packageDisplayTests, activeCategory, search]);
 
@@ -288,11 +244,9 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
     if (checked) {
       setSelectedTests((prev) => {
         const existingIds = new Set(prev.map((x) => x.test_id));
-
         const newTests = currentCategoryTests
           .filter((test) => !existingIds.has(test.test_id))
           .map((test) => normalizeToSelectedTest(test));
-
         return [...prev, ...newTests];
       });
     } else {
@@ -306,6 +260,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
       );
     }
   };
+
   const validatePackage = () => {
     let valid = true;
     setPackageNameError("");
@@ -323,7 +278,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
       valid = false;
     }
     if (selectedTests.length < 2) {
-      setSelectedTestError("Select at least two tests.");
+      setSelectedTestError("Select at least 2 tests to create a package.");
       valid = false;
     }
     if (Number(packagePrice) > totalTestPrice) {
@@ -337,7 +292,6 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
     if (!validatePackage()) return;
     await onSavePackage({
       packageName,
-      // packageCode,
       description,
       packagePrice: Number(packagePrice),
       selectedTests,
@@ -346,6 +300,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
       discountPercentage: savingPercentage,
     });
   };
+
   if (loading) {
     return <Loader message="Loading laboratory services..." />;
   }
@@ -359,540 +314,516 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
       }}
       maxWidth="xl"
       fullWidth
-      className="bg-white"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          maxHeight: "90vh",
+          height: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        },
+      }}
     >
-      <DialogTitle>
-        {isEditMode ? "Edit Package" : "Create New Package"}
+      {/* ================= MAIN DIALOG TITLE BAR ================= */}
+      <DialogTitle
+        sx={{
+          py: 2,
+          px: 3,
+          borderBottom: "1px solid var(--color-border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          bgcolor: "var(--color-bg)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 shadow-2xs">
+            <Inventory2OutlinedIcon sx={{ fontSize: 22 }} />
+          </div>
+          <div>
+            <Typography variant="h6" fontWeight={700} fontSize={18}>
+              {isEditMode ? "Edit Laboratory Package" : "Create New Laboratory Package"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" fontSize={13}>
+              Bundle multiple laboratory tests with custom discounted package pricing
+            </Typography>
+          </div>
+        </div>
+
         <IconButton
-          sx={{
-            position: "absolute",
-            right: 10,
-            top: 10,
-          }}
+          size="medium"
           onClick={() => {
             resetForm();
             onClose();
           }}
+          sx={{ color: "var(--color-disabled)", "&:hover": { color: "var(--color-text)" } }}
         >
-          <CloseIcon />
+          <CloseIcon sx={{ fontSize: 22 }} />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent
-        dividers
-        sx={{
-          p: 0,
-          height: "82vh",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            height: "100%",
-            overflow: "hidden",
-          }}
+      {/* ================= MOBILE / TABLET NAVIGATION TABS ================= */}
+      <div className="flex md:hidden border-b border-slate-200 bg-slate-50 p-1.5 gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileTab("categories")}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            mobileTab === "categories"
+              ? "bg-white text-sky-700 shadow-xs"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
         >
-          {/* ================= LEFT ================= */}
-          <Box
-            sx={{
-              width: 260,
-              display: "flex",
-              flexDirection: "column",
-              borderRight: "1px solid #e5e7eb",
-            }}
+          Categories ({categories.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("tests")}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            mobileTab === "tests"
+              ? "bg-white text-sky-700 shadow-xs"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Tests ({currentCategoryTests.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("builder")}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            mobileTab === "builder"
+              ? "bg-white text-sky-700 shadow-xs"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Builder ({selectedTests.length})
+        </button>
+      </div>
+
+      {/* ================= MAIN 3-COLUMN CONTENT BODY ================= */}
+      <DialogContent sx={{ p: 0, flex: 1, overflow: "hidden" }}>
+        <div className="flex flex-col md:flex-row h-full overflow-hidden divide-y md:divide-y-0 md:divide-x divide-slate-200">
+          {/* ================= COLUMN 1: CATEGORIES ================= */}
+          <div
+            className={`w-full md:w-64 lg:w-72 shrink-0 bg-slate-50/50 flex-col h-full overflow-hidden ${
+              mobileTab === "categories" ? "flex" : "hidden md:flex"
+            }`}
           >
-            {/* Header */}
-            <Box
-              sx={{
-                p: 2.5,
-                borderBottom: "1px solid #e5e7eb",
-                bgcolor: "#fff",
-              }}
-            >
-              <Typography variant="h6" fontWeight={700}>
-                Test Categories
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {categories.length} Categories
-              </Typography>
-            </Box>
+            {/* Synchronized Header: Height 56px */}
+            <div className="h-14 px-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between shrink-0">
+              <span className="text-sm font-bold text-slate-800 tracking-wide uppercase">
+                Categories
+              </span>
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                {categories.length}
+              </span>
+            </div>
+
             {/* Category List */}
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-              }}
-            >
-              <List disablePadding>
-                {categories.map((category) => {
-                  const totalTests = packageDisplayTests.filter(
-                    (item) => item.category_name === category,
-                  ).length;
+            <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5">
+              {categories.map((category) => {
+                const totalTests = packageDisplayTests.filter(
+                  (item) => item.category_name === category,
+                ).length;
+                const selectedCount = selectedTests.filter(
+                  (item) => item.category_name === category,
+                ).length;
+                const isActive = activeCategory === category;
+                const isFullySelected =
+                  selectedCount === totalTests && totalTests > 0;
 
-                  const selectedCount = selectedTests.filter(
-                    (item) => item.category_name === category,
-                  ).length;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => {
+                      setActiveCategory(category);
+                      if (window.innerWidth < 768) setMobileTab("tests");
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                      isActive
+                        ? "bg-white text-sky-800 shadow-xs border border-sky-300 font-semibold"
+                        : "text-slate-700 hover:bg-slate-200/70 hover:text-slate-900 border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className="shrink-0">
+                        {categoryIcons[category] ?? (
+                          <CategoryOutlinedIcon sx={{ fontSize: 20, color: "var(--color-disabled)" }} />
+                        )}
+                      </span>
+                      <div className="truncate">
+                        <div className="text-sm font-semibold truncate leading-tight">
+                          {category}
+                        </div>
+                        <div className="text-xs text-slate-400 font-normal mt-0.5">
+                          {totalTests} available tests
+                        </div>
+                      </div>
+                    </div>
 
-                  return (
-                    <ListItemButton
-                      key={category}
-                      selected={activeCategory === category}
-                      onClick={() => setActiveCategory(category)}
-                      sx={{
-                        py: 1.5,
-                        px: 2,
-                        borderBottom: "1px solid #f2f2f2",
-                        borderLeft: "4px solid transparent",
-
-                        "&.Mui-selected": {
-                          bgcolor: "#EEF4FF",
-                          borderLeftColor: "#1976d2",
-                        },
-
-                        "&.Mui-selected:hover": {
-                          bgcolor: "#EEF4FF",
-                        },
-
-                        "&:hover": {
-                          bgcolor: "#f7faff",
-                        },
-                      }}
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        isFullySelected
+                          ? "bg-emerald-100 text-emerald-800"
+                          : selectedCount > 0
+                            ? "bg-sky-100 text-sky-800"
+                            : "bg-slate-200 text-slate-600"
+                      }`}
                     >
-                      <Stack
-                        direction="row"
-                        spacing={1.5}
-                        alignItems="center"
-                        width="100%"
-                      >
-                        {/* Icon */}
+                      {selectedCount}/{totalTests}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                        <Box>
-                          {categoryIcons[category] ?? (
-                            <CategoryOutlinedIcon color="disabled" />
-                          )}
-                        </Box>
-                        {/* Category */}
-                        <Box flex={1}>
-                          <Typography fontWeight={600} fontSize={14} noWrap>
-                            {category}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {totalTests} Tests
-                          </Typography>
-                        </Box>
-                        {/* Badge */}
-                        <Chip
-                          size="small"
-                          label={`${selectedCount}/${totalTests}`}
-                          color={
-                            selectedCount === totalTests && totalTests > 0
-                              ? "success"
-                              : "default"
-                          }
-                          sx={{
-                            minWidth: 48,
-                            fontWeight: 600,
-                          }}
-                        />
-                      </Stack>
-                    </ListItemButton>
-                  );
-                })}
-              </List>
-            </Box>
-          </Box>
-          {/* ================= MIDDLE ================= */}
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              bgcolor: "#fff",
-              borderRight: "1px solid #e5e7eb",
-            }}
+          {/* ================= COLUMN 2: AVAILABLE TESTS ================= */}
+          <div
+            className={`flex-1 flex-col h-full overflow-hidden bg-white ${
+              mobileTab === "tests" ? "flex" : "hidden md:flex"
+            }`}
           >
-            {/* Header */}
-            <Box
-              sx={{
-                p: 2,
-                borderBottom: "1px solid #e5e7eb",
-                flexShrink: 0,
-              }}
-            >
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-              >
-                <Box>
-                  <Typography variant="h6" fontWeight={700}>
-                    Available Tests
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {activeCategory}
-                  </Typography>
-                </Box>
-                <TextField
-                  size="small"
-                  placeholder="Search test..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  sx={{
-                    width: 260,
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Stack>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {currentCategoryTests.length} Test(s) •{" "}
-                  {
-                    selectedTests.filter(
-                      (x) => x.category_name === activeCategory,
-                    ).length
-                  }{" "}
-                  Selected
-                </Typography>
+            {/* Synchronized Header: Height 56px */}
+            <div className="h-14 px-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base font-bold text-slate-800 truncate">
+                  {activeCategory || "Select Category"}
+                </span>
+                <span className="text-xs font-medium text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full shrink-0">
+                  {currentCategoryTests.length} tests
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="relative w-48 sm:w-60">
+                  <SearchIcon
+                    sx={{ fontSize: 18 }}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search test name or code..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm bg-white hover:bg-slate-50 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                  />
+                </div>
+
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={isAllSelected}
                       indeterminate={isIndeterminate}
                       onChange={(e) => handleSelectAll(e.target.checked)}
+                      sx={{ p: 0.5 }}
                     />
                   }
-                  label="Select All"
+                  label={
+                    <span className="text-sm font-semibold text-slate-700 select-none">
+                      Select All
+                    </span>
+                  }
+                  sx={{ mr: 0, m: 0 }}
                 />
-              </Stack>
-            </Box>
-            {/* Test List */}
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                p: 2,
-                bgcolor: "#fafafa",
-              }}
-            >
+              </div>
+            </div>
+
+            {/* Test Cards List */}
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-slate-50/30">
               {filteredTests.length === 0 ? (
-                <Paper
-                  sx={{
-                    p: 6,
-                    textAlign: "center",
-                    borderRadius: 3,
-                  }}
-                >
-                  <Typography color="text.secondary">
-                    No tests found.
-                  </Typography>
-                </Paper>
+                <div className="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center">
+                  <SearchIcon sx={{ fontSize: 32, mb: 1, color: "var(--color-disabled)" }} />
+                  <div className="font-semibold text-slate-600">No tests found</div>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    Try adjusting your search query.
+                  </div>
+                </div>
               ) : (
-                <Stack spacing={1.5}>
-                  {filteredTests.map((test) => (
-                    <Paper
+                filteredTests.map((test) => {
+                  const checked = isChecked(test.test_id);
+
+                  return (
+                    <div
                       key={test.test_id}
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        transition: ".2s",
-
-                        "&:hover": {
-                          borderColor: "primary.main",
-                          boxShadow: 2,
-                        },
-                      }}
+                      onClick={() => handleToggle(test)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        checked
+                          ? "bg-sky-50/90 border-sky-400 shadow-xs ring-1 ring-sky-200"
+                          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
+                      }`}
                     >
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        {/* Left */}
-
-                        <Stack direction="row" spacing={2} alignItems="center">
-                          <Checkbox
-                            checked={isChecked(test.test_id)}
-                            onChange={() => handleToggle(test)}
-                          />
-
-                          <Box>
-                            <Typography fontWeight={600}>
-                              {test.test_name}
-                            </Typography>
-
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Checkbox
+                          checked={checked}
+                          onChange={() => {}}
+                          sx={{ p: 0 }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm sm:text-[15px] font-semibold text-slate-800 truncate">
+                            {test.test_name}
+                          </div>
+                          {test.test_code && (
+                            <span className="inline-block mt-0.5 text-xs font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/60">
                               {test.test_code}
-                            </Typography>
-                          </Box>
-                        </Stack>
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                        {/* Right */}
-
-                        <Stack direction="row" spacing={4} alignItems="center">
-                          <Box textAlign="center">
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Price
-                            </Typography>
-
-                            <Typography fontWeight={700}>
-                              ₹{test.price}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Stack>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs text-slate-400 block font-medium">Standard Price</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-800">
+                          ₹{test.price}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </Box>
-          </Box>
+            </div>
+          </div>
 
-          {/* ================= RIGHT ================= */}
-          <Box
-            sx={{
-              width: 400,
-              display: "flex",
-              flexDirection: "column",
-              bgcolor: "#fafafa",
-            }}
+          {/* ================= COLUMN 3: PACKAGE BUILDER ================= */}
+          <div
+            className={`w-full md:w-80 lg:w-96 shrink-0 bg-white flex-col h-full overflow-hidden ${
+              mobileTab === "builder" ? "flex" : "hidden md:flex"
+            }`}
           >
-            {/* Header */}
-
-            <Box
-              sx={{
-                p: 2,
-                borderBottom: "1px solid #e5e7eb",
-                bgcolor: "#fff",
-              }}
-            >
-              <Typography variant="h6" fontWeight={700}>
+            {/* Synchronized Header: Height 56px */}
+            <div className="h-14 px-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between shrink-0">
+              <span className="text-sm font-bold text-slate-800 tracking-wide uppercase">
                 Package Builder
-              </Typography>
+              </span>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                {selectedTests.length} Selected
+              </span>
+            </div>
 
-              <Typography variant="body2" color="text.secondary">
-                Configure your laboratory package
-              </Typography>
-            </Box>
-
-            {/* Content */}
-
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                p: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
+            {/* Package Configuration Form */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
               {/* Package Name */}
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Package Name"
-                value={packageName}
-                error={Boolean(packageNameError)}
-                helperText={packageNameError}
-                onChange={(e) => {
-                  setPackageName(e.target.value);
-                  if (packageNameError) setPackageNameError("");
-                }}
-              />
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Package Name *
+                </label>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="e.g. Comprehensive Health Checkup"
+                  value={packageName}
+                  error={Boolean(packageNameError)}
+                  helperText={packageNameError}
+                  onChange={(e) => {
+                    setPackageName(e.target.value);
+                    if (packageNameError) setPackageNameError("");
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: 14,
+                      height: 40,
+                      backgroundColor: "var(--color-bg)",
+                      borderRadius: 2,
+                    },
+                    "& .MuiFormHelperText-root": {
+                      fontSize: 11,
+                      marginLeft: 0,
+                    },
+                  }}
+                />
+              </div>
 
               {/* Package Price */}
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Package Price"
-                value={packagePrice}
-                error={Boolean(packagePriceError)}
-                helperText={packagePriceError}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d*$/.test(value)) {
-                    setPackagePrice(value);
-                    if (packagePriceError) setPackagePriceError("");
-                  }
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">₹</InputAdornment>
-                  ),
-                }}
-              />
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Package Price (₹) *
+                </label>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="e.g. 999"
+                  value={packagePrice}
+                  error={Boolean(packagePriceError)}
+                  helperText={packagePriceError}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setPackagePrice(value);
+                      if (packagePriceError) setPackagePriceError("");
+                    }
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: 14,
+                      height: 40,
+                      backgroundColor: "var(--color-bg)",
+                      borderRadius: 2,
+                    },
+                    "& .MuiFormHelperText-root": {
+                      fontSize: 11,
+                      marginLeft: 0,
+                    },
+                  }}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                          <span className="text-sm font-bold text-slate-600">
+                            ₹
+                          </span>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </div>
 
-              {/* Summary */}
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                }}
-              >
-                <Typography fontWeight={700} mb={2}>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Description (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Brief note about who this package is for..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-slate-50 hover:bg-slate-100/70 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                />
+              </div>
+
+              {/* Pricing Breakdown Summary */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col gap-2">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Package Summary
-                </Typography>
+                </span>
 
-                <Stack spacing={1}>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography color="text.secondary">
-                      Selected Tests
-                    </Typography>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 font-medium">Selected Tests:</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedTests.length} tests
+                  </span>
+                </div>
 
-                    <Typography fontWeight={700}>
-                      {selectedTests.length}
-                    </Typography>
-                  </Stack>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 font-medium">Total Standard Value:</span>
+                  <span className="font-semibold text-slate-700">
+                    ₹{totalTestPrice}
+                  </span>
+                </div>
 
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography color="text.secondary">
-                      Total Test Price
-                    </Typography>
-
-                    <Typography fontWeight={700}>₹{totalTestPrice}</Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography color="text.secondary">Discount</Typography>
-                    <Typography fontWeight={700} color="success.main">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 font-medium">Patient Savings:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-emerald-700">
                       ₹{discount}
-                      {discount > 0 && (
-                        <Chip
-                          color="success"
-                          size="small"
-                          label={`Save ${savingPercentage}%`}
-                        />
-                      )}
-                    </Typography>
-                  </Stack>
-                  <Divider />
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography fontWeight={700} color="text.main">
-                      Package Price
-                    </Typography>
+                    </span>
+                    {discount > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                        <LocalOfferOutlinedIcon sx={{ fontSize: 11 }} />
+                        {savingPercentage}% OFF
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-                    <Typography fontWeight={700}>₹{packageAmount}</Typography>
-                  </Stack>
-                </Stack>
-              </Paper>
+                <Divider sx={{ my: 0.5 }} />
 
-              {/* Selected Tests */}
-              <Paper
-                variant="outlined"
-                sx={{
-                  flex: 1,
-                  overflow: "hidden",
-                  p: 2,
-                  borderRadius: 2,
-                  minHeight: 180,
-                  display: "flex-start",
-                  flexDirection: "column",
-                }}
-              >
-                <Typography fontWeight={700} mb={2}>
-                  Selected Tests
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-slate-800">
+                    Final Package Price:
+                  </span>
+                  <span className="text-lg font-bold text-sky-700">
+                    ₹{packageAmount}
+                  </span>
+                </div>
+              </div>
+
+              {/* Selected Tests Pill Box */}
+              <div className="flex-1 flex flex-col min-h-[110px] border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Included Tests ({selectedTests.length})
+                  </span>
                   {selectedTestError && (
-                    <Typography color="error" fontSize={12} mb={1}>
+                    <span className="text-xs text-red-600 font-semibold">
                       {selectedTestError}
-                    </Typography>
+                    </span>
                   )}
-                </Typography>
+                </div>
 
                 {selectedTests.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No tests selected.
-                  </Typography>
+                  <div className="flex-1 flex items-center justify-center text-xs text-slate-400 text-center py-4">
+                    Select tests from the middle pane to add them to this package.
+                  </div>
                 ) : (
-                  <Box
-                    sx={{
-                      flex: 1,
-                      overflowY: "auto",
-                      pr: 0.5,
-                      maxHeight: 180,
-                    }}
-                  >
-                    <Stack
-                      direction="row"
-                      flexWrap="wrap"
-                      gap={1}
-                      alignItems="flex-start"
-                    >
-                      {selectedTests.map((test) => (
-                        <Chip
-                          key={test.test_id}
-                          size="small"
-                          label={test.test_code}
-                          color="primary"
-                          variant="outlined"
-                          onDelete={() =>
+                  <div className="flex-1 overflow-y-auto max-h-36 flex flex-wrap gap-1.5 pr-1">
+                    {selectedTests.map((test) => (
+                      <span
+                        key={test.test_id}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium bg-white text-slate-800 border border-slate-200 px-2.5 py-1 rounded-full shadow-2xs group"
+                      >
+                        <span className="truncate max-w-[140px]">
+                          {test.test_name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
                             setSelectedTests((prev) =>
                               prev.filter(
                                 (item) => item.test_id !== test.test_id,
                               ),
                             )
                           }
-                          sx={{
-                            borderRadius: "16px",
-                            fontWeight: 500,
-                            maxWidth: 180,
-                            "& .MuiChip-label": {
-                              px: 1,
-                            },
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                  </Box>
+                          className="text-slate-400 hover:text-red-500 cursor-pointer"
+                        >
+                          <CloseOutlinedIcon sx={{ fontSize: 13 }} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
-              </Paper>
-            </Box>
+              </div>
+            </div>
 
-            {/* Footer */}
-            <Box
-              sx={{
-                p: 2,
-                borderTop: "1px solid #e5e7eb",
-                bgcolor: "#fff",
-              }}
-            >
-              <Stack direction="row" spacing={2}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => {
-                    resetForm();
-                    onClose();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button fullWidth variant="contained" onClick={handleSave}>
-                  {isEditMode ? "Update Package" : "Create Package"}
-                </Button>
-              </Stack>
-            </Box>
-          </Box>
-        </Box>
+            {/* Bottom Actions */}
+            <div className="p-3 px-4 border-t border-slate-200 bg-white flex items-center gap-3 shrink-0">
+              <Button
+                fullWidth
+                size="medium"
+                variant="outlined"
+                onClick={() => {
+                  resetForm();
+                  onClose();
+                }}
+                sx={{ textTransform: "none", borderRadius: 2, py: 1, fontSize: 14, fontWeight: 600 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                fullWidth
+                size="medium"
+                variant="contained"
+                onClick={handleSave}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 2,
+                  py: 1,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  bgcolor: "var(--color-primary)",
+                  "&:hover": { bgcolor: "var(--color-primary-dark)" },
+                }}
+              >
+                {isEditMode ? "Update Package" : "Create Package"}
+              </Button>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
+
 export default LabPackagePopUp;

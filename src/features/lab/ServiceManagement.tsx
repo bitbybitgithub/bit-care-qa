@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Tabs, Tab, Paper } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   getLabPackageListApi,
   getLabTestListApi,
@@ -15,6 +15,9 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import LabTestManagement from "./LabTestManagement";
 import LabPackageManagement from "./LabPackageManagement";
 import LabTestSelectionPopup from "./LabTestSelectionPopup";
+import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+
 const ServiceManagement: React.FC = () => {
   const [labId] = useState(() => getSessionItem("user", "lab_id"));
   const [userId] = useState(() => getSessionItem("user", "user_id"));
@@ -26,13 +29,10 @@ const ServiceManagement: React.FC = () => {
   const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
   const [addTestPopupOpen, setAddTestPopupOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [, setIsUpdateMode] = useState(false);
   const [isOn, setIsOn] = useState(false);
   // Package Management
   const [packages, setPackages] = useState<any[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<any>(null);
-  // Dialogs
-  // Loading
 
   const transformLabTests = (data: unknown): LabCategory[] => {
     if (Array.isArray(data)) {
@@ -172,52 +172,115 @@ const ServiceManagement: React.FC = () => {
   }, [labId]);
 
   return (
-    <div className="h-auto md:mt-1">
-      <Paper
-        elevation={0}
-        sx={{
-          mb: 2,
-          borderRadius: 1,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "white",
-        }}
-      >
-        <Tabs
-          value={activeTab}
-          onChange={(_, value) => setActiveTab(value)}
-          sx={{
-            px: 2,
-            "& .MuiTab-root": {
-              textTransform: "none",
-              fontWeight: 700,
-              minHeight: 58,
-            },
-          }}
-        >
-          <Tab value="tests" label="Laboratory Tests" />
-          <Tab value="packages" label="Laboratory Packages" />
-        </Tabs>
-      </Paper>
+    <div className="w-full flex flex-col gap-2">
+      {/* Modern Compact Segmented Header Bar */}
+      <div className="bg-white border border-slate-200/90 rounded-xl px-4 py-2.5 shadow-xs flex items-center justify-between flex-wrap gap-3 transition-all">
+        <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setActiveTab("tests")}
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              activeTab === "tests"
+                ? "bg-sky-600 text-white shadow-sm ring-1 ring-sky-500/50"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+            }`}
+          >
+            <ScienceOutlinedIcon sx={{ fontSize: 18 }} />
+            <span>Laboratory Tests</span>
+            <span
+              className={`text-xs font-bold px-2 py-0.5 rounded-full transition-colors ${
+                activeTab === "tests"
+                  ? "bg-white/20 text-white border border-white/30"
+                  : "bg-slate-200 text-slate-700"
+              }`}
+            >
+              {selectedTests.length}
+            </span>
+          </button>
 
-      {activeTab === "tests" && (
-        <LabTestManagement
-          data={{
-            selectedTests,
-            search,
-          }}
-          actions={{
-            setSearch,
-            setSelectedTests,
-          }}
-          labId={labId}
-          userId={userId}
-          onUpdated={fetchAll}
-          loading={loading}
-          onAddNewTest={() => {
-            setAddTestPopupOpen(true);
-          }}
-        />
-      )}
+          <button
+            type="button"
+            onClick={() => setActiveTab("packages")}
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              activeTab === "packages"
+                ? "bg-sky-600 text-white shadow-sm ring-1 ring-sky-500/50"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+            }`}
+          >
+            <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />
+            <span>Laboratory Packages</span>
+            <span
+              className={`text-xs font-bold px-2 py-0.5 rounded-full transition-colors ${
+                activeTab === "packages"
+                  ? "bg-white/20 text-white border border-white/30"
+                  : "bg-slate-200 text-slate-700"
+              }`}
+            >
+              {packages.length}
+            </span>
+          </button>
+        </div>
+
+        {/* Quick summary status */}
+        <div className="hidden sm:flex items-center gap-3 text-xs sm:text-sm text-slate-500 font-medium">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Total Active Services: <strong className="text-slate-700">{selectedTests.length + packages.length}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Panels with Smooth Animated Transition */}
+      <AnimatePresence mode="wait">
+        {activeTab === "tests" && (
+          <motion.div
+            key="tab-tests"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="w-full"
+          >
+            <LabTestManagement
+              data={{
+                selectedTests,
+                search,
+              }}
+              actions={{
+                setSearch,
+                setSelectedTests,
+              }}
+              labId={labId}
+              userId={userId}
+              onUpdated={fetchAll}
+              loading={loading}
+              onAddNewTest={() => {
+                setAddTestPopupOpen(true);
+              }}
+            />
+          </motion.div>
+        )}
+
+        {activeTab === "packages" && (
+          <motion.div
+            key="tab-packages"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="w-full"
+          >
+            <LabPackageManagement
+              packages={packages}
+              savedLabTests={savedLabTests}
+              loading={loading}
+              onRefresh={fetchAll}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add New Test Dialog */}
       {addTestPopupOpen && (
         <LabTestSelectionPopup
           open={addTestPopupOpen}
@@ -228,14 +291,6 @@ const ServiceManagement: React.FC = () => {
           userId={userId}
           doorStepService={isOn}
           onSaved={fetchAll}
-        />
-      )}
-      {activeTab === "packages" && (
-        <LabPackageManagement
-          packages={packages}
-          savedLabTests={savedLabTests}
-          loading={loading}
-          onRefresh={fetchAll}
         />
       )}
     </div>

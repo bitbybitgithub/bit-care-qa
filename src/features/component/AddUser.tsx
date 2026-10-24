@@ -192,7 +192,7 @@ const AddUser: React.FC<AddUserProps> = ({ onClose, module,onSuccess }) => {
       >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <VscPersonAdd className="text-blue-600 text-xl" />
+            <VscPersonAdd className="text-[var(--color-primary)] text-xl" />
             <h3 className="font-semibold text-lg">Add New User</h3>
           </div>
           <button

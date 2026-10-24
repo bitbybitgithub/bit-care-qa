@@ -401,7 +401,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                 Laboratory Tests
               </h2>
               <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200/60">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
                   <ScienceOutlinedIcon sx={{ fontSize: 14 }} />
                   {selectedTests.length} Tests
                 </span>
@@ -427,7 +427,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                 placeholder="Search test or code..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-slate-100/80 focus:bg-white rounded-lg border border-slate-200 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-slate-100/80 focus:bg-white rounded-lg border border-slate-200 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
               />
               {search && (
                 <button
@@ -444,7 +444,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
             <button
               type="button"
               onClick={onAddNewTest}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--color-primary)] hover:opacity-90 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97 whitespace-nowrap"
             >
               <AddOutlinedIcon sx={{ fontSize: 16 }} />
               <span>Add New Test</span>
@@ -470,7 +470,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                     onClick={() => setActiveCategory(idx)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
                       isActive
-                        ? "bg-sky-600 text-white font-semibold shadow-xs"
+                        ? "bg-[var(--color-primary)] text-white font-semibold shadow-xs"
                         : "bg-slate-100/90 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border border-slate-200/50"
                     }`}
                   >
@@ -478,7 +478,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                     <span
                       className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
                         isActive
-                          ? "bg-sky-700/80 text-white"
+                          ? "bg-[var(--color-primary-dark)] text-white"
                           : "bg-slate-200 text-slate-700"
                       }`}
                     >
@@ -506,7 +506,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                     <button
                       type="button"
                       onClick={() => setSearch("")}
-                      className="mt-2 text-xs text-sky-600 font-semibold hover:underline"
+                      className="mt-2 text-xs text-[var(--color-primary)] font-semibold hover:underline"
                     >
                       Clear search
                     </button>
@@ -531,8 +531,8 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                         transition={{ duration: 0.15 }}
                         className={`bg-white rounded-xl border p-3 flex flex-col justify-between transition-all duration-200 group relative ${
                           isEditing
-                            ? "border-sky-400 ring-2 ring-sky-100 shadow-sm"
-                            : "border-slate-200/90 hover:border-sky-300 hover:shadow-xs"
+                            ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 shadow-sm"
+                            : "border-slate-200/90 hover:border-[var(--color-primary)]/40 hover:shadow-xs"
                         }`}
                       >
                         {/* Card Header */}
@@ -540,7 +540,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                           <div className="flex items-start justify-between gap-1.5">
                             <div className="flex-1 min-w-0 pr-1">
                               <h3
-                                className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-sky-700 transition-colors"
+                                className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-[var(--color-primary)] transition-colors"
                                 title={test.testName}
                               >
                                 {test.testName}
@@ -690,7 +690,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                                 <span className="text-[11px] text-slate-500 font-medium">
                                   Net Payable:
                                 </span>
-                                <span className="font-bold text-sky-700">
+                                <span className="font-bold text-[var(--color-primary)]">
                                   ₹{payable}
                                 </span>
                               </div>
@@ -714,11 +714,11 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                               )}
 
                               {/* Payable Banner */}
-                              <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-sky-50/70 border border-sky-100/90 mt-1">
-                                <span className="text-[11px] font-semibold text-sky-800 uppercase tracking-wide">
+                              <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-primary)]/20 mt-1">
+                                <span className="text-[11px] font-semibold text-[var(--color-primary-dark)] uppercase tracking-wide">
                                   Payable
                                 </span>
-                                <span className="text-xs sm:text-sm font-bold text-sky-700">
+                                <span className="text-xs sm:text-sm font-bold text-[var(--color-primary)]">
                                   ₹{payable}
                                 </span>
                               </div>
@@ -735,7 +735,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
         ) : (
           /* ================= NO TESTS CONFIGURED ================= */
           <div className="py-14 text-center flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600 mb-3 border border-sky-100 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-primary)] mb-3 border border-[var(--color-primary)]/20 shadow-xs">
               <ScienceOutlinedIcon sx={{ fontSize: 30 }} />
             </div>
             <h3 className="text-base font-bold text-slate-800">
@@ -748,7 +748,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
             <button
               type="button"
               onClick={onAddNewTest}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-[var(--color-primary)] hover:opacity-90 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97"
             >
               <AddOutlinedIcon sx={{ fontSize: 16 }} />
               <span>Add Your First Test</span>
@@ -785,7 +785,7 @@ const LabTestManagement: React.FC<LabTestManagementProps> = ({
                 type="button"
                 onClick={handleUpdateTests}
                 disabled={updateLoading}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--color-primary)] hover:opacity-90 text-white shadow-xs hover:shadow transition-all duration-150 cursor-pointer active:scale-97 disabled:opacity-50"
               >
                 <CheckOutlinedIcon sx={{ fontSize: 16 }} />
                 <span>{updateLoading ? "Saving..." : "Save Changes"}</span>

@@ -75,13 +75,13 @@ const filteredActions = actions.filter((a) => {
             <MenuItem key={a} onClick={() => handleClick(a)}>
               <Box display="flex" alignItems="center" gap={1} fontSize={13}>
                 {a === "Add Vitals" && (
-                  <RiHeartAdd2Line style={{ color: "#2563EB" }} />
+                  <RiHeartAdd2Line style={{ color: "var(--color-primary)" }} />
                 )}
                 {a === "Cancel Appointment" && (
-                  <AiOutlineUserDelete style={{ color: "#DC2626" }} />
+                  <AiOutlineUserDelete style={{ color: "var(--color-error)" }} />
                 )}
                 {a === "Hold Appointment" && (
-                  <IoClose style={{ color: "#F97316" }} />
+                  <IoClose style={{ color: "var(--color-warning)" }} />
                 )}
                 {a === "Send to Lab" && (
                   <FaFlask style={{ color: "var(--color-info)" }} />

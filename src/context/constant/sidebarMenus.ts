@@ -4,8 +4,9 @@ import {
   FaCog,
   FaClinicMedical,
   FaUserMd,
+  FaGift,
+  FaVials,
 } from "react-icons/fa";
-import { FaGift } from "react-icons/fa";
 import { EntityType } from "./enum";
 import type { MenuItem, Role } from "../../types/common/sidebarTypes";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -37,7 +38,7 @@ export const SIDEBAR_MENUS: Record<
       // { title: "Blog", link: "/clinic/blog", icon: FaGift },
       { title: "Blogs", link: "/clinic/BlogTabs", icon: FaGift },
       // { title: "Blog List", link: "/clinic/bloglist", icon: FaGift },
-      { title: "Clinic Settings", link: "/clinic/settings", icon: FaCog },
+      { title: "Settings", link: "/clinic/settings", icon: FaCog },
     ],
     Staff: [
       { title: "Staff Dashboard", link: "/staff/dashboard", icon: FaHome },
@@ -58,12 +59,12 @@ export const SIDEBAR_MENUS: Record<
       { title: "Dashboard", link: "/lab/dashboard", icon: FaHome },
       { title: "Users", link: "/lab/users", icon: FaUsers },
       { title: "Offers", link: "/lab/offers", icon: FaGift },
-      { title: "Lab Setting", link: "/lab/labsetting", icon: FaCog },
       {
         title: "Service Management",
         link: "/lab/service-management",
-        icon: FaCog,
+        icon: FaVials,
       },
+      { title: "Setting", link: "/lab/labsetting", icon: FaCog },
     ],
     Staff: [{ title: "Dashboard", link: "/lab/dashboard", icon: FaHome }],
   },

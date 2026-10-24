@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   const cardIcon: Record<number, JSX.Element> = {
     1: <FaCalendarDays className="text-amber-600" />,
-    2: <FaPeopleGroup className="text-blue-600" />,
+    2: <FaPeopleGroup className="text-[var(--color-primary)]" />,
     3: <FaUserDoctor className="text-emerald-600" />,
     4: <FaUserNurse className="text-violet-600" />,
   };

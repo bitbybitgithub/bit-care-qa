@@ -108,7 +108,7 @@ const ScheduleSummary: React.FC<SummaryProps> = ({
 
       <Typography variant="subtitle2" color="text.secondary" className="mb-4">
         Selected Date:{" "}
-        <span className="text-blue-600 font-medium">
+        <span className="text-[var(--color-primary)] font-medium">
           {selectedDate.format("ddd, MMM D, YYYY")}
         </span>
       </Typography>

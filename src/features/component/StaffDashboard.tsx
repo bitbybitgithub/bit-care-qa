@@ -69,7 +69,7 @@ const StaffDashboard: React.FC = () => {
     searchConfigByTab[activeTab] ?? searchConfigByTab.queue;
   const cardIcon: Record<number, JSX.Element> = {
     3: <FaUserMd className="text-emerald-600" />,
-    6: <FaPeopleGroup className="text-blue-600" />,
+    6: <FaPeopleGroup className="text-[var(--color-primary)]" />,
     7: <FaClipboardList className="text-amber-600" />,
     8: <FaEnvelopeOpenText className="text-violet-600" />,
   };

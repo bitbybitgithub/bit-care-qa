@@ -75,7 +75,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
     <>
       <div className="p-3">
         <section className="mb-4">
-          <h3 className="font-semibold text-blue-600 mb-2">
+          <h3 className="font-semibold text-[var(--color-primary)] mb-2">
             Pharmacy Branding
           </h3>
 
@@ -121,7 +121,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
             type="text"
             disabled
             value={profile.pharma_name}
-            className="w-2/4 border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+            className="w-2/4 border rounded-md px-3 py-2 border-[var(--color-primary)] bg-gray-100"
           />
         </div>
 
@@ -134,7 +134,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
               type="email"
               disabled
               value={profile.email}
-              className="w-full border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+              className="w-full border rounded-md px-3 py-2 border-[var(--color-primary)] bg-gray-100"
             />
           </div>
 
@@ -146,7 +146,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
               type="text"
               disabled
               value={profile.phone}
-              className="w-full border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+              className="w-full border rounded-md px-3 py-2 border-[var(--color-primary)] bg-gray-100"
             />
           </div>
         </div>
@@ -159,7 +159,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
             multiline
             disabled
             value={profile.address}
-            className="w-2/4 border rounded-md px-3 py-2 border-blue-600 bg-gray-100"
+            className="w-2/4 border rounded-md px-3 py-2 border-[var(--color-primary)] bg-gray-100"
           />
         </div>
         <div>
@@ -169,7 +169,7 @@ const GeneralSetting: React.FC<GeneralSettingProps> = ({
               disabled={loading}
               className={`px-6 py-2 rounded-md text-white transition ${loading
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
                 }`}
             >
               {loading ? "Saving..." : "Save & Complete"}

@@ -207,7 +207,7 @@ const MedicalDispensing: React.FC<MedicalDispensingProps> = ({
               borderRadius: "8px",
               fontWeight: 600,
               px: 2,
-              backgroundColor: isPending ? "var(--color-primary)" : "#b0b0b0",
+              backgroundColor: isPending ? "var(--color-primary)" : "var(--color-disabled)",
             }}
           >
             {status}

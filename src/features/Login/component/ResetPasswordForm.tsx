@@ -34,20 +34,20 @@ const LABEL_CLASS =
 const inputSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "var(--color-bg)",
     fontSize: 14,
     minHeight: 40,
     padding: "0 8px 0 14px",
     transition: "background-color .15s",
-    "& fieldset": { borderColor: "#e2e8f0" },
-    "&:hover fieldset": { borderColor: "#cbd5e1" },
-    "&.Mui-focused": { backgroundColor: "#fff" },
+    "& fieldset": { borderColor: "var(--color-border)" },
+    "&:hover fieldset": { borderColor: "var(--color-primary-light)" },
+    "&.Mui-focused": { backgroundColor: "var(--color-surface-alt)" },
     "&.Mui-focused fieldset": {
       borderColor: "var(--color-primary)",
       borderWidth: "1.5px",
     },
-    "&.Mui-error fieldset": { borderColor: "#dc2626" },
-    "&.Mui-disabled": { backgroundColor: "#f1f5f9" },
+    "&.Mui-error fieldset": { borderColor: "var(--color-error)" },
+    "&.Mui-disabled": { backgroundColor: "var(--color-surface)" },
   },
   "& .MuiInputBase-input": {
     padding: "9px 6px 9px 0",
@@ -55,8 +55,8 @@ const inputSx = {
     lineHeight: "22px",
     boxSizing: "border-box",
     height: "auto",
-    "&::placeholder": { color: "#94a3b8", opacity: 1 },
-    "&.Mui-disabled": { WebkitTextFillColor: "#334155" },
+    "&::placeholder": { color: "var(--color-text-secondary)", opacity: 1 },
+    "&.Mui-disabled": { WebkitTextFillColor: "var(--color-disabled)" },
   },
   "& .MuiInputAdornment-positionStart": { marginRight: "10px" },
   "& .MuiFormHelperText-root": {
@@ -72,10 +72,10 @@ const otpBoxSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
     height: 44,
-    backgroundColor: "#f8fafc",
-    "& fieldset": { borderColor: "#e2e8f0" },
-    "&:hover fieldset": { borderColor: "#cbd5e1" },
-    "&.Mui-focused": { backgroundColor: "#fff" },
+    backgroundColor: "var(--color-bg)",
+    "& fieldset": { borderColor: "var(--color-border)" },
+    "&:hover fieldset": { borderColor: "var(--color-primary-light)" },
+    "&.Mui-focused": { backgroundColor: "var(--color-surface-alt)" },
     "&.Mui-focused fieldset": {
       borderColor: "var(--color-primary)",
       borderWidth: "1.5px",
@@ -430,7 +430,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                 ),
                 endAdornment: isOtpVerified && (
                   <InputAdornment position="end">
-                    <CheckCircleIcon size={18} style={{ color: "#15803d" }} />
+                    <CheckCircleIcon size={18} style={{ color: "var(--color-success)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -457,8 +457,8 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                     opacity: 0.92,
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "#e2e8f0",
-                    color: "#94a3b8",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-disabled)",
                     cursor: "not-allowed",
                     pointerEvents: "auto",
                   },
@@ -554,7 +554,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
                     textTransform: "none",
                     whiteSpace: "nowrap",
                     color: "var(--color-primary)",
-                    "&.Mui-disabled": { color: "#94a3b8" },
+                    "&.Mui-disabled": { color: "var(--color-disabled)" },
                   }}>
                   {resendLoading
                     ? "Sending..."
@@ -623,7 +623,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
             sx={{
               height: 5,
               borderRadius: 3,
-              backgroundColor: "#eef2f6",
+              backgroundColor: "var(--color-surface)",
               "& .MuiLinearProgress-bar": {
                 backgroundColor: passwordStrength.color,
                 borderRadius: 3,
@@ -642,7 +642,7 @@ const ResetPasswordForm: React.FC<ForgotPasswordProps> = ({
           </Typography>
           <Typography
             variant="caption"
-            sx={{ color: "#64748b", display: "block", lineHeight: 1.3 }}>
+            sx={{ color: "var(--color-text-secondary)", display: "block", lineHeight: 1.3 }}>
             {passwordStrength.suggestion}
           </Typography>
         </Box>

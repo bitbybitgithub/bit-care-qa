@@ -98,7 +98,7 @@ const FollowUpAppointment: React.FC<FollowUpAppointmentProps> = ({
 
   const getStatusChipProps = (status) => ({
     label: status || "Unknown",
-    sx: { backgroundColor: "#F3F4F6", color: "#374151" },
+    sx: { backgroundColor: "var(--color-surface)", color: "var(--color-text)" },
   });
 
   const columns = [
@@ -387,10 +387,10 @@ return (
   sx={{
     width: "160px",
     borderRadius: "var(--radius-md)",
-    background: "#ffffff",
+    background: "var(--color-surface-alt)",
     fontSize: "var(--font-xs)",
     fontWeight: 600,
-    color: "#ffffff",
+    color: "var(--color-text)",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
     "& .MuiSelect-select": {
       padding: "12px 12px",
@@ -415,7 +415,7 @@ return (
       fontWeight: 600,
       fontSize: "14px",
       borderRadius: "10px",
-      "&:hover": { background: "#e2e8f0" },
+      "&:hover": { background: "var(--color-surface)" },
     }}
   >
     Successful
@@ -427,7 +427,7 @@ return (
       fontWeight: 600,
       fontSize: "14px",
       borderRadius: "10px",
-      "&:hover": { background: "#e2e8f0" },
+      "&:hover": { background: "var(--color-surface)" },
     }}
   >
     Not Required
@@ -438,7 +438,7 @@ return (
 
     
 <Box width="150px">
-  <Typography fontSize="var(--font-small)" fontWeight={600} mb={0.8} color="#000000">
+  <Typography fontSize="var(--font-small)" fontWeight={600} mb={0.8} color="var(--color-text)">
     Extend (Days)
   </Typography>
 
@@ -448,7 +448,7 @@ return (
       alignItems: "center",
       justifyContent: "center",
       gap: 2,
-      background: "#E8F0FE",
+      background: "var(--color-surface)",
       paddingY: 1,
       borderRadius: "16px",
     }}
@@ -482,7 +482,7 @@ return (
         justifyContent: "center",
         fontWeight: 700,
         fontSize: "16px",
-        color: "#fff",
+        color: "var(--color-white)",
         boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
       }}
     >

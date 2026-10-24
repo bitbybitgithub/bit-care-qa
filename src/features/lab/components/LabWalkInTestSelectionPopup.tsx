@@ -246,7 +246,7 @@ const LabWalkInTestSelectionPopup: React.FC<Props> = ({
               {filteredTests.map((test) => (
                 <Box
                   key={test.test_id}
-                  sx={{ border: "1px solid #e5e7eb", borderRadius: 2, p: 1 }}
+                  sx={{ border: "1px solid var(--color-border)", borderRadius: 2, p: 1 }}
                 >
                   <Stack direction="row" alignItems="center">
                     <Checkbox
@@ -302,7 +302,7 @@ const LabWalkInTestSelectionPopup: React.FC<Props> = ({
             {filteredPackages.map((pkg) => (
               <Box
                 key={pkg.package_id}
-                sx={{ border: "1px solid #e5e7eb", borderRadius: 2, p: 1 }}
+                sx={{ border: "1px solid var(--color-border)", borderRadius: 2, p: 1 }}
               >
                 <Stack direction="row" alignItems="center">
                   <Checkbox

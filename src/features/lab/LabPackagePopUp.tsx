@@ -338,7 +338,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 shadow-2xs">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center border border-[var(--color-primary)]/20 shadow-2xs">
             <Inventory2OutlinedIcon sx={{ fontSize: 22 }} />
           </div>
           <div>
@@ -370,7 +370,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
           onClick={() => setMobileTab("categories")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "categories"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -381,7 +381,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
           onClick={() => setMobileTab("tests")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "tests"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -392,7 +392,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
           onClick={() => setMobileTab("builder")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "builder"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -442,7 +442,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                     }}
                     className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between gap-2 cursor-pointer ${
                       isActive
-                        ? "bg-white text-sky-800 shadow-xs border border-sky-300 font-semibold"
+                        ? "bg-white text-[var(--color-primary)] shadow-xs border border-[var(--color-primary)]/30 font-semibold"
                         : "text-slate-700 hover:bg-slate-200/70 hover:text-slate-900 border border-transparent"
                     }`}
                   >
@@ -467,7 +467,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                         isFullySelected
                           ? "bg-emerald-100 text-emerald-800"
                           : selectedCount > 0
-                            ? "bg-sky-100 text-sky-800"
+                            ? "bg-[var(--color-surface)] text-[var(--color-primary)]"
                             : "bg-slate-200 text-slate-600"
                       }`}
                     >
@@ -507,7 +507,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                     placeholder="Search test name or code..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm bg-white hover:bg-slate-50 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm bg-white hover:bg-slate-50 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
                   />
                 </div>
 
@@ -550,7 +550,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                       onClick={() => handleToggle(test)}
                       className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                         checked
-                          ? "bg-sky-50/90 border-sky-400 shadow-xs ring-1 ring-sky-200"
+                          ? "bg-[var(--color-surface)]/90 border-[var(--color-primary)] shadow-xs ring-1 ring-[var(--color-primary-light)]/50"
                           : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
                       }`}
                     >
@@ -596,7 +596,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
               <span className="text-sm font-bold text-slate-800 tracking-wide uppercase">
                 Package Builder
               </span>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
                 {selectedTests.length} Selected
               </span>
             </div>
@@ -689,7 +689,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                   placeholder="Brief note about who this package is for..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-slate-50 hover:bg-slate-100/70 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                  className="w-full px-3 py-2 text-sm bg-slate-50 hover:bg-slate-100/70 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
                 />
               </div>
 
@@ -734,7 +734,7 @@ const LabPackagePopUp: React.FC<LabPackagePopUpProps> = ({
                   <span className="text-sm font-bold text-slate-800">
                     Final Package Price:
                   </span>
-                  <span className="text-lg font-bold text-sky-700">
+                  <span className="text-lg font-bold text-[var(--color-primary)]">
                     ₹{packageAmount}
                   </span>
                 </div>

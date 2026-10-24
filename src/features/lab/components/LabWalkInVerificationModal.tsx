@@ -427,7 +427,7 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
               <div
                 key={p.patient_id}
                 onClick={() => onPatientSelect(p, contact)}
-                className="flex items-center justify-between bg-[var(--color-surface-alt)] border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
+                className="flex items-center justify-between bg-[var(--color-surface-alt)] border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-[var(--color-primary)] hover:shadow-lg transition-all cursor-pointer"
               >
                 <div className="flex flex-col gap-2 flex-1">
                   <div className="flex items-center gap-3">
@@ -462,7 +462,7 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
                       <span>{p.mobile_number}</span>
                     </div>
 
-                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold">
+                    <div className="bg-[var(--color-surface)] text-[var(--color-primary)] px-4 py-1 rounded-full text-sm font-semibold">
                       {getAge(p.date_of_birth)} yrs
                     </div>
                   </div>

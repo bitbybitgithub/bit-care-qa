@@ -34,7 +34,7 @@ export const BlogTabs: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           {/* Left: Branding & Title */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 to-sky-500 text-white flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center shadow-xs shrink-0">
               <BookOpen className="w-4 h-4" />
             </div>
 
@@ -43,8 +43,8 @@ export const BlogTabs: React.FC = () => {
                 <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-none">
                   Blogs & Patient Education
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                  <Sparkles className="w-2.5 h-2.5 text-sky-500" />
+                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                  <Sparkles className="w-2.5 h-2.5 text-[var(--color-primary)]" />
                   Editorial Portal
                 </span>
               </div>
@@ -63,11 +63,11 @@ export const BlogTabs: React.FC = () => {
               onClick={() => handleTabChange("view")}
               className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
                 activeTab === "view"
-                  ? "bg-white text-sky-700 shadow-2xs border border-slate-200/60"
+                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
               }`}
             >
-              <Layers className="w-3.5 h-3.5 text-sky-600" />
+              <Layers className="w-3.5 h-3.5 text-[var(--color-primary)]" />
               <span>View Articles</span>
             </button>
 
@@ -78,11 +78,11 @@ export const BlogTabs: React.FC = () => {
               onClick={() => handleTabChange("add")}
               className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
                 activeTab === "add"
-                  ? "bg-white text-sky-700 shadow-2xs border border-slate-200/60"
+                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
               }`}
             >
-              <PlusCircle className="w-3.5 h-3.5 text-sky-600" />
+              <PlusCircle className="w-3.5 h-3.5 text-[var(--color-primary)]" />
               <span>Create Article</span>
             </button>
           </div>

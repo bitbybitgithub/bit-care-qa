@@ -60,7 +60,7 @@ const WelcomePage = ({ name, email, phone, entity, onClose }: Props) => {
         className="w-full max-w-md bg-[var(--color-bg)] rounded-2xl p-6 shadow-xl"
       >
         <div className="flex justify-center mb-4">
-          <div className="bg-[var(--color-primary-soft,#EEF2FF)] p-3 rounded-full">
+          <div className="bg-[var(--color-surface)] p-3 rounded-full">
             <Icon className="w-7 h-7 text-[var(--color-primary)]" />
           </div>
         </div>
@@ -103,7 +103,7 @@ const WelcomePage = ({ name, email, phone, entity, onClose }: Props) => {
             py: 1.2,
             borderRadius: "12px",
             background: "var(--color-primary)",
-            color: "#fff",
+            color: "var(--color-white)",
             fontWeight: 600,
             textTransform: "none",
             fontSize: "14px",

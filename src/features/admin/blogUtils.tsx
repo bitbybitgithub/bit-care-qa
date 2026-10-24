@@ -53,10 +53,10 @@ export const DEFAULT_CATEGORY: BlogCategoryMeta = {
   id: 0,
   name: "General Wellness",
   slug: "general-wellness",
-  badgeClass: "bg-sky-50 text-sky-700 border-sky-200/80 ring-sky-500/10",
-  chipColor: "#0284c7",
+  badgeClass: "bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary)]/20",
+  chipColor: "var(--color-primary)",
   iconType: "sparkles",
-  accentGradient: "from-sky-500/15 via-blue-500/10 to-cyan-600/20",
+  accentGradient: "from-[var(--color-surface)] via-blue-500/10 to-cyan-600/20",
   description: "Preventive medicine, self-care guidance & healthcare updates",
 };
 
@@ -147,7 +147,7 @@ export const FallbackBanner: React.FC<FallbackBannerProps> = ({
     <div
       className={`relative w-full h-full flex flex-col justify-between p-6 bg-gradient-to-br ${cat.accentGradient} overflow-hidden select-none ${className}`}
       style={{
-        background: `linear-gradient(135deg, ${cat.chipColor}12 0%, #ffffff 50%, ${cat.chipColor}18 100%)`,
+        background: `linear-gradient(135deg, ${cat.chipColor}12 0%, var(--color-bg) 50%, ${cat.chipColor}18 100%)`,
       }}
     >
       {/* Decorative background grid and watermark icon */}

@@ -33,10 +33,10 @@ const MainLayout = () => {
       {/* -------- Sidebar (Desktop Fixed) -------- */}
       <div
         className={`
-          hidden md:block fixed top-0 left-0 h-full 
+          hidden md:block fixed top-0 left-0 h-full z-30
           bg-[var(--color-primary)]
-          transition-all duration-300 
-          ${collapsed ? "w-20" : "w-56"}
+          transition-all duration-300 ease-in-out
+          ${collapsed ? "w-20" : "w-64"}
         `}
       >
         <Sidebar
@@ -50,11 +50,13 @@ const MainLayout = () => {
       {/* -------- Sidebar (Mobile Drawer) -------- */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="absolute left-0 top-0 h-full w-64 bg-[var(--color-primary)] z-50">
+          {/* Drawer Content */}
+          <div className="fixed inset-y-0 left-0 w-72 z-50 bg-[var(--color-primary)] shadow-2xl transition-transform duration-300">
             <Sidebar
               isCollapsed={false}
               setIsCollapsed={() => {}}
@@ -68,27 +70,30 @@ const MainLayout = () => {
       {/* -------- Main Layout Wrapper -------- */}
       <div
         className={`
-          flex flex-col h-full transition-all duration-300 w-auto
-          ${collapsed ? "md:ml-20" : "md:ml-56"} 
+          flex flex-col h-full min-w-0 transition-all duration-300 ease-in-out
+          ${collapsed ? "md:ml-20" : "md:ml-64"} 
           ml-0
         `}
       >
         {/* -------- Header -------- */}
-        <div className="sticky top-0 z-40 shadow ">
+        <div className="sticky top-0 z-20">
           <Navbar
             onMenuClick={() => {
-              if (window.innerWidth < 768) setMobileOpen(true);
-              else setCollapsed((prev) => !prev);
+              if (window.innerWidth < 768) {
+                setMobileOpen(true);
+              } else {
+                setCollapsed((prev) => !prev);
+              }
             }}
           />
         </div>
 
         {/* -------- Main Content (Scrollable) -------- */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-[var(--color-bg)]">
           <SocketProvider token={token} clinicId={clinicId} doctorId={doctorId}>
             <Outlet />
           </SocketProvider>
-        </div>
+        </main>
       </div>
     </div>
   );

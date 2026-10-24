@@ -77,7 +77,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
 
   return (
     <article
-      className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-sky-500/10 hover:border-sky-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+      className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-[var(--color-primary)]/10 hover:border-[var(--color-primary-light)] transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
       style={{
         animationDelay: `${Math.min(index * 50, 300)}ms`,
       }}
@@ -134,7 +134,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
         {/* Title */}
         <h3
           onClick={() => onRead(blog.blog_id || "")}
-          className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2 leading-snug cursor-pointer mb-2"
+          className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug cursor-pointer mb-2"
         >
           {blog.title}
         </h3>
@@ -149,7 +149,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
           <button
             type="button"
             onClick={() => onRead(blog.blog_id || "")}
-            className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-sky-600 hover:text-sky-700 transition cursor-pointer group/link"
+            className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition cursor-pointer group/link"
           >
             <span>Read Article</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-1" />
@@ -341,7 +341,7 @@ export const BlogsList: React.FC = () => {
             <button
               type="button"
               onClick={handleBackToBlogs}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-xl transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Articles
@@ -398,7 +398,7 @@ export const BlogsList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleEditBlog(blog.blog_id || blogId)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl shadow-2xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-xl shadow-2xs transition cursor-pointer"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit Article</span>
@@ -445,14 +445,14 @@ export const BlogsList: React.FC = () => {
 
                 {/* Excerpt / Summary */}
                 {blog.short_description && (
-                  <div className="p-3 sm:p-3.5 rounded-2xl bg-sky-50/70 border-l-4 border-sky-600 text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
+                  <div className="p-3 sm:p-3.5 rounded-2xl bg-[var(--color-surface)]/70 border-l-4 border-[var(--color-primary)] text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
                     {blog.short_description}
                   </div>
                 )}
 
                 {/* Byline */}
                 <div className="flex items-center gap-2 pt-1 text-xs text-slate-500">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-[10px] shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center font-bold text-[10px] shrink-0">
                     BC
                   </div>
                   <span className="font-semibold text-slate-700">BitCare Medical Editorial</span>
@@ -488,7 +488,7 @@ export const BlogsList: React.FC = () => {
 
             {/* Medical Disclaimer */}
             <div className="mt-8 sm:mt-10 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs text-slate-500 leading-relaxed flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-slate-700 inline">
                   Medical Disclaimer:{" "}
@@ -524,7 +524,7 @@ export const BlogsList: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleEditBlog(blog.blog_id || blogId)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-2xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-2xs transition cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     Edit Article
@@ -637,7 +637,7 @@ export const BlogsList: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search articles..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition"
+                className="w-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition"
               />
               {searchQuery && (
                 <button
@@ -669,7 +669,7 @@ export const BlogsList: React.FC = () => {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-xl transition cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
             >
               Retry
             </button>
@@ -679,7 +679,7 @@ export const BlogsList: React.FC = () => {
         {/* Empty State */}
         {!error && filteredBlogs.length === 0 && (
           <div className="max-w-md mx-auto py-12 px-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center mx-auto mb-3 shadow-2xs">
               <BookOpen className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900 mb-1">
@@ -697,7 +697,7 @@ export const BlogsList: React.FC = () => {
                   setSearchQuery("");
                   setSelectedCategory("all");
                 }}
-                className="px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-lg transition cursor-pointer"
               >
                 Clear Filters
               </button>

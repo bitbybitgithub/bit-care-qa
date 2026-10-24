@@ -28,7 +28,7 @@ const ConsultationItem: React.FC<ConsultationItemProps> = ({
     <div className="flex items-center justify-between p-4 border-b border-slate-100/50 last:border-0 relative z-10">
       <div className="flex flex-col flex-1 min-w-0">
         <motion.span
-          className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors"
+          className="font-semibold text-slate-900 text-sm group-hover:text-[var(--color-primary)] transition-colors"
           whileHover={{ x: 2 }}
         >
           {patient?.patient_name}
@@ -53,12 +53,12 @@ const ConsultationItem: React.FC<ConsultationItemProps> = ({
       </div>
 
       <motion.button
-        className="ml-3 p-2 rounded-lg hover:bg-blue-100 transition-all"
+        className="ml-3 p-2 rounded-lg hover:bg-[var(--color-surface)] transition-all"
         whileHover={{ scale: 1.1, rotate: 90 }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        <MoreHorizontal size={16} className="text-slate-400 group-hover:text-blue-500" />
+        <MoreHorizontal size={16} className="text-slate-400 group-hover:text-[var(--color-primary)]" />
       </motion.button>
     </div>
   </motion.div>

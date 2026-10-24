@@ -145,7 +145,7 @@ const AddPartner = ({
   flex flex-col h-full
   
 
-  ${isSelected ? "border-[var(--color-primary)] bg-blue-50" : "border-transparent bg-white "}
+  ${isSelected ? "border-[var(--color-primary)] bg-[var(--color-surface)]" : "border-transparent bg-white "}
 
   ${
     item.alreadyMapped
@@ -180,7 +180,7 @@ const AddPartner = ({
                 className={`px-4 py-3 space-y-3 text-xs
   text-[var(--color-text-secondary)]
   flex-1 
-  ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
+  ${isSelected ? "bg-[var(--color-surface)]" : "bg-[var(--color-surface-alt)]"}
 `}
               >
                 {item.mobile && (
@@ -210,7 +210,7 @@ const AddPartner = ({
               </div>
               <div
                 className={`px-4 pb-3 flex items-center justify-between
-  ${isSelected ? "bg-blue-50" : "bg-[var(--color-surface-alt)]"}
+  ${isSelected ? "bg-[var(--color-surface)]" : "bg-[var(--color-surface-alt)]"}
 `}
               >
                 <span

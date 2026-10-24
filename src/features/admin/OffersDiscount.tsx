@@ -220,7 +220,7 @@ const OffersDiscount = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#ffffff",
+              backgroundColor: "var(--color-bg)",
               borderRadius: "10px",
             },
           }}
@@ -236,7 +236,7 @@ const OffersDiscount = () => {
         <TextField
           sx={{
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#ffffff",
+              backgroundColor: "var(--color-bg)",
               borderRadius: "10px",
             },
           }}
@@ -263,7 +263,7 @@ const OffersDiscount = () => {
             ${
               errors.offer_image
                 ? "border-red-500"
-                : "border-gray-300 hover:border-blue-500"
+                : "border-gray-300 hover:border-[var(--color-primary)]"
             }`}
           >
             <input
@@ -300,7 +300,7 @@ const OffersDiscount = () => {
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-bg)",
                 borderRadius: "10px",
               },
             }}
@@ -318,7 +318,7 @@ const OffersDiscount = () => {
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-bg)",
                 borderRadius: "10px",
               },
             }}
@@ -344,7 +344,7 @@ const OffersDiscount = () => {
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-bg)",
                 borderRadius: "10px",
               },
             }}
@@ -368,7 +368,7 @@ const OffersDiscount = () => {
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-bg)",
                 borderRadius: "10px",
               },
             }}

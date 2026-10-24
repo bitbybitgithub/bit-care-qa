@@ -181,7 +181,7 @@ const ServiceManagement: React.FC = () => {
             onClick={() => setActiveTab("tests")}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
               activeTab === "tests"
-                ? "bg-sky-600 text-white shadow-sm ring-1 ring-sky-500/50"
+                ? "bg-[var(--color-primary)] text-white shadow-sm ring-1 ring-[var(--color-primary)]/50"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
             }`}
           >
@@ -203,7 +203,7 @@ const ServiceManagement: React.FC = () => {
             onClick={() => setActiveTab("packages")}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
               activeTab === "packages"
-                ? "bg-sky-600 text-white shadow-sm ring-1 ring-sky-500/50"
+                ? "bg-[var(--color-primary)] text-white shadow-sm ring-1 ring-[var(--color-primary)]/50"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
             }`}
           >

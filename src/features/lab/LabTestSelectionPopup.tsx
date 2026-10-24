@@ -386,7 +386,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 shadow-2xs">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center border border-[var(--color-primary)]/20 shadow-2xs">
             <ScienceOutlinedIcon sx={{ fontSize: 22 }} />
           </div>
           <div>
@@ -415,7 +415,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           onClick={() => setMobileTab("categories")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "categories"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -426,7 +426,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           onClick={() => setMobileTab("tests")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "tests"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -437,7 +437,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           onClick={() => setMobileTab("selected")}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             mobileTab === "selected"
-              ? "bg-white text-sky-700 shadow-xs"
+              ? "bg-white text-[var(--color-primary)] shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -499,7 +499,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       }}
                       className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between gap-2 cursor-pointer ${
                         isActive
-                          ? "bg-white text-sky-800 shadow-xs border border-sky-300 font-semibold"
+                          ? "bg-white text-[var(--color-primary)] shadow-xs border border-[var(--color-primary)]/30 font-semibold"
                           : "text-slate-700 hover:bg-slate-200/70 hover:text-slate-900 border border-transparent"
                       }`}
                     >
@@ -513,7 +513,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       </div>
 
                       {selectedInThisCategory > 0 ? (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 shrink-0">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] shrink-0">
                           {selectedInThisCategory}
                         </span>
                       ) : (
@@ -555,7 +555,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       placeholder="Search test name or code..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm bg-white hover:bg-slate-50 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                      className="w-full pl-8 pr-3 py-1.5 text-xs sm:text-sm bg-white hover:bg-slate-50 focus:bg-white rounded-lg border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
                     />
                   </div>
 
@@ -609,7 +609,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                         key={test.id}
                         className={`p-3 rounded-xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3 ${
                           checked
-                            ? "bg-sky-50/90 border-sky-400 shadow-xs ring-1 ring-sky-200"
+                            ? "bg-[var(--color-surface)]/90 border-[var(--color-primary)] shadow-xs ring-1 ring-[var(--color-primary-light)]/50"
                             : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
                         }`}
                       >
@@ -743,7 +743,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
 
                             {/* Net Payable Badge */}
                             <div className="flex flex-col items-end self-center mt-3 ml-1">
-                              <span className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-lg bg-sky-100 text-sky-800 whitespace-nowrap border border-sky-200/80">
+                              <span className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] whitespace-nowrap border border-[var(--color-primary)]/20">
                                 = ₹{payable !== null ? payable : "0.00"}
                               </span>
                             </div>
@@ -773,7 +773,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                 <span className="text-sm font-bold text-slate-800 tracking-wide uppercase">
                   Selected Tests
                 </span>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
                   {newSelectedTests.length} Ready
                 </span>
               </div>
@@ -843,10 +843,10 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       )}
 
                       <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                        <span className="font-bold text-sky-900 uppercase tracking-wide">
+                        <span className="font-bold text-slate-800 uppercase tracking-wide">
                           Payable Amount:
                         </span>
-                        <span className="text-sm font-bold text-sky-700">
+                        <span className="text-sm font-bold text-[var(--color-primary)]">
                           {test.price
                             ? `₹${(
                                 Number(test.price) -

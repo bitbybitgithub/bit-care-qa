@@ -421,7 +421,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           </Link>
           <Link
             to="/login"
-            className="px-3.5 py-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-lg transition"
+            className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-lg transition"
           >
             Go to Login
           </Link>
@@ -444,7 +444,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           {blogId && (
             <Link
               to="/clinic/BlogTabs"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 transition mr-1"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition mr-1"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -453,8 +453,8 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           <span className="text-sm font-bold text-slate-800">
             {blogId ? "Edit Article" : "Create New Article"}
           </span>
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-50 text-sky-700 border border-sky-100">
-            <Sparkles className="w-2.5 h-2.5 text-sky-500" />
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+            <Sparkles className="w-2.5 h-2.5 text-[var(--color-primary)]" />
             {blogId ? "Editing" : "Draft"}
           </span>
         </div>
@@ -475,7 +475,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 active:from-sky-700 active:to-sky-800 rounded-lg shadow-2xs transition disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-lg shadow-2xs transition disabled:opacity-60 cursor-pointer"
           >
             {isSubmitting ? (
               <>
@@ -504,7 +504,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <span className="flex items-center gap-1.5 text-slate-800 font-semibold text-xs sm:text-sm">
-                <FileText className="w-3.5 h-3.5 text-sky-600" />
+                <FileText className="w-3.5 h-3.5 text-[var(--color-primary)]" />
                 Article Essentials
               </span>
               <span className="text-[11px] text-slate-400">* Required</span>
@@ -533,7 +533,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
                 className={`w-full px-3 py-2 rounded-xl border text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
                   errors.title
                     ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
-                    : "border-slate-300 focus:border-sky-500 focus:ring-sky-500/15 bg-white"
+                    : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
                 }`}
               />
               {errors.title && (
@@ -567,7 +567,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
                 className={`w-full px-3 py-2 rounded-xl border text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm leading-relaxed transition focus:outline-none focus:ring-2 resize-y ${
                   errors.short_description
                     ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
-                    : "border-slate-300 focus:border-sky-500 focus:ring-sky-500/15 bg-white"
+                    : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
                 }`}
               />
               {errors.short_description && (
@@ -595,7 +595,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
               className={`rounded-xl overflow-hidden border transition ${
                 errors.content
                   ? "border-rose-400 ring-2 ring-rose-500/15"
-                  : "border-slate-200 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/15"
+                  : "border-slate-200 focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/15"
               }`}
             >
               <div className="bg-white">
@@ -628,7 +628,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 space-y-2.5">
             <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
               <span className="font-semibold text-slate-800 text-xs flex items-center gap-1">
-                <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
+                <ImageIcon className="w-3.5 h-3.5 text-[var(--color-primary)]" />
                 Banner Image <span className="text-rose-500">*</span>
               </span>
               <span className="text-[10px] text-slate-400">16:9 • Max 5MB</span>
@@ -659,7 +659,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-2.5 py-1 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-lg shadow-2xs flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-lg shadow-2xs flex items-center gap-1 cursor-pointer"
                   >
                     <FolderOpen className="w-3 h-3" />
                     Replace
@@ -695,19 +695,19 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
                   isDragging
-                    ? "border-sky-500 bg-sky-50/60"
+                    ? "border-[var(--color-primary)] bg-[var(--color-surface)]/60"
                     : errors.featured_image
                     ? "border-rose-300 bg-rose-50/20"
-                    : "border-slate-200 bg-slate-50/50 hover:border-sky-400 hover:bg-sky-50/20"
+                    : "border-slate-200 bg-slate-50/50 hover:border-[var(--color-primary-light)] hover:bg-[var(--color-surface)]/20"
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-sky-100/70 text-sky-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center">
                   <UploadCloud className="w-4 h-4" />
                 </div>
                 <p className="text-xs font-semibold text-slate-800">
                   Click or drag banner here
                 </p>
-                <span className="px-2.5 py-0.5 text-[11px] font-semibold text-sky-700 bg-white border border-sky-200 rounded-md shadow-2xs">
+                <span className="px-2.5 py-0.5 text-[11px] font-semibold text-[var(--color-primary)] bg-white border border-[var(--color-primary)]/30 rounded-md shadow-2xs">
                   Browse
                 </span>
               </div>
@@ -737,7 +737,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
               className={`w-full px-3 py-2 rounded-xl border text-xs text-slate-900 bg-white transition focus:outline-none focus:ring-2 ${
                 errors.category_id
                   ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
-                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-500/15"
+                  : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15"
               }`}
             >
               <option value="">-- Select Category --</option>
@@ -787,7 +787,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full py-2 px-3 text-xs font-semibold text-white bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 active:from-sky-700 active:to-sky-800 rounded-xl shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full py-2 px-3 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>

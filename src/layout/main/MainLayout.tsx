@@ -25,6 +25,7 @@ const MainLayout = () => {
 
   const clinicId = getSessionItem("user", "clinic_id");
   const doctorId = getSessionItem("user", "doctor_id");
+  const labId = getSessionItem("user", "lab_id");
 
   if (loading) return <Loader />;
 
@@ -90,7 +91,12 @@ const MainLayout = () => {
 
         {/* -------- Main Content (Scrollable) -------- */}
         <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-[var(--color-bg)]">
-          <SocketProvider token={token} clinicId={clinicId} doctorId={doctorId}>
+          <SocketProvider
+            token={token}
+            clinicId={clinicId ? Number(clinicId) : null}
+            doctorId={doctorId ? Number(doctorId) : null}
+            labId={labId ? Number(labId) : null}
+          >
             <Outlet />
           </SocketProvider>
         </main>

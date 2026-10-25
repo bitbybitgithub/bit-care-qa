@@ -8,9 +8,14 @@ export interface PendingQueueDto {
   doctor_id: number;
   doctor_name: string;
   clinic_id: number;
-  test_date: string; 
+  test_date: string;
   result_status: "Pending" | "Processing" | "Completed";
-  created_date: string; 
+  created_date: string;
   report_id: string | null;
-  prescription_id:number | null
+  prescription_id: number | null;
+  discount_price?: number | null;
+  payable_amount?: number | null;
+  gross_amount?: number | null;
+  discount_amount?: number | null;
+  total_amount?: number | null;
 }

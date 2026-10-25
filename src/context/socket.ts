@@ -9,6 +9,7 @@ export const getSocket = (token?: string): Socket => {
   if (!socket) {
     socket = io(SOCKET_URL, {
       transports: ["websocket"],
+      withCredentials: true,
       autoConnect: false, // we’ll manually connect after setting auth
       reconnection: true,
       reconnectionDelay: 1000,

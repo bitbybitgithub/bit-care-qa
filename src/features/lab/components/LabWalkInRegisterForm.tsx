@@ -95,7 +95,10 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
   const totalSelectionCount = selectionSummary.length;
   const totalAmount =
-    selectedTests.reduce((total, test) => total + Number(test.payable_amount ?? test.price ?? 0), 0) +
+    selectedTests.reduce(
+      (total, test) => total + Number(test.payable_amount ?? test.price ?? 0),
+      0,
+    ) +
     selectedPackages.reduce(
       (total, pkg) => total + Number(pkg.package_price ?? 0),
       0,
@@ -308,13 +311,37 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       const selectedPackage = selectedPackages[0] ?? null;
       const testDetails =
         selectedTests.length > 0
-          ? selectedTests.map((test) => ({
-              test_id: Number(test.test_id),
-              category_id: Number(test.category_id),
-              test_price: Number(test.payable_amount ?? test.price),
-            }))
+          ? selectedTests.map((test) => {
+              const price = Number(test.price);
+              const discount = Number(test.discount_price ?? 0);
+              return {
+                test_id: Number(test.test_id),
+                category_id: Number(test.category_id),
+                test_price: price,
+                discount_price: discount,
+                payable_amount: Number(
+                  test.payable_amount ??
+                    test.payable_amount ??
+                    price - discount,
+                ),
+              };
+            })
           : null;
 
+      const totalAmount =
+        selectedTests.reduce(
+          (sum, t) =>
+            sum +
+            Number(
+              t.payable_amount ??
+                Number(t.price) - Number(t.discount_price ?? 0),
+            ),
+          0,
+        ) +
+        selectedPackages.reduce(
+          (sum, p) => sum + Number(p.package_price || 0),
+          0,
+        );
       const payload: SaveLabAppointmentPayload = {
         lab_id: labId,
         patient_id: Number(patientId),
@@ -335,7 +362,6 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
         prescription_guid_name: prescriptionGuid,
         prescription_file_name: prescriptionFileName,
       };
-
       const appointmentResponse = await saveLabAppointmentApi(payload);
 
       if (!(appointmentResponse as any)?.success) {
@@ -378,7 +404,10 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       <div className="relative w-full max-w-2xl bg-[var(--color-surface)] border border-[var(--color-border)]/30 rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] p-4 sm:p-6 text-[var(--color-text)] overflow-hidden max-h-[92vh] flex flex-col">
         {saving && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-surface)]/80 backdrop-blur-xs rounded-[var(--radius-xl)]">
-            <CircularProgress size={36} sx={{ color: "var(--color-primary)" }} />
+            <CircularProgress
+              size={36}
+              sx={{ color: "var(--color-primary)" }}
+            />
             <p className="mt-3 text-xs sm:text-sm font-semibold text-[var(--color-primary)]">
               Booking Appointment...
             </p>
@@ -501,7 +530,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {/* DOB */}
               <div>
                 <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                  Date of Birth <span className="text-[var(--color-error)]">*</span>
+                  Date of Birth{" "}
+                  <span className="text-[var(--color-error)]">*</span>
                 </label>
                 <TextField
                   fullWidth
@@ -566,7 +596,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {/* Phone */}
               <div>
                 <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                  Contact Number <span className="text-[var(--color-error)]">*</span>
+                  Contact Number{" "}
+                  <span className="text-[var(--color-error)]">*</span>
                 </label>
                 <TextField
                   fullWidth
@@ -661,7 +692,10 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {/* Email */}
               <div className={!isPrescriptionRequired ? "sm:col-span-2" : ""}>
                 <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                  Email Address <span className="text-[var(--color-text-secondary)] font-normal">(Optional)</span>
+                  Email Address{" "}
+                  <span className="text-[var(--color-text-secondary)] font-normal">
+                    (Optional)
+                  </span>
                 </label>
                 <TextField
                   fullWidth
@@ -701,7 +735,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {isPrescriptionRequired && (
                 <div>
                   <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                    Doctor Name <span className="text-[var(--color-error)]">*</span>
+                    Doctor Name{" "}
+                    <span className="text-[var(--color-error)]">*</span>
                   </label>
                   <TextField
                     fullWidth
@@ -741,7 +776,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {isPrescriptionRequired && (
                 <div>
                   <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                    Doctor Mobile Number <span className="text-[var(--color-error)]">*</span>
+                    Doctor Mobile Number{" "}
+                    <span className="text-[var(--color-error)]">*</span>
                   </label>
                   <TextField
                     fullWidth
@@ -789,7 +825,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               {isPrescriptionRequired && (
                 <div>
                   <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
-                    Upload Prescription <span className="text-[var(--color-error)]">*</span>
+                    Upload Prescription{" "}
+                    <span className="text-[var(--color-error)]">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <Button
@@ -888,7 +925,9 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                   }}
                 >
                   <FaPlusCircle className="mr-1 text-xs" />
-                  {totalSelectionCount ? "Edit Tests/Packages" : "Select Tests/Packages"}
+                  {totalSelectionCount
+                    ? "Edit Tests/Packages"
+                    : "Select Tests/Packages"}
                 </Button>
               </div>
 
@@ -899,7 +938,9 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                       key={`${item.type}-${item.id}`}
                       className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text)]"
                     >
-                      <span className="truncate max-w-[220px]">{item.name}</span>
+                      <span className="truncate max-w-[220px]">
+                        {item.name}
+                      </span>
                       <IconButton
                         type="button"
                         size="small"
@@ -934,7 +975,8 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 </div>
               ) : (
                 <p className="text-xs text-[var(--color-text-secondary)] py-1">
-                  No tests or packages selected. Click the button above to choose tests.
+                  No tests or packages selected. Click the button above to
+                  choose tests.
                 </p>
               )}
 

@@ -19,8 +19,10 @@ import LabTestDetailsDialog from "./components/LabTestDetailsDialog";
 import LabPrescriptionDialog from "./components/LabPrescriptionDialog";
 import LabReportUploadDialog from "./components/LabReportUploadDialog";
 import LabReportViewerDialog from "./components/LabReportViewerDialog";
+import { useSocket } from "../../context/SocketContext";
 import type {
   LabQueueRow,
+  LabQueueTest,
   LabReport,
   LabReportFile,
 } from "./components/LabQueueTypes";
@@ -213,6 +215,7 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const location = useLocation();
   const labId = getSessionItem("user", "lab_id");
   const user_id = getSessionItem("user", "user_id");
+  const { socket } = useSocket();
 
   const [rows, setRows] = useState<LabQueueRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -240,18 +243,207 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [reportsLoadError, setReportsLoadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  /* ---------------- FETCH ---------------- */
-  useEffect(() => {
-    const fetchData = async () => {
-      const apiData = await getPendingQueueAsync(labId);
-      const normalized = apiData.map((r) => ({
+  /* ---------------- FETCH & REAL-TIME QUEUE REFRESH ---------------- */
+  const refreshQueue = useCallback(async () => {
+    if (!labId) return;
+    try {
+      const apiData = await getPendingQueueAsync(Number(labId));
+      const normalized = (apiData || []).map((r) => ({
         ...r,
         result_status: normalizeStatus(r.result_status),
       })) as LabQueueRow[];
       setRows(normalized);
-    };
-    fetchData();
+    } catch (err) {
+      console.warn("Failed to refresh lab queue:", err);
+    }
   }, [labId]);
+
+  useEffect(() => {
+    void refreshQueue();
+  }, [refreshQueue]);
+
+  /* ---------------- SOCKET REAL-TIME LISTENERS ---------------- */
+  useEffect(() => {
+    if (!socket || !labId) return;
+
+    const numericLabId = Number(labId);
+
+    // Re-emit lab join if socket is already connected on mount
+    if (socket.connected) {
+      socket.emit("joinLab", numericLabId);
+    }
+
+    const handleConnect = () => {
+      socket.emit("joinLab", numericLabId);
+      void refreshQueue();
+    };
+
+    const handleLabReferral = (payload?: { lab_id?: number | string }) => {
+      if (!payload?.lab_id || Number(payload.lab_id) === numericLabId) {
+        toast.info("New lab referral received");
+        void refreshQueue();
+      }
+    };
+
+    const handleNewAppointment = (data: unknown) => {
+      const item =
+        data && typeof data === "object" && "data" in data
+          ? (data as { data: unknown }).data
+          : data;
+
+      if (item && typeof item === "object" && "lab_record_id" in item) {
+        const raw = item as LabQueueRow;
+        if (raw.lab_id && Number(raw.lab_id) !== numericLabId) {
+          return;
+        }
+        const newRow: LabQueueRow = {
+          ...raw,
+          result_status: normalizeStatus(raw.result_status || "Pending"),
+        };
+        setRows((prev) => {
+          const exists = prev.some(
+            (r) => Number(r.lab_record_id) === Number(newRow.lab_record_id),
+          );
+          if (exists) {
+            return prev.map((r) =>
+              Number(r.lab_record_id) === Number(newRow.lab_record_id)
+                ? { ...r, ...newRow }
+                : r,
+            );
+          }
+          return [newRow, ...prev];
+        });
+        toast.info("New lab appointment received");
+      } else {
+        void refreshQueue();
+      }
+    };
+
+    const handleStatusUpdate = (data: unknown) => {
+      const item =
+        data && typeof data === "object" && "data" in data
+          ? (data as { data: unknown }).data
+          : data;
+
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const recordId =
+          record.lab_record_id ?? record.lab_appointment_id ?? record.appointment_id;
+        const statusVal = (record.result_status ?? record.status) as
+          | string
+          | undefined;
+
+        if (recordId !== undefined && statusVal) {
+          const normalizedStatus = normalizeStatus(statusVal);
+          setRows((prev) =>
+            prev.map((r) => {
+              const matches =
+                (record.lab_record_id !== undefined &&
+                  Number(r.lab_record_id) === Number(record.lab_record_id)) ||
+                (record.lab_appointment_id !== undefined &&
+                  Number(r.lab_appointment_id) ===
+                    Number(record.lab_appointment_id)) ||
+                (record.appointment_id !== undefined &&
+                  Number(r.appointment_id) === Number(record.appointment_id));
+
+              return matches
+                ? { ...r, ...record, result_status: normalizedStatus }
+                : r;
+            }),
+          );
+          return;
+        }
+      }
+      void refreshQueue();
+    };
+
+    const handlePaymentUpdate = (data: unknown) => {
+      const item =
+        data && typeof data === "object" && "data" in data
+          ? (data as { data: unknown }).data
+          : data;
+
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const recordId =
+          record.lab_record_id ?? record.lab_appointment_id ?? record.appointment_id;
+
+        if (recordId !== undefined) {
+          setRows((prev) =>
+            prev.map((r) => {
+              const matches =
+                (record.lab_record_id !== undefined &&
+                  Number(r.lab_record_id) === Number(record.lab_record_id)) ||
+                (record.lab_appointment_id !== undefined &&
+                  Number(r.lab_appointment_id) ===
+                    Number(record.lab_appointment_id)) ||
+                (record.appointment_id !== undefined &&
+                  Number(r.appointment_id) === Number(record.appointment_id));
+
+              return matches ? { ...r, ...record, is_fee_paid: "1" } : r;
+            }),
+          );
+          return;
+        }
+      }
+      void refreshQueue();
+    };
+
+    const handleTestsUpdated = (data: unknown) => {
+      const item =
+        data && typeof data === "object" && "data" in data
+          ? (data as { data: unknown }).data
+          : data;
+
+      if (
+        item &&
+        typeof item === "object" &&
+        "lab_record_id" in item &&
+        "tests" in item &&
+        Array.isArray((item as Record<string, unknown>).tests)
+      ) {
+        const record = item as {
+          lab_record_id: number | string;
+          tests: LabQueueTest[];
+        };
+        setRows((prev) =>
+          prev.map((r) =>
+            Number(r.lab_record_id) === Number(record.lab_record_id)
+              ? { ...r, test_details: record.tests }
+              : r,
+          ),
+        );
+        return;
+      }
+      void refreshQueue();
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("lab_referral", handleLabReferral);
+    socket.on("newAppointment", handleNewAppointment);
+    socket.on("newLabAppointment", handleNewAppointment);
+    socket.on("appointmentUpdate", handleStatusUpdate);
+    socket.on("labStatusUpdate", handleStatusUpdate);
+    socket.on("labUpdate", handleStatusUpdate);
+    socket.on("labPayment", handlePaymentUpdate);
+    socket.on("paymentUpdate", handlePaymentUpdate);
+    socket.on("labTestsUpdated", handleTestsUpdated);
+    socket.on("updatePatientTests", handleTestsUpdated);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("lab_referral", handleLabReferral);
+      socket.off("newAppointment", handleNewAppointment);
+      socket.off("newLabAppointment", handleNewAppointment);
+      socket.off("appointmentUpdate", handleStatusUpdate);
+      socket.off("labStatusUpdate", handleStatusUpdate);
+      socket.off("labUpdate", handleStatusUpdate);
+      socket.off("labPayment", handlePaymentUpdate);
+      socket.off("paymentUpdate", handlePaymentUpdate);
+      socket.off("labTestsUpdated", handleTestsUpdated);
+      socket.off("updatePatientTests", handleTestsUpdated);
+    };
+  }, [socket, labId, refreshQueue]);
 
   /* ---------------- MODE ---------------- */
   const resolvedMode = useMemo(() => {
@@ -1044,6 +1236,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         pdfUrl={pdfUrl}
         pdfLoading={pdfLoading}
         viewOnly={addTestViewOnly}
+        variant={
+          addTestRow?.booking_source?.toUpperCase() === "CLINIC" ||
+          Boolean(
+            addTestRow?.prescription_url ||
+            addTestRow?.clinic_id ||
+            addTestRow?.clinic_name,
+          )
+            ? "clinic"
+            : "patient"
+        }
         onClose={() => {
           setAddTestRow(null);
           setPdfUrl(null);
@@ -1062,6 +1264,8 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                         test_name: test.test_name,
                         test_code: test.test_code,
                         test_price: test.price,
+                        discount_price: test.discount_price,
+                        payable_amount: test.payable_amount,
                       })),
                     ],
                   }

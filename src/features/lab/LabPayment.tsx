@@ -68,10 +68,10 @@ export default function LabPayment({
   const amount = packageDetails?.price
     ? Number(packageDetails.price)
     : testDetails.reduce(
-        (total, test) => total + Number(test.test_price || 0),
+        (total, test) => total + Number(test.payable_amount || 0),
         0,
       );
-
+  const amountInPaise = Math.round(amount * 100);
   const handleSubmit = async () => {
     if (amount <= 0) {
       toast.error("Payment amount is not available");
@@ -110,7 +110,6 @@ export default function LabPayment({
 
   const handleOnlinePayment = async () => {
     try {
-      debugger;
       setLoading(true);
       if (!window.Razorpay) {
         await new Promise<void>((resolve, reject) => {
@@ -133,7 +132,7 @@ export default function LabPayment({
       if (!publicKey) throw new Error("Unable to load Razorpay public key");
 
       const orderResponse = await createRazorpayOrder({
-        amount: amount,
+        amount: amountInPaise,
         currency: "INR",
         receipt: String(labAppointmentId),
       });
@@ -147,7 +146,7 @@ export default function LabPayment({
         );
       const options: RazorpayOptions = {
         key: publicKey,
-        amount: orderResponse.amount || amount,
+        amount: orderResponse.amount || amountInPaise,
         currency: orderResponse.currency || "INR",
         name: "BITCARE",
         description: "Lab test payment",

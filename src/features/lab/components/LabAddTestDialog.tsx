@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Box,
   Button,
   Checkbox,
   CircularProgress,
@@ -8,7 +7,6 @@ import {
   DialogActions,
   DialogContent,
   IconButton,
-  useTheme,
   useMediaQuery,
 } from "@mui/material";
 import {
@@ -37,20 +35,36 @@ interface LabAddTestDialogProps {
   pdfUrl: string | null;
   pdfLoading: boolean;
   viewOnly?: boolean;
+  variant?: "clinic" | "patient";
   onClose: () => void;
   onTestsAdded: (row: LabQueueRow, tests: AvailablePatientTest[]) => void;
 }
+
+type AssignedTest = {
+  test_id?: number | string;
+  test_name?: string;
+  name?: string;
+  test_code?: string;
+  category_name?: string;
+  test_price?: number | string | null;
+  price?: number | string | null;
+  discount_price?: number | string | null;
+  payable_amount?: number | string | null;
+};
+
+const CARD_RADIUS = "rounded-[10px]";
 
 export default function LabAddTestDialog({
   row,
   pdfUrl,
   pdfLoading,
   viewOnly = false,
+  variant,
   onClose,
   onTestsAdded,
 }: LabAddTestDialogProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  // matches Tailwind's `md` breakpoint (768px)
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [mobileTab, setMobileTab] = useState<"prescription" | "tests">("tests");
 
   const [availableTests, setAvailableTests] = useState<AvailablePatientTest[]>(
@@ -62,6 +76,10 @@ export default function LabAddTestDialog({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setMobileTab("tests");
+  }, [row?.lab_record_id]);
 
   useEffect(() => {
     if (!row) return;
@@ -142,23 +160,30 @@ export default function LabAddTestDialog({
     );
   }, [availableTests, search]);
 
-  const assignedTests = row?.test_details?.length
+  const assignedTests = (row?.test_details?.length
     ? row.test_details
-    : row?.package_tests || [];
+    : row?.package_tests || []) as unknown as AssignedTest[];
 
   const hasPackage = Boolean(
     row?.is_package === "1" ||
-      row?.is_package === 1 ||
-      row?.package_id ||
-      row?.package_name ||
-      row?.package_code,
+    row?.is_package === 1 ||
+    row?.package_id ||
+    row?.package_name ||
+    row?.package_code,
   );
 
   const bookingSource = (row?.booking_source || "").toUpperCase();
-  const isClinic = bookingSource === "CLINIC";
   const isSelf = bookingSource === "LAB";
-  const showPrescription = isClinic && Boolean(row?.prescription_url);
+  const isClinicVariant =
+    variant === "clinic" ||
+    (variant == null &&
+      (bookingSource === "CLINIC" ||
+        Boolean(row?.prescription_url || row?.clinic_id || row?.clinic_name)));
+
+  const showPrescription = Boolean(isClinicVariant && row?.prescription_url);
   const showTests = !viewOnly || assignedTests.length > 0 || hasPackage;
+  const bothPanels = showPrescription && showTests;
+  const prescriptionOnly = showPrescription && !showTests;
 
   const toggleTest = (test: AvailablePatientTest) => {
     setSelectedTests((current) =>
@@ -170,7 +195,8 @@ export default function LabAddTestDialog({
 
   const totalAdditionalPayable = useMemo(() => {
     return selectedTests.reduce(
-      (acc, t) => acc + (t.payable_amount ?? Math.max(0, t.price - t.discount_price)),
+      (acc, t) =>
+        acc + (t.payable_amount ?? Math.max(0, t.price - t.discount_price)),
       0,
     );
   }, [selectedTests]);
@@ -228,23 +254,25 @@ export default function LabAddTestDialog({
 
   if (!row) return null;
 
+  /* ---------------- TESTS PANEL CONTENT ---------------- */
   const testContent = (
-    <div className="flex flex-col h-full overflow-y-auto p-4 sm:p-5 space-y-4">
-      {/* Current Assigned Tests */}
+    <div className="space-y-4 p-4 sm:p-5">
+      {/* Current assigned tests */}
       {assignedTests.length > 0 && (
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-border)]/40">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                <FaFlask className="text-[var(--color-primary)] text-sm" />
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)]/40 pb-1.5">
+            <div className="min-w-0">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--color-text)] sm:text-base">
+                <FaFlask className="text-sm text-[var(--color-primary)]" />
                 Current Tests
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Tests already assigned to this patient
               </p>
             </div>
-            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-              {assignedTests.length} {assignedTests.length === 1 ? "Test" : "Tests"}
+            <span className="shrink-0 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 px-2.5 py-0.5 text-xs font-bold text-[var(--color-primary)]">
+              {assignedTests.length}{" "}
+              {assignedTests.length === 1 ? "Test" : "Tests"}
             </span>
           </div>
 
@@ -260,18 +288,18 @@ export default function LabAddTestDialog({
               return (
                 <div
                   key={`current-${test.test_id ?? test.test_name ?? test.name}-${index}`}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-alt)] shadow-[var(--shadow-xs)] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-md)] transition-all"
+                  className={`flex flex-col justify-between gap-2.5 ${CARD_RADIUS} border border-[var(--color-border)] bg-[var(--color-surface-alt)] p-3 shadow-[var(--shadow-xs)] transition-all hover:border-[var(--color-primary)] sm:flex-row sm:items-center`}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-xs font-bold text-[var(--color-primary)]">
                       {index + 1}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-sm sm:text-base text-[var(--color-text)]">
+                      <h4 className="break-words text-sm font-semibold text-[var(--color-text)] sm:text-base">
                         {test.test_name || test.name || "Lab test"}
                       </h4>
                       {(test.test_code || test.category_name) && (
-                        <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                        <p className="mt-0.5 break-words text-xs text-[var(--color-text-secondary)]">
                           {test.test_code ? `Code: ${test.test_code}` : ""}
                           {test.test_code && test.category_name ? " • " : ""}
                           {test.category_name ? test.category_name : ""}
@@ -280,13 +308,16 @@ export default function LabAddTestDialog({
                     </div>
                   </div>
 
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--color-border)]/30 text-right">
-                    <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                  <div className="flex shrink-0 items-center justify-between border-t border-[var(--color-border)]/30 pt-2 text-right sm:flex-col sm:items-end sm:justify-center sm:whitespace-nowrap sm:border-t-0 sm:pt-0">
+                    <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-0">
                       <span className="text-xs text-[var(--color-text-secondary)]">
-                        Actual Price: <span className="font-medium text-[var(--color-text)]">₹{actualPrice.toFixed(2)}</span>
+                        Actual Price:{" "}
+                        <span className="font-medium text-[var(--color-text)]">
+                          ₹{actualPrice.toFixed(2)}
+                        </span>
                       </span>
                       {discountPrice > 0 && (
-                        <span className="text-xs text-[var(--color-success)] font-medium">
+                        <span className="text-xs font-medium text-[var(--color-success)]">
                           Discount: -₹{discountPrice.toFixed(2)}
                         </span>
                       )}
@@ -302,42 +333,53 @@ export default function LabAddTestDialog({
         </div>
       )}
 
-      {/* Package Notice (if applicable) */}
+      {/* Package notice */}
       {hasPackage && (
-        <div className="p-3.5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)]">
-          <div className="flex items-center justify-between gap-2 mb-1">
+        <div
+          className={`${CARD_RADIUS} border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-xs)]`}
+        >
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">
               <FaBoxes /> Package Assigned
             </span>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--color-primary)] text-white">
+            <span className="rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs font-semibold text-white">
               {row.package_name || row.package_code || "Package"}
+              {row.package_price != null &&
+                ` — ₹${Number(row.package_price).toFixed(2)}`}
             </span>
           </div>
           {row.package_description && (
-            <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
               {row.package_description}
             </p>
           )}
         </div>
       )}
 
-      {/* Search Input for Available Tests */}
+      {/* Empty state for view-only */}
+      {viewOnly && !assignedTests.length && !hasPackage && (
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          No tests are assigned to this patient.
+        </p>
+      )}
+
+      {/* Search */}
       {!viewOnly && (
-        <div className="pt-2">
+        <div className="sticky top-0 z-10 -mx-4 bg-[var(--color-bg)] px-4 py-2 sm:-mx-5 sm:px-5">
           <div className="relative w-full">
-            <FaSearch className="absolute left-3.5 top-3 text-[var(--color-primary)] text-sm pointer-events-none" />
+            <FaSearch className="pointer-events-none absolute left-3.5 top-3 text-sm text-[var(--color-primary)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tests by name or test code..."
-              className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] focus:border-[var(--color-primary)] focus:bg-[var(--color-surface-alt)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all placeholder:text-[var(--color-text-secondary)]/60"
+              className={`w-full ${CARD_RADIUS} border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pl-9 pr-8 text-xs text-[var(--color-text)] transition-all placeholder:text-[var(--color-text-secondary)]/60 focus:border-[var(--color-primary)] focus:bg-[var(--color-surface-alt)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 sm:text-sm`}
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-2.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] text-xs cursor-pointer"
+                className="absolute right-3 top-2.5 cursor-pointer text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
                 aria-label="Clear search"
               >
                 <FaTimes />
@@ -347,52 +389,58 @@ export default function LabAddTestDialog({
         </div>
       )}
 
-      {/* Additional Tests Section */}
+      {/* Additional tests */}
       {!viewOnly && (
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-border)]/40">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                <FaPlusCircle className="text-[var(--color-primary)] text-sm" />
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)]/40 pb-1.5">
+            <div className="min-w-0">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--color-text)] sm:text-base">
+                <FaPlusCircle className="text-sm text-[var(--color-primary)]" />
                 Add Additional Tests
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Select tests from catalog to add to this patient
               </p>
             </div>
-            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+            <span className="shrink-0 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 px-2.5 py-0.5 text-xs font-bold text-[var(--color-primary)]">
               {filteredTests.length} Available
             </span>
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <CircularProgress size={28} sx={{ color: "var(--color-primary)" }} />
-              <p className="text-xs text-[var(--color-text-secondary)]">Loading available tests...</p>
+            <div className="flex flex-col items-center justify-center gap-2 py-8">
+              <CircularProgress
+                size={28}
+                sx={{ color: "var(--color-primary)" }}
+              />
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Loading available tests...
+              </p>
             </div>
           ) : filteredTests.length > 0 ? (
-            <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            <div className="space-y-2">
               {filteredTests.map((test) => {
                 const isChecked = selectedTests.some(
                   (item) => item.test_id === test.test_id,
                 );
                 const actual = Number(test.price ?? 0);
                 const discount = Number(test.discount_price ?? 0);
-                const payable = test.payable_amount != null
-                  ? Number(test.payable_amount)
-                  : Math.max(0, actual - discount);
+                const payable =
+                  test.payable_amount != null
+                    ? Number(test.payable_amount)
+                    : Math.max(0, actual - discount);
 
                 return (
                   <div
                     key={`available-${test.test_id}`}
                     onClick={() => toggleTest(test)}
-                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-[var(--radius-lg)] border transition-all cursor-pointer ${
+                    className={`flex cursor-pointer flex-col justify-between gap-2.5 ${CARD_RADIUS} border p-3 transition-all sm:flex-row sm:items-center ${
                       isChecked
                         ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-[var(--shadow-sm)]"
                         : "border-[var(--color-border)] bg-[var(--color-surface-alt)] shadow-[var(--shadow-xs)] hover:border-[var(--color-primary)]/60 hover:shadow-[var(--shadow-sm)]"
                     }`}
                   >
-                    <div className="flex items-start gap-2.5 min-w-0">
+                    <div className="flex min-w-0 flex-1 items-start gap-2.5">
                       <Checkbox
                         checked={isChecked}
                         onChange={() => toggleTest(test)}
@@ -400,6 +448,7 @@ export default function LabAddTestDialog({
                         size="small"
                         sx={{
                           p: 0.5,
+                          flexShrink: 0,
                           color: "var(--color-border)",
                           "&.Mui-checked": {
                             color: "var(--color-primary)",
@@ -407,11 +456,11 @@ export default function LabAddTestDialog({
                         }}
                       />
                       <div className="min-w-0">
-                        <h4 className="font-semibold text-sm text-[var(--color-text)]">
+                        <h4 className="break-words text-sm font-semibold text-[var(--color-text)]">
                           {test.test_name}
                         </h4>
                         {(test.test_code || test.category_name) && (
-                          <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                          <p className="mt-0.5 break-words text-xs text-[var(--color-text-secondary)]">
                             {test.test_code ? `Code: ${test.test_code}` : ""}
                             {test.test_code && test.category_name ? " • " : ""}
                             {test.category_name ? test.category_name : ""}
@@ -420,13 +469,16 @@ export default function LabAddTestDialog({
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--color-border)]/30 text-right pl-7 sm:pl-0">
-                      <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                    <div className="flex shrink-0 items-center justify-between border-t border-[var(--color-border)]/30 pl-7 pt-2 text-right sm:flex-col sm:items-end sm:justify-center sm:whitespace-nowrap sm:border-t-0 sm:pl-0 sm:pt-0">
+                      <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-0">
                         <span className="text-xs text-[var(--color-text-secondary)]">
-                          Actual Price: <span className="font-medium text-[var(--color-text)]">₹{actual.toFixed(2)}</span>
+                          Actual Price:{" "}
+                          <span className="font-medium text-[var(--color-text)]">
+                            ₹{actual.toFixed(2)}
+                          </span>
                         </span>
                         {discount > 0 && (
-                          <span className="text-xs text-[var(--color-success)] font-medium">
+                          <span className="text-xs font-medium text-[var(--color-success)]">
                             Discount: -₹{discount.toFixed(2)}
                           </span>
                         )}
@@ -440,19 +492,25 @@ export default function LabAddTestDialog({
               })}
             </div>
           ) : (
-            <div className="text-center py-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]">
+            <div
+              className={`${CARD_RADIUS} border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] py-6 text-center`}
+            >
               <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                {search ? `No tests matching "${search}"` : "No additional tests available"}
+                {search
+                  ? `No tests matching "${search}"`
+                  : "No additional tests available"}
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* Selected Tests Summary Box */}
+      {/* Selected summary */}
       {!viewOnly && selectedTests.length > 0 && (
-        <div className="p-3.5 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-xs)] space-y-2 mt-auto">
-          <div className="flex items-center justify-between text-xs sm:text-sm text-[var(--color-text-secondary)]">
+        <div
+          className={`space-y-2 ${CARD_RADIUS} border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-xs)]`}
+        >
+          <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)] sm:text-sm">
             <span>Additional Tests Selected:</span>
             <span className="font-bold text-[var(--color-text)]">
               {selectedTests.length}
@@ -463,13 +521,14 @@ export default function LabAddTestDialog({
             {selectedTests.map((t) => (
               <span
                 key={`badge-${t.test_id}`}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--color-surface-alt)] border border-[var(--color-border)] text-[var(--color-text)]"
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-alt)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text)]"
               >
-                {t.test_name}
+                <span className="truncate">{t.test_name}</span>
                 <button
                   type="button"
                   onClick={() => toggleTest(t)}
-                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-error)] ml-0.5 cursor-pointer"
+                  aria-label={`Remove ${t.test_name}`}
+                  className="ml-0.5 shrink-0 cursor-pointer text-[var(--color-text-secondary)] hover:text-[var(--color-error)]"
                 >
                   <FaTimes className="text-[10px]" />
                 </button>
@@ -477,11 +536,11 @@ export default function LabAddTestDialog({
             ))}
           </div>
 
-          <div className="border-t border-[var(--color-border)]/50 pt-2 flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-[var(--color-text)]">
+          <div className="flex items-center justify-between border-t border-[var(--color-border)]/50 pt-2">
+            <span className="text-xs font-bold text-[var(--color-text)] sm:text-sm">
               Total Additional Payable:
             </span>
-            <span className="text-sm sm:text-base font-bold text-[var(--color-primary)]">
+            <span className="text-sm font-bold text-[var(--color-primary)] sm:text-base">
               ₹{totalAdditionalPayable.toFixed(2)}
             </span>
           </div>
@@ -490,54 +549,104 @@ export default function LabAddTestDialog({
     </div>
   );
 
+  /* ---------------- PRESCRIPTION PANEL ---------------- */
+  const prescriptionPanel = pdfLoading ? (
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <CircularProgress size={36} sx={{ color: "var(--color-primary)" }} />
+      <p className="text-sm font-semibold text-[var(--color-text)]">
+        Loading prescription document...
+      </p>
+    </div>
+  ) : pdfUrl ? (
+    <PdfViewerDialog
+      open={true}
+      pdfUrl={pdfUrl}
+      loading={false}
+      onClose={onClose}
+      embedded
+    />
+  ) : (
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
+      <FaFilePrescription className="mb-1 text-3xl text-[var(--color-text-secondary)] opacity-40" />
+      <p className="text-sm font-semibold text-[var(--color-text)]">
+        Unable to load the prescription.
+      </p>
+    </div>
+  );
+
+  const tabClass = (active: boolean) =>
+    `flex flex-1 cursor-pointer items-center justify-center gap-1.5 ${CARD_RADIUS} py-2 text-xs font-semibold transition-all ${
+      active
+        ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-xs)]"
+        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
+    }`;
+
   return (
     <Dialog
       open={Boolean(row)}
       onClose={onClose}
-      maxWidth={showPrescription ? "xl" : "md"}
+      maxWidth={false}
       fullWidth
+      aria-labelledby="lab-add-test-title"
       PaperProps={{
         sx: {
-          borderRadius: "var(--radius-lg)",
           backgroundColor: "var(--color-bg)",
           overflow: "hidden",
-          width: showPrescription
-            ? { xs: "96vw", sm: "92vw", md: "90vw", lg: "86vw" }
-            : { xs: "96vw", sm: "88vw", md: "680px", lg: "740px" },
-          maxHeight: "92vh",
-          height: showPrescription ? { xs: "92vh", md: "86vh" } : "auto",
           boxShadow: "var(--shadow-lg)",
           border: "1px solid var(--color-border)",
+          m: { xs: 1, sm: 2 },
+          display: "flex",
+          flexDirection: "column",
+          ...(showPrescription
+            ? {
+                borderRadius: "var(--radius-lg)",
+                width: "100%",
+                maxWidth: {
+                  xs: "calc(100% - 16px)",
+                  md: "92vw",
+                  lg: "1280px",
+                },
+                maxHeight: "92vh",
+                height: { xs: "92vh", md: "86vh" },
+              }
+            : {
+                borderRadius: "16px",
+                width: "100%",
+                maxWidth: { xs: "calc(100% - 16px)", sm: 480 },
+                maxHeight: { xs: "90vh", sm: "85vh" },
+              }),
         },
       }}
     >
-      {/* Header Bar matching Screen 3 */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[var(--color-border)] bg-[var(--color-surface-alt)]">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-alt)] px-4 py-3 sm:px-5">
         <div className="min-w-0 pr-3">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h2 className="text-base sm:text-lg font-bold text-[var(--color-text)] tracking-tight">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h2
+              id="lab-add-test-title"
+              className="text-base font-bold tracking-tight text-[var(--color-text)] sm:text-lg"
+            >
               {viewOnly ? "Patient Test Details" : "Add Tests for Patient"}
             </h2>
-            {isClinic && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+            {isClinicVariant && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--color-primary)]">
                 <FaClinicMedical className="text-[11px]" /> Clinic Referral
               </span>
             )}
-            {isSelf && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            {!isClinicVariant && isSelf && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                 <FaUser className="text-[11px]" /> Self Booking
               </span>
             )}
-            {!isClinic && !isSelf && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+            {!isClinicVariant && !isSelf && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
                 <FaUser className="text-[11px]" /> Patient Direct
               </span>
             )}
           </div>
 
-          {/* Patient Meta line */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-secondary)]">
-            <span className="font-semibold text-[var(--color-primary)] text-sm">
+            <span className="text-sm font-semibold text-[var(--color-primary)]">
               {row.patient_name}
               {row.gender && ` (${row.gender.toUpperCase().charAt(0)})`}
             </span>
@@ -547,7 +656,7 @@ export default function LabAddTestDialog({
                 {row.contact_no}
               </span>
             )}
-            {isClinic && (row.clinic_name || row.doctor_name) && (
+            {isClinicVariant && (row.clinic_name || row.doctor_name) && (
               <span className="flex items-center gap-1 font-medium text-[var(--color-text)]">
                 <FaClinicMedical className="text-[10px] text-[var(--color-primary)]" />
                 {row.clinic_name || "Clinic"}
@@ -562,6 +671,7 @@ export default function LabAddTestDialog({
           onClick={onClose}
           size="small"
           sx={{
+            flexShrink: 0,
             color: "var(--color-text-secondary)",
             backgroundColor: "var(--color-surface)",
             "&:hover": {
@@ -574,105 +684,79 @@ export default function LabAddTestDialog({
         </IconButton>
       </div>
 
-      {/* Main Content Area */}
+      {/* Body */}
       <DialogContent
         dividers
         sx={{
           p: 0,
           minHeight: 0,
+          flex: 1,
           display: "flex",
           flexDirection: "column",
-          flex: 1,
-          overflow: "hidden",
+          overflowY: bothPanels || prescriptionOnly ? "hidden" : "auto",
           backgroundColor: "var(--color-bg)",
         }}
       >
-        {showPrescription && showTests ? (
+        {bothPanels ? (
           <>
-            {/* Mobile Tab Control for Clinic Split View */}
             {isMobile && (
-              <div className="flex p-1 bg-[var(--color-surface)] border-b border-[var(--color-border)] shrink-0">
+              <div className="flex shrink-0 gap-1 border-b border-[var(--color-border)] bg-[var(--color-surface)] p-1">
                 <button
                   type="button"
                   onClick={() => setMobileTab("prescription")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-[var(--radius-md)] flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    mobileTab === "prescription"
-                      ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-xs)]"
-                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
-                  }`}
+                  className={tabClass(mobileTab === "prescription")}
                 >
                   <FaFilePrescription /> Prescription
                 </button>
                 <button
                   type="button"
                   onClick={() => setMobileTab("tests")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-[var(--radius-md)] flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    mobileTab === "tests"
-                      ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-xs)]"
-                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-alt)]"
-                  }`}
+                  className={tabClass(mobileTab === "tests")}
                 >
                   <FaFlask /> Tests
                 </button>
               </div>
             )}
 
-            {/* Desktop 2-column or Mobile Active Tab View */}
-            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-              {/* Left Column: Prescription Viewer */}
+            <div className="flex min-h-0 flex-1 overflow-hidden">
               {(!isMobile || mobileTab === "prescription") && (
-                <div className="w-full md:w-[56%] h-full min-h-0 border-r-0 md:border-r border-[var(--color-border)] flex flex-col bg-[var(--color-surface)]">
-                  {pdfLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full p-6 text-center gap-3">
-                      <CircularProgress
-                        size={36}
-                        sx={{ color: "var(--color-primary)" }}
-                      />
-                      <p className="text-sm font-semibold text-[var(--color-text)]">
-                        Loading prescription document...
-                      </p>
-                    </div>
-                  ) : pdfUrl ? (
-                    <PdfViewerDialog
-                      open={true}
-                      pdfUrl={pdfUrl}
-                      loading={false}
-                      onClose={onClose}
-                      embedded
-                      title="Patient Prescription"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full p-6 text-center gap-2">
-                      <FaFilePrescription className="text-3xl text-[var(--color-text-secondary)] opacity-40 mb-1" />
-                      <p className="text-sm font-semibold text-[var(--color-text)]">
-                        No Prescription Document Available
-                      </p>
-                    </div>
-                  )}
+                <div
+                  className={`h-full min-h-0 overflow-hidden bg-[var(--color-surface)] ${
+                    isMobile
+                      ? "w-full"
+                      : "w-[56%] border-r border-[var(--color-border)]"
+                  }`}
+                >
+                  {prescriptionPanel}
                 </div>
               )}
-
-              {/* Right Column: Tests */}
               {(!isMobile || mobileTab === "tests") && (
-                <div className="w-full md:w-[44%] h-full min-h-0 flex flex-col bg-[var(--color-bg)]">
+                <div
+                  className={`h-full min-h-0 overflow-y-auto bg-[var(--color-bg)] ${
+                    isMobile ? "w-full" : "w-[44%]"
+                  }`}
+                >
                   {testContent}
                 </div>
               )}
             </div>
           </>
-        ) : (
-          /* Single Column Layout (Screen 1 & Screen 3) */
-          <div className="max-h-[72vh] overflow-y-auto">
-            {testContent}
+        ) : prescriptionOnly ? (
+          <div className="h-full min-h-0 flex-1 overflow-hidden bg-[var(--color-surface)]">
+            {prescriptionPanel}
           </div>
+        ) : (
+          testContent
         )}
       </DialogContent>
 
-      {/* Footer Actions */}
+      {/* Footer */}
       <DialogActions
         sx={{
+          flexShrink: 0,
           px: { xs: 2, sm: 3 },
           py: 1.5,
+          gap: 1,
           borderTop: "1px solid var(--color-border)",
           backgroundColor: "var(--color-surface-alt)",
           display: "flex",
@@ -684,9 +768,9 @@ export default function LabAddTestDialog({
           onClick={onClose}
           variant="outlined"
           sx={{
-            borderRadius: "var(--radius-lg)",
+            borderRadius: "10px",
+            minHeight: 40,
             px: 3,
-            py: 0.8,
             textTransform: "none",
             fontWeight: 600,
             borderColor: "var(--color-border)",
@@ -706,9 +790,9 @@ export default function LabAddTestDialog({
             disabled={!selectedTests.length || saving || loading}
             onClick={saveTests}
             sx={{
-              borderRadius: "var(--radius-lg)",
+              borderRadius: "10px",
+              minHeight: 40,
               px: 3.5,
-              py: 0.8,
               textTransform: "none",
               fontWeight: 600,
               backgroundColor: "var(--color-primary)",

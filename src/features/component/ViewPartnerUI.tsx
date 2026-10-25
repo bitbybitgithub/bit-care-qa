@@ -1,17 +1,12 @@
+import React from "react";
 import ScienceIcon from "@mui/icons-material/Science";
-import { styled, Switch } from "@mui/material";
-import { FaClinicMedical, FaUserMd } from "react-icons/fa";
-import {
-  MdEmail,
-  MdPhone,
-  MdLocationOn,
-  MdCurrencyRupee,
-  MdCalendarToday,
-} from "react-icons/md";
+import { FaClinicMedical } from "react-icons/fa";
+import { Phone, Mail, MapPin, Building2, Sparkles } from "lucide-react";
 import AvatarWithStatus from "../../components/common/AvatarWithStatus";
 
 interface PartnerItem {
   id: number;
+  clinic_lab_id?: number;
   name: string;
   logo?: string;
   phone?: string;
@@ -21,7 +16,7 @@ interface PartnerItem {
   state?: string;
   consultation_fees?: number;
   fees_duration?: number;
-  is_active: "0" | "1";
+  is_active: "0" | "1" | boolean | number;
 }
 
 interface Props {
@@ -34,42 +29,6 @@ interface Props {
   updatingId?: number | null;
 }
 
-const MiniSwitch = styled(Switch)(() => ({
-  width: 32,
-  height: 18,
-  padding: 0,
-  display: "flex",
-  alignItems: "center",
-
-  "& .MuiSwitch-switchBase": {
-    padding: 2,
-    transitionDuration: "200ms",
-
-    "&.Mui-checked": {
-      transform: "translateX(14px)",
-      color: "var(--color-surface-alt)",
-
-      "& + .MuiSwitch-track": {
-        backgroundColor: "var(--color-success)",
-        opacity: 1,
-        border: 0,
-      },
-    },
-  },
-
-  "& .MuiSwitch-thumb": {
-    width: 14,
-    height: 14,
-    boxShadow: "var(--shadow-sm)",
-  },
-
-  "& .MuiSwitch-track": {
-    borderRadius: 9,
-    backgroundColor: "var(--color-error)",
-    opacity: 1,
-  },
-}));
-
 const ViewPartnerUI = ({
   title,
   countLabel,
@@ -79,143 +38,173 @@ const ViewPartnerUI = ({
   updatingId,
 }: Props) => {
   return (
-    <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-alt)]">
-      <div className="mb-6">
-        <h2
-          className="text-[var(--color-primary)] font-[var(--font-weight-bold)]"
-          style={{ fontSize: "var(--font-h4)" }}
-        >
-          {title}
-        </h2>
-
-        <p
-          className="text-[var(--color-text)] opacity-70"
-          style={{ fontSize: "var(--font-sx)" }}
-        >
-          {data?.length} {countLabel}
-        </p>
+    <div className="w-full space-y-3.5">
+      {/* Subheader summary bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              {title}
+            </h2>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+              <Sparkles className="w-3 h-3 text-[var(--color-primary)]" />
+              {data?.length ?? 0} Connected
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {data?.length ?? 0} {countLabel}
+          </p>
+        </div>
       </div>
 
+      {/* Empty State */}
       {!data?.length && (
-        <p
-          className="text-[var(--color-text)] opacity-70"
-          style={{ fontSize: "var(--font-sx)" }}
-        >
-          {emptyText}
-        </p>
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-8 sm:p-12 text-center max-w-md mx-auto my-6 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center mx-auto shadow-2xs">
+            <Building2 className="w-6 h-6 text-[var(--color-primary)]" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900">{title}</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">{emptyText}</p>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {data?.map((item) => (
-          <div
-            key={item.id}
-            className="w-full flex flex-col rounded-[var(--radius-lg)] overflow-hidden
-               shadow-[var(--shadow-md)]
-               bg-[var(--color-bg)]
-               transition-all duration-300
-               hover:shadow-[var(--shadow-lg)]"
-          >
-            <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-primary)] text-white">
+      {/* Connected Partner Cards Grid */}
+      {data && data.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 items-stretch">
+          {data.map((item) => {
+            const isActive =
+              item.is_active === "1" ||
+              item.is_active === true ||
+              item.is_active === 1;
 
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="shrink-0">
-                  <AvatarWithStatus
-                    image={item.logo}
-                    alt={item.name}
-                    isActive={item.is_active}
-                    fallbackIcon={
-                      title === "Registered Labs"
-                        ? ScienceIcon
-                        : FaClinicMedical
-                    }
-                  />
-                </div>
-
-                <h3 className="font-semibold text-sm break-words leading-snug">
-                  {item.name}
-                </h3>
-              </div>
-
-              {onToggleStatus && (
-                <div
-                  className="
-                  flex items-center gap-2
-                  px-2 py-1 rounded-[var(--radius-lg)] 
-                  border bg-[var(--color-surface-alt)]
-                  shadow-[var(--shadow-md)]
-                  text-[var(--color-primary)]
-                "
-                >
-                  <span className="text-[10px] font-semibold leading-none">
-                    {item.is_active === "1" ? "Active" : "Inactive"}
-                  </span>
-
-                  <MiniSwitch
-                    checked={item.is_active === "1"}
-                    disabled={updatingId === item.id}
-                    onChange={() => onToggleStatus(item)}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div
-              className="px-4 py-3 flex flex-col h-full text-xs
-                    text-[var(--color-text-secondary)]
-                    bg-[var(--color-surface-alt)]"
-            >
-              <div className="space-y-3">
-                {item.phone && (
-                  <div className="flex items-center gap-2">
-                    <MdPhone className="text-[var(--color-primary)] text-sm shrink-0" />
-                    <span className="truncate">{item.phone}</span>
-                  </div>
-                )}
-
-                {item.email && (
-                  <div className="flex items-center gap-2">
-                    <MdEmail className="text-[var(--color-primary)] text-sm shrink-0" />
-                    <span className="truncate">{item.email}</span>
-                  </div>
-                )}
-
-                {item.address && (
-                  <div className="flex items-start gap-2">
-                    <MdLocationOn className="text-[var(--color-primary)] text-sm mt-0.5 shrink-0" />
-                    <span className="leading-relaxed">
-                      {[item.address, item.city, item.state]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {(item.consultation_fees !== undefined ||
-                item.fees_duration !== undefined) && (
-                <div className="flex justify-between items-center mt-auto pt-3">
-                  {item.consultation_fees !== undefined && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-medium">
-                      <MdCurrencyRupee className="text-sm" />
-                      {item.consultation_fees} Fee
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group"
+              >
+                {/* Card Top: Gradient Banner */}
+                <div className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white p-3.5 flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="shrink-0">
+                      <AvatarWithStatus
+                        image={item.logo}
+                        alt={item.name}
+                        isActive={isActive ? "1" : "0"}
+                        showStatus={true}
+                        size={38}
+                        fallbackIcon={
+                          title.toLowerCase().includes("lab")
+                            ? ScienceIcon
+                            : FaClinicMedical
+                        }
+                      />
                     </div>
-                  )}
+                    <h3
+                      className="font-bold text-sm text-white truncate"
+                      title={item.name}
+                    >
+                      {item.name}
+                    </h3>
+                  </div>
 
-                  {item.fees_duration !== undefined && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-medium">
-                      <MdCalendarToday className="text-sm" />
-                      <span>
-                        {item.fees_duration}{" "}
-                        {item.fees_duration === 1 ? "Day" : "Days"} Validity
+                  {/* Clean Minimal Status Toggle Button */}
+                  {onToggleStatus && (
+                    <button
+                      type="button"
+                      disabled={updatingId === item.id}
+                      onClick={() => onToggleStatus(item)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white/95 text-slate-800 shadow-2xs transition-all cursor-pointer shrink-0 select-none ${
+                        updatingId === item.id
+                          ? "opacity-60 cursor-wait"
+                          : "hover:bg-white hover:shadow-xs"
+                      }`}
+                      title={`Click to ${isActive ? "deactivate" : "activate"}`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          isActive
+                            ? "bg-emerald-500 ring-2 ring-emerald-200"
+                            : "bg-slate-400"
+                        }`}
+                      />
+                      <span
+                        className={
+                          isActive
+                            ? "text-emerald-700 font-bold"
+                            : "text-slate-600"
+                        }
+                      >
+                        {isActive ? "Active" : "Inactive"}
                       </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Card Body: Contact Details */}
+                <div className="p-4 flex flex-col flex-1 justify-between gap-3 text-xs text-slate-600 bg-white">
+                  <div className="space-y-2.5">
+                    {item.phone && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
+                          <Phone className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-medium text-slate-700 truncate">
+                          {item.phone}
+                        </span>
+                      </div>
+                    )}
+
+                    {item.email && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
+                          <Mail className="w-3.5 h-3.5" />
+                        </div>
+                        <span
+                          className="text-slate-600 truncate"
+                          title={item.email}
+                        >
+                          {item.email}
+                        </span>
+                      </div>
+                    )}
+
+                    {(item.address || item.city || item.state) && (
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center shrink-0 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-slate-600 line-clamp-2 leading-relaxed">
+                          {[item.address, item.city, item.state]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Consultation fees & duration if available */}
+                  {(item.consultation_fees !== undefined ||
+                    item.fees_duration !== undefined) && (
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
+                      {item.consultation_fees !== undefined && (
+                        <span className="inline-flex items-center gap-1 font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] px-2.5 py-1 rounded-lg">
+                          ₹{item.consultation_fees} Fee
+                        </span>
+                      )}
+                      {item.fees_duration !== undefined && (
+                        <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-2 py-1 rounded-lg text-[11px]">
+                          {item.fees_duration}{" "}
+                          {item.fees_duration === 1 ? "Day" : "Days"}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

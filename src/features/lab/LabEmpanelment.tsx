@@ -3,6 +3,7 @@ import AddPartnerUI from "../../features/component/AddPartnerUI";
 import ViewPartnerUI from "../../features/component/ViewPartnerUI";
 import ScienceIcon from "@mui/icons-material/Science";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { FlaskConical, Sparkles, Layers, PlusCircle } from "lucide-react";
 
 import {
   getMappedLabsListApi,
@@ -19,6 +20,7 @@ const LabEmpanelment = () => {
   const [labs, setLabs] = useState<LabApiItem[]>([]);
   const [mappedLabs, setMappedLabs] = useState<LabApiItem[]>([]);
   const [loading, setLoading] = useState(false);
+
   const clinicId = getSessionItem("user", "clinic_id");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<{
@@ -59,10 +61,11 @@ const LabEmpanelment = () => {
   }, []);
 
   const fetchMappedLabByClinicId = async () => {
+    if (!clinicId) return;
     try {
       setLoading(true);
       const res = await getMappedLabsListApi(clinicId, null);
-      setMappedLabs(res.data);
+      setMappedLabs(res.data || []);
     } catch (err) {
       console.error("Lab list error", err);
     } finally {
@@ -111,6 +114,7 @@ const LabEmpanelment = () => {
     }
 
     try {
+      setLoading(true);
       await mapClinicPartnersApi({
         clinic_id: clinicId,
         lab_ids: ids,
@@ -118,9 +122,7 @@ const LabEmpanelment = () => {
       });
 
       toast.success("Lab Added Successfully.");
-
       await fetchMappedLabByClinicId();
-
       setActiveTab("view");
     } catch (err: any) {
       if (err?.response?.status === 409) {
@@ -128,8 +130,9 @@ const LabEmpanelment = () => {
       } else {
         toast.error("Failed to map labs.");
       }
-
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,23 +162,20 @@ const LabEmpanelment = () => {
         l.lab_id === item.id ? { ...l, is_active: isActive ? "0" : "1" } : l,
       ),
     );
+
     try {
-      const result = await updateLabStatus({
+      await updateLabStatus({
         clinic_id: clinicId,
         lab_id: item.id,
-        is_active: isActive ? false : true,
+        is_active: !isActive,
       });
-
-      // if (result.success) {
-      //   toast.success(isActive ? "Lab Deactivated" : "Lab Activated");
-      // }
+      toast.success(isActive ? "Lab Deactivated" : "Lab Activated");
     } catch (error: any) {
       setMappedLabs((prev) =>
         prev.map((l) =>
           l.lab_id === item.id ? { ...l, is_active: previousValue } : l,
         ),
       );
-
       toast.error(
         error?.response?.data?.message || "Failed to update lab status",
       );
@@ -185,101 +185,116 @@ const LabEmpanelment = () => {
   };
 
   return (
-    <div className="w-full bg-[var(--color-surface-alt)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
-      <div className="flex p-4 border-b border-b-[var(--color-primary)]">
-        <div
-          className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
-          style={{ background: "var(--color-primary)" }}
-        >
-          {[
-            { key: "view", label: "View" },
-            { key: "add", label: "Add" },
-          ].map((t) => (
+    <div className="w-full min-h-[calc(100vh-80px)] space-y-3">
+      {/* =====================================================
+          HEADER & TAB CONTROLS (RESPONSIVE - OFFERS TABS STYLE)
+      ====================================================== */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs px-4 py-3 sm:px-5 sm:py-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Left: Branding & Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center shadow-xs shrink-0">
+              <FlaskConical className="w-4 h-4" />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-none">
+                  Lab Empanelment
+                </h1>
+                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                  <Sparkles className="w-2.5 h-2.5 text-[var(--color-primary)]" />
+                  Diagnostic Network
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-tight mt-0.5">
+                Manage diagnostic laboratories and partner affiliations connected to your clinic.
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Modern Responsive Segmented Tabs */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80 shrink-0 w-full sm:w-auto">
             <button
-              key={t.key}
+              type="button"
               role="tab"
-              aria-selected={activeTab === t.key}
-              onClick={() => setActiveTab(t.key as "view" | "add")}
-              className={`
-          px-4 py-1.5 text-sm font-semibold cursor-pointer
-          rounded-[var(--radius-md)]
-          transition border-2
-        `}
-              style={{
-                background:
-                  activeTab === t.key
-                    ? "var(--color-surface-alt)"
-                    : "transparent",
-                color:
-                  activeTab === t.key
-                    ? "var(--color-primary)"
-                    : "var(--color-surface-alt)",
-                borderColor:
-                  activeTab === t.key ? "var(--color-primary)" : "transparent",
-                transition: "var(--transition-fast)",
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== t.key) {
-                  e.currentTarget.style.borderColor =
-                    "var(--color-surface-alt)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== t.key) {
-                  e.currentTarget.style.borderColor = "transparent";
-                }
-              }}
+              aria-selected={activeTab === "view"}
+              onClick={() => setActiveTab("view")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "view"
+                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
             >
-              {t.label}
+              <Layers className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+              <span>View</span>
             </button>
-          ))}
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "add"}
+              onClick={() => setActiveTab("add")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "add"
+                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {loading && (
-        <div
-          className="p-3 text-[var(--color-info)]"
-          style={{ fontSize: "var(--font-xs)" }}
-        >
-          Loading...
+      {/* =====================================================
+          TAB CONTENT PANEL
+      ====================================================== */}
+      {loading ? (
+        <div className="w-full flex flex-col items-center justify-center py-16 gap-3 bg-white rounded-2xl border border-slate-200/90 shadow-2xs">
+          <div className="w-8 h-8 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-medium text-slate-500">
+            Loading laboratories...
+          </span>
+        </div>
+      ) : (
+        <div className="transition-all duration-150">
+          {activeTab === "view" && (
+            <ViewPartnerUI
+              title="Registered Labs"
+              countLabel="labs connected to your clinic"
+              emptyText="No laboratories mapped yet. Switch to the 'Add' tab to connect diagnostic labs."
+              clinicId={clinicId}
+              data={viewItems}
+              onToggleStatus={handleLabStatus}
+              updatingId={updatingId}
+            />
+          )}
+
+          {activeTab === "add" && (
+            <AddPartnerUI
+              data={labs.map((l) => ({
+                id: l.lab_id,
+                name: l.lab_name,
+                logo: l.lab_logo,
+                email: l.email,
+                mobile: l.phone,
+                address: l.address,
+                city: l.city,
+                state: l.state,
+                alreadyMapped: mappedLabIds.has(l.lab_id),
+                distance_km: l.distance_km,
+              }))}
+              icon={<ScienceIcon className="text-[var(--color-primary)]" />}
+              placeholder="Search labs by name, city..."
+              buttonText="Map Selected Labs"
+              onSubmit={handleSubmitLabs}
+              onSearchChange={handleSearchChange}
+            />
+          )}
         </div>
       )}
-
-      <div>
-        {activeTab === "view" && (
-          <ViewPartnerUI
-            title="Registered Labs"
-            countLabel="labs connected to your clinic"
-            emptyText="No labs mapped yet."
-            clinicId={clinicId}
-            data={viewItems}
-            onToggleStatus={handleLabStatus}
-            updatingId={updatingId}
-          />
-        )}
-
-        {activeTab === "add" && (
-          <AddPartnerUI
-            data={labs.map((l) => ({
-              id: l.lab_id,
-              name: l.lab_name,
-              logo: l.lab_logo,
-              email: l.email,
-              mobile: l.phone,
-              address: l.address,
-              city: l.city,
-              state: l.state,
-              alreadyMapped: mappedLabIds.has(l.lab_id),
-              distance_km: l.distance_km,
-            }))}
-            icon={<ScienceIcon className="text-[var(--color-info)]" />}
-            placeholder="Search labs..."
-            buttonText="Selected Labs"
-            onSubmit={handleSubmitLabs}
-            onSearchChange={handleSearchChange}
-          />
-        )}
-      </div>
     </div>
   );
 };

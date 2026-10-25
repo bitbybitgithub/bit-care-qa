@@ -311,6 +311,8 @@ const handleSubmit = async (e: React.FormEvent) => {
         />
         {/* Title */}
         {isEdit ? "Update Offer / Discount" : "Add Offer / Discount"}
+
+        
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -491,7 +493,56 @@ const handleSubmit = async (e: React.FormEvent) => {
           />
         </div>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center items-center gap-4 flex-wrap">
+  <Button variant="contained" type="submit">
+    {isEdit ? "Update Offer" : "Save Offer"}
+  </Button>
+
+  <Button
+    variant="outlined"
+    color="secondary"
+    onClick={handleReset}
+  >
+    Reset
+  </Button>
+
+  {isEdit && (
+    <div className="flex items-center gap-2 border rounded-lg px-3 py-2">
+      <div>
+  <p className="font-semibold">Offer Status</p>
+  <p
+    className={`text-sm font-medium ${
+      isActive === 1 ? "text-green-600" : "text-red-600"
+    }`}
+  >
+    {isActive === 1 ? "Active" : "Inactive"}
+  </p>
+</div>
+
+      <Button
+        type="button"
+        size="small"
+        variant="outlined"
+        color={isActive === 1 ? "error" : "success"}
+        onClick={() => {
+          setIsActive((prev) => (prev === 1 ? 0 : 1));
+        }}
+        sx={{
+          fontSize: "11px",
+          padding: "2px 6px",
+          minWidth: "auto",
+          lineHeight: 1.2,
+          borderRadius: "8px",
+          textTransform: "none",
+        }}
+      >
+        {isActive === 1 ? "Deactivate Offer" : "Activate Offer"}
+      </Button>
+    </div>
+  )}
+</div>
+
+        {/* <div className="flex justify-center gap-4">
           <Button variant="contained" type="submit">
             {isEdit ? "Update Offer" : "Save Offer"}
           </Button>
@@ -529,6 +580,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 )}
 
         </div>
+         */}
         {/* </div> */}
       </form>
     </div>

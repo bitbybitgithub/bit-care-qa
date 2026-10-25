@@ -29,6 +29,7 @@ import LabSettings from "../components/common/EstablishmentSettings/Labsettings"
 import PharmacySettings from "../components/common/EstablishmentSettings/Pharmacysettings";
 import BlogTabs from "../features/admin/BlogTabs";
 import NotFoundPage from "../pages/NotFoundPage";
+import OffersTabs from "../features/admin/OffersTabs";
 
 const Router = [
   {
@@ -44,6 +45,7 @@ const Router = [
       { path: "/blogs", element: <BlogsList /> },
       { path: "/blog/:blogId", element: <BlogsList /> },
       { path: "/404", element: <NotFoundPage /> },
+
     ],
   },
   {
@@ -56,7 +58,7 @@ const Router = [
       { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
-      { path: "/clinic/offers", element: <OffersDiscount /> },
+      { path: "/clinic/offers", element: <OffersTabs /> },
       { path: "/clinic/blog", element: <Navigate to="/clinic/BlogTabs" replace /> },
       { path: "/clinic/BlogTabs", element: <BlogTabs /> },
       {

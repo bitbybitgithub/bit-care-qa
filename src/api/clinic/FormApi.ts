@@ -1,4 +1,4 @@
-import type { FormDataBase, OfferForm,BlogFormData,BlogListResponse,BlogByIdResponse} from "../../types/types";
+import type { FormDataBase, OfferForm,BlogFormData,BlogListResponse,BlogByIdResponse,PromotionalOffersResponse,PromotionalOfferslistResponse} from "../../types/types";
 import { emrAPI, BASE_URL } from "../../services/EmrApi";
 
 export const registerApi = async (formData: any) => {
@@ -34,9 +34,12 @@ export const registerApi = async (formData: any) => {
   }
 };
 
+
 export const offersdiscountApi = async (formData: OfferForm) => {
   try {
     const offersDiscount = {
+      offer_id: formData.offer_id ?? null,
+      is_active: formData.is_active ?? 1,
       center_id: formData.center_id,
       entity_type: formData.entity_type,
       center_name: formData.center_name,
@@ -52,16 +55,24 @@ export const offersdiscountApi = async (formData: OfferForm) => {
       end_date: formData.end_date,
       priority: formData.priority,
       created_by: formData.created_by,
+      modified_by: formData.modified_by ?? null,
     };
 
-    const response = await emrAPI.post<any>("/admin/offers", offersDiscount);
+    const response = await emrAPI.post<any>(
+      "/admin/offers",
+      offersDiscount
+    );
+
     return response;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || error.message || "Failed to save",
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to save"
     );
   }
 };
+
 
 export const uploadOfferImageApi = async (file: File) => {
   const formData = new FormData();
@@ -171,6 +182,14 @@ export const updateBlogApi = async (
   const response = await emrAPI.put<any>(
     `/blogs/${blogId}`,
     blogData,
+  );
+
+  return response;
+};
+
+export const getPromotionalOffersApi = async ( id: number,type: string) => {
+  const response = await emrAPI.get<PromotionalOffersResponse>(
+    `/patient/patients/get-promotional-offers?id=${id}&type=${type}`
   );
 
   return response;

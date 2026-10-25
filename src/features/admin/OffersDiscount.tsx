@@ -6,8 +6,24 @@ import { offersdiscountApi, uploadOfferImageApi } from "../../api";
 import { toast } from "react-toastify";
 import { getSession } from "../../context/sessions/userSession";
 
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { BASE_URL } from "../../services/EmrApi";
+import type { PromotionalOffer } from "../../types/types";
+
 const OffersDiscount = () => {
   const today = new Date().toISOString().split("T")[0];
+
+  const location = useLocation();
+
+    const navigationState = location.state as {
+      offer?: PromotionalOffer;
+      isEdit?: boolean;
+    } | null;
+
+    const selectedOffer = navigationState?.offer;
+    const isEdit = navigationState?.isEdit === true;
+
   const [errors, setErrors] = useState<ValidationErrors<OfferForm>>({
     offer_title: "",
     offer_description: "",
@@ -35,7 +51,56 @@ const OffersDiscount = () => {
   });
 
   const [preview, setPreview] = useState("");
+  const [isActive, setIsActive] = useState(1);
   const user = getSession("user");
+
+  useEffect(() => {
+  if (!isEdit || !selectedOffer) return;
+
+  setIsActive(Number(selectedOffer.is_active ?? 1));
+
+  console.log("EDIT OFFER DATE VALUES:", {
+    start_date: selectedOffer.start_date,
+    end_date: selectedOffer.end_date,
+  });
+
+  setFormData((prev) => ({
+    ...prev,
+    offer_title: selectedOffer.offer_title ?? "",
+    offer_description: selectedOffer.offer_description ?? "",
+    offer_image: null,
+    offer_image_path: selectedOffer.offer_image_path ?? "",
+    offer_image_guid: selectedOffer.offer_image_guid ?? "",
+    offer_image_name: selectedOffer.offer_image_name ?? "",
+    discount_percentage: selectedOffer.discount_percentage ?? "",
+    coupon_code: selectedOffer.coupon_code ?? "",
+
+    start_date: selectedOffer.start_date
+  ? String(selectedOffer.start_date).slice(0, 10) ===
+    String(selectedOffer.start_date).slice(0, 10)
+    ? new Date(selectedOffer.start_date).toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+      })
+    : ""
+  : "",
+
+end_date: selectedOffer.end_date
+  ? new Date(selectedOffer.end_date).toLocaleDateString("en-CA", {
+      timeZone: "Asia/Kolkata",
+    })
+  : "",
+  }));
+
+  if (selectedOffer.offer_image_guid) {
+    setPreview(
+      `${BASE_URL}/patient/patients/offer-images/${selectedOffer.offer_image_guid}`
+    );
+  } else {
+    setPreview("");
+  }
+}, [isEdit, selectedOffer]);
+
+
   const handleChange = (e) => {
     const { name, value, files, checked, type } = e.target;
 
@@ -99,8 +164,15 @@ const OffersDiscount = () => {
     if (!formData.offer_description.trim())
       newErrors.offer_description = "Offer Description is required.";
 
-    if (!formData.offer_image)
+    // if (!formData.offer_image)
+    //   newErrors.offer_image = "Please upload an image.";
+
+    if (
+      !formData.offer_image &&
+      !(isEdit && formData.offer_image_guid)
+    ) {
       newErrors.offer_image = "Please upload an image.";
+    }
 
     const discount = Number(formData.discount_percentage);
 
@@ -125,59 +197,88 @@ const OffersDiscount = () => {
     return Object.values(newErrors).every((x) => x === "");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading || !validateForm()) {
-      return;
-    }
+  
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const centerId =
-      user.entity_type === 1
-        ? user.clinic_id
-        : user.entity_type === 2
-          ? user.lab_id
-          : undefined;
+  if (loading || !validateForm()) {
+    return;
+  }
 
-    if (!centerId) {
-      toast.error("A valid clinic or lab session is required.");
-      return;
-    }
+  const centerId =
+    user.entity_type === 1
+      ? user.clinic_id
+      : user.entity_type === 2
+        ? user.lab_id
+        : undefined;
 
-    setLoading(true);
+  if (!centerId) {
+    toast.error("A valid clinic or lab session is required.");
+    return;
+  }
 
-    try {
-      const uploadResponse = await uploadOfferImageApi(formData.offer_image);
+  if (isEdit && !selectedOffer?.offer_id) {
+    toast.error("Offer ID is missing. Please reopen the offer and try again.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Keep the existing image unless a replacement is selected.
+    let imagePath = formData.offer_image_path;
+    let imageGuid = formData.offer_image_guid;
+    let imageName = formData.offer_image_name;
+
+    if (formData.offer_image) {
+      const uploadResponse = await uploadOfferImageApi(
+        formData.offer_image
+      );
+
       const uploadedFile = uploadResponse?.files?.[0];
 
       if (!uploadedFile) {
         throw new Error("Offer image upload returned no file.");
       }
 
-      const offerData = {
-        ...formData,
-        center_id: centerId,
-        entity_type: user.entity_type,
-        center_name: user.full_name,
-        center_type: user.entity_name,
-        created_by: user.user_id ?? 0,
-        offer_image_path: uploadedFile.path,
-        offer_image_guid: uploadedFile.guid_name,
-        offer_image_name: uploadedFile.file_name,
-      };
-      const res = await offersdiscountApi(offerData);
-      toast.success(res.message);
-      handleReset();
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Registration failed.";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
+      imagePath = uploadedFile.path;
+      imageGuid = uploadedFile.guid_name;
+      imageName = uploadedFile.file_name;
     }
-  };
+
+    const offerData = {
+      ...formData,
+      offer_id: isEdit ? selectedOffer!.offer_id : null,
+      is_active: isEdit ? isActive : 1,
+      center_id: centerId,
+      entity_type: user.entity_type,
+      center_name: user.full_name,
+      center_type: user.entity_name,
+      created_by: user.user_id ?? 0,
+      modified_by: isEdit ? user.user_id ?? 0 : null,
+      offer_image_path: imagePath,
+      offer_image_guid: imageGuid,
+      offer_image_name: imageName,
+    };
+
+    const res = await offersdiscountApi(offerData);
+
+    toast.success(res.message);
+
+    handleReset();
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to save offer.";
+
+    toast.error(msg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleReset = () => {
     setFormData({
@@ -209,7 +310,7 @@ const OffersDiscount = () => {
           className="absolute left-1.5 w-35 h-18 bg-white object-contain rounded-lg"
         />
         {/* Title */}
-        Add Offer / Discount
+        {isEdit ? "Update Offer / Discount" : "Add Offer / Discount"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -392,12 +493,41 @@ const OffersDiscount = () => {
 
         <div className="flex justify-center gap-4">
           <Button variant="contained" type="submit">
-            Save Offer
+            {isEdit ? "Update Offer" : "Save Offer"}
           </Button>
 
           <Button variant="outlined" color="secondary" onClick={handleReset}>
             Reset
           </Button>
+
+
+{isEdit && (
+  <div className="flex justify-between items-center border rounded-lg p-3 mb-4">
+    <div>
+      <p className="font-semibold">Offer Status</p>
+      <p className="text-sm text-gray-500">
+        {isActive === 1 ? "Active" : "Inactive"}
+      </p>
+    </div>
+
+    <Button
+      type="button"
+      size="small"
+      variant="outlined"
+      color={isActive === 1 ? "error" : "success"}
+      onClick={() => {
+        setIsActive((prev) => (prev === 1 ? 0 : 1));
+      }}
+      sx={{
+        borderRadius: "10px",
+        textTransform: "none",
+      }}
+    >
+      {isActive === 1 ? "Deactivate Offer" : "Activate Offer"}
+    </Button>
+  </div>
+)}
+
         </div>
         {/* </div> */}
       </form>

@@ -13,20 +13,20 @@ import BlogsList from "../list-blogs/BlogsList";
 export const BlogTabs: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read initial tab from search params or default to "view"
+  // Read initial tab from search params or default to "add"
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<"view" | "add">(
-    tabParam === "add" ? "add" : "view"
+    tabParam === "view" ? "view" : "add"
   );
 
   // Sync tab with URL search param
   const handleTabChange = (tab: "view" | "add") => {
     setActiveTab(tab);
-    setSearchParams(tab === "add" ? { tab: "add" } : {});
+    setSearchParams(tab === "view" ? { tab: "view" } : {});
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] bg-gradient-to-b from-white via-slate-50/50 to-white p-3 sm:p-4 space-y-3">
+    <div className="w-full min-h-[calc(100vh-80px)] space-y-3">
       {/* =====================================================
           CLINIC ADMIN HEADER & TAB CONTROLS (RESPONSIVE)
       ====================================================== */}
@@ -54,23 +54,8 @@ export const BlogTabs: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Modern Responsive Segmented Tabs */}
+          {/* Right: Modern Responsive Segmented Tabs (Add first, View second) */}
           <div className="grid grid-cols-2 sm:flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 shrink-0 w-full sm:w-auto">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "view"}
-              onClick={() => handleTabChange("view")}
-              className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
-                activeTab === "view"
-                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-              <span>View Articles</span>
-            </button>
-
             <button
               type="button"
               role="tab"
@@ -84,6 +69,21 @@ export const BlogTabs: React.FC = () => {
             >
               <PlusCircle className="w-3.5 h-3.5 text-[var(--color-primary)]" />
               <span>Create Article</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "view"}
+              onClick={() => handleTabChange("view")}
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "view"
+                  ? "bg-white text-[var(--color-primary)] shadow-2xs border border-slate-200/60"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+              <span>View Articles</span>
             </button>
           </div>
         </div>

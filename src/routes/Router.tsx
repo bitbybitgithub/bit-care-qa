@@ -21,7 +21,6 @@ import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
-import OffersDiscount from "../features/admin/OffersDiscount";
 import Blogs from "../features/admin/Blogs";
 import BlogsList from "../features/list-blogs/BlogsList";
 import ClinicSettings from "../components/common/EstablishmentSettings/Clinicsettings";
@@ -80,7 +79,7 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
-      { path: "/lab/offers", element: <OffersDiscount /> },
+      { path: "/lab/offers", element: <OffersTabs /> },
       { path: "/lab/labsetting", element: <LabSettings /> },
       { path: "/lab/service-management", element: <ServiceManagement /> },
 

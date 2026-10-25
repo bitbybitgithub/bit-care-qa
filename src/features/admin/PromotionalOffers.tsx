@@ -1,626 +1,392 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
-import ConfirmationNumberOutlinedIcon from "@mui/icons-material/ConfirmationNumberOutlined";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-
+  Tag,
+  Ticket,
+  Edit,
+  Copy,
+  Check,
+  Search,
+  PlusCircle,
+  Sparkles,
+  Percent,
+  Calendar,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../services/EmrApi";
 import { getPromotionalOffersApi } from "../../api";
 import type { PromotionalOffer } from "../../types/types";
-import { useNavigate } from "react-router-dom";
 import { getSession } from "../../context/sessions/userSession";
 
 interface PromotionalOffersProps {
   onEdit: (offer: PromotionalOffer) => void;
+  onAddNew?: () => void;
 }
 
-// const PromotionalOffers = () => {
 const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
   onEdit,
+  onAddNew,
 }) => {
   const [offers, setOffers] = useState<PromotionalOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedOffer, setSelectedOffer] = useState<PromotionalOffer | null>(null);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
 
   const navigate = useNavigate();
+  const user = getSession("user");
 
-//   const fetchOffers = async () => {
-//     try {
-//       setLoading(true);
-//       setError("");
+  const fetchOffers = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-//       const response = await getPromotionalOffersApi();
+      const centerId =
+        user?.entity_type === 1
+          ? user?.clinic_id
+          : user?.entity_type === 2
+            ? user?.lab_id
+            : user?.clinic_id || user?.lab_id;
 
-//       console.log("PROMOTIONAL OFFERS RESPONSE:", response);
-//       console.log("PROMOTIONAL OFFERS DATA:", response.data);
+      const centerType =
+        user?.entity_type === 1
+          ? "clinic"
+          : user?.entity_type === 2
+            ? "lab"
+            : user?.clinic_id
+              ? "clinic"
+              : "lab";
 
-//       if (response.success && Array.isArray(response.data)) {
-//         setOffers(response.data);
+      if (!centerId || !centerType) {
+        setOffers([]);
+        setError("Unable to identify the logged-in clinic or lab establishment.");
+        return;
+      }
 
-//         console.log(
-//           "FIRST OFFER IMAGE:",
-//           response.data[0]?.offer_image_path,
-//           response.data[0]?.offer_image_guid,
-//           response.data[0]?.offer_image_name
-//         );
-//       } else {
-//         setOffers([]);
-//         setError("Unable to load promotional offers. Please try again.");
-//       }
-//     } catch (err) {
-//       console.error("Error fetching promotional offers:", err);
-//       setOffers([]);
-//       setError("Unable to load promotional offers. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+      const response = await getPromotionalOffersApi(centerId, centerType);
 
-
-const fetchOffers = async () => {
-  try {
-    setLoading(true);
-    setError("");
-
-    // Get the logged-in user's session
-    const user = getSession("user");
-
-    const centerId =
-      user?.entity_type === 1
-        ? user?.clinic_id
-        : user?.entity_type === 2
-          ? user?.lab_id
-          : undefined;
-
-    const centerType =
-      user?.entity_type === 1
-        ? "clinic"
-        : user?.entity_type === 2
-          ? "lab"
-          : undefined;
-
-    // Validate the logged-in user's center
-    if (!centerId || !centerType) {
-      setOffers([]);
-      setError("Unable to identify the logged-in clinic or lab.");
-      return;
-    }
-
-    // Fetch offers for this clinic or lab only
-    const response = await getPromotionalOffersApi(
-      centerId,
-      centerType
-    );
-
-    if (response.success && Array.isArray(response.data)) {
-      setOffers(response.data);
-
-    } else {
+      if (response.success && Array.isArray(response.data)) {
+        setOffers(response.data);
+      } else {
+        setOffers([]);
+        setError("Unable to load promotional offers. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error fetching promotional offers:", err);
       setOffers([]);
       setError("Unable to load promotional offers. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Error fetching promotional offers:", err);
-    setOffers([]);
-    setError("Unable to load promotional offers. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchOffers();
   }, []);
 
-    const handleEdit = (offer: PromotionalOffer) => {
-    navigate("/clinic/offers", {
+  const handleEdit = (offer: PromotionalOffer) => {
+    if (onEdit) {
+      onEdit(offer);
+    } else {
+      const targetRoute = user?.entity_type === 2 ? "/lab/offers" : "/clinic/offers";
+      navigate(targetRoute, {
         state: {
-        offer,
-        isEdit: true,
+          offer,
+          isEdit: true,
         },
-    });
-    };
-
-  const handleCloseEdit = () => {
-    setSelectedOffer(null);
+      });
+    }
   };
 
-  // Existing image URL logic — unchanged
+  const handleCopyCoupon = (code: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCoupon(code);
+      toast.success(`Coupon code ${code} copied!`);
+      setTimeout(() => setCopiedCoupon(null), 2500);
+    });
+  };
+
   const getImageUrl = (offer: PromotionalOffer) => {
     if (!offer.offer_image_guid) return "";
-
     return `${BASE_URL}/patient/patients/offer-images/${offer.offer_image_guid}`;
   };
 
-  const formatDate = (date: string) => {
-    if (!date) return "—";
-
-    const parsedDate = new Date(date);
-
-    return Number.isNaN(parsedDate.getTime())
-      ? date
-      : parsedDate.toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
+  const formatValidTill = (dateStr?: string) => {
+    if (!dateStr) return "Ongoing";
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
+
+  const filteredOffers = useMemo(() => {
+    return offers.filter((offer) => {
+      const isActive = Number(offer.is_active ?? 1) === 1;
+      if (filterStatus === "active" && !isActive) return false;
+      if (filterStatus === "inactive" && isActive) return false;
+
+      if (search.trim()) {
+        const query = search.trim().toLowerCase();
+        const titleMatch = (offer.offer_title || "").toLowerCase().includes(query);
+        const codeMatch = (offer.coupon_code || "").toLowerCase().includes(query);
+        const descMatch = (offer.offer_description || "").toLowerCase().includes(query);
+        return titleMatch || codeMatch || descMatch;
+      }
+
+      return true;
+    });
+  }, [offers, filterStatus, search]);
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="300px"
-      >
-        <CircularProgress />
-      </Box>
+      <div className="w-full flex flex-col items-center justify-center min-h-[300px] gap-2.5">
+        <div className="w-8 h-8 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-slate-500 font-medium">
+          Loading promotional offers...
+        </span>
+      </div>
     );
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        mx: "auto",
-        px: { xs: 2, sm: 3, md: 4 },
-        py: { xs: 1.5, md: 2 },
-        backgroundColor: "#FFFFFF",
-      }}
-    >
-      {/* PAGE HEADER — based on BlogsList UI */}
-      <Box
-        sx={{
-          textAlign: "center",
-          mb: { xs: 2, md: 3 },
-        }}
-      >
-        <Typography
-          variant="h2"
-          fontWeight={700}
-          sx={{
-            fontSize: { xs: "20px", sm: "26px", md: "32px" },
-            mb: 1,
-            color: "#202124",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Promotional Offers
-        </Typography>
+    <div className="w-full space-y-3.5">
+      {/* =====================================================
+          CONTROL BAR: SEARCH & STATUS FILTERS
+      ====================================================== */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-800">
+            Promotional Offers
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+            <Tag className="w-3 h-3 text-[var(--color-primary)]" />
+            {filteredOffers.length} {filteredOffers.length === 1 ? "Offer" : "Offers"}
+          </span>
+        </div>
 
-        <Typography
-          variant="body1"
-          sx={{
-            maxWidth: "650px",
-            mx: "auto",
-            fontSize: "15px",
-            lineHeight: 1.8,
-            color: "#626262",
-          }}
-        >
-          Explore our latest promotional offers, exclusive discounts, and
-          special deals available for you.
-        </Typography>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-60">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search offer or coupon..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/15 transition"
+            />
+          </div>
 
-        <Box
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1,
-            mt: 2.5,
-            px: 2,
-            py: 1,
-            borderRadius: "8px",
-            backgroundColor: "#eef4ff",
-            color: "#2856a6",
-          }}
-        >
-          <LocalOfferOutlinedIcon fontSize="small" />
-
-          <Typography fontSize="14px" fontWeight={600}>
-            {offers.length} Total Offers
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* ERROR */}
-      {error && (
-        <Alert
-          severity="error"
-          sx={{
-            maxWidth: "1200px",
-            mx: "auto",
-            mb: 3,
-            borderRadius: "10px",
-          }}
-          action={
-            <Button color="inherit" size="small" onClick={fetchOffers}>
-              Retry
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      )}
-
-      {/* NO OFFERS */}
-      {!error && offers.length === 0 && (
-        <Card
-          elevation={0}
-          sx={{
-            maxWidth: "1200px",
-            mx: "auto",
-            p: { xs: 3, md: 5 },
-            textAlign: "center",
-            border: "1px solid #eeeeee",
-            borderRadius: "14px",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <LocalOfferOutlinedIcon
-            sx={{
-              fontSize: 52,
-              color: "#94A3B8",
-              mb: 1.5,
-            }}
-          />
-
-          <Typography variant="h6" fontWeight={700} color="#202124">
-            No promotional offers found
-          </Typography>
-
-          <Typography sx={{ mt: 1, color: "#626262" }}>
-            Offers will appear here when they are available.
-          </Typography>
-        </Card>
-      )}
-
-      {/* OFFER CARDS */}
-      {!error && offers.length > 0 && (
-       <Grid
-        container
-        spacing={{ xs: 2, md: 2.5 }}
-        sx={{
-            maxWidth: "1200px",
-            mx: "auto",
-            alignItems: "stretch",
-        }}
-        >
-          {offers.map((offer, index) => (
-           <Grid
-            key={offer.offer_id}
-            size={{ xs: 12, sm: 6, md: 4 }}
-            >
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  border: "1px solid #eeeeee",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.07)",
-                  transition:
-                    "transform 0.25s ease, box-shadow 0.25s ease",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: "0 12px 28px rgba(0,0,0,0.13)",
-                  },
-                  animation: "offerFadeIn 0.6s ease-out both",
-                  animationDelay: `${index * 120}ms`,
-                  "@keyframes offerFadeIn": {
-                    from: {
-                      opacity: 0,
-                      transform: "translateY(18px)",
-                    },
-                    to: {
-                      opacity: 1,
-                      transform: "translateY(0)",
-                    },
-                  },
-                }}
+          {/* Status Segmented Pill */}
+          <div className="flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200/80 shrink-0">
+            {(
+              [
+                { id: "all", label: "All" },
+                { id: "active", label: "Active" },
+                { id: "inactive", label: "Inactive" },
+              ] as const
+            ).map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => setFilterStatus(st.id)}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  filterStatus === st.id
+                    ? "bg-white text-[var(--color-primary)] shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
               >
-                {/* OFFER IMAGE */}
-                <Box
-                  sx={{
-                    width: "100%",
-                   height: { xs: "170px", md: "190px" },
-                    overflow: "hidden",
-                    backgroundColor: "#f3f4f6",
-                    position: "relative",
-                    "& img": {
-                      transition: "transform 0.5s ease",
-                    },
-                    "&:hover img": {
-                      transform: "scale(1.045)",
-                    },
-                  }}
-                >
-                  {getImageUrl(offer) ? (
-                    <CardMedia
-                      component="img"
-                      image={getImageUrl(offer)}
+                {st.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            type="button"
+            onClick={fetchOffers}
+            title="Refresh list"
+            className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition flex items-center justify-center cursor-pointer shrink-0"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-3 text-rose-800 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchOffers}
+            className="px-2.5 py-1 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition cursor-pointer shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* EMPTY OFFERS STATE */}
+      {!error && filteredOffers.length === 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-8 sm:p-12 text-center max-w-xl mx-auto my-4 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center mx-auto shadow-2xs">
+            <Sparkles className="w-6 h-6 text-[var(--color-primary)]" />
+          </div>
+
+          <h3 className="text-base font-bold text-slate-900">
+            {offers.length === 0
+              ? "No Promotional Offers Created Yet"
+              : "No Offers Match Your Filter"}
+          </h3>
+
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            {offers.length === 0
+              ? "Attract and reward patients with seasonal healthcare checkup discounts, packages, and coupon deals."
+              : "Try refining your search keyword or switching between Active and Inactive filters."}
+          </p>
+
+          {onAddNew && offers.length === 0 && (
+            <button
+              type="button"
+              onClick={onAddNew}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-2xs transition cursor-pointer mt-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Create First Offer</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* =====================================================
+          OFFER CARDS GRID - PATIENT VOUCHER DESIGN (MATCHING IMAGE 2)
+      ====================================================== */}
+      {!error && filteredOffers.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          {filteredOffers.map((offer) => {
+            const imageUrl = getImageUrl(offer);
+            const isImageFailed = failedImages[offer.offer_id] || !imageUrl;
+            const isActive = Number(offer.is_active ?? 1) === 1;
+
+            return (
+              <div
+                key={offer.offer_id}
+                className="relative rounded-2xl overflow-hidden min-h-[220px] p-5 flex flex-col justify-between bg-slate-900 border border-slate-800 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1 group"
+              >
+                {/* Background Image with Dark Cinematic Gradient Overlay */}
+                {!isImageFailed ? (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{
+                      backgroundImage: `url(${imageUrl})`,
+                    }}
+                  >
+                    <img
+                      src={imageUrl}
                       alt={offer.offer_title}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        display: "block",
-                        backgroundColor: "#f3f4f6",
-                      }}
+                      className="hidden"
+                      onError={() =>
+                        setFailedImages((prev) => ({
+                          ...prev,
+                          [offer.offer_id]: true,
+                        }))
+                      }
                     />
-                  ) : (
-                    <Box
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "#eef4ff",
-                        color: "#2856a6",
-                      }}
+                    {/* Gradient Overlay for high readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/60" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+                    <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[var(--color-primary)]/15 blur-2xl pointer-events-none" />
+                    <Percent className="absolute right-4 bottom-4 w-28 h-28 text-white/[0.04] pointer-events-none" />
+                  </div>
+                )}
+
+                {/* Top Row: Center Pill & Validity / Status */}
+                <div className="relative z-10 flex items-center justify-between gap-2">
+                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-white tracking-wide truncate max-w-[170px] shadow-2xs">
+                    {offer.center_name || user?.full_name || "TrueHeal Clinic"}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/90 font-medium shrink-0">
+                      Valid till: {formatValidTill(offer.end_date)}
+                    </span>
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        isActive ? "bg-emerald-400 ring-2 ring-emerald-400/40" : "bg-slate-400"
+                      }`}
+                      title={isActive ? "Active campaign" : "Inactive campaign"}
+                    />
+                  </div>
+                </div>
+
+                {/* Middle Row: Title, Big Yellow Discount, Description */}
+                <div className="relative z-10 my-3 space-y-1">
+                  <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug line-clamp-1">
+                    {offer.offer_title}
+                  </h3>
+
+                  <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight leading-none drop-shadow-xs">
+                    {offer.discount_percentage}% OFF
+                  </div>
+
+                  <p className="text-xs text-slate-200/90 line-clamp-2 leading-relaxed pt-0.5">
+                    {offer.offer_description}
+                  </p>
+                </div>
+
+                {/* Bottom Row: Coupon Pill (Left) & Edit Button (Right) */}
+                <div className="relative z-10 flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+                  {/* Coupon Code Pill */}
+                  {offer.coupon_code ? (
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopyCoupon(offer.coupon_code!, e)}
+                      title="Click to copy coupon code"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/30 bg-black/40 backdrop-blur-sm text-xs font-bold text-white tracking-wider hover:border-amber-400 hover:text-amber-300 transition cursor-pointer select-none group/cpn"
                     >
-                      <LocalOfferOutlinedIcon sx={{ fontSize: 65 }} />
-                    </Box>
+                      <Ticket className="w-3.5 h-3.5 text-amber-400 group-hover/cpn:rotate-12 transition-transform" />
+                      <span>{offer.coupon_code}</span>
+                      {copiedCoupon === offer.coupon_code ? (
+                        <Check className="w-3 h-3 text-emerald-400 ml-0.5" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-white/60 ml-0.5 group-hover/cpn:text-white" />
+                      )}
+                    </button>
+                  ) : (
+                    <div />
                   )}
 
-                  {/* DISCOUNT BADGE */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 14,
-                      left: 14,
-                      px: 1.5,
-                      py: 0.8,
-                      borderRadius: "6px",
-                      backgroundColor: "#e7f8ef",
-                      color: "#15803d",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    }}
+                  {/* Edit Action Button (Styled like Claim Now in Image 2) */}
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(offer)}
+                    className="px-4 py-1.5 rounded-full bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer shrink-0"
                   >
-                    {offer.discount_percentage}% OFF
-                  </Box>
-                </Box>
-
-                {/* OFFER CONTENT */}
-                <CardContent
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flexGrow: 1,
-                    p: "14px 16px 16px",
-                    backgroundColor: "#ffffff",
-                  }}
-                >
-                
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      gap: 1,
-                      mb: 1.2,
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      sx={{
-                        lineHeight: 1.3,
-                        fontSize: "14px",
-                        color: "#202124",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {offer.offer_title}
-                    </Typography>
-
-                    <IconButton
-                      aria-label={`Edit ${offer.offer_title}`}
-                      onClick={() => handleEdit(offer)}
-                      size="small"
-                      sx={{
-                        flexShrink: 0,
-                        color: "#2856a6",
-                        border: "1px solid #d5e2fa",
-                        borderRadius: "7px",
-                        "&:hover": {
-                          backgroundColor: "#eef4ff",
-                          borderColor: "#2856a6",
-                        },
-                      }}
-                    >
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-
-                  {/* DESCRIPTION */}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      lineHeight: 1.5,
-                        fontSize: "12px",
-                        color: "#5f6368",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        overflowWrap: "anywhere",
-                        minHeight: "36px",
-                        mb: 1,
-                    }}
-                  >
-                    {offer.offer_description}
-                  </Typography>
-
-                  {/* OFFER DETAILS */}
-                  <Stack spacing={1} sx={{ mb: 1.5 }}>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="flex-start"
-                    >
-                      <ConfirmationNumberOutlinedIcon
-                        fontSize="small"
-                        sx={{ color: "#64748b", mt: "2px", flexShrink: 0 }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: "13px",
-                          color: "#626262",
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        Coupon:{" "}
-                        <Box
-                          component="span"
-                          sx={{
-                            fontWeight: 700,
-                            color: "#2856a6",
-                          }}
-                        >
-                          {offer.coupon_code || "No coupon"}
-                        </Box>
-                      </Typography>
-                    </Stack>
-
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="flex-start"
-                    >
-                      <CalendarMonthOutlinedIcon
-                        fontSize="small"
-                        sx={{ color: "#64748b", mt: "2px", flexShrink: 0 }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        sx={{ fontSize: "13px", color: "#626262" }}
-                      >
-                        {formatDate(offer.start_date)} –{" "}
-                        {formatDate(offer.end_date)}
-                      </Typography>
-                    </Stack>
-
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="flex-start"
-                    >
-                      <LocationOnOutlinedIcon
-                        fontSize="small"
-                        sx={{ color: "#64748b", mt: "2px", flexShrink: 0 }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: "13px",
-                          color: "#626262",
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        {offer.center_name || "Center"}
-                        {offer.address ? ` · ${offer.address}` : ""}
-                      </Typography>
-                    </Stack>
-
-                    {offer.phone && (
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="flex-start"
-                      >
-                        <PhoneOutlinedIcon
-                          fontSize="small"
-                          sx={{
-                            color: "#64748b",
-                            mt: "2px",
-                            flexShrink: 0,
-                          }}
-                        />
-
-                        <Typography
-                          variant="body2"
-                          sx={{ fontSize: "13px", color: "#626262" }}
-                        >
-                          {offer.phone}
-                        </Typography>
-                      </Stack>
-                    )}
-
-                    {offer.email && (
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="flex-start"
-                      >
-                        <EmailOutlinedIcon
-                          fontSize="small"
-                          sx={{
-                            color: "#64748b",
-                            mt: "2px",
-                            flexShrink: 0,
-                          }}
-                        />
-
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: "13px",
-                            color: "#626262",
-                            overflowWrap: "anywhere",
-                          }}
-                        >
-                          {offer.email}
-                        </Typography>
-                      </Stack>
-                    )}
-                  </Stack>
-
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <Edit className="w-3.5 h-3.5 text-slate-700" />
+                    <span>Edit</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
-
-     
-    </Box>
+    </div>
   );
 };
 

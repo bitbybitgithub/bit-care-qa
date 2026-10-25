@@ -553,7 +553,7 @@ const LabWalkInTestSelectionPopup: React.FC<Props> = ({
               fontSize: "0.8125rem",
               borderRadius: "var(--radius-lg)",
               backgroundColor: "var(--color-primary)",
-              color: "#ffffff",
+              color: "var(--color-white)",
               boxShadow: "var(--shadow-xs)",
               "&:hover": {
                 backgroundColor: "var(--color-primary)",

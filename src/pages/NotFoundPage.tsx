@@ -121,7 +121,7 @@ const NotFoundPage: React.FC = () => {
               rx="6"
               fill="var(--color-primary)"
             />
-            <circle cx="100" cy="29" r="3" fill="#ffffff" />
+            <circle cx="100" cy="29" r="3" fill="var(--color-white)" />
 
             {/* Medical Cross on Header */}
             <path
@@ -195,19 +195,17 @@ const NotFoundPage: React.FC = () => {
 
         {/* Headings */}
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-text)] tracking-tight mt-4">
-          Clinical Resource Not Found
+          Resource Not Found
         </h1>
         <p className="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] max-w-lg leading-relaxed">
-          The medical chart, patient appointment, or clinical module you are
-          looking for may have been moved, completed, or is unavailable at this
-          address.
+          The requested record, scheduled event, or system module may have been moved, completed, or is unavailable at this address.
         </p>
 
         {/* Operational Status Badges */}
         <div className="flex flex-wrap items-center justify-center gap-3 my-6 text-xs text-[var(--color-text-secondary)] font-medium">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]/30">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Clinical Systems Active</span>
+            <span>Systems Active</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]/30">
             <RiShieldCrossLine className="text-[var(--color-primary)] text-sm" />
@@ -222,7 +220,7 @@ const NotFoundPage: React.FC = () => {
             onClick={() => navigate(dashboardRoute)}
             sx={{
               backgroundColor: "var(--color-primary)",
-              color: "#ffffff",
+              color: "var(--color-white)",
               borderRadius: "var(--radius-lg)",
               py: 1.1,
               px: 3.5,
@@ -274,7 +272,7 @@ const NotFoundPage: React.FC = () => {
         {/* Footer Support Prompt */}
         <p className="mt-8 text-xs text-[var(--color-text-secondary)] flex items-center justify-center gap-1.5">
           <FaHeadset className="text-[var(--color-primary)]" />
-          <span>Need assistance? Contact your clinic or lab administrator.</span>
+          <span>Need assistance? Contact your respective administrator.</span>
         </p>
       </div>
     </div>

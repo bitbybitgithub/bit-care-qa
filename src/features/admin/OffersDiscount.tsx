@@ -542,46 +542,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   )}
 </div>
 
-        {/* <div className="flex justify-center gap-4">
-          <Button variant="contained" type="submit">
-            {isEdit ? "Update Offer" : "Save Offer"}
-          </Button>
-
-          <Button variant="outlined" color="secondary" onClick={handleReset}>
-            Reset
-          </Button>
-
-
-{isEdit && (
-  <div className="flex justify-between items-center border rounded-lg p-3 mb-4">
-    <div>
-      <p className="font-semibold">Offer Status</p>
-      <p className="text-sm text-gray-500">
-        {isActive === 1 ? "Active" : "Inactive"}
-      </p>
-    </div>
-
-    <Button
-      type="button"
-      size="small"
-      variant="outlined"
-      color={isActive === 1 ? "error" : "success"}
-      onClick={() => {
-        setIsActive((prev) => (prev === 1 ? 0 : 1));
-      }}
-      sx={{
-        borderRadius: "10px",
-        textTransform: "none",
-      }}
-    >
-      {isActive === 1 ? "Deactivate Offer" : "Activate Offer"}
-    </Button>
-  </div>
-)}
-
-        </div>
-         */}
-        {/* </div> */}
+      
       </form>
     </div>
   );

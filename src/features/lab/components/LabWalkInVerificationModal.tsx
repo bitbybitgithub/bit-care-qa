@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, FormControl, InputAdornment, TextField } from "@mui/material";
-import { FaTimes, FaUser, FaCalendarAlt } from "react-icons/fa";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  TextField,
+  CircularProgress,
+} from "@mui/material";
+import { FaTimes, FaUser, FaCalendarAlt, FaCheckCircle } from "react-icons/fa";
 import { FaPeopleLine } from "react-icons/fa6";
 import { IoCall } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -173,61 +179,49 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
   const count = verifiedPatients?.length || 0;
 
   return (
-    <div
-      className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center px-4"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
-    >
-      <div
-        className="w-full max-w-md p-6 animate-fadeIn overflow-y-auto max-h-[90vh]"
-        style={{
-          backgroundColor: "var(--color-surface)",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "var(--shadow-xl)",
-          color: "var(--color-text)",
-          transition: "all var(--transition-normal)",
-        }}
-      >
-        {!verifiedPatients && (
+    <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md p-6 bg-[var(--color-surface)] border border-[var(--color-border)]/30 rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] text-[var(--color-text)] transition-all overflow-hidden max-h-[90vh] flex flex-col">
+        {!verifiedPatients ? (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <FaPeopleLine
-                  className="text-[var(--color-primary)]"
-                  style={{ fontSize: "var(--font-h2)" }}
-                />
-                <h3
-                  className="font-semibold text-[var(--color-primary)]"
-                  style={{ fontSize: "var(--font-h3)" }}
-                >
-                  Add Walk-In Patient
-                </h3>
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center text-xl shrink-0">
+                  <FaPeopleLine />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-[var(--color-text)]">
+                    Add Walk-In Patient
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                    We'll verify contact to find existing patient records
+                  </p>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   onClose();
                   resetState();
                 }}
-                className="w-8 h-8 flex justify-center items-center rounded-[var(--radius-full)] cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <FaTimes />
               </button>
             </div>
 
-            <p style={{ fontSize: "var(--font-small)" }}>
-              We&apos;ll verify your contact to find existing records
-            </p>
-          </>
-        )}
-
-        {!verifiedPatients && (
-          <>
-            <div className="mt-4">
-              <div className="flex items-center gap-3">
-                <FormControl>
+            {/* Mobile Number Input */}
+            <div className="mt-2">
+              <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">
+                Contact Number
+              </label>
+              <div className="flex items-center gap-2">
+                <FormControl fullWidth>
                   <TextField
                     fullWidth
                     size="small"
-                    placeholder="Enter 10-digit number"
+                    placeholder="Enter 10-digit mobile"
                     value={contact}
                     disabled={editedAfterOtp}
                     onChange={(e) => {
@@ -254,17 +248,25 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
                       input: {
                         startAdornment: (
                           <InputAdornment position="start">
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: "var(--color-text-secondary)",
-                              }}
-                            >
+                            <span className="font-semibold text-xs text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-1.5 py-0.5 rounded">
                               +91
                             </span>
                           </InputAdornment>
                         ),
-                        inputProps: { maxLength: 10 },
+                        inputProps: { maxLength: 10, inputMode: "numeric" },
+                      },
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "var(--radius-lg)",
+                        backgroundColor: "var(--color-surface-alt)",
+                        fontSize: "0.875rem",
+                        "&:hover fieldset": {
+                          borderColor: "var(--color-primary)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "var(--color-primary)",
+                        },
                       },
                     }}
                   />
@@ -272,57 +274,55 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
 
                 <Button
                   onClick={handleSendOtp}
-                  variant="text"
+                  variant="contained"
                   disabled={contact.length !== 10 || showOtp || loadingGenerate}
                   sx={{
                     fontWeight: 600,
-                    fontSize: "var(--font-small)",
-                    color: "var(--color-surface-alt)",
-                    boxShadow: "var(--shadow-md)",
+                    fontSize: "0.8125rem",
+                    borderRadius: "var(--radius-lg)",
                     textTransform: "none",
-                    backgroundColor: "var(--color-info)",
+                    whiteSpace: "nowrap",
+                    px: 2.5,
+                    py: 1,
+                    boxShadow: "var(--shadow-xs)",
+                    backgroundColor: "var(--color-primary)",
+                    color: "#ffffff",
                     "&:hover": {
-                      backgroundColor: "var(--color-info)",
-                      opacity: 0.8,
+                      backgroundColor: "var(--color-primary)",
+                      opacity: 0.9,
                     },
                     "&.Mui-disabled": {
-                      color: "var(--color-white)",
-                      cursor: "not-allowed",
-                      opacity: 0.7,
-                      pointerEvents: "auto",
+                      backgroundColor: "var(--color-border)",
+                      color: "var(--color-text-secondary)",
+                      opacity: 0.6,
                     },
                   }}
                 >
-                  Send OTP
+                  {loadingGenerate ? (
+                    <CircularProgress size={18} sx={{ color: "#ffffff" }} />
+                  ) : showOtp ? (
+                    "OTP Sent"
+                  ) : (
+                    "Send OTP"
+                  )}
                 </Button>
               </div>
 
               {error.mobile && (
-                <p
-                  className="mt-1"
-                  style={{
-                    fontSize: "var(--font-xs)",
-                    color: "var(--color-error)",
-                  }}
-                >
+                <p className="mt-1 text-xs text-[var(--color-error)]">
                   {error.mobile}
                 </p>
               )}
             </div>
 
+            {/* OTP Section */}
             {showOtp && (
-              <div className="mt-4 text-center">
-                <p
-                  className="font-medium mb-2"
-                  style={{
-                    color: "var(--color-text-secondary)",
-                    fontSize: "var(--font-small)",
-                  }}
-                >
-                  Enter 4-digit OTP
+              <div className="mt-5 p-4 rounded-[var(--radius-lg)] border border-[var(--color-border)]/40 bg-[var(--color-surface-alt)] text-center animate-fadeIn">
+                <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-3">
+                  Enter 4-digit verification code sent to +91 {contact}
                 </p>
 
-                <div className="flex justify-center gap-2 sm:gap-2.5">
+                <div className="flex justify-center items-center gap-3">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -331,168 +331,190 @@ const LabWalkInVerificationModal: React.FC<Props> = ({
                       onChange={(e) => handleOtpChange(e.target.value, index)}
                       onKeyDown={(e) => handleOtpKeyDown(e, index)}
                       maxLength={1}
+                      inputMode="numeric"
                       ref={(el) => {
                         otpRefs.current[index] = el;
                       }}
-                      className="text-center outline-none"
+                      className="w-11 h-12 text-center text-lg font-bold rounded-[var(--radius-lg)] border bg-[var(--color-surface)] text-[var(--color-text)] outline-none transition-all focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
                       style={{
-                        width: "2.5rem",
-                        height: "2.5rem",
-                        boxShadow: "var(--shadow-md)",
-                        border: `1px solid ${
-                          error.otp ? "var(--color-error)" : "var(--color-none)"
-                        }`,
-                        borderRadius: "var(--radius-lg)",
-                        backgroundColor: "var(--color-bg)",
-                        color: "var(--color-text)",
-                        fontWeight: "var(--font-weight-semibold)",
+                        borderColor: error.otp
+                          ? "var(--color-error)"
+                          : digit
+                          ? "var(--color-primary)"
+                          : "var(--color-border)",
                       }}
                     />
                   ))}
-
-                  {loadingVerify && (
-                    <div className="relative w-5 h-5 mt-1">
-                      <div
-                        className="absolute inset-0 border-4 rounded-full animate-spin"
-                        style={{
-                          borderColor: "var(--color-border)",
-                          borderTopColor: "var(--color-success)",
-                        }}
-                      ></div>
-                    </div>
-                  )}
                 </div>
 
                 {otpSent && !loadingGenerate && (
-                  <div className="mt-2">
+                  <div className="mt-3 text-xs">
                     {resendTimer > 0 ? (
-                      <p
-                        style={{
-                          fontSize: "var(--font-small)",
-                          color: "var(--color-text-secondary)",
-                        }}
-                      >
-                        Resend OTP in {resendTimer}s
-                      </p>
+                      <span className="text-[var(--color-text-secondary)]">
+                        Resend code in{" "}
+                        <strong className="text-[var(--color-primary)]">
+                          {resendTimer}s
+                        </strong>
+                      </span>
                     ) : (
                       <button
+                        type="button"
                         onClick={handleResendOtp}
-                        className="font-semibold transition-all"
-                        style={{
-                          fontSize: "var(--font-small)",
-                          color: "var(--color-primary)",
-                        }}
+                        className="font-semibold text-[var(--color-primary)] hover:underline cursor-pointer"
                       >
-                        Resend OTP
+                        Didn't receive code? Resend OTP
                       </button>
                     )}
                   </div>
                 )}
 
                 {error.otp && (
-                  <p
-                    className="mt-1"
-                    style={{
-                      fontSize: "var(--font-xs)",
-                      color: "var(--color-error)",
-                    }}
-                  >
+                  <p className="mt-2 text-xs text-[var(--color-error)] font-medium">
                     {error.otp}
                   </p>
                 )}
+
+                <div className="mt-4">
+                  <Button
+                    fullWidth
+                    onClick={handleConfirm}
+                    disabled={loadingVerify || otp.join("").length !== 4}
+                    variant="contained"
+                    sx={{
+                      py: 1,
+                      fontWeight: 600,
+                      borderRadius: "var(--radius-lg)",
+                      textTransform: "none",
+                      backgroundColor: "var(--color-primary)",
+                      color: "#ffffff",
+                      boxShadow: "var(--shadow-md)",
+                      "&:hover": {
+                        backgroundColor: "var(--color-primary)",
+                        opacity: 0.9,
+                      },
+                      "&.Mui-disabled": {
+                        backgroundColor: "var(--color-border)",
+                        color: "var(--color-text-secondary)",
+                        opacity: 0.6,
+                      },
+                    }}
+                  >
+                    {loadingVerify ? (
+                      <span className="flex items-center gap-2">
+                        <CircularProgress size={16} sx={{ color: "#ffffff" }} />
+                        Verifying...
+                      </span>
+                    ) : (
+                      "Confirm & Continue"
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
           </>
-        )}
-
-        {verifiedPatients && verifiedPatients.length > 0 && (
-          <>
-            <div className="flex justify-between items-center mb-3">
-              <h3>
-                {count} Patient{count > 1 ? "s" : ""}{" "}
-                {count > 0 ? "found for existing contact" : "already exist"}
-              </h3>
+        ) : (
+          /* Verified Patients List */
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-[var(--color-border)]/30">
+              <div>
+                <h3 className="font-bold text-base text-[var(--color-text)]">
+                  {count} Existing Patient{count > 1 ? "s" : ""} Found
+                </h3>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  Select an existing profile or register as new
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => {
                   onClose();
                   resetState();
                 }}
-                className="w-8 h-8 flex justify-center items-center rounded-full cursor-pointer text-[var(--color-surface-alt)] bg-[var(--color-primary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <FaTimes />
               </button>
             </div>
 
-            {verifiedPatients.map((p) => (
-              <div
-                key={p.patient_id}
-                onClick={() => onPatientSelect(p, contact)}
-                className="flex items-center justify-between bg-[var(--color-surface-alt)] border-2 border-gray-200 rounded-2xl sm:p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
-              >
-                <div className="flex flex-col gap-2 flex-1">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 flex items-center justify-center rounded-full"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, var(--color-primary), var(--color-primary-light))",
-                      }}
-                    >
-                      <FaUser className="text-white text-xl" />
+            <div className="space-y-2.5 overflow-y-auto max-h-[300px] pr-1 my-2">
+              {verifiedPatients.map((p) => {
+                const genderInitial =
+                  p.gender?.toString()?.[0]?.toUpperCase() || "-";
+                const calculatedAge = getAge(p.date_of_birth);
+
+                return (
+                  <div
+                    key={p.patient_id}
+                    onClick={() => onPatientSelect(p, contact)}
+                    className="group flex items-center justify-between p-3.5 rounded-[var(--radius-lg)] border border-[var(--color-border)]/50 hover:border-[var(--color-primary)] bg-[var(--color-surface-alt)] hover:shadow-[var(--shadow-md)] transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center text-base shrink-0 group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors">
+                        <FaUser />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-sm text-[var(--color-text)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                            {p.patient_name}
+                          </h4>
+                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                            {genderInitial}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)] mt-1">
+                          <span className="flex items-center gap-1">
+                            <FaCalendarAlt className="text-[10px]" />
+                            {p.date_of_birth
+                              ? new Date(p.date_of_birth).toLocaleDateString()
+                              : "N/A"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <IoCall className="text-[10px]" />
+                            {p.mobile_number || contact}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <h4>{p.patient_name}</h4>
-                    <span
-                      style={{ color: "var(--color-primary)", fontWeight: 500 }}
-                    >
-                      ({p.gender?.toString()?.[0]?.toUpperCase() || "-"})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-6 text-sm">
-                    <div className="flex items-center gap-2">
-                      <FaCalendarAlt className="text-gray-500" />
-                      <span>
-                        {new Date(p.date_of_birth).toLocaleDateString()}
+                    <div className="shrink-0 pl-2">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                        {calculatedAge} yrs
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <IoCall className="text-gray-500" />
-                      <span>{p.mobile_number}</span>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold">
-                      {getAge(p.date_of_birth)} yrs
-                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
 
-            <div className="text-center mt-4">
-              <p>Do you want to register a new patient? Click below</p>
+            <div className="pt-3 border-t border-[var(--color-border)]/30 text-center">
+              <p className="text-xs text-[var(--color-text-secondary)] mb-2">
+                Want to create a different patient under this number?
+              </p>
               <Button
-                variant="contained"
+                fullWidth
+                variant="outlined"
                 onClick={() => onPatientSelect(null, contact)}
+                sx={{
+                  py: 0.8,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.8125rem",
+                  borderRadius: "var(--radius-lg)",
+                  borderColor: "var(--color-primary)",
+                  color: "var(--color-primary)",
+                  "&:hover": {
+                    borderColor: "var(--color-primary)",
+                    backgroundColor: "var(--color-primary)",
+                    color: "#ffffff",
+                  },
+                }}
               >
-                Register New Patient
+                + Register New Patient
               </Button>
             </div>
-          </>
+          </div>
         )}
-
-        <div className="flex justify-center mt-4">
-          {showOtp && !verifiedPatients && (
-            <Button
-              onClick={handleConfirm}
-              disabled={loadingVerify}
-              variant="contained"
-            >
-              {loadingVerify ? "Verifying..." : "Confirm"}
-            </Button>
-          )}
-        </div>
       </div>
     </div>
   );

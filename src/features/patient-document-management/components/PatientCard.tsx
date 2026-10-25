@@ -31,8 +31,8 @@ export default function PatientCard({ patient }: PatientCardProps) {
       className="shadow-md rounded-2xl border border-slate-200"
       sx={{
         width: 320,
-        background: "#ffffff",
-        borderLeft: "5px solid #2563eb",
+        background: "var(--color-bg)",
+        borderLeft: "5px solid var(--color-primary)",
         borderRadius: "16px",
       }}
     >
@@ -43,7 +43,7 @@ export default function PatientCard({ patient }: PatientCardProps) {
             sx={{
               width: 70,
               height: 70,
-              bgcolor: "#2563eb",
+              bgcolor: "var(--color-primary)",
               fontSize: "1.4rem",
             }}
           >
@@ -64,19 +64,19 @@ export default function PatientCard({ patient }: PatientCardProps) {
 
         <Box display="flex" flexDirection="column" gap={1}>
           <Box display="flex" alignItems="center" gap={1}>
-            <PhoneIcon fontSize="small" className="text-blue-600" />
+            <PhoneIcon fontSize="small" className="text-[var(--color-primary)]" />
             <Typography variant="body2">{patient.phone}</Typography>
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>
-            <CalendarMonthIcon fontSize="small" className="text-blue-600" />
+            <CalendarMonthIcon fontSize="small" className="text-[var(--color-primary)]" />
             <Typography variant="body2">
               Last Visit: {patient.lastVisit || "—"}
             </Typography>
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>
-            <EventIcon fontSize="small" className="text-blue-600" />
+            <EventIcon fontSize="small" className="text-[var(--color-primary)]" />
             <Typography variant="body2">
               Next Visit: {patient.nextVisit || "—"}
             </Typography>
@@ -92,7 +92,8 @@ export default function PatientCard({ patient }: PatientCardProps) {
           sx={{
             textTransform: "none",
             borderRadius: "10px",
-            backgroundColor: "#2563eb",
+            backgroundColor: "var(--color-primary)",
+            "&:hover": { backgroundColor: "var(--color-primary-dark)" },
           }}
         >
           View Full Profile →

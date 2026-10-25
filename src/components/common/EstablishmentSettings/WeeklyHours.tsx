@@ -54,7 +54,7 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                   <div
                     className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs uppercase transition-colors duration-200 ${
                       d.isOpen
-                        ? "bg-[#0070ba] text-white shadow-2xs"
+                        ? "bg-[var(--color-primary)] text-white shadow-2xs"
                         : "bg-slate-200 text-slate-500"
                     }`}>
                     {dayAbbr}
@@ -156,10 +156,10 @@ const WeeklyHours: React.FC<Props> = ({ days, errors, onChange }) => {
                     inputProps={{ "aria-label": `${d.day} open` }}
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#0284c7",
+                        color: "var(--color-primary)",
                       },
                       "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#0284c7",
+                        backgroundColor: "var(--color-primary)",
                       },
                     }}
                   />

@@ -525,7 +525,7 @@ const WalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               type="submit"
               disabled={saving}
               variant="contained"
-              className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:bg-blue-700 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
+              className="px-4 py-2 rounded-xl bg-[var(--color-success)] hover:opacity-90 text-white shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed normal-case"
             >
               Submit{" "}
             </Button>

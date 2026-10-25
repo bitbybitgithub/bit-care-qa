@@ -4,6 +4,8 @@ import type {
   BlogFormData,
   BlogListResponse,
   BlogByIdResponse,
+  PromotionalOffersResponse,
+  PromotionalOfferslistResponse,
 } from "../../types/types";
 import { emrAPI, BASE_URL } from "../../services/EmrApi";
 
@@ -27,15 +29,15 @@ export const registerApi = async (formData: any) => {
       slot_duration: formData.slotDuration, // clinics only
       lab_category: formData.labCategory, // labs only
     };
- 
+
     const response = await emrAPI.post<any>(
       "/onboard/register",
-      registerPayload
+      registerPayload,
     );
     return response;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || error.message || "Registration failed"
+      error.response?.data?.message || error.message || "Registration failed",
     );
   }
 };
@@ -43,6 +45,8 @@ export const registerApi = async (formData: any) => {
 export const offersdiscountApi = async (formData: OfferForm) => {
   try {
     const offersDiscount = {
+      offer_id: formData.offer_id ?? null,
+      is_active: formData.is_active ?? 1,
       center_id: formData.center_id,
       entity_type: formData.entity_type,
       center_name: formData.center_name,
@@ -58,9 +62,11 @@ export const offersdiscountApi = async (formData: OfferForm) => {
       end_date: formData.end_date,
       priority: formData.priority,
       created_by: formData.created_by,
+      modified_by: formData.modified_by ?? null,
     };
 
     const response = await emrAPI.post<any>("/admin/offers", offersDiscount);
+
     return response;
   } catch (error: any) {
     throw new Error(
@@ -150,7 +156,6 @@ export const getBlogByIdApi = async (blogId: string) => {
   return response;
 };
 
-
 export const updateBlogApi = async (
   blogId: string | number,
   formData: BlogFormData,
@@ -170,11 +175,15 @@ export const updateBlogApi = async (
     modified_by: formData.modified_by,
   };
 
-  const response = await emrAPI.put<any>(
-    `/blogs/${blogId}`,
-    blogData,
-  );
+  const response = await emrAPI.put<any>(`/blogs/${blogId}`, blogData);
 
   return response;
 };
 
+export const getPromotionalOffersApi = async (id: number, type: string) => {
+  const response = await emrAPI.get<PromotionalOffersResponse>(
+    `/patient/patients/get-promotional-offers?id=${id}&type=${type}`,
+  );
+
+  return response;
+};

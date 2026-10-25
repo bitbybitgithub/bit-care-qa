@@ -10,37 +10,36 @@ export const Card: React.FC<{
   icon?: ReactNode;
   rightAction?: ReactNode;
   children: ReactNode;
-  className?: string;
-}> = ({ title, subtitle, icon, rightAction, children, className = "" }) => (
+}> = (props) => (
   <section
-    className={`rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 w-full min-w-0 overflow-hidden ${className}`}>
-    {(title || rightAction) && (
+    className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 w-full min-w-0 overflow-hidden">
+    {(props.title || props.rightAction) && (
       <div className="mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          {icon && (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              {icon}
+          {props.icon && (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--color-surface)] text-[var(--color-primary)]">
+              {props.icon}
             </div>
           )}
           <div className="min-w-0">
-            {typeof title === "string" ? (
+            {typeof props.title === "string" ? (
               <h2 className="text-base sm:text-[17px] font-bold text-slate-900 tracking-tight leading-tight truncate">
-                {title}
+                {props.title}
               </h2>
             ) : (
-              title
+              props.title
             )}
-            {subtitle && (
+            {props.subtitle && (
               <p className="text-xs text-slate-400 mt-0.5 leading-snug font-normal">
-                {subtitle}
+                {props.subtitle}
               </p>
             )}
           </div>
         </div>
-        {rightAction && <div className="shrink-0 self-start sm:self-center">{rightAction}</div>}
+        {props.rightAction && <div className="shrink-0 self-start sm:self-center">{props.rightAction}</div>}
       </div>
     )}
-    {children}
+    {props.children}
   </section>
 );
 
@@ -76,7 +75,7 @@ export const BrandingCard: React.FC<{
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
             <Camera size={17} />
           </div>
           <div className="min-w-0">
@@ -123,7 +122,7 @@ export const BrandingCard: React.FC<{
               <button
                 type="button"
                 onClick={() => setIsReplacingLogo(true)}
-                className="mt-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1 cursor-pointer transition-colors">
+                className="mt-1.5 text-xs font-semibold text-[var(--color-primary)] hover:opacity-80 hover:underline flex items-center gap-1 cursor-pointer transition-colors">
                 <Camera size={13} />
                 Replace Logo
               </button>
@@ -212,10 +211,10 @@ export const CodCard: React.FC<{
         sx={{
           shrink: 0,
           "& .MuiSwitch-switchBase.Mui-checked": {
-            color: "#059669",
+            color: "var(--color-success)",
           },
           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-            backgroundColor: "#059669",
+            backgroundColor: "var(--color-success)",
           },
         }}
       />
@@ -266,10 +265,10 @@ export const RemindersCard: React.FC<{
         sx={{
           shrink: 0,
           "& .MuiSwitch-switchBase.Mui-checked": {
-            color: "#4f46e5",
+            color: "var(--color-primary)",
           },
           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-            backgroundColor: "#4f46e5",
+            backgroundColor: "var(--color-primary)",
           },
         }}
       />
@@ -291,7 +290,7 @@ export const RemindersCard: React.FC<{
   </div>
 );
 
-export const SLOT_DURATION_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
+const SLOT_DURATION_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 
 /* ---------------- 4. Appointment Slot Duration Card (Exact UI from Profile.tsx / Screenshot 1) ---------------- */
 export const SlotDurationCard: React.FC<{
@@ -332,12 +331,12 @@ export const SlotDurationCard: React.FC<{
               borderRadius: "10px",
               fontSize: 12.5,
               fontWeight: 600,
-              backgroundColor: "#f8fafc",
+              backgroundColor: "var(--color-surface)",
               height: 30,
-              "& fieldset": { borderColor: "#e2e8f0" },
-              "&:hover fieldset": { borderColor: "#cbd5e1" },
+              "& fieldset": { borderColor: "var(--color-border)" },
+              "&:hover fieldset": { borderColor: "var(--color-primary-light)" },
               "&.Mui-focused fieldset": {
-                borderColor: "#0070ba",
+                borderColor: "var(--color-primary)",
                 borderWidth: "1.5px",
               },
             },
@@ -347,9 +346,9 @@ export const SlotDurationCard: React.FC<{
               alignItems: "center",
               fontSize: 12.5,
               fontWeight: 600,
-              color: "#1e293b",
+              color: "var(--color-text)",
             },
-            "& .MuiSelect-icon": { right: 6, fontSize: 18, color: "#64748b" },
+            "& .MuiSelect-icon": { right: 6, fontSize: 18, color: "var(--color-text-secondary)" },
           }}
           slotProps={{
             select: {
@@ -364,8 +363,8 @@ export const SlotDurationCard: React.FC<{
                       fontWeight: 500,
                       py: 0.7,
                       "&.Mui-selected": {
-                        backgroundColor: "#f0f9ff",
-                        color: "#0070ba",
+                        backgroundColor: "var(--color-surface)",
+                        color: "var(--color-primary)",
                         fontWeight: 700,
                       },
                     },

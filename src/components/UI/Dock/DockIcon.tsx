@@ -22,16 +22,16 @@ const DockIcon: React.FC<DockIconProps> = ({
   return (
     <button
       onClick={() => onClick(item.key)}
-      className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-sky-400 focus:outline-none"
+      className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[var(--color-primary)] focus:outline-none"
     >
       <item.icon
         className={`w-6 h-6 mb-1 transition-colors ${
-          isActive ? "text-indigo-600 dark:text-sky-400" : ""
+          isActive ? "text-[var(--color-primary)]" : ""
         }`}
       />
       <span
         className={`text-xs font-medium ${
-          isActive ? "text-indigo-600 dark:text-sky-400" : ""
+          isActive ? "text-[var(--color-primary)]" : ""
         }`}
       >
         {item.label}

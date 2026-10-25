@@ -16,7 +16,7 @@
   --font-h1: 2.25rem;   /* 36px */
   --font-h2: 1.75rem;   /* 28px */
   --font-h3: 1.5rem;    /* 24px */
-  --font-h4:1.25rem;
+  --font-h4: 1.25rem;
   --font-body: 1rem;    /* 16px */
   --font-small: 0.875rem;
   --font-xs: 0.75rem;
@@ -50,20 +50,19 @@
    🌙 THEME: DARK
 ========================================================== */
 [data-theme="dark"] {
-  /* --color-primary: #60a5fa; */
-  --color-primary: #0073ff;
-  --color-primary-light: #93c5fd;
-  --color-primary-dark: #2563eb;
+  --color-primary: #0284c7;
+  --color-primary-light: #38bdf8;
+  --color-primary-dark: #0369a1;
 
   --color-secondary: #22c55e;
   --color-accent: #fbbf24;
 
   --color-bg: #0f172a;
   --color-surface: #1e293b;
-  --color-surface-alt: #334155;
-  --color-border: #475569;
+  --color-surface-alt: #1e293b;
+  --color-border: #334155;
 
-  --color-text: #e2e8f0;
+  --color-text: #f8fafc;
   --color-text-secondary: #94a3b8;
   --color-disabled: #64748b;
 
@@ -73,7 +72,7 @@
 }
 
 /* ==========================================================
-   🌊 THEME: OCEAN (Enterprise Violet–Blue)
+   🌊 THEME: OCEAN (Enterprise Violet–Blue, Default)
 ========================================================== */
 [data-theme="ocean"] {
   --color-primary: #0284c7;
@@ -97,6 +96,155 @@
   --shadow-lg: 0 10px 15px rgba(14, 165, 233, 0.15);
 }
 
+/* ==========================================================
+   🌿 THEME: GREEN (Healthcare / EMR Mint)
+========================================================== */
+[data-theme="green"] {
+  --color-primary: #059669;
+  --color-primary-light: #34d399;
+  --color-primary-dark: #047857;
+
+  --color-secondary: #10b981;
+  --color-accent: #22c55e;
+
+  --color-bg: #f0fdf4;
+  --color-surface: #dcfce7;
+  --color-surface-alt: #ffffff;
+  --color-border: #059669;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #047857;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
+  --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);
+  --shadow-lg: 0 10px 15px rgba(5, 150, 105, 0.15);
+}
+
+/* ==========================================================
+   🌞 THEME: LIGHT (Royal / Classic Clinical Blue)
+========================================================== */
+[data-theme="light"] {
+  --color-primary: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1e3a8a;
+
+  --color-secondary: #3b82f6;
+  --color-accent: #f59e0b;
+
+  --color-bg: #f8fafc;
+  --color-surface: #e2e8f0;
+  --color-surface-alt: #ffffff;
+  --color-border: #2563eb;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #1e40af;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(37, 99, 235, 0.05);
+  --shadow-md: 0 4px 6px rgba(37, 99, 235, 0.1);
+  --shadow-lg: 0 10px 15px rgba(37, 99, 235, 0.15);
+}
+
+/* ==========================================================
+   🔮 THEME: VIOLET (Linear / High-Tech Raycast Purple)
+========================================================== */
+[data-theme="violet"] {
+  --color-primary: #7c3aed;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #5b21b6;
+
+  --color-secondary: #8b5cf6;
+  --color-accent: #ec4899;
+
+  --color-bg: #faf5ff;
+  --color-surface: #ede9fe;
+  --color-surface-alt: #ffffff;
+  --color-border: #7c3aed;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #6d28d9;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(124, 58, 237, 0.05);
+  --shadow-md: 0 4px 6px rgba(124, 58, 237, 0.12);
+  --shadow-lg: 0 10px 15px rgba(124, 58, 237, 0.15);
+}
+
+/* ==========================================================
+   🌅 THEME: SUNSET (Stripe / Vibrant Warm Coral)
+========================================================== */
+[data-theme="sunset"] {
+  --color-primary: #ea580c;
+  --color-primary-light: #fb923c;
+  --color-primary-dark: #c2410c;
+
+  --color-secondary: #f97316;
+  --color-accent: #e11d48;
+
+  --color-bg: #fffaf5;
+  --color-surface: #ffedd5;
+  --color-surface-alt: #ffffff;
+  --color-border: #ea580c;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #9a3412;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(234, 88, 12, 0.05);
+  --shadow-md: 0 4px 6px rgba(234, 88, 12, 0.12);
+  --shadow-lg: 0 10px 15px rgba(234, 88, 12, 0.15);
+}
+
+/* ==========================================================
+   🧬 THEME: TEAL (Supabase / BioTech Mint)
+========================================================== */
+[data-theme="teal"] {
+  --color-primary: #0d9488;
+  --color-primary-light: #2dd4bf;
+  --color-primary-dark: #0f766e;
+
+  --color-secondary: #14b8a6;
+  --color-accent: #06b6d4;
+
+  --color-bg: #f0fdfa;
+  --color-surface: #ccfbf1;
+  --color-surface-alt: #ffffff;
+  --color-border: #0d9488;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #115e59;
+  --color-disabled: #64748b;
+
+  --shadow-xs: 0 1px 2px rgba(13, 148, 136, 0.05);
+  --shadow-md: 0 4px 6px rgba(13, 148, 136, 0.12);
+  --shadow-lg: 0 10px 15px rgba(13, 148, 136, 0.15);
+}
+
+/* ==========================================================
+   ⚡ THEME: SLATE (Vercel / Minimalist Zinc Modern)
+========================================================== */
+[data-theme="slate"] {
+  --color-primary: #1e293b;
+  --color-primary-light: #475569;
+  --color-primary-dark: #0f172a;
+
+  --color-secondary: #334155;
+  --color-accent: #0284c7;
+
+  --color-bg: #f8fafc;
+  --color-surface: #e2e8f0;
+  --color-surface-alt: #ffffff;
+  --color-border: #334155;
+
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-disabled: #94a3b8;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.15);
+}
 
 /* ==========================================================
    🧩 BASE STYLES — Applies Globally
@@ -135,48 +283,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-dark);
 }
-
-
-/* ✅ Healthcare / EMR Green Theme */
-/* [data-theme="green"] {
-  --color-primary: #16a34a; 
-  --color-primary-light: #4ade80;
-  --color-primary-dark: #15803d;
-
-  --color-secondary: #10b981;
-  --color-accent: #22c55e;
-
-  --color-bg: #f0fdf4; 
-  --color-surface: #c9e7d9;
-  --color-surface-alt: #d1fae5;
-  --color-border: #16a34a;
-
-  --color-text: #000000;
-  --color-text-secondary: #065f46;
-  --color-disabled: #000000;
-
-  --shadow-xs: 0 1px 2px rgba(5, 150, 105, 0.05);
-  --shadow-md: 0 4px 6px rgba(5, 150, 105, 0.1);
-  --shadow-lg: 0 10px 15px rgba(5, 150, 105, 0.15);
-} */
-
-/* ==========================================================
-   🌞 THEME: LIGHT (Default)
-========================================================== */
-/* [data-theme="light"] {
-  --color-primary: #2563eb;
-  --color-primary-light: #60a5fa;
-  --color-primary-dark: #1e3a8a;
-
-  --color-secondary: #16a34a;
-  --color-accent: #f59e0b;
-
-  --color-bg: #f9fafb;
-  --color-surface: #ffffff;
-  --color-surface-alt: #f3f4f6;
-  --color-border: #e5e7eb;
-
-  --color-text: #1f2937;
-  --color-text-secondary: #4b5563;
-  --color-disabled: #9ca3af;
-} */

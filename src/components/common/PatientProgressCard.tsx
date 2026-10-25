@@ -146,7 +146,7 @@ const PatientProgressChart: React.FC = () => {
   return (
     <Card
       sx={{
-        background: "linear-gradient(to bottom right, #EBF3FF, #E3F2FD)",
+        background: "linear-gradient(to bottom right, var(--color-surface), var(--color-bg))",
         borderRadius: 3,
         boxShadow: 4,
         p: 2,

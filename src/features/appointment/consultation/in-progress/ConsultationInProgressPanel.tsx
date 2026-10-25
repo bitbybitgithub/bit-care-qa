@@ -32,9 +32,9 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <motion.div
-        className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl shadow-lg border border-blue-500/20 p-4 cursor-pointer group overflow-hidden relative"
+        className="bg-[var(--color-primary)] rounded-t-2xl shadow-lg border border-white/20 p-4 cursor-pointer group overflow-hidden relative"
         onClick={() => setIsOpen((prev) => !prev)}
-        whileHover={{ boxShadow: "0 20px 40px rgba(37, 99, 235, 0.2)" }}
+        whileHover={{ boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)" }}
         transition={{ duration: 0.2 }}
       >
         <motion.div
@@ -60,7 +60,7 @@ const ConsultationInProgressPanel: React.FC<Props> = ({
               <p className="font-semibold text-white text-sm">
                 Active Consultations
               </p>
-              <p className="text-blue-100 text-xs">Ongoing sessions</p>
+              <p className="text-white/80 text-xs">Ongoing sessions</p>
             </div>
           </div>
 

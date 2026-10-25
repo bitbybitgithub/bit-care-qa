@@ -10,9 +10,10 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 interface Props {
-  token: string; 
-  clinicId: number;
-  doctorId: number | null;
+  token: string;
+  clinicId?: number | null;
+  doctorId?: number | null;
+  labId?: number | null;
   children: React.ReactNode;
 }
 
@@ -20,33 +21,61 @@ export const SocketProvider: React.FC<Props> = ({
   token,
   clinicId,
   doctorId,
+  labId,
   children,
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const socket = getSocket(token);
+
   useEffect(() => {
-    if (!socket.connected) socket.connect();
+    if (token) {
+      socket.auth = { token };
+    }
 
-    socket.on("connect", () => {
+    const emitJoins = () => {
+      if (clinicId) {
+        socket.emit(
+          "joinClinic",
+          Number(clinicId),
+          doctorId ? Number(doctorId) : null,
+        );
+      }
+      if (labId) {
+        socket.emit("joinLab", Number(labId));
+      }
+    };
+
+    if (!socket.connected) {
+      socket.connect();
+    } else {
       setIsConnected(true);
-      socket.emit("joinClinic", clinicId, doctorId);
-    });
+      emitJoins();
+    }
 
-    socket.on("disconnect", (reason) => {
+    const handleConnect = () => {
+      setIsConnected(true);
+      emitJoins();
+    };
+
+    const handleDisconnect = (reason: Socket.DisconnectReason) => {
       setIsConnected(false);
       console.warn("⚠️ Socket disconnected:", reason);
-    });
+    };
 
-    socket.on("connect_error", (err) => {
-      console.error("Socket connect error:", err.message);
-    });
+    const handleConnectError = (err: Error) => {
+      console.warn("Socket connect error:", err.message);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
 
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("connect_error");
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
     };
-  }, [socket, clinicId, doctorId]);
+  }, [socket, clinicId, doctorId, labId, token]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

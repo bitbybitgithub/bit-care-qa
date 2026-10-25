@@ -72,19 +72,19 @@ const LABEL_CLASS =
 const inputSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "var(--color-bg)",
     fontSize: 14,
     minHeight: 40,
     padding: "0 8px 0 14px",
     transition: "background-color .15s",
-    "& fieldset": { borderColor: "#e2e8f0" },
-    "&:hover fieldset": { borderColor: "#cbd5e1" },
-    "&.Mui-focused": { backgroundColor: "#fff" },
+    "& fieldset": { borderColor: "var(--color-border)" },
+    "&:hover fieldset": { borderColor: "var(--color-primary-light)" },
+    "&.Mui-focused": { backgroundColor: "var(--color-surface-alt)" },
     "&.Mui-focused fieldset": {
       borderColor: "var(--color-primary)",
       borderWidth: "1.5px",
     },
-    "&.Mui-error fieldset": { borderColor: "#dc2626" },
+    "&.Mui-error fieldset": { borderColor: "var(--color-error)" },
   },
   "& .MuiInputBase-input": {
     padding: "9px 6px 9px 0",
@@ -92,7 +92,7 @@ const inputSx = {
     lineHeight: "22px",
     boxSizing: "border-box",
     height: "auto",
-    "&::placeholder": { color: "#94a3b8", opacity: 1 },
+    "&::placeholder": { color: "var(--color-text-secondary)", opacity: 1 },
   },
   "& .MuiInputAdornment-positionStart": { marginRight: "10px" },
   "& .MuiFormHelperText-root": {

@@ -63,7 +63,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ subtitle }) => {
         </h1>
 
         <p
-          className="text-[var(--color-text)] opacity-70"
+          className="text-slate-600 font-medium"
           style={{ fontSize: "var(--font-body)" }}
         >
           {resolveSubtitle()}

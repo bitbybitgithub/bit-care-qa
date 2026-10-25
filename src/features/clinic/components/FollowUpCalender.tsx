@@ -122,7 +122,6 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
           clinicIdNumber,
           doctorId,
         );
-        console.log("get follow up details", res);
         if (!isMounted) return;
 
         // 1. Normalize follow-up appointment records
@@ -646,41 +645,57 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         if (event.target.value.trim()) setReasonValidationAttempted(false);
       }}
       sx={{
-        "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-          borderColor: "var(--follow-up-primary)",
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "var(--radius-lg)",
+          backgroundColor: "var(--color-surface)",
+          color: "var(--color-text)",
+          "& fieldset": {
+            borderColor: "rgba(var(--color-border), 0.3)",
+          },
+          "&:hover fieldset": {
+            borderColor: "var(--color-primary)",
+          },
+          "&.Mui-focused fieldset": {
+            borderColor: "var(--color-primary)",
+          },
         },
-        "& .MuiInputLabel-root.Mui-focused": {
-          color: "var(--follow-up-primary)",
+        "& .MuiInputLabel-root": {
+          color: "var(--color-text-secondary)",
+          "&.Mui-focused": {
+            color: "var(--color-primary)",
+          },
         },
       }}
     />
   );
 
   return (
-    <div className="follow-up-calendar flex h-full min-h-0 flex-col bg-[var(--follow-up-background)]">
-      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--follow-up-border)] bg-white px-5 py-4">
+    <div className="follow-up-calendar flex h-full min-h-0 flex-col bg-[var(--color-bg)] text-[var(--color-text)]">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--color-border)]/20 bg-[var(--color-surface)] px-5 py-3.5 shadow-[var(--shadow-xs)]">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--follow-up-navy)]">
-            <RiCalendarEventLine className="text-[var(--follow-up-primary)]" />
+          <h2 className="flex items-center gap-2 text-base sm:text-lg font-bold text-[var(--color-text)]">
+            <RiCalendarEventLine className="text-[var(--color-primary)] text-xl" />
             Set Patient Follow Up
           </h2>
-          <p className="mt-0.5 text-sm text-slate-500">{patient?.name}</p>
+          <p className="mt-0.5 text-xs text-[var(--color-text-secondary)] font-medium">
+            {patient?.name}
+          </p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close Set Patient Follow Up"
-          className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[var(--follow-up-navy)]"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] transition hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)] cursor-pointer"
         >
-          <MdClose size={22} />
+          <MdClose size={20} />
         </button>
       </header>
 
-      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <main className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4">
         {!rootIsValid && (
           <div
             role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/10 p-3 text-xs text-[var(--color-error)] font-medium"
           >
             Unable to verify the original appointment date or follow-up period.
             Follow-up scheduling is unavailable.
@@ -688,11 +703,11 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         )}
 
         {pendingFollowUp && (
-          <section className="rounded-xl border border-[var(--follow-up-border)] border-l-4 border-l-[var(--follow-up-red)] bg-white px-4 py-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)]/30 border-l-4 border-l-[var(--color-error)] bg-[var(--color-surface-alt)] px-4 py-3 shadow-[var(--shadow-xs)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-error)]">
               Pending follow-up scheduled
             </p>
-            <p className="mt-1 text-sm font-semibold text-[var(--follow-up-navy)]">
+            <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">
               {formatDateDDMMYYYY(pendingFollowUp.follow_up_date)}
               {pendingFollowUp.start_time && pendingFollowUp.end_time
                 ? ` · ${normalizeTime(pendingFollowUp.start_time)} - ${normalizeTime(pendingFollowUp.end_time)}`
@@ -704,21 +719,20 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         {isSelectedDateAfterFeeDuration && (
           <section
             role="status"
-            className="rounded-xl border border-amber-200 border-l-4 border-l-[var(--follow-up-amber)] bg-amber-50 p-3 text-sm text-amber-900"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-warning)]/40 border-l-4 border-l-[var(--color-warning)] bg-[var(--color-warning)]/10 p-3 text-xs sm:text-sm text-[var(--color-text)] font-medium shadow-[var(--shadow-xs)]"
           >
-            <p>
+            <p className="font-semibold text-amber-800 dark:text-amber-200">
               Follow-up validity has expired. Standard consultation fees apply.
             </p>
             {pendingFollowUp && pendingFollowUpId && (
-              <p className="mt-1 font-medium">
-                Confirming will cancel the pending follow-up and book a regular
-                appointment.
+              <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                Confirming will cancel the pending follow-up and book a regular appointment.
               </p>
             )}
           </section>
         )}
 
-        <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm sm:p-5">
+        <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)]/30 bg-[var(--color-surface-alt)] p-4 shadow-[var(--shadow-xs)] sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
@@ -728,13 +742,13 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
                 !isPrevDisabled &&
                 setCurrentMonth(currentMonth.subtract(1, "month"))
               }
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--follow-up-border)] text-[var(--follow-up-navy)] transition hover:bg-[var(--follow-up-background)] disabled:cursor-not-allowed disabled:text-slate-300"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border)]/40 text-[var(--color-text)] transition hover:bg-[var(--color-surface)] hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
             >
-              <RiArrowLeftSLine size={20} />
+              <RiArrowLeftSLine size={18} />
             </button>
 
-            <h3 className="flex items-center gap-2 text-base font-semibold text-[var(--follow-up-navy)]">
-              <RiCalendarEventLine className="text-[var(--follow-up-primary)]" />
+            <h3 className="flex items-center gap-2 text-sm sm:text-base font-bold text-[var(--color-text)]">
+              <RiCalendarEventLine className="text-[var(--color-primary)]" />
               {currentMonth.format("MMMM YYYY")}
             </h3>
 
@@ -742,15 +756,15 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
               type="button"
               aria-label="Next month"
               onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--follow-up-border)] text-[var(--follow-up-navy)] transition hover:bg-[var(--follow-up-background)]"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border)]/40 text-[var(--color-text)] transition hover:bg-[var(--color-surface)] hover:border-[var(--color-primary)] cursor-pointer"
             >
-              <RiArrowRightSLine size={20} />
+              <RiArrowRightSLine size={18} />
             </button>
           </div>
 
-          <div className="mb-2 grid grid-cols-7 text-center text-xs font-semibold text-slate-500">
+          <div className="mb-2 grid grid-cols-7 text-center text-xs font-bold text-[var(--color-text-secondary)]">
             {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-              <div key={`${day}-${index}`} className="py-2">
+              <div key={`${day}-${index}`} className="py-1">
                 {day}
               </div>
             ))}
@@ -791,17 +805,17 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
                     aria-label={`${date.format("dddd, MMMM D, YYYY")}${
                       isLastFollowUpDate ? ", last valid follow-up date" : ""
                     }`}
-                    className={`flex h-full w-full items-center justify-center rounded-full text-sm font-medium transition ${
+                    className={`flex h-full w-full items-center justify-center rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer ${
                       isPast
-                        ? "cursor-not-allowed text-slate-300"
+                        ? "cursor-not-allowed text-[var(--color-text-secondary)]/30 font-normal"
                         : isSelected
-                          ? "bg-[var(--follow-up-primary)] text-white shadow-sm"
+                          ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-sm)] scale-105"
                           : isPendingDate
-                            ? "bg-[var(--follow-up-red)] text-white hover:opacity-90"
-                            : "text-[var(--follow-up-navy)] hover:bg-teal-50"
+                            ? "bg-[var(--color-error)] text-white hover:opacity-90 font-bold"
+                            : "text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]"
                     } ${
-                      isLastFollowUpDate
-                        ? "outline outline-2 outline-offset-1 outline-[var(--follow-up-amber)]"
+                      isLastFollowUpDate && !isSelected
+                        ? "ring-2 ring-[var(--color-warning)] ring-offset-1 text-[var(--color-text)] font-bold bg-[var(--color-warning)]/10"
                         : ""
                     }`}
                   >
@@ -814,21 +828,21 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
         </section>
 
         {selectedDate && (
-          <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm">
-            <h3 className="mb-3 flex items-center gap-2 font-semibold text-[var(--follow-up-navy)]">
-              <RiTimeLine className="text-[var(--follow-up-primary)]" />
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)]/30 bg-[var(--color-surface-alt)] p-4 shadow-[var(--shadow-xs)] animate-fadeIn">
+            <h3 className="mb-3 flex items-center gap-2 text-xs sm:text-sm font-bold text-[var(--color-text)]">
+              <RiTimeLine className="text-[var(--color-primary)] text-base" />
               Select Time Slot
             </h3>
 
             {slotsLoading ? (
-              <div className="flex justify-center py-5">
+              <div className="flex justify-center py-6">
                 <CircularProgress
-                  size={25}
-                  sx={{ color: "var(--follow-up-primary)" }}
+                  size={24}
+                  sx={{ color: "var(--color-primary)" }}
                 />
               </div>
             ) : doctorSlots.length === 0 ? (
-              <p className="py-3 text-center text-sm text-slate-500">
+              <p className="py-4 text-center text-xs text-[var(--color-text-secondary)]">
                 No slots available for this date
               </p>
             ) : (
@@ -844,12 +858,12 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
                       disabled={isUnavailable}
                       aria-pressed={isSelected}
                       onClick={() => setSelectedSlot(slot)}
-                      className={`rounded-lg border px-2 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed ${
+                      className={`rounded-[var(--radius-lg)] border px-2 py-2 text-xs font-semibold transition cursor-pointer disabled:cursor-not-allowed ${
                         isSelected
-                          ? "border-[var(--follow-up-primary)] bg-[var(--follow-up-primary)] text-white"
+                          ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-[var(--shadow-xs)] scale-[1.02]"
                           : isUnavailable
-                            ? "border-slate-200 bg-slate-100 text-slate-400"
-                            : "border-[var(--follow-up-border)] bg-white text-[var(--follow-up-navy)] hover:border-[var(--follow-up-primary)] hover:bg-teal-50"
+                            ? "border-[var(--color-border)]/20 bg-[var(--color-bg)] text-[var(--color-text-secondary)]/40 font-normal"
+                            : "border-[var(--color-border)]/50 bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 hover:text-[var(--color-primary)]"
                       }`}
                     >
                       {slot.start} - {slot.end}
@@ -861,20 +875,27 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
           </section>
         )}
 
-        <section className="rounded-2xl border border-[var(--follow-up-border)] bg-white p-4 shadow-sm">
+        <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)]/30 bg-[var(--color-surface-alt)] p-4 shadow-[var(--shadow-xs)]">
           {reasonField}
         </section>
       </main>
 
-      <footer className="flex shrink-0 gap-3 border-t border-[var(--follow-up-border)] bg-white p-4">
+      <footer className="flex shrink-0 gap-3 border-t border-[var(--color-border)]/20 bg-[var(--color-surface)] p-4 shadow-[var(--shadow-md)]">
         <Button
           variant="outlined"
           fullWidth
           onClick={onClose}
           sx={{
-            borderColor: "var(--follow-up-border)",
-            color: "var(--follow-up-navy)",
+            borderColor: "var(--color-border)",
+            color: "var(--color-text-secondary)",
+            borderRadius: "var(--radius-lg)",
             textTransform: "none",
+            fontWeight: 600,
+            fontSize: "0.8125rem",
+            "&:hover": {
+              borderColor: "var(--color-text)",
+              backgroundColor: "var(--color-bg)",
+            },
           }}
         >
           Cancel
@@ -897,8 +918,21 @@ const FollowUpCalender: React.FC<Props> = ({ patient, onClose, onSave }) => {
             )
           }
           sx={{
-            backgroundColor: "var(--follow-up-primary)",
-            "&:hover": { backgroundColor: "var(--follow-up-primary-hover)" },
+            backgroundColor: "var(--color-primary)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-md)",
+            color: "#ffffff",
+            fontWeight: 600,
+            fontSize: "0.8125rem",
+            "&:hover": {
+              backgroundColor: "var(--color-primary)",
+              opacity: 0.9,
+            },
+            "&.Mui-disabled": {
+              backgroundColor: "var(--color-border)",
+              color: "var(--color-text-secondary)",
+              opacity: 0.6,
+            },
             textTransform: "none",
             whiteSpace: "nowrap",
           }}

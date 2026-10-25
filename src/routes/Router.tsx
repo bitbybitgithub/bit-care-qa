@@ -21,13 +21,15 @@ import PharmaEmpanelment from "../features/pharma/PharmaEmpanelment";
 import PharmaSetting from "../features/pharma/PharmaSetting";
 import DoctorEmpanelment from "../features/clinic/components/DoctorEmpanelment";
 import SupportDashboard from "../features/internalusers/support/pages/SupportDashboard";
-import OffersDiscount from "../features/admin/OffersDiscount";
 import Blogs from "../features/admin/Blogs";
 import BlogsList from "../features/list-blogs/BlogsList";
 import ClinicSettings from "../components/common/EstablishmentSettings/Clinicsettings";
 import LabSettings from "../components/common/EstablishmentSettings/Labsettings";
 import PharmacySettings from "../components/common/EstablishmentSettings/Pharmacysettings";
 import BlogTabs from "../features/admin/BlogTabs";
+import NotFoundPage from "../pages/NotFoundPage";
+import OffersTabs from "../features/admin/OffersTabs";
+
 const Router = [
   {
     path: "/",
@@ -36,28 +38,33 @@ const Router = [
       { path: "/", element: <Navigate to="/login" /> },
       { path: "/register", element: <Registration /> },
       { path: "/login", exact: true, element: <Login /> },
-      { path: "/blog", element: <Blogs /> },
+      // Public / General View Routes (View Only - No Editing)
+      { path: "/blog", element: <BlogsList /> },
       { path: "/bloglist", element: <BlogsList /> },
+      { path: "/blogs", element: <BlogsList /> },
       { path: "/blog/:blogId", element: <BlogsList /> },
+      { path: "/404", element: <NotFoundPage /> },
+
     ],
   },
   {
     path: "/",
     element: <MainLayout />,
     children: [
-      // clinic admin routesy
+      // clinic admin routes
       { path: "/clinic/dashboard", element: <Dashboard /> },
       { path: "/clinic/users", element: <Users /> },
       { path: "/clinic/DoctorEmpanelment", element: <DoctorEmpanelment /> },
       { path: "/clinic/labempanelment", element: <LabEmpanelment /> },
       { path: "/clinic/pharmaempanelment", element: <PharmaEmpanelment /> },
-      { path: "/clinic/offers", element: <OffersDiscount /> },
-      { path: "/clinic/blog", element: <Blogs /> },
+      { path: "/clinic/offers", element: <OffersTabs /> },
+      { path: "/clinic/blog", element: <Navigate to="/clinic/BlogTabs" replace /> },
       { path: "/clinic/BlogTabs", element: <BlogTabs /> },
       {
         path: "/clinic/BlogTabs/blog/edit/:blogId",
         element: <Blogs />,
       },
+      { path: "/clinic/blog/:blogId", element: <BlogsList /> },
       { path: "/clinic/bloglist", element: <BlogsList /> },
       { path: "/clinic/settings", element: <ClinicSettings /> },
 
@@ -72,7 +79,7 @@ const Router = [
       // lab routes
       { path: "/lab/dashboard", element: <LabDashboard /> },
       { path: "/lab/users", element: <Users /> },
-      { path: "/lab/offers", element: <OffersDiscount /> },
+      { path: "/lab/offers", element: <OffersTabs /> },
       { path: "/lab/labsetting", element: <LabSettings /> },
       { path: "/lab/service-management", element: <ServiceManagement /> },
 
@@ -83,25 +90,13 @@ const Router = [
       { path: "/pharmacy/settings", element: <PharmacySettings /> },
       { path: "/pharmacy/pharmasettings", element: <PharmacySettings /> },
 
-      //  SupportTeam routes
+      // SupportTeam routes
       { path: "/support/dashboard", element: <SupportDashboard /> },
-
-      // { path: "/patients-records", element: <ComingSoon /> },
-      // { path: "/add-diagnosis", element: <ComingSoon /> },
-      // { path: "/manage-medication", element: <ComingSoon /> },
-      // { path: "/refer-patient", element: <ComingSoon /> },
-      // { path: "/task-and-reminder", element: <ComingSoon /> },
-      // { path: "/assign-patient", element: <ComingSoon /> },
-      // { path: "/message", element: <ComingSoon /> },
-      // { path: "/cln-protocol", element: <ComingSoon /> },
-      // { path: "/shift-schedule", element: <ComingSoon /> },
-      // {
-      //   path: "/consultation-in-progress",
-      //   element: <ConsultationInProgress />,
-      // },
-      // { path: '/walkin-register', element: <WalkInRegisterForm /> },
-      //
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ];
 

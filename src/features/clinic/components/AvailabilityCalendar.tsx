@@ -15,11 +15,11 @@ const AvailabilityCalendar: React.FC<
   Pick<AvailabilityProps, "schedule" | "selectedDate" | "setSelectedDate">
 > = ({ schedule, selectedDate, setSelectedDate }) => {
   const reasonColors: Record<string, string> = {
-    Lunch: "#facc15", 
-    Meeting: "#5e5e5fff", 
-    Training: "#a855f7", 
-    Leave: "#700202ff", 
-    Default: "#045df7ff", 
+    Lunch: "var(--color-warning)",
+    Meeting: "var(--color-text-secondary)",
+    Training: "var(--color-secondary)",
+    Leave: "var(--color-error)",
+    Default: "var(--color-primary)",
   };
 
   const localizer = dayjsLocalizer(dayjs);
@@ -57,7 +57,7 @@ const AvailabilityCalendar: React.FC<
     const isSelected = dayjs(date).isSame(selectedDate, "day");
     return {
       style: {
-        backgroundColor: isSelected ? "#60a5fa" : "transparent", 
+        backgroundColor: isSelected ? "var(--color-primary-light)" : "transparent", 
         borderRadius: isSelected ? "8px" : "0px",
         color: isSelected ? "white" : "inherit",
         transition: "background-color 0.2s ease",

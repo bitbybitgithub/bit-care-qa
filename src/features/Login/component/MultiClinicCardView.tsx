@@ -143,8 +143,8 @@ const MultiClinicCardView = ({
                 boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
               },
               "&.Mui-disabled": {
-                backgroundColor: "#e2e8f0",
-                color: "#94a3b8",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-disabled)",
               },
             }}>
             Continue

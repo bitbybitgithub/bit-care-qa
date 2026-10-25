@@ -20,11 +20,15 @@ export interface FormDataBase {
   slotDuration?: number;
   labCategory?: string;
 }
+
 export interface OfferForm {
+  offer_id?: number | null;
+  is_active?: number; 
   center_id?: number;
   entity_type?: number;
   center_name?: string;
   center_type?: string;
+
   offer_title: string;
   offer_description: string;
   offer_image: File | null;
@@ -38,8 +42,46 @@ export interface OfferForm {
   priority: number;
 
   created_by: number;
+  modified_by?: number | null;
 }
 
+export interface PromotionalOffer {
+  offer_id: number;
+  center_id: number;
+  entity_type: number;
+  center_name: string;
+
+  offer_title: string;
+  offer_description: string;
+
+  offer_image_path: string | null;
+  offer_image_guid: string | null;
+  offer_image_name: string | null;
+
+  discount_percentage: number;
+  coupon_code: string | null;
+
+  start_date: string;
+  end_date: string;
+  priority: number;
+
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  is_active: number | string;
+}
+
+export interface PromotionalOffersResponse {
+  success: boolean;
+  message?: string;
+  data: PromotionalOffer[];
+}
+
+export interface PromotionalOfferslistResponse {
+  success: boolean;
+  message?: string;
+  data: PromotionalOffer[];
+}
 
 export interface BlogFormData {
   blog_id?: number;
@@ -73,23 +115,6 @@ export interface BlogByIdResponse {
   success: boolean;
   data: BlogFormData;
 }
-
-// export interface OfferForm{
-//   // clinic_id: number,
-//   // clinic_name: string,
-//   offer_title:string,
-//   offer_description:string,
-//   offer_image: File | null,
-//   //offer_image:string,
-//   //discount_percentage:number,
-//   discount_percentage: number | "";
-//   coupon_code:string,
-//   start_date:string,
-//   end_date:string,
-//   priority:number,
-//   created_by: string,
-//   // status: boolean
-// }
 
 
 export interface ResetPassword {

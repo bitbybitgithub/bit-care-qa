@@ -174,7 +174,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
       >
         <Typography
           fontWeight={600}
-          color="#fff"
+          color="var(--color-white)"
           sx={{
             display: "flex",
             alignItems: "center",
@@ -201,7 +201,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
               position: "absolute",
               left: "50%",
               transform: "translateX(-50%)",
-              bgcolor: "#fff",
+              bgcolor: "var(--color-bg)",
               px: 2,
               py: 0.4,
               borderRadius: 50,
@@ -224,7 +224,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
               sx={{
                 px: 1.5,
                 py: 0.3,
-                bgcolor: "#f3f4f6",
+                bgcolor: "var(--color-surface)",
                 borderRadius: 2,
                 fontWeight: 500,
               }}
@@ -281,12 +281,12 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
               size="small"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              sx={{ color: "#fff" }}
+              sx={{ color: "var(--color-white)" }}
             >
               <NavigateBefore />
             </IconButton>
 
-            <Typography color="#fff" fontSize={13}>
+            <Typography color="var(--color-white)" fontSize={13}>
               {page}/{numPages}
             </Typography>
 
@@ -294,7 +294,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
               size="small"
               disabled={page >= numPages}
               onClick={() => setPage((p) => p + 1)}
-              sx={{ color: "#fff" }}
+              sx={{ color: "var(--color-white)" }}
             >
               <NavigateNext />
             </IconButton>
@@ -302,7 +302,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
             <IconButton
               size="small"
               onClick={(e) => setMenuAnchor(e.currentTarget)}
-              sx={{ color: "#fff" }}
+              sx={{ color: "var(--color-white)" }}
             >
               <MoreVert />
             </IconButton>
@@ -325,7 +325,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           size={embedded ? "small" : "medium"}
           onClick={onClose}
           sx={{
-            color: "#fff",
+            color: "var(--color-white)",
             bgcolor: "rgba(255,255,255,0.15)",
             "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
           }}
@@ -343,7 +343,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
-          background: "#eef2f7",
+          background: "var(--color-surface)",
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
@@ -367,7 +367,7 @@ const PdfViewerDialog: React.FC<PdfViewerDialogProps> = ({
           >
             <Box
               sx={{
-                background: "#fff",
+                background: "var(--color-bg)",
                 borderRadius: 0,
                 overflow: "visible",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.12)",

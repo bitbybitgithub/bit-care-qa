@@ -44,7 +44,6 @@ export default function LabReportViewerDialog({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const reports = row?.lab_reports ?? [];
 
-  console.log("report names", reports);
   return (
     <Dialog
       open={Boolean(row)}
@@ -61,7 +60,7 @@ export default function LabReportViewerDialog({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          bgcolor: "var(--color-surface, #fff)",
+          bgcolor: "var(--color-surface)",
         },
       }}
     >
@@ -238,7 +237,7 @@ export default function LabReportViewerDialog({
         <Box
           component="section"
           aria-label="PDF preview"
-          sx={{ flex: 1, minWidth: 0, minHeight: 0, bgcolor: "#eef2f7" }}
+          sx={{ flex: 1, minWidth: 0, minHeight: 0, bgcolor: "var(--color-surface)" }}
         >
           {error ? (
             <Box

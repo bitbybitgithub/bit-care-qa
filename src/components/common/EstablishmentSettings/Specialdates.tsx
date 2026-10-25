@@ -89,7 +89,7 @@ const tileStatus = (d: ScheduleDay): { label: string; icon: LucideIcon; tone: st
   if (ex?.exception_type === "CLOSED")
     return { label: "Closed", icon: Ban, tone: "bg-rose-50 text-rose-700 border-rose-200/80" };
   if (ex)
-    return { label: "Modified", icon: Clock, tone: "bg-blue-50 text-blue-700 border-blue-200/80" };
+    return { label: "Modified", icon: Clock, tone: "bg-[var(--color-surface)] text-[var(--color-primary)] border-[var(--color-primary)]/20" };
   return d.effective.is_open
     ? { label: "Open", icon: Check, tone: "bg-emerald-50 text-emerald-700 border-emerald-200/80" }
     : { label: "Closed", icon: Ban, tone: "bg-slate-100 text-slate-500 border-slate-200/60" };
@@ -311,7 +311,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
       {/* 15-Day Rolling Calendar Header (Image 4 Green Circle) */}
       <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <CalendarDays size={18} className="text-[#0070ba] shrink-0" />
+          <CalendarDays size={18} className="text-[var(--color-primary)] shrink-0" />
           <div className="min-w-0">
             <h4 className="text-sm font-bold text-slate-800 leading-tight">
               15-Day Rolling Calendar
@@ -322,7 +322,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-full bg-blue-50/80 px-2.5 py-0.5 text-[11px] font-semibold text-[#0070ba] border border-blue-200/70 shadow-2xs shrink-0">
+        <div className="flex items-center gap-1.5 rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--color-primary)] border border-[var(--color-primary)]/20 shadow-2xs shrink-0">
           <Clock size={11} />
           <span>Dates in {tz}</span>
         </div>
@@ -382,8 +382,8 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                 aria-label={`${longDate(d.date)}, ${st.label}${d.is_today ? ", today" : ""}`}
                 className={`flex min-w-[82px] sm:min-w-[88px] shrink-0 snap-start flex-col items-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
                   active
-                    ? "border-[#0070ba] bg-blue-50/40 ring-2 ring-[#0070ba]/20 shadow-xs"
-                    : "border-slate-200/80 bg-white hover:border-blue-300 hover:bg-slate-50/50"
+                    ? "border-[var(--color-primary)] bg-[var(--color-surface)]/50 ring-2 ring-[var(--color-primary)]/20 shadow-xs"
+                    : "border-slate-200/80 bg-white hover:border-[var(--color-primary)]/40 hover:bg-slate-50/50"
                 }`}>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {dt.toLocaleDateString("en-IN", { weekday: "short" })}
@@ -393,7 +393,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                 </span>
                 <span className="text-[10px] font-medium text-slate-500">
                   {d.is_today ? (
-                    <span className="rounded-md bg-blue-100/90 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider text-[#0070ba]">
+                    <span className="rounded-md bg-[var(--color-surface)] px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
                       Today
                     </span>
                   ) : (
@@ -424,7 +424,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
               <div className="min-w-0">
                 <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <Calendar size={15} className="text-[#0070ba] shrink-0" />
+                  <Calendar size={15} className="text-[var(--color-primary)] shrink-0" />
                   <span>{longDate(day.date)}</span>
                 </h4>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -447,7 +447,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                   <button
                     type="button"
                     onClick={() => setConfirm("RESTORE")}
-                    className={`text-xs text-[#0070ba] hover:underline flex items-center gap-1 font-semibold ${FOCUS_RING}`}>
+                    className={`text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-semibold ${FOCUS_RING}`}>
                     <RotateCcw size={12} />
                     Restore regular
                   </button>
@@ -473,7 +473,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
               <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-xs text-slate-700 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <p className="font-bold text-slate-800">{TYPE_LABEL[ex.exception_type]}</p>
-                  <span className="font-semibold text-[#0070ba]">{describeEffective(day)}</span>
+                  <span className="font-semibold text-[var(--color-primary)]">{describeEffective(day)}</span>
                 </div>
                 {ex.reason && (
                   <p className="mt-1 text-slate-500">
@@ -498,12 +498,12 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                     textTransform: "none",
                     fontWeight: 600,
                     fontSize: 13,
-                    backgroundColor: "#0070ba",
-                    color: "#fff",
+                    backgroundColor: "var(--color-primary)",
+                    color: "var(--color-white)",
                     px: 3,
                     py: 1,
                     boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-                    "&:hover": { backgroundColor: "#005a96" },
+                    "&:hover": { backgroundColor: "var(--color-primary-dark)" },
                   }}>
                   Customize this date
                 </Button>
@@ -521,7 +521,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                     onClick={() => openMode(m)}
                     className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${FOCUS_RING} ${
                       ex?.exception_type === m
-                        ? "border-[#0070ba] bg-blue-50/80 text-[#0070ba] shadow-2xs"
+                        ? "border-[var(--color-primary)] bg-[var(--color-surface)]/80 text-[var(--color-primary)] shadow-2xs"
                         : danger
                         ? "border-rose-200 bg-white text-rose-700 hover:bg-rose-50/60"
                         : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/60"
@@ -534,7 +534,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                   <button
                     type="button"
                     onClick={() => setConfirm("RESTORE")}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#0070ba] hover:underline ${FOCUS_RING}`}>
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[var(--color-primary)] hover:underline ${FOCUS_RING}`}>
                     <RotateCcw size={13} aria-hidden /> Restore regular schedule
                   </button>
                 )}
@@ -653,14 +653,14 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                           fontSize: 13,
                           minWidth: 140,
                           height: 38,
-                          backgroundColor: mode === "EMERGENCY" ? "#dc2626" : "#0070ba",
-                          color: "#fff",
+                          backgroundColor: mode === "EMERGENCY" ? "var(--color-error)" : "var(--color-primary)",
+                          color: "var(--color-white)",
                           "&:hover": {
-                            backgroundColor: mode === "EMERGENCY" ? "#b91c1c" : "#005a96",
+                            backgroundColor: mode === "EMERGENCY" ? "var(--color-error)" : "var(--color-primary-dark)",
                           },
                           "&.Mui-disabled": {
-                            backgroundColor: mode === "EMERGENCY" ? "#dc2626" : "#0070ba",
-                            color: "#fff",
+                            backgroundColor: mode === "EMERGENCY" ? "var(--color-error)" : "var(--color-primary)",
+                            color: "var(--color-white)",
                             opacity: 0.45,
                           },
                         }}>
@@ -674,8 +674,8 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
                           borderRadius: "10px",
                           textTransform: "none",
                           fontWeight: 500,
-                          color: "#64748b",
-                          "&:hover": { backgroundColor: "#f1f5f9" },
+                          color: "var(--color-text-secondary)",
+                          "&:hover": { backgroundColor: "var(--color-surface)" },
                         }}>
                         Cancel
                       </Button>
@@ -695,7 +695,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: "16px", p: 1, m: 2 } }}>
-        <DialogTitle sx={{ fontWeight: 700, fontSize: 17, color: "#1e293b" }}>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 17, color: "var(--color-text)" }}>
           Confirm emergency closure
         </DialogTitle>
         <DialogContent>
@@ -708,7 +708,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
           <Button
             onClick={() => setConfirm(null)}
             disabled={saving}
-            sx={{ textTransform: "none", borderRadius: "10px", color: "#64748b" }}>
+            sx={{ textTransform: "none", borderRadius: "10px", color: "var(--color-text-secondary)" }}>
             Cancel
           </Button>
           <Button
@@ -728,7 +728,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: "16px", p: 1, m: 2 } }}>
-        <DialogTitle sx={{ fontWeight: 700, fontSize: 17, color: "#1e293b" }}>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 17, color: "var(--color-text)" }}>
           Restore regular schedule?
         </DialogTitle>
         <DialogContent>
@@ -742,7 +742,7 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
           <Button
             onClick={() => setConfirm(null)}
             disabled={saving}
-            sx={{ textTransform: "none", borderRadius: "10px", color: "#64748b" }}>
+            sx={{ textTransform: "none", borderRadius: "10px", color: "var(--color-text-secondary)" }}>
             Cancel
           </Button>
           <Button
@@ -753,8 +753,9 @@ const SpecialDates: React.FC<Props> = ({ kind, entityId, refreshKey, weeklyDirty
               textTransform: "none",
               borderRadius: "10px",
               fontWeight: 600,
-              backgroundColor: "#0070ba",
-              "&:hover": { backgroundColor: "#005a96" },
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-white)",
+              "&:hover": { backgroundColor: "var(--color-primary-dark)" },
             }}>
             {saving ? <CircularProgress size={18} color="inherit" /> : "Restore"}
           </Button>

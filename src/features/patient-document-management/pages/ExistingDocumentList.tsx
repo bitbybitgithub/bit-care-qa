@@ -58,7 +58,7 @@ export default function ExistingDocumentsGrid() {
       case "ecg report":
         return <FaFileAlt size={16} color="var(--color-primary-dark)" />;
       case "pdf":
-        return <FaFilePdf size={16} color="#d32f2f" />;
+        return <FaFilePdf size={16} color="var(--color-error)" />;
       case "image":
       case "jpg":
       case "jpeg":
@@ -131,7 +131,7 @@ export default function ExistingDocumentsGrid() {
 
           <Tooltip title="Delete">
             <IconButton size="small" onClick={() => handleDelete(params.row)}>
-              <FaTrash size={14} color="#d32f2f" />
+              <FaTrash size={14} color="var(--color-error)" />
             </IconButton>
           </Tooltip>
         </Box>

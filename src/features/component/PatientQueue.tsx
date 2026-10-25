@@ -108,8 +108,8 @@ const badgeClasses = (status: string): string => {
   const colors: Record<string, string> = {
     waiting: "bg-amber-100 text-amber-600 ",
     pending_vitals: "bg-indigo-100 text-indigo-600 ",
-    checked_in: "bg-sky-100 text-sky-600 ",
-    in_progress: "bg-blue-100 text-blue-600 ",
+    checked_in: "bg-[var(--color-surface)] text-[var(--color-primary)] ",
+    in_progress: "bg-[var(--color-surface)] text-[var(--color-primary)] ",
     in_consultation: "bg-violet-100 text-violet-600 ",
     started: "bg-indigo-100 text-indigo-600 ",
     on_hold: "bg-gray-300 text-gray-600 ",

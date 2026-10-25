@@ -225,7 +225,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
         {/* Top Header Section (Prominent & Clear Hierarchy) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/80 pb-2.5">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0070ba] text-white shadow-xs">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-xs">
               <Building2 size={19} />
             </div>
             <div className="min-w-0">
@@ -233,7 +233,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                 <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 tracking-tight truncate">
                   {adapter.establishmentLabel} Profile & Availability
                 </h1>
-                <span className="hidden sm:inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-[#0070ba] border border-blue-100">
+                <span className="hidden sm:inline-flex items-center rounded-md bg-[var(--color-surface)] px-2 py-0.5 text-xs font-bold text-[var(--color-primary)] border border-[var(--color-primary)]/20">
                   #{adapter.establishmentLabel}
                 </span>
               </div>
@@ -245,7 +245,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <span className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200 shadow-2xs">
-              <Clock size={12} className="text-[#0070ba]" />
+              <Clock size={12} className="text-[var(--color-primary)]" />
               Open: {openCount}/{weekly.length}
             </span>
             {cap.slotDuration && (
@@ -325,7 +325,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                         onClick={() => setTab("weekly")}
                         className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
                           tab === "weekly"
-                            ? "bg-white text-[#0070ba] shadow-xs"
+                            ? "bg-white text-[var(--color-primary)] shadow-xs"
                             : "text-slate-500 hover:text-slate-800"
                         }`}>
                         <Clock size={12} />
@@ -340,7 +340,7 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                         onClick={() => setTab("special")}
                         className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-200 cursor-pointer ${FOCUS_RING} ${
                           tab === "special"
-                            ? "bg-white text-[#0070ba] shadow-xs"
+                            ? "bg-white text-[var(--color-primary)] shadow-xs"
                             : "text-slate-500 hover:text-slate-800"
                         }`}>
                         <Calendar size={12} />
@@ -425,11 +425,11 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                 textTransform: "none",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#64748b",
+                color: "var(--color-text-secondary)",
                 borderRadius: "8px",
                 height: 30,
                 px: 1.5,
-                "&:hover": { backgroundColor: "#f1f5f9", color: "#1e293b" },
+                "&:hover": { backgroundColor: "var(--color-surface)", color: "var(--color-text)" },
               }}>
               Discard
             </Button>
@@ -446,15 +446,15 @@ const EstablishmentSettings: React.FC<Props> = ({ adapter }) => {
                 textTransform: "none",
                 fontWeight: 600,
                 fontSize: 12,
-                backgroundColor: "#0070ba",
-                color: "#fff",
+                backgroundColor: "var(--color-primary)",
+                color: "var(--color-white)",
                 boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                 display: "flex",
                 alignItems: "center",
                 gap: 0.75,
                 px: 2,
-                "&:hover": { backgroundColor: "#005a96" },
-                "&.Mui-disabled": { backgroundColor: "#0070ba", color: "#fff", opacity: 0.45 },
+                "&:hover": { backgroundColor: "var(--color-primary-dark)" },
+                "&.Mui-disabled": { backgroundColor: "var(--color-primary)", color: "var(--color-white)", opacity: 0.45 },
               }}>
               {saving ? (
                 <CircularProgress size={14} color="inherit" />

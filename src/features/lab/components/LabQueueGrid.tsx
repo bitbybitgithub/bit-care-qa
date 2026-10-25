@@ -20,7 +20,16 @@ export default function LabQueueGrid({
   onPageChange,
 }: LabQueueGridProps) {
   return (
-    <Box mt={2}>
+    <Box
+      sx={{
+        width: "100%",
+        overflowX: "auto",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--color-border)",
+        backgroundColor: "var(--color-surface-alt)",
+        boxShadow: "var(--shadow-xs)",
+      }}
+    >
       <DataGrid
         rows={rows}
         columns={columns}
@@ -29,33 +38,47 @@ export default function LabQueueGrid({
         rowCount={rowCount}
         paginationModel={{ page: currentPage - 1, pageSize }}
         onPaginationModelChange={(model) => onPageChange(model.page + 1)}
-        rowHeight={64}
+        rowHeight={60}
         disableRowSelectionOnClick
         density="compact"
         sx={{
           width: "100%",
-          backgroundColor: "var(--color-surface-alt)",
-          overflow: "hidden",
+          minWidth: 720,
+          border: "none",
+          backgroundColor: "transparent",
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "transparent",
+            backgroundColor: "rgba(2, 132, 199, 0.05)",
+            borderBottom: "1px solid var(--color-border)",
             color: "var(--color-primary)",
             textTransform: "uppercase",
-            fontSize: 12,
+            fontSize: "0.75rem",
             letterSpacing: "0.06em",
-            fontWeight: 600,
+            fontWeight: 700,
+          },
+          "& .MuiDataGrid-columnHeaderTitle": {
+            fontWeight: 700,
           },
           "& .MuiDataGrid-columnSeparator": { display: "none" },
-          "& .MuiDataGrid-row": { fontSize: 13 },
+          "& .MuiDataGrid-row": {
+            fontSize: "0.8125rem",
+            borderBottom: "1px solid rgba(0,0,0,0.04)",
+            transition: "background-color 0.15s ease",
+          },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "rgba(0,0,0,0.02)",
+            backgroundColor: "rgba(2, 132, 199, 0.04)",
           },
-          "& .MuiDataGrid-virtualScrollerRenderZone": {
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "rgba(15,23,42,0.02)",
-            },
+          "& .MuiDataGrid-cell": {
+            display: "flex",
+            alignItems: "center",
           },
-          "& .MuiDataGrid-cell:focus": { outline: "none" },
-          "& .MuiDataGrid-footerContainer": { borderTop: "none" },
+          "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+            outline: "none",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "1px solid var(--color-border)",
+            color: "var(--color-text-secondary)",
+            fontSize: "0.8125rem",
+          },
         }}
       />
     </Box>

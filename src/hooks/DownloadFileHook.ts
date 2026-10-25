@@ -5,7 +5,6 @@ export const getPdfFromServer = async (
   fileName: string,
 ): Promise<string> => {
   try {
-    console.log("get pdf from server", filePath, fileName);
     const response = await axios.post(
       "https://qacliniccareapi.bitbybitsolutions.co.in/api/common/downloadFile",
       { filePath, fileName },
@@ -13,7 +12,6 @@ export const getPdfFromServer = async (
         responseType: "blob",
       },
     );
-    console.log("Download response:", response);
     const blob = new Blob([response.data], { type: "application/pdf" });
 
     return URL.createObjectURL(blob);

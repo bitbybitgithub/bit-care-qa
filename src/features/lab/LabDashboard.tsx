@@ -72,104 +72,87 @@ const LabDashboard = () => {
   ];
 
   return (
-    <div className="flex flex-col relative">
+    <div className="flex flex-col relative gap-4">
       <div
         className="
-    h-[10vh] 
-    relative 
-    mb-4
-    shadow-[var(--shadow-lg)] 
-    px-6
-    flex items-center justify-between 
-    py-12
-    rounded-[var(--radius-md)]
-    overflow-hidden
-  "
+          relative 
+          shadow-[var(--shadow-md)] 
+          px-4 sm:px-6
+          py-5 sm:py-7
+          flex items-center justify-between 
+          rounded-[var(--radius-lg)]
+          overflow-hidden
+          border border-[var(--color-border)]/40
+        "
         style={{
           backgroundImage: `
-      linear-gradient(to right, 
-        rgba(255,255,255,1) 0%,
-        rgba(255,255,255,0.85) 70%,
-        rgba(255,255,255,0.3) 80%,
-        rgba(255,255,255,0) 100%
-      ),
-      url(${SidebarBg})
-    `,
+            linear-gradient(to right, 
+              rgba(255,255,255,1) 0%,
+              rgba(255,255,255,0.9) 60%,
+              rgba(255,255,255,0.4) 85%,
+              rgba(255,255,255,0) 100%
+            ),
+            url(${SidebarBg})
+          `,
           backgroundSize: "cover",
           backgroundPosition: "left center",
         }}
       >
         <div>
-          <h1
-            className="text-[var(--color-text)] font-[var(--font-weight-bold)]"
-            style={{ fontSize: "var(--font-h4)" }}
-          >
+          <h1 className="text-[var(--color-text)] font-[var(--font-weight-bold)] text-lg sm:text-xl md:text-2xl">
             Welcome,{" "}
-            <span className="text-[var(--color-primary)]">{username}</span>
+            <span className="text-[var(--color-primary)]">{username || "Lab Staff"}</span>
           </h1>
 
-          <p
-            className="text-[var(--color-text)] opacity-70 "
-            style={{ fontSize: "var(--font-body)" }}
-          >
-            Your lab is running smoothly today.
-            <h3 className="opacity-60">
-              Check your daily stats and announcements below.
-            </h3>
+          <p className="text-[var(--color-text-secondary)] text-xs sm:text-sm mt-1">
+            Your lab is running smoothly today. Check your daily stats and announcements below.
           </p>
         </div>
       </div>
+
       {user === Roles.Admin && (
-        <>
-          <div className="md:flex gap-x-4 ">
-            <div className="md:w-[25%] bg-[var(--color-surface)] shadow-[var(--shadow-md)] border-2 border-[var(--color-border)] rounded-[var(--radius-md)] p-2  px-5 mb-2 md:mb-0">
-              <h2
-                className="font-semibold mb-4 text-[var(--color-primary)]"
-                style={{ fontSize: "var(--font-h4)" }}
-              >
-                Quick Actions
-              </h2>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-[28%] bg-[var(--color-surface)] shadow-[var(--shadow-xs)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 flex flex-col justify-between">
+            <h2 className="font-semibold text-sm sm:text-base mb-3 text-[var(--color-primary)] flex items-center gap-2">
+              Quick Actions
+            </h2>
 
-              <div className="flex flex-col flex-wrap gap-3">
-                {quickActions.map((btn, i) => (
-                  <ActionButton
-                    key={i}
-                    icon={btn.icon}
-                    label={btn.label}
-                    onClick={btn.onClick}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="bg-[var(--color-surface)] shadow-[var(--shadow-md)] p-2 px-5 md:w-[75%] border-2 border-[var(--color-border)] rounded-[var(--radius-md)]">
-              <div
-                className="flex items-center gap-x-2 mb-2"
-                style={{ fontSize: "var(--font-h4)" }}
-              >
-                <h2 className="font-[var(--font-weight-semibold)] text-[var(--color-primary)]">
-                  Lab Announcements
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-x-2 bg-[var(--color-surface-alt)] shadow-[var(--shadow-md)] rounded-[var(--radius-lg)] border-[var(--color-error)] p-2">
-                <TfiAnnouncement
-                  className="text-[var(--color-error)] "
-                  style={{ fontSize: "var(--font-h4)" }}
+            <div className="flex flex-col gap-2.5">
+              {quickActions.map((btn, i) => (
+                <ActionButton
+                  key={i}
+                  icon={btn.icon}
+                  label={btn.label}
+                  onClick={btn.onClick}
                 />
-                <h1>
-                  The lab will be closed for the holiday on December 25th.
-                </h1>
-              </div>
+              ))}
             </div>
           </div>
-        </>
+
+          <div className="w-full md:w-[72%] bg-[var(--color-surface)] shadow-[var(--shadow-xs)] p-4 border border-[var(--color-border)] rounded-[var(--radius-lg)] flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-2.5">
+              <h2 className="font-semibold text-sm sm:text-base text-[var(--color-primary)] flex items-center gap-2">
+                <TfiAnnouncement className="text-[var(--color-primary)]" />
+                Lab Announcements
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-3 bg-[var(--color-surface-alt)] shadow-[var(--shadow-xs)] rounded-[var(--radius-md)] border border-amber-200/80 p-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <TfiAnnouncement />
+              </span>
+              <p className="text-xs sm:text-sm text-[var(--color-text)] font-medium">
+                The lab will be closed for the holiday on December 25th.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
-      <div className="bg-[var(--color-surface-alt)] p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] mt-5">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div
-            className="flex p-1 space-x-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)]"
-            style={{ background: "var(--color-primary)" }}
-          >
+
+      <div className="bg-[var(--color-surface-alt)] p-3 sm:p-5 rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] border border-[var(--color-border)]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          {/* Responsive Segmented Tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex p-1 gap-1 rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] bg-[var(--color-primary)] shrink-0">
             {tabs.map((t) => (
               <button
                 key={t.key}
@@ -177,35 +160,36 @@ const LabDashboard = () => {
                 aria-selected={activeTab === t.key}
                 onClick={() => setActiveTab(t.key)}
                 className={`
-          px-2 py-1 text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition w-[33%]
-          ${
-            activeTab === t.key
-              ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)]"
-              : "text-white hover:bg-[var(--color-hover)]"
-          }
-        `}
+                  px-3 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer rounded-[var(--radius-md)] transition-all text-center
+                  ${
+                    activeTab === t.key
+                      ? "bg-[var(--color-surface-alt)] text-[var(--color-primary)] shadow-[var(--shadow-xs)]"
+                      : "text-white/90 hover:bg-white/15"
+                  }
+                `}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Right Action Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
             {isLabStaff && activeTab === "pendingQueue" && (
               <button
                 onClick={() => {
                   resetWalkInFlow();
                   setShowWalkInModal(true);
                 }}
-                className="flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition hover:opacity-90"
+                className="flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:opacity-90 cursor-pointer shrink-0"
               >
                 <FaUserPlus />
-                Add Walk-In Patient
+                <span>Add Walk-In Patient</span>
               </button>
             )}
 
-            <div className="relative w-full sm:w-74">
-              <FaSearch className="absolute left-3 top-3 text-[var(--color-primary)]" />
+            <div className="relative w-full sm:w-64 md:w-72">
+              <FaSearch className="absolute left-3 top-2.5 text-[var(--color-primary)] text-sm pointer-events-none" />
               <input
                 value={queueSearch}
                 onChange={(e) => {
@@ -213,13 +197,22 @@ const LabDashboard = () => {
                   setQueueSearch(value);
                 }}
                 placeholder="Search by Patient Name"
-                className="w-full pl-10 pr-3 py-2 rounded-lg border border-[var(--color-primary)]"
+                className="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm rounded-[var(--radius-md)] border border-[var(--color-primary)]/40 bg-[var(--color-bg)] text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all placeholder:text-[var(--color-text-secondary)]/60"
               />
+              {queueSearch && (
+                <button
+                  onClick={() => setQueueSearch("")}
+                  className="absolute right-2.5 top-2.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text)] text-xs cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <FaTimes />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-2">
           <LabQueues
             mode={
               activeTab === "processingQueue"

@@ -15,6 +15,7 @@ import { getPdfFromServer } from "../../hooks/DownloadFileHook";
 import LabPayment from "./LabPayment";
 import LabQueueGrid from "./components/LabQueueGrid";
 import LabAddTestDialog from "./components/LabAddTestDialog";
+import LabTestDetailsDialog from "./components/LabTestDetailsDialog";
 import LabPrescriptionDialog from "./components/LabPrescriptionDialog";
 import LabReportUploadDialog from "./components/LabReportUploadDialog";
 import LabReportViewerDialog from "./components/LabReportViewerDialog";
@@ -83,26 +84,27 @@ function renderReferredBy(row: LabQueueRow) {
     ? "SELF"
     : isClinicBooking
       ? "CLINIC"
-      : row.booking_source;
+      : row.booking_source || "PATIENT";
 
   const clinicDetails = (
-    <span className="flex flex-col gap-1 p-1 text-xs">
-      <span>Clinic: {row.clinic_name || "-"}</span>
-      <span>Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "-"}</span>
-    </span>
+    <div className="flex flex-col gap-1 p-1.5 text-xs">
+      <span className="font-semibold text-white">Clinic Referral</span>
+      <span>Clinic: {row.clinic_name || "Not specified"}</span>
+      <span>Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "Not specified"}</span>
+    </div>
   );
 
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-1 text-xs leading-tight">
-      <Tooltip title={isClinicBooking ? clinicDetails : ""} arrow>
+    <div className="flex h-full w-full items-center">
+      <Tooltip title={isClinicBooking ? clinicDetails : ""} arrow placement="top">
         <span
-          className="w-fit rounded-full px-2 py-0.5 font-semibold"
-          style={{
-            backgroundColor: isSelfBooking
-              ? "color-mix(in srgb, var(--color-success) 12%, var(--color-surface))"
-              : "color-mix(in srgb, var(--color-primary) 12%, var(--color-surface))",
-            color: "var(--color-primary)",
-          }}
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold cursor-default transition-all ${
+            isClinicBooking
+              ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/30"
+              : isSelfBooking
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-sky-50 text-sky-700 border border-sky-200"
+          }`}
         >
           {source}
         </span>
@@ -137,8 +139,23 @@ function PaymentStatusButton({
       size="small"
       variant="outlined"
       disabled
-      className="!border-green-200 !bg-green-100 !text-green-600"
-      sx={{ "&.Mui-disabled": { opacity: 1 } }}
+      sx={{
+        borderRadius: "var(--radius-full)",
+        textTransform: "none",
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        px: 2,
+        py: 0.5,
+        borderColor: "var(--color-success)",
+        backgroundColor: "rgba(22, 163, 74, 0.1)",
+        color: "var(--color-success)",
+        "&.Mui-disabled": {
+          borderColor: "var(--color-success)",
+          backgroundColor: "rgba(22, 163, 74, 0.1)",
+          color: "var(--color-success)",
+          opacity: 1,
+        },
+      }}
     >
       Paid
     </Button>
@@ -147,7 +164,21 @@ function PaymentStatusButton({
       size="small"
       variant="outlined"
       onClick={onMakePayment}
-      className="!border-orange-200 !bg-orange-100 !text-orange-600 hover:!bg-orange-100"
+      sx={{
+        borderRadius: "var(--radius-full)",
+        textTransform: "none",
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        px: 2,
+        py: 0.5,
+        borderColor: "rgba(234, 88, 12, 0.4)",
+        backgroundColor: "rgba(234, 88, 12, 0.08)",
+        color: "#c2410c",
+        "&:hover": {
+          backgroundColor: "rgba(234, 88, 12, 0.15)",
+          borderColor: "#ea580c",
+        },
+      }}
     >
       Make Payment
     </Button>
@@ -187,6 +218,10 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRow, setActiveRow] = useState<LabQueueRow | null>(null);
   const [paymentRow, setPaymentRow] = useState<LabQueueRow | null>(null);
+
+  const [detailsRow, setDetailsRow] = useState<LabQueueRow | null>(null);
+  const [detailsPdfUrl, setDetailsPdfUrl] = useState<string | null>(null);
+  const [detailsPdfLoading, setDetailsPdfLoading] = useState(false);
 
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -251,9 +286,32 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     [],
   );
 
+  useEffect(() => {
+    if (!detailsPdfUrl) return;
+    return () => URL.revokeObjectURL(detailsPdfUrl);
+  }, [detailsPdfUrl]);
+
   const openReadOnlyTestDetails = useCallback(
-    (row: LabQueueRow) => void openTestDetails(row, true),
-    [openTestDetails],
+    async (row: LabQueueRow) => {
+      setDetailsPdfUrl(null);
+      setDetailsRow(row);
+      const isClinic = row.booking_source?.toUpperCase() === "CLINIC";
+      if (isClinic && row.prescription_url && row.guid_name) {
+        setDetailsPdfLoading(true);
+        try {
+          const url = await getPdfFromServer(row.prescription_url, row.guid_name);
+          setDetailsPdfUrl(url);
+        } catch (error) {
+          console.error("Prescription PDF Load Error:", error);
+          toast.error("Failed to load prescription PDF");
+        } finally {
+          setDetailsPdfLoading(false);
+        }
+      } else {
+        setDetailsPdfLoading(false);
+      }
+    },
+    [],
   );
 
   const openViewReport = useCallback((row: LabQueueRow) => {
@@ -619,14 +677,22 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         field: "patient_name",
         headerName: "Patient Name",
         flex: 1.4,
-        minWidth: 145,
+        minWidth: 155,
         renderCell: (p) => (
-          <h1 className="font-[var(--font-weight-semibold)]">
-            {p.row.patient_name}{" "}
-            <span style={{ color: "var(--color-primary)" }}>
-              ({p.row.gender?.toUpperCase().charAt(0)})
-            </span>
-          </h1>
+          <div className="font-semibold text-xs sm:text-sm text-[var(--color-text)] flex items-center gap-1.5 truncate">
+            <span>{p.row.patient_name}</span>
+            {p.row.gender && (
+              <span
+                className="font-bold text-xs px-1.5 py-0.5 rounded"
+                style={{
+                  color: "var(--color-primary)",
+                  backgroundColor: "rgba(2, 132, 199, 0.1)",
+                }}
+              >
+                ({p.row.gender.toUpperCase().charAt(0)})
+              </span>
+            )}
+          </div>
         ),
       },
       {
@@ -634,14 +700,22 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         headerName: "Contact Number",
         flex: 1,
         minWidth: 130,
+        renderCell: (p) => (
+          <span className="text-xs text-[var(--color-text-secondary)] font-medium">
+            {p.row.contact_no || "-"}
+          </span>
+        ),
       },
       {
         field: "appointment_type",
         headerName: "Appt Type",
         flex: 0.9,
         minWidth: 125,
-        valueGetter: (_value, row) =>
-          formatAppointmentType(row.appointment_type),
+        renderCell: (p) => (
+          <span className="text-xs font-medium text-[var(--color-text)]">
+            {formatAppointmentType(p.row.appointment_type)}
+          </span>
+        ),
       },
       {
         field: "referred_by",
@@ -668,6 +742,18 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               size="small"
               variant="contained"
               onClick={() => updateStatus(p.row, "Processing")}
+              sx={{
+                borderRadius: "var(--radius-full)",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                px: 2,
+                py: 0.5,
+                backgroundColor: "var(--color-primary)",
+                "&:hover": {
+                  backgroundColor: "var(--color-primary-dark)",
+                },
+              }}
             >
               Start
             </Button>
@@ -703,6 +789,18 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 size="small"
                 variant="contained"
                 onClick={() => void openTestDetails(p.row, false)}
+                sx={{
+                  borderRadius: "var(--radius-full)",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.75rem",
+                  px: 2,
+                  py: 0.5,
+                  backgroundColor: "var(--color-primary)",
+                  "&:hover": {
+                    backgroundColor: "var(--color-primary-dark)",
+                  },
+                }}
               >
                 {hasTestsOrPackage(p.row) ? "View Details" : "Add Test"}
               </Button>
@@ -719,6 +817,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               size="small"
               variant="contained"
               onClick={() => updateStatus(p.row, "Reporting Pending")}
+              sx={{
+                borderRadius: "var(--radius-full)",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                px: 2,
+                py: 0.5,
+              }}
             >
               Sampling
             </Button>
@@ -742,7 +848,6 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
     if (resolvedMode === "completed")
       return [
         ...commonColumns,
-        //
         {
           field: "action",
           headerName: "Action",
@@ -754,6 +859,18 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
                 size="small"
                 variant="contained"
                 onClick={() => openReadOnlyTestDetails(p.row)}
+                sx={{
+                  borderRadius: "var(--radius-full)",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.75rem",
+                  px: 2,
+                  py: 0.5,
+                  backgroundColor: "var(--color-primary)",
+                  "&:hover": {
+                    backgroundColor: "var(--color-primary-dark)",
+                  },
+                }}
               >
                 View Details
               </Button>
@@ -769,6 +886,14 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               size="small"
               variant="contained"
               onClick={() => openViewReport(p.row)}
+              sx={{
+                borderRadius: "var(--radius-full)",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                px: 2,
+                py: 0.5,
+              }}
             >
               View Report
             </Button>
@@ -803,6 +928,18 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
               size="small"
               variant="contained"
               onClick={() => openReadOnlyTestDetails(p.row)}
+              sx={{
+                borderRadius: "var(--radius-full)",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                px: 2,
+                py: 0.5,
+                backgroundColor: "var(--color-primary)",
+                "&:hover": {
+                  backgroundColor: "var(--color-primary-dark)",
+                },
+              }}
             >
               View Details
             </Button>
@@ -818,6 +955,20 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             size="small"
             variant="outlined"
             onClick={(e) => openUpload(e, p.row)}
+            sx={{
+              borderRadius: "var(--radius-full)",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              px: 2,
+              py: 0.5,
+              borderColor: "var(--color-primary)",
+              color: "var(--color-primary)",
+              "&:hover": {
+                borderColor: "var(--color-primary-dark)",
+                backgroundColor: "rgba(2, 132, 199, 0.08)",
+              },
+            }}
           >
             Upload Test
           </Button>
@@ -857,6 +1008,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
         currentPage={currentPage}
         pageSize={PAGE_SIZE}
         onPageChange={setCurrentPage}
+      />
+      <LabTestDetailsDialog
+        open={Boolean(detailsRow)}
+        row={detailsRow}
+        pdfUrl={detailsPdfUrl}
+        pdfLoading={detailsPdfLoading}
+        onClose={() => {
+          setDetailsRow(null);
+          setDetailsPdfUrl(null);
+        }}
       />
       <LabPrescriptionDialog
         open={openPdf}

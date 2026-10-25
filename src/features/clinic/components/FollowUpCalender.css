@@ -1,9 +1,11 @@
 .follow-up-calendar {
-  --follow-up-primary: #0d9488;
-  --follow-up-primary-hover: #0f766e;
-  --follow-up-navy: #17324d;
-  --follow-up-background: #f4f8fb;
-  --follow-up-border: #dce6ee;
-  --follow-up-amber: #f59e0b;
-  --follow-up-red: #ef4444;
+  --follow-up-primary: var(--color-primary, #7c3aed);
+  --follow-up-primary-hover: var(--color-primary-dark, #5b21b6);
+  --follow-up-navy: var(--color-text, #0f172a);
+  --follow-up-background: var(--color-bg, #f8fafc);
+  --follow-up-surface: var(--color-surface, #f1f5f9);
+  --follow-up-surface-alt: var(--color-surface-alt, #ffffff);
+  --follow-up-border: var(--color-border, #cbd5e1);
+  --follow-up-amber: var(--color-warning, #f59e0b);
+  --follow-up-red: var(--color-error, #ef4444);
 }

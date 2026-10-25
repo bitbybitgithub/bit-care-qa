@@ -28,6 +28,7 @@ import ClinicSettings from "../components/common/EstablishmentSettings/Clinicset
 import LabSettings from "../components/common/EstablishmentSettings/Labsettings";
 import PharmacySettings from "../components/common/EstablishmentSettings/Pharmacysettings";
 import BlogTabs from "../features/admin/BlogTabs";
+import NotFoundPage from "../pages/NotFoundPage";
 
 const Router = [
   {
@@ -42,6 +43,7 @@ const Router = [
       { path: "/bloglist", element: <BlogsList /> },
       { path: "/blogs", element: <BlogsList /> },
       { path: "/blog/:blogId", element: <BlogsList /> },
+      { path: "/404", element: <NotFoundPage /> },
     ],
   },
   {
@@ -90,6 +92,10 @@ const Router = [
       // SupportTeam routes
       { path: "/support/dashboard", element: <SupportDashboard /> },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ];
 

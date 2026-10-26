@@ -59,32 +59,72 @@ const DocDashboard: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("patient_assigned", (data: AppointmentDto) => {
-      const mapped = mapAppointmentsToPatients([data])[0];
+    if (doctorId) {
+      socket.emit("joinDoctor", { doctorId: Number(doctorId) });
+    }
 
-      setPatients(prev => {
-        const exists = prev.some(p => p.appointment_id === mapped.appointment_id);
+    const handlePatientAssigned = (data: AppointmentDto) => {
+      const patientName = data.patient_name || (data as any).name || "Patient";
+      toast.info(`Patient ${patientName} is ready with vitals recorded`);
+      const mapped = mapAppointmentsToPatients([data])[0];
+      if (!mapped) return;
+
+      setPatients((prev) => {
+        const exists = prev.some((p) => p.appointment_id === mapped.appointment_id);
         if (exists) {
-          return prev.map(p =>
+          return prev.map((p) =>
             p.appointment_id === mapped.appointment_id ? mapped : p
           );
         }
         return [...prev, mapped];
       });
-    });
+    };
 
-
-    socket.on("newAppointment", (data: AppointmentDto) => {
-      toast.info("New appointment assigned");
+    const handleNewAppointment = (data: AppointmentDto) => {
+      // If doctor_id is specified in appointment, only accept if it matches this doctor
+      if (data?.doctor_id && doctorId && Number(data.doctor_id) !== Number(doctorId)) {
+        return;
+      }
+      const patientName = data.patient_name || (data as any).name;
+      toast.info(`New appointment assigned${patientName ? `: ${patientName}` : ""}`);
       const mapped = mapAppointmentsToPatients([data])[0];
-      setPatients(prev => [...prev, mapped]);
-    });
+      if (!mapped) return;
+
+      setPatients((prev) => {
+        const exists = prev.some((p) => p.appointment_id === mapped.appointment_id);
+        if (exists) {
+          return prev.map((p) =>
+            p.appointment_id === mapped.appointment_id ? mapped : p
+          );
+        }
+        return [...prev, mapped];
+      });
+    };
+
+    const handleAppointmentUpdate = (data: any) => {
+      if (!data?.appointment_id) return;
+      setPatients((prev) =>
+        prev.map((p) =>
+          p.appointment_id === Number(data.appointment_id)
+            ? { ...p, status: data.status }
+            : p
+        )
+      );
+    };
+
+    socket.on("patient_assigned", handlePatientAssigned);
+    socket.on("newAppointment", handleNewAppointment);
+    socket.on("appointmentUpdate", handleAppointmentUpdate);
 
     return () => {
-      socket.off("patient_assigned");
-      socket.off("newAppointment");
+      socket.off("patient_assigned", handlePatientAssigned);
+      socket.off("newAppointment", handleNewAppointment);
+      socket.off("appointmentUpdate", handleAppointmentUpdate);
+      if (doctorId) {
+        socket.emit("leaveDoctor", { doctorId: Number(doctorId) });
+      }
     };
-  }, [socket]);
+  }, [socket, doctorId]);
 
   const handleStartConsultation = async (patient: Patient) => {
     if (!patient?.appointment_id) return;

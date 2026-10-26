@@ -8,6 +8,7 @@ import { logoutApi } from "./api";
 import { useDispatch } from "react-redux";
 import { logout } from "./redux";
 import { clearSession } from "./context/sessions/userSession";
+import { disconnectSocket } from "./context/socket";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -15,6 +16,7 @@ export default function App() {
 
   ApiInterceptor.set({
     onAuthError: async () => {
+      disconnectSocket();
       const res = await logoutApi();
       if (res.success) {
         dispatch(logout()); // clear redux

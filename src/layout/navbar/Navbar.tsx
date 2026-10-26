@@ -7,6 +7,7 @@ import {
   getSessionItem,
 } from "../../context/sessions/userSession";
 import { logout } from "../../redux";
+import { disconnectSocket } from "../../context/socket";
 import { toast } from "react-toastify";
 import { SIDEBAR_MENUS } from "../../context/constant/sidebarMenus";
 import { EntityType } from "../../context/constant/enum";
@@ -150,6 +151,7 @@ const Navbar: React.FC<HeaderProps> = ({ onMenuClick }) => {
       const res = await logoutApi();
 
       if (res.success) {
+        disconnectSocket();
         setIsMenuOpen(false);
         dispatch(logout());
         clearSession("user");

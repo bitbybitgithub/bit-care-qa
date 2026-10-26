@@ -3,6 +3,7 @@ import { Button, Dialog } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useSocket } from "../../context/SocketContext";
 import {
   getPharmaPatientRecords,
   updatePharmaPatientStatus,
@@ -47,6 +48,7 @@ const resolvedMode: "pending" | "processing" | "complete" = useMemo(() => {
 
   const pharmaId = getSessionItem("user", "pharmacy_id");
   const userID = getSessionItem("user", "user_id");
+  const { socket } = useSocket();
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
@@ -62,6 +64,32 @@ const resolvedMode: "pending" | "processing" | "complete" = useMemo(() => {
     };
     fetchData();
   }, [pharmaId]);
+
+  /* ================= SOCKET REALTIME ================= */
+  useEffect(() => {
+    if (!socket) return;
+
+    if (pharmaId) {
+      socket.emit("joinPharma", { pharmacyId: Number(pharmaId) });
+    }
+
+    const handlePharmaReferral = (data: any) => {
+      toast.info(data?.message || "New pharmacy referral received");
+      getPharmaPatientRecords(pharmaId).then((res) => {
+        const d = (res as any)?.data ?? res ?? [];
+        setRows(Array.isArray(d) ? d : []);
+      }).catch(() => {});
+    };
+
+    socket.on("pharma_referral", handlePharmaReferral);
+
+    return () => {
+      socket.off("pharma_referral", handlePharmaReferral);
+      if (pharmaId) {
+        socket.emit("leavePharma", { pharmacyId: Number(pharmaId) });
+      }
+    };
+  }, [socket, pharmaId]);
 
   /* ================= FILTER ================= */
 

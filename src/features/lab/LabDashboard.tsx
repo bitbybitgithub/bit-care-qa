@@ -28,6 +28,7 @@ const LabDashboard = () => {
   const [walkInContact, setWalkInContact] = useState("");
   const [walkInPatient, setWalkInPatient] = useState<Patient | null>(null);
   const [showWalkInRegistration, setShowWalkInRegistration] = useState(false);
+  const [queueRefreshTrigger, setQueueRefreshTrigger] = useState(0);
   const isLabStaff = user === Roles.Staff || user === Roles.Admin;
 
   const tabs = [
@@ -224,6 +225,7 @@ const LabDashboard = () => {
                     : "pending"
             }
             searchTerm={queueSearch}
+            refreshTrigger={queueRefreshTrigger}
           />
         </div>
       </div>
@@ -259,6 +261,7 @@ const LabDashboard = () => {
             setShowWalkInRegistration(false);
             setWalkInContact("");
             setWalkInPatient(null);
+            setQueueRefreshTrigger((prev) => prev + 1);
           }}
           patientData={walkInPatient}
         />

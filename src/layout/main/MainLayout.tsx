@@ -26,6 +26,9 @@ const MainLayout = () => {
   const clinicId = getSessionItem("user", "clinic_id");
   const doctorId = getSessionItem("user", "doctor_id");
   const labId = getSessionItem("user", "lab_id");
+  const userId = getSessionItem("user", "user_id");
+  const role = getSessionItem("user", "role");
+  const pharmacyId = getSessionItem("user", "pharmacy_id");
 
   if (loading) return <Loader />;
 
@@ -96,6 +99,9 @@ const MainLayout = () => {
             clinicId={clinicId ? Number(clinicId) : null}
             doctorId={doctorId ? Number(doctorId) : null}
             labId={labId ? Number(labId) : null}
+            userId={userId ? Number(userId) : null}
+            role={role || null}
+            pharmacyId={pharmacyId ? Number(pharmacyId) : null}
           >
             <Outlet />
           </SocketProvider>

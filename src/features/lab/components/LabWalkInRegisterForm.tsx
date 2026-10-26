@@ -27,6 +27,7 @@ import {
   type SaveLabAppointmentPayload,
 } from "../../../api/labApis/LabApi";
 import { getSessionItem } from "../../../context/sessions/userSession";
+import { useSocket } from "../../../context/SocketContext";
 import type {
   WalkinFormData,
   WalkInRegisterFormProps,
@@ -68,6 +69,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
   const today = new Date();
   const labId = Number(getSessionItem("user", "lab_id"));
   const userId = Number(getSessionItem("user", "user_id"));
+  const { socket } = useSocket();
   const NAME_REGEX = /^[A-Za-z\s.'-]{2,50}$/;
   const MOBILE_REGEX = /^[6-9]\d{9}$/;
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -372,6 +374,16 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       }
 
       toast.success("Lab appointment booked successfully");
+
+      if (socket && labId) {
+        socket.emit("newLabAppointment", {
+          lab_id: Number(labId),
+          appointment_id: (appointmentResponse as any)?.data?.appointment_id,
+          lab_record_id: (appointmentResponse as any)?.data?.lab_record_id,
+          patient_name: formData.name,
+          appointment_type: "WALK_IN",
+        });
+      }
 
       setFormData({
         name: "",

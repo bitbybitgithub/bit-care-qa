@@ -1,7 +1,7 @@
 // src/api/api.ts
 import { TokenManager } from "../api/auth/tokenManager";
 import type { RefreshToken } from "../types/types";
-import { getSocket } from "../context/socket";
+import { updateSocketAuth } from "../context/socket";
 
 export const BASE_URL = "https://qacliniccareapi.bitbybitsolutions.co.in/api";
 //export const BASE_URL = "https://cliniccareapi.bitbybitsolutions.co.in/api";
@@ -105,15 +105,7 @@ const refreshAccessToken = async (
     TokenManager.setAccessToken(data.accessToken);
 
     //  Update socket auth and reconnect
-    const socket = getSocket(data.accessToken); // don’t pass token yet, it reuses same instance
-    if (socket) {
-      socket.auth = { token: data.accessToken };
-
-      // reconnect only if currently connected
-      if (socket.connected) {
-        socket.disconnect().connect();
-      }
-    }
+    updateSocketAuth({ token: data.accessToken });
     return data.accessToken;
   } catch (err) {
     console.error("Token refresh failed", err);

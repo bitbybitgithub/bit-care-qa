@@ -91,23 +91,54 @@ const StaffDashboard: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleUpdate = (data: Appointment) => {
-      if (activeTab !== "pending") return;
+    const handleUpdate = (data: any) => {
+      if (!data?.appointment_id) return;
+      if (activeTab === "pending") {
+        setPendingPatients((prev) =>
+          prev.map((p) =>
+            p?.raw?.appointment_id === data.appointment_id ||
+            p?.appointment_id === data.appointment_id
+              ? { ...p, status: data.status }
+              : p,
+          ),
+        );
+      }
+    };
 
-      setPendingPatients((prev) =>
-        prev.map((p) =>
-          p?.raw.appointment_id === data.appointment_id
-            ? { ...p, status: data.status }
-            : p,
-        ),
-      );
+    const handleNewAppointment = (data: any) => {
+      const patientName = data?.patient_name || "a patient";
+      toast.info(`New appointment created for ${patientName}`);
+      if (activeTab === "pending") {
+        fetchPendingQueue();
+      }
+      if (uId && clinicId) {
+        fetchDashboardStats(Number(uId), Number(clinicId))
+          .then((dashboardData) => {
+            const mapped: DashboardCard[] = dashboardData
+              .map((item) => ({
+                id: item.card_id,
+                title: item.card_title,
+                value: item.count,
+                icon: cardIcon[item.card_id] || null,
+                description: item.card_description,
+                key: item.key,
+              }))
+              .sort((a, b) => a.id - b.id);
+
+            setStats(mapped);
+          })
+          .catch(() => {});
+      }
     };
 
     socket.on("appointmentUpdate", handleUpdate);
+    socket.on("newAppointment", handleNewAppointment);
+
     return () => {
       socket.off("appointmentUpdate", handleUpdate);
+      socket.off("newAppointment", handleNewAppointment);
     };
-  }, [socket, activeTab]);
+  }, [socket, activeTab, uId, clinicId]);
 
   useEffect(() => {
     fetchDashboardStats(Number(uId), Number(clinicId))

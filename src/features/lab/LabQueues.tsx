@@ -209,9 +209,14 @@ const normalizeStatus = (s: string) => {
 interface Props {
   mode?: "pending" | "processing" | "reporting" | "completed";
   searchTerm?: string;
+  refreshTrigger?: number;
 }
 
-export default function LabQueues({ mode, searchTerm = "" }: Props) {
+export default function LabQueues({
+  mode,
+  searchTerm = "",
+  refreshTrigger,
+}: Props) {
   const location = useLocation();
   const labId = getSessionItem("user", "lab_id");
   const user_id = getSessionItem("user", "user_id");
@@ -261,6 +266,12 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
   useEffect(() => {
     void refreshQueue();
   }, [refreshQueue]);
+
+  useEffect(() => {
+    if (refreshTrigger) {
+      void refreshQueue();
+    }
+  }, [refreshTrigger, refreshQueue]);
 
   /* ---------------- SOCKET REAL-TIME LISTENERS ---------------- */
   useEffect(() => {
@@ -418,10 +429,19 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       void refreshQueue();
     };
 
+    const handleRecordUpdated = (payload?: { lab_id?: number | string }) => {
+      if (!payload?.lab_id || Number(payload.lab_id) === numericLabId) {
+        void refreshQueue();
+      }
+    };
+
     socket.on("connect", handleConnect);
     socket.on("lab_referral", handleLabReferral);
     socket.on("newAppointment", handleNewAppointment);
     socket.on("newLabAppointment", handleNewAppointment);
+    socket.on("walkInLabAppointment", handleNewAppointment);
+    socket.on("lab_test_record_updated", handleRecordUpdated);
+    socket.on("labRecordUpdated", handleRecordUpdated);
     socket.on("appointmentUpdate", handleStatusUpdate);
     socket.on("labStatusUpdate", handleStatusUpdate);
     socket.on("labUpdate", handleStatusUpdate);
@@ -435,6 +455,9 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
       socket.off("lab_referral", handleLabReferral);
       socket.off("newAppointment", handleNewAppointment);
       socket.off("newLabAppointment", handleNewAppointment);
+      socket.off("walkInLabAppointment", handleNewAppointment);
+      socket.off("lab_test_record_updated", handleRecordUpdated);
+      socket.off("labRecordUpdated", handleRecordUpdated);
       socket.off("appointmentUpdate", handleStatusUpdate);
       socket.off("labStatusUpdate", handleStatusUpdate);
       socket.off("labUpdate", handleStatusUpdate);
@@ -682,8 +705,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             : r,
         ),
       );
+
+      if (socket && row.lab_id) {
+        socket.emit("labStatusUpdate", {
+          lab_id: Number(row.lab_id),
+          lab_record_id: Number(row.lab_record_id),
+          status,
+        });
+      }
     },
-    [user_id],
+    [user_id, socket],
   );
 
   const loadSavedReports = useCallback(async (row: LabQueueRow) => {
@@ -850,6 +881,16 @@ export default function LabQueues({ mode, searchTerm = "" }: Props) {
             : row,
         ),
       );
+
+      if (socket && activeRow?.lab_id) {
+        socket.emit("labStatusUpdate", {
+          lab_id: Number(activeRow.lab_id),
+          lab_record_id: Number(activeRow.lab_record_id),
+          status: "Completed",
+          report_id: reportIds.length === 1 ? reportIds[0] : reportIds,
+        });
+      }
+
       toast.success("Reports submitted successfully");
       closeUpload();
     } catch (error) {

@@ -11,7 +11,17 @@ export interface BlogCategoryMeta {
   slug: string;
   badgeClass: string;
   chipColor: string;
-  iconType: "heart" | "activity" | "apple" | "sparkles";
+  iconType:
+    | "heart"
+    | "activity"
+    | "apple"
+    | "sparkles"
+    | "microscope"
+    | "pill"
+    | "baby"
+    | "bone"
+    | "brain"
+    | "shield";
   accentGradient: string;
   description: string;
 }
@@ -25,7 +35,7 @@ export const BLOG_CATEGORIES: Record<number, BlogCategoryMeta> = {
     chipColor: "#059669",
     iconType: "activity",
     accentGradient: "from-emerald-500/15 via-teal-500/10 to-emerald-600/20",
-    description: "Blood sugar management, lifestyle tips & clinical endocrinology updates",
+    description: "Blood sugar management, lifestyle tips & endocrinology updates",
   },
   2: {
     id: 2,
@@ -45,7 +55,77 @@ export const BLOG_CATEGORIES: Record<number, BlogCategoryMeta> = {
     chipColor: "#d97706",
     iconType: "apple",
     accentGradient: "from-amber-500/15 via-orange-500/10 to-yellow-600/20",
-    description: "Macro & micro nutrients, dietary planning & evidence-based wellness",
+    description: "Dietary planning, vitamins, minerals & evidence-based nutrition",
+  },
+  4: {
+    id: 4,
+    name: "Diagnostics & Pathology",
+    slug: "diagnostics-pathology",
+    badgeClass: "bg-purple-50 text-purple-700 border-purple-200/80 ring-purple-500/10",
+    chipColor: "#7c3aed",
+    iconType: "microscope",
+    accentGradient: "from-purple-500/15 via-indigo-500/10 to-violet-600/20",
+    description: "Laboratory testing, diagnostic screenings, biomarkers & preventive blood panels",
+  },
+  5: {
+    id: 5,
+    name: "Pharmacology & Medicine",
+    slug: "pharmacology-medicine",
+    badgeClass: "bg-sky-50 text-sky-700 border-sky-200/80 ring-sky-500/10",
+    chipColor: "#0284c7",
+    iconType: "pill",
+    accentGradient: "from-sky-500/15 via-blue-500/10 to-cyan-600/20",
+    description: "Prescription guidance, drug interactions, OTC therapies & pharmacy advice",
+  },
+  6: {
+    id: 6,
+    name: "Pediatrics & Child Health",
+    slug: "pediatrics-child-health",
+    badgeClass: "bg-pink-50 text-pink-700 border-pink-200/80 ring-pink-500/10",
+    chipColor: "#db2777",
+    iconType: "baby",
+    accentGradient: "from-pink-500/15 via-rose-500/10 to-fuchsia-600/20",
+    description: "Infant care, childhood milestones, immunizations & pediatric wellness",
+  },
+  7: {
+    id: 7,
+    name: "Dermatology & Skin Care",
+    slug: "dermatology-skin-care",
+    badgeClass: "bg-teal-50 text-teal-700 border-teal-200/80 ring-teal-500/10",
+    chipColor: "#0d9488",
+    iconType: "sparkles",
+    accentGradient: "from-teal-500/15 via-emerald-500/10 to-cyan-600/20",
+    description: "Skin health, dermatological therapies, allergy relief & clinical skincare",
+  },
+  8: {
+    id: 8,
+    name: "Orthopedics & Joint Health",
+    slug: "orthopedics-joint-health",
+    badgeClass: "bg-orange-50 text-orange-700 border-orange-200/80 ring-orange-500/10",
+    chipColor: "#ea580c",
+    iconType: "bone",
+    accentGradient: "from-orange-500/15 via-amber-500/10 to-red-600/20",
+    description: "Joint mobility, arthritis management, sports rehabilitation & bone density",
+  },
+  9: {
+    id: 9,
+    name: "Mental Health & Neurology",
+    slug: "mental-health-neurology",
+    badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200/80 ring-indigo-500/10",
+    chipColor: "#4f46e5",
+    iconType: "brain",
+    accentGradient: "from-indigo-500/15 via-purple-500/10 to-blue-600/20",
+    description: "Emotional well-being, stress & anxiety management, sleep & neuroscience",
+  },
+  10: {
+    id: 10,
+    name: "Preventive Care & Wellness",
+    slug: "preventive-care-wellness",
+    badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-300/80 ring-emerald-500/10",
+    chipColor: "#10b981",
+    iconType: "shield",
+    accentGradient: "from-emerald-500/15 via-teal-500/10 to-green-600/20",
+    description: "Preventive medicine, seasonal health, vaccinations & lifestyle wellness",
   },
 };
 
@@ -402,7 +482,21 @@ export const FallbackBanner: React.FC<FallbackBannerProps> = ({
               d="M12 3v3m0 0a6 6 0 100 12 6 6 0 000-12zm-3-3a3 3 0 013 3"
             />
           )}
-          {cat.iconType === "sparkles" && (
+          {cat.iconType === "pill" && (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V6h3V1.5m-3 0h3"
+            />
+          )}
+          {cat.iconType === "shield" && (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 2.25l8.25 3.75v6c0 5.25-3.75 10.125-8.25 11.25-4.5-1.125-8.25-6-8.25-11.25v-6L12 2.25z"
+            />
+          )}
+          {(cat.iconType === "sparkles" || cat.iconType === "microscope" || cat.iconType === "baby" || cat.iconType === "bone" || cat.iconType === "brain") && (
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

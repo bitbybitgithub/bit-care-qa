@@ -187,6 +187,16 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
     }
   };
 
+  const handleSelectCategory = (catId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      category_id: catId,
+    }));
+    if (errors.category_id) {
+      setErrors((prev) => ({ ...prev, category_id: "" }));
+    }
+  };
+
   const handleContentChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -730,13 +740,48 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           </div>
 
           {/* Card 4: Taxonomy & Category */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 space-y-2">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
               <span className="font-semibold text-slate-800 text-xs">
                 Category Specialty <span className="text-rose-500">*</span>
               </span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {Object.keys(BLOG_CATEGORIES).length} Specialties
+              </span>
             </div>
 
+            {/* Quick-Select Specialty Chips */}
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+              {Object.values(BLOG_CATEGORIES).map((cat) => {
+                const isSelected = Number(formData.category_id) === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleSelectCategory(cat.id)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer ${
+                      isSelected
+                        ? "text-white shadow-xs scale-102"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80"
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? cat.chipColor : undefined,
+                    }}
+                  >
+                    {!isSelected && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: cat.chipColor }}
+                      />
+                    )}
+                    <span>{cat.name}</span>
+                    {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Standard Dropdown Selector */}
             <select
               id="category_id"
               name="category_id"
@@ -748,7 +793,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
                   : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15"
               }`}
             >
-              <option value="">-- Select Category --</option>
+              <option value="">-- Or Select from Dropdown --</option>
               {Object.values(BLOG_CATEGORIES).map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -763,10 +808,26 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
               </p>
             )}
 
+            {/* Selected Category Details & Scope */}
             {formData.category_id && (
-              <p className="text-[11px] text-slate-500 pt-0.5">
-                {BLOG_CATEGORIES[Number(formData.category_id)]?.description}
-              </p>
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor:
+                        BLOG_CATEGORIES[Number(formData.category_id)]?.chipColor ||
+                        "var(--color-primary)",
+                    }}
+                  />
+                  <span className="font-bold text-slate-800">
+                    {BLOG_CATEGORIES[Number(formData.category_id)]?.name}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {BLOG_CATEGORIES[Number(formData.category_id)]?.description}
+                </p>
+              </div>
             )}
           </div>
 

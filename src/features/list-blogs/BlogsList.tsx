@@ -29,6 +29,12 @@ import {
   Stethoscope,
   ChevronLeft,
   ChevronRight,
+  Microscope,
+  Pill,
+  Baby,
+  Bone,
+  Brain,
+  Shield,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -141,6 +147,18 @@ const BlogListItem: React.FC<BlogListItemProps> = ({
         return <Activity className="w-2.5 h-2.5" />;
       case "apple":
         return <Apple className="w-2.5 h-2.5" />;
+      case "microscope":
+        return <Microscope className="w-2.5 h-2.5" />;
+      case "pill":
+        return <Pill className="w-2.5 h-2.5" />;
+      case "baby":
+        return <Baby className="w-2.5 h-2.5" />;
+      case "bone":
+        return <Bone className="w-2.5 h-2.5" />;
+      case "brain":
+        return <Brain className="w-2.5 h-2.5" />;
+      case "shield":
+        return <Shield className="w-2.5 h-2.5" />;
       default:
         return <Sparkles className="w-2.5 h-2.5" />;
     }
@@ -331,6 +349,18 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
         return <Activity className="w-2.5 h-2.5" />;
       case "apple":
         return <Apple className="w-2.5 h-2.5" />;
+      case "microscope":
+        return <Microscope className="w-2.5 h-2.5" />;
+      case "pill":
+        return <Pill className="w-2.5 h-2.5" />;
+      case "baby":
+        return <Baby className="w-2.5 h-2.5" />;
+      case "bone":
+        return <Bone className="w-2.5 h-2.5" />;
+      case "brain":
+        return <Brain className="w-2.5 h-2.5" />;
+      case "shield":
+        return <Shield className="w-2.5 h-2.5" />;
       default:
         return <Sparkles className="w-2.5 h-2.5" />;
     }

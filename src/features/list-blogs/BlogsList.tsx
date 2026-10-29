@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import {
   Search,
@@ -21,6 +21,14 @@ import {
   Mail,
   PlusCircle,
   CheckCircle2,
+  TrendingUp,
+  Building2,
+  LayoutGrid,
+  List as ListIcon,
+  HelpCircle,
+  Stethoscope,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -38,6 +46,9 @@ import {
   BLOG_CATEGORIES,
   EntityAvatar,
   getAdminEntityInfo,
+  getEntityTypeLabel,
+  getEntityBadgeLabel,
+  getEntityContactLabel,
 } from "../admin/blogUtils";
 
 // ============================================================================
@@ -49,24 +60,24 @@ const PatientNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Left: BitCare Logo & Health Library Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between gap-4">
+        {/* Left: BitCare Logo & Health Library Title (Enlarged & Prominent) */}
         <div
           onClick={() => navigate("/blog")}
-          className="flex items-center gap-3 cursor-pointer group select-none"
+          className="flex items-center gap-3.5 sm:gap-4 cursor-pointer group select-none"
           role="button"
           tabIndex={0}
         >
           <img
             src={BitCareLogo}
             alt="BitCare"
-            className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-102"
+            className="h-11 sm:h-13 md:h-14 w-auto object-contain transition-transform group-hover:scale-102 drop-shadow-2xs"
           />
-          <div className="hidden sm:flex flex-col border-l border-slate-200 pl-3">
-            <span className="text-xs font-bold text-slate-800 tracking-tight leading-tight">
+          <div className="hidden sm:flex flex-col border-l border-slate-200/90 pl-3.5 py-0.5">
+            <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-tight">
               Health Library
             </span>
-            <span className="text-[10px] text-slate-400 font-medium">
+            <span className="text-xs text-slate-500 font-medium">
               Patient Education & Wellness
             </span>
           </div>
@@ -81,9 +92,9 @@ const PatientNavbar: React.FC = () => {
 
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-xs transition-all cursor-pointer"
           >
-            <span>Clinic Portal</span>
+            <span>Provider Portal</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -93,7 +104,197 @@ const PatientNavbar: React.FC = () => {
 };
 
 // ============================================================================
-// Single Blog Card (Responsive, Entity-Aware & Role-Aware)
+// Horizontal List Item (Modern Magazine Blog Layout)
+// ============================================================================
+
+interface BlogListItemProps {
+  blog: BlogFormData;
+  index: number;
+  canEdit: boolean;
+  isAdminView?: boolean;
+  onRead: (id: number | string) => void;
+  onEdit: (id: number | string) => void;
+}
+
+const BlogListItem: React.FC<BlogListItemProps> = ({
+  blog,
+  index,
+  canEdit,
+  isAdminView = false,
+  onRead,
+  onEdit,
+}) => {
+  const [imageFailed, setImageFailed] = useState<boolean>(false);
+  const imageUrl = getBlogImageUrl(
+    blog.featured_image_guid,
+    blog.featured_image_path
+  );
+  const cat = getCategoryMeta(blog.category_id);
+  const readTime = calculateReadTime(blog.content || blog.short_description);
+  const formattedDate = formatBlogDate(blog.created_date);
+
+  const getCategoryIcon = () => {
+    switch (cat.iconType) {
+      case "heart":
+        return <Heart className="w-2.5 h-2.5" />;
+      case "activity":
+        return <Activity className="w-2.5 h-2.5" />;
+      case "apple":
+        return <Apple className="w-2.5 h-2.5" />;
+      default:
+        return <Sparkles className="w-2.5 h-2.5" />;
+    }
+  };
+
+  const isPublished = blog.status === true || String(blog.status) === "1";
+
+  return (
+    <article
+      onClick={() => onRead(blog.blog_id || "")}
+      className="group relative flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-[var(--color-primary)]/10 hover:border-[var(--color-primary-light)] transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+      style={{
+        animationDelay: `${Math.min(index * 40, 300)}ms`,
+      }}
+    >
+      {/* Left: Article Details */}
+      <div className="flex flex-col justify-between flex-1 min-w-0">
+        <div>
+          {/* Top Author & Meta Row */}
+          <div className="flex flex-wrap items-center gap-2 mb-2 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <EntityAvatar
+                name={blog.entity_name}
+                logo={blog.entity_logo}
+                size="xs"
+              />
+              <span
+                className="font-bold text-slate-800 hover:text-[var(--color-primary)] transition truncate max-w-[150px] sm:max-w-[200px]"
+                title={blog.entity_name || "Healthcare Partner"}
+              >
+                {blog.entity_name || "Healthcare Partner"}
+              </span>
+              {blog.entity_type && (
+                <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
+                  {getEntityTypeLabel(blog.entity_type)}
+                </span>
+              )}
+            </div>
+
+            <span className="text-slate-300">•</span>
+
+            <span className="text-[11px] text-slate-400 font-medium">
+              {formattedDate}
+            </span>
+
+            <span className="text-slate-300">•</span>
+
+            <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+              <Clock className="w-2.5 h-2.5" />
+              {readTime}
+            </span>
+
+            {isAdminView && (
+              <span
+                className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                  isPublished
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                {isPublished ? "Published" : "Draft"}
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug mb-2">
+            {blog.title}
+          </h3>
+
+          {/* Excerpt */}
+          <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 sm:line-clamp-3 leading-relaxed mb-4">
+            {blog.short_description}
+          </p>
+        </div>
+
+        {/* Bottom Actions Row */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100/90 mt-auto">
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full border ${cat.badgeClass}`}
+            >
+              {getCategoryIcon()}
+              {cat.name}
+            </span>
+
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
+              <ShieldCheck className="w-3 h-3" />
+              Verified Guide
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            {blog.entity_email && (
+              <span
+                className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-400"
+                title={blog.entity_email}
+              >
+                <Mail className="w-2.5 h-2.5" />
+                <span className="max-w-[150px] truncate">{blog.entity_email}</span>
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRead(blog.blog_id || "");
+              }}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition cursor-pointer"
+            >
+              <span>Read Article</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(blog.blog_id || "");
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer"
+                title="Edit article"
+              >
+                <Edit3 className="w-3 h-3 text-slate-500" />
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Featured Thumbnail (Strictly uniform dimensions across all list items) */}
+      <div className="relative w-full sm:w-56 md:w-64 h-48 sm:h-44 md:h-44 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs self-center">
+        {!imageFailed && imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={blog.title}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            onError={() => setImageFailed(true)}
+            loading="lazy"
+          />
+        ) : (
+          <FallbackBanner categoryId={blog.category_id} title={blog.title} />
+        )}
+      </div>
+    </article>
+  );
+};
+
+// ============================================================================
+// Single Blog Card (Grid Card Item for Admin View or Grid Switch)
 // ============================================================================
 
 interface BlogCardItemProps {
@@ -116,7 +317,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
   const [imageFailed, setImageFailed] = useState<boolean>(false);
   const imageUrl = getBlogImageUrl(
     blog.featured_image_guid,
-    blog.featured_image_path,
+    blog.featured_image_path
   );
   const cat = getCategoryMeta(blog.category_id);
   const readTime = calculateReadTime(blog.content || blog.short_description);
@@ -146,7 +347,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
     >
       {/* ----------------- BANNER / IMAGE ----------------- */}
       <div
-        className="relative aspect-[16/9] max-h-48 w-full overflow-hidden bg-slate-100 cursor-pointer"
+        className="relative aspect-[16/10] h-48 w-full overflow-hidden bg-slate-100 cursor-pointer"
         onClick={() => onRead(blog.blog_id || "")}
       >
         {!imageFailed && imageUrl ? (
@@ -291,6 +492,135 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
 };
 
 // ============================================================================
+// Modern Responsive Pagination Component
+// ============================================================================
+
+interface PaginationBarProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (newSize: number) => void;
+}
+
+const getPageNumbers = (current: number, total: number): (number | string)[] => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, "...", total];
+  }
+
+  if (current >= total - 3) {
+    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+  }
+
+  return [1, "...", current - 1, current, current + 1, "...", total];
+};
+
+const PaginationBar: React.FC<PaginationBarProps> = ({
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange,
+}) => {
+  if (totalItems === 0) return null;
+
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  const pages = getPageNumbers(currentPage, totalPages);
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3 sm:px-4 sm:py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
+      {/* Left: Summary Count & Items Per Page Selector */}
+      <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto text-xs text-slate-500">
+        <div>
+          Showing <span className="font-bold text-slate-800">{startIndex}</span>–
+          <span className="font-bold text-slate-800">{endIndex}</span> of{" "}
+          <span className="font-bold text-slate-800">{totalItems}</span> articles
+        </div>
+
+        <div className="flex items-center gap-1.5 pl-2 sm:border-l sm:border-slate-200">
+          <span className="hidden md:inline text-slate-400">Show:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition cursor-pointer"
+          >
+            <option value={10}>10 / page</option>
+            <option value={12}>12 / page</option>
+            <option value={15}>15 / page</option>
+            <option value={20}>20 / page</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Right: Modern Fluid Pagination Buttons */}
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1 sm:gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
+          {/* Previous Button */}
+          <button
+            type="button"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer shadow-2xs"
+            aria-label="Previous Page"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
+
+          {/* Page Numbers */}
+          <div className="flex items-center gap-1">
+            {pages.map((p, idx) =>
+              p === "..." ? (
+                <span
+                  key={`ellipsis-${idx}`}
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 text-xs font-medium"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={`page-${p}`}
+                  type="button"
+                  onClick={() => onPageChange(Number(p))}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs font-bold rounded-xl transition cursor-pointer ${
+                    currentPage === p
+                      ? "bg-[var(--color-primary)] text-white shadow-xs scale-105"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent hover:border-slate-200"
+                  }`}
+                  aria-label={`Page ${p}`}
+                  aria-current={currentPage === p ? "page" : undefined}
+                >
+                  {p}
+                </button>
+              )
+            )}
+          </div>
+
+          {/* Next Button */}
+          <button
+            type="button"
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer shadow-2xs"
+            aria-label="Next Page"
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
 // Main BlogsList Component
 // ============================================================================
 
@@ -318,12 +648,20 @@ export const BlogsList: React.FC<BlogsListProps> = ({
   );
 
   // Extract admin entity information (e.g. id=60, type="clinic")
-  const adminEntity = useMemo(() => getAdminEntityInfo(sessionUser), [sessionUser]);
+  const adminEntity = useMemo(
+    () => getAdminEntityInfo(sessionUser),
+    [sessionUser]
+  );
 
   // STRICT EDITING CONDITION:
   // Only clinic admins accessing from within the clinic portal are allowed to edit!
   // Any public/general route (/blog, /bloglist, /blogs, /blog/:blogId) is STRICTLY VIEW-ONLY!
   const canEdit = isClinicPath && isClinicAdmin;
+
+  // View Mode: Patient view defaults to "list", Admin view defaults to "grid"
+  const [viewMode, setViewMode] = useState<"list" | "grid">(
+    isClinicPath ? "grid" : "list"
+  );
 
   const [blogs, setBlogs] = useState<BlogFormData[]>([]);
   const [blog, setBlog] = useState<BlogFormData | null>(null);
@@ -332,9 +670,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
 
   // Search & Category Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<number | "all">(
-    "all",
-  );
+  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [detailImageFailed, setDetailImageFailed] = useState<boolean>(false);
 
@@ -411,6 +747,42 @@ export const BlogsList: React.FC<BlogsListProps> = ({
     });
   }, [blogs, selectedCategory, searchQuery]);
 
+  // Pagination State (Default 10 items per page, configurable 10, 12, 15, 20)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
+
+  // Total pages
+  const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage) || 1;
+
+  // Reset to page 1 whenever search, category, or itemsPerPage changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, itemsPerPage]);
+
+  // Adjust if currentPage exceeds totalPages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  // Paginated articles slice for current page
+  const paginatedBlogs = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBlogs.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBlogs, currentPage, itemsPerPage]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   // Counts per category
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { all: blogs.length };
@@ -419,6 +791,44 @@ export const BlogsList: React.FC<BlogsListProps> = ({
       counts[catId] = (counts[catId] || 0) + 1;
     });
     return counts;
+  }, [blogs]);
+
+  // Distinct contributing clinics extracted from loaded blogs
+  const contributingClinics = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        name: string;
+        email?: string;
+        logo?: string;
+        type?: string;
+        count: number;
+      }
+    >();
+
+    blogs.forEach((b) => {
+      if (!b.entity_name && !b.entity_id) return;
+      const key = b.entity_name || String(b.entity_id);
+      const existing = map.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(key, {
+          name: b.entity_name || "Healthcare Provider",
+          email: b.entity_email || undefined,
+          logo: b.entity_logo || undefined,
+          type: b.entity_type || "Provider",
+          count: 1,
+        });
+      }
+    });
+
+    return Array.from(map.values()).slice(0, 5);
+  }, [blogs]);
+
+  // Top / trending articles for the sidebar widget
+  const trendingArticles = useMemo(() => {
+    return blogs.slice(0, 4);
   }, [blogs]);
 
   // Navigation handlers
@@ -505,7 +915,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
     const formattedDate = formatBlogDate(blog.created_date);
     const resolvedBannerUrl = getBlogImageUrl(
       blog.featured_image_guid,
-      blog.featured_image_path,
+      blog.featured_image_path
     );
 
     return (
@@ -620,7 +1030,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                           />
                           <span
                             className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white"
-                            title="Verified Clinical Provider"
+                            title="Verified Healthcare Provider"
                           >
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </span>
@@ -628,12 +1038,12 @@ export const BlogsList: React.FC<BlogsListProps> = ({
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded-full bg-teal-700 text-white shadow-2xs">
-                              Clinical Publisher
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-teal-700 text-white shadow-2xs">
+                              {getEntityBadgeLabel(blog.entity_type)}
                             </span>
                             {blog.entity_type && (
-                              <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-white text-teal-800 border border-teal-200 capitalize">
-                                {blog.entity_type}
+                              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white text-teal-800 border border-teal-200">
+                                {getEntityTypeLabel(blog.entity_type)}
                               </span>
                             )}
                           </div>
@@ -672,7 +1082,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg shadow-2xs transition"
                           >
                             <Mail className="w-3 h-3" />
-                            <span>Contact Clinic</span>
+                            <span>{getEntityContactLabel(blog.entity_type)}</span>
                           </a>
                         )}
                       </div>
@@ -727,11 +1137,11 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[11px] uppercase tracking-wider font-extrabold text-teal-900 bg-teal-100/90 px-2.5 py-0.5 rounded-full">
-                          Published & Clinically Verified By
+                          Published & Verified By
                         </span>
                         {blog.entity_type && (
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200 capitalize">
-                            {blog.entity_type}
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200">
+                            {getEntityTypeLabel(blog.entity_type)}
                           </span>
                         )}
                       </div>
@@ -741,11 +1151,11 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                       </h3>
 
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed max-w-xl">
-                        This article was created and approved under the clinical oversight of{" "}
+                        This article was reviewed and verified by{" "}
                         <span className="font-semibold text-slate-800">
                           {blog.entity_name || "the healthcare provider"}
                         </span>{" "}
-                        to promote evidence-based medical awareness and preventive care.
+                        to promote evidence-based healthcare awareness and patient wellness.
                       </p>
 
                       {blog.entity_email && (
@@ -841,55 +1251,63 @@ export const BlogsList: React.FC<BlogsListProps> = ({
   }
 
   // ==========================================================================
-  // VIEW A: BLOG CATALOG (PATIENT BRANDED / ADMIN ISOLATED)
+  // VIEW A: BLOG CATALOG (PATIENT LIST VIEW + EDITORIAL SIDEBAR / ADMIN ISOLATED)
   // ==========================================================================
   return (
-    <div className={`w-full ${isClinicPath ? "space-y-3" : "min-h-screen bg-gradient-to-b from-white via-slate-50/40 to-white flex flex-col"}`}>
+    <div
+      className={`w-full ${
+        isClinicPath
+          ? "space-y-3"
+          : "min-h-screen bg-gradient-to-b from-white via-slate-50/40 to-white flex flex-col"
+      }`}
+    >
       {/* =====================================================
           PATIENT VIEW: STICKY TOP BRANDING NAVBAR
       ====================================================== */}
       {!isClinicPath && <PatientNavbar />}
 
-      <div className={`w-full ${isClinicPath ? "" : "flex-1 py-4 sm:py-6 px-3 sm:px-6 lg:px-8"}`}>
+      <div
+        className={`w-full ${
+          isClinicPath ? "" : "flex-1 py-4 sm:py-6 px-3 sm:px-6 lg:px-8"
+        }`}
+      >
         <main className={`w-full ${isClinicPath ? "" : "max-w-7xl mx-auto"} space-y-4`}>
           {/* =====================================================
               PATIENT VIEW: HERO BRANDING BANNER
           ====================================================== */}
           {!isClinicPath && (
-            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-sky-50/50 to-[var(--color-surface)] border border-slate-200/90 p-5 sm:p-8 shadow-2xs">
-              <div className="relative z-10 max-w-3xl space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white shadow-2xs border border-[var(--color-primary)]/20 text-[var(--color-primary)]">
-                  <Sparkles className="w-3 h-3 text-[var(--color-primary)]" />
-                  <span>BitCare Verified Healthcare Articles</span>
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-50/70 via-white to-[var(--color-surface)] border border-slate-200/80 px-4 py-3 sm:px-5 sm:py-3.5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                    Health & Medical Blogs
+                  </h1>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-[var(--color-primary)] border border-[var(--color-primary)]/20 shadow-2xs">
+                    <Sparkles className="w-2.5 h-2.5 text-[var(--color-primary)]" />
+                    Verified Knowledge
+                  </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  Health & Medical Blogs
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Explore evidence-based health articles, wellness tips, and guides verified by healthcare professionals across our clinical network.
+                <p className="text-xs text-slate-600 line-clamp-1">
+                  Evidence-based health guides contributed by verified clinics, diagnostic labs, doctors, and pharmacies.
                 </p>
-                <div className="pt-2 flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium text-slate-500">
-                  <span className="inline-flex items-center gap-1 text-emerald-700">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    Doctor & Clinic Verified
-                  </span>
-                  <span>•</span>
-                  <span className="inline-flex items-center gap-1 text-slate-600">
-                    <Clock className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                    Evidence-Based Insights
-                  </span>
-                  <span>•</span>
-                  <span className="inline-flex items-center gap-1 text-slate-600">
-                    <BookOpen className="w-3.5 h-3.5 text-amber-500" />
-                    Free Patient Education
-                  </span>
-                </div>
+              </div>
+
+              <div className="hidden lg:flex items-center gap-3 text-[11px] font-medium text-slate-500 shrink-0 border-l border-slate-200/80 pl-4">
+                <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Provider Verified
+                </span>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+                  Free Patient Education
+                </span>
               </div>
             </div>
           )}
 
           {/* =====================================================
-              RESPONSIVE TOOLBAR: CATEGORY PILLS + SEARCH + COUNT
+              RESPONSIVE TOOLBAR: CATEGORY PILLS + SEARCH + VIEW TOGGLE
           ====================================================== */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-2.5 sm:px-4 sm:py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
             {/* Left: Category Filter Pills */}
@@ -949,7 +1367,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
               })}
             </div>
 
-            {/* Right: Search Bar & Count */}
+            {/* Right: Search Bar & Count & View Switch */}
             <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-between md:justify-end">
               <div className="relative w-full sm:w-60">
                 <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
@@ -957,7 +1375,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by title, clinic, topic..."
+                  placeholder="Search articles, providers, topics..."
                   className="w-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition"
                 />
                 {searchQuery && (
@@ -969,6 +1387,34 @@ export const BlogsList: React.FC<BlogsListProps> = ({
                     <X className="w-3 h-3" />
                   </button>
                 )}
+              </div>
+
+              {/* View Switch (List vs Grid) */}
+              <div className="hidden sm:flex items-center p-0.5 bg-slate-100 border border-slate-200 rounded-lg shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`p-1 rounded-md transition cursor-pointer ${
+                    viewMode === "list"
+                      ? "bg-white text-[var(--color-primary)] shadow-2xs font-bold"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                  title="List view"
+                >
+                  <ListIcon className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1 rounded-md transition cursor-pointer ${
+                    viewMode === "grid"
+                      ? "bg-white text-[var(--color-primary)] shadow-2xs font-bold"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               <span className="text-xs font-medium text-slate-400 whitespace-nowrap shrink-0">
@@ -1016,14 +1462,14 @@ export const BlogsList: React.FC<BlogsListProps> = ({
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-1">
                 {isClinicPath
-                  ? "No Articles Found for Your Clinic"
+                  ? "No Articles Found for Your Account"
                   : "No Articles Found"}
               </h3>
               <p className="text-xs text-slate-500 mb-4">
                 {searchQuery
                   ? `No articles match "${searchQuery}". Try a different keyword or reset filters.`
                   : isClinicPath
-                  ? "Your clinic has not published any articles yet. Create and publish your first article for patients."
+                  ? "You have not published any articles yet. Create and publish your first article for patients."
                   : "There are currently no articles in this category. Check back soon for new health updates."}
               </p>
 
@@ -1055,20 +1501,252 @@ export const BlogsList: React.FC<BlogsListProps> = ({
             </div>
           )}
 
-          {/* Blog Cards Grid (Responsive 1 col mobile, 2 cols tablet, 3 cols desktop) */}
+          {/* =====================================================
+              MAIN CONTENT AREA: LIST VIEW + EDITORIAL SIDEBAR
+          ====================================================== */}
           {!error && filteredBlogs.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {filteredBlogs.map((b, idx) => (
-                <BlogCardItem
-                  key={b.blog_id ?? idx}
-                  blog={b}
-                  index={idx}
-                  canEdit={canEdit}
-                  isAdminView={isClinicPath}
-                  onRead={handleReadBlog}
-                  onEdit={handleEditBlog}
+            <div
+              className={`grid grid-cols-1 ${
+                !isClinicPath
+                  ? "lg:grid-cols-12 gap-6 lg:gap-8 items-start"
+                  : ""
+              }`}
+            >
+              {/* Left Column: Articles Feed */}
+              <div
+                ref={listTopRef}
+                className={!isClinicPath ? "lg:col-span-8 space-y-4" : "space-y-4"}
+              >
+                {viewMode === "list" ? (
+                  // List Layout (Horizontal Magazine Cards)
+                  <div className="space-y-4">
+                    {paginatedBlogs.map((b, idx) => (
+                      <BlogListItem
+                        key={b.blog_id ?? idx}
+                        blog={b}
+                        index={idx}
+                        canEdit={canEdit}
+                        isAdminView={isClinicPath}
+                        onRead={handleReadBlog}
+                        onEdit={handleEditBlog}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  // Grid Layout
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    {paginatedBlogs.map((b, idx) => (
+                      <BlogCardItem
+                        key={b.blog_id ?? idx}
+                        blog={b}
+                        index={idx}
+                        canEdit={canEdit}
+                        isAdminView={isClinicPath}
+                        onRead={handleReadBlog}
+                        onEdit={handleEditBlog}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Pagination Controls */}
+                <PaginationBar
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredBlogs.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={(newSize) => {
+                    setItemsPerPage(newSize);
+                    handlePageChange(1);
+                  }}
                 />
-              ))}
+              </div>
+
+              {/* =====================================================
+                  RIGHT SIDEBAR: PATIENT VIEW EDITORIAL & TRUST WIDGETS
+                  (Transforms the whitespace into rich medical library UI)
+              ====================================================== */}
+              {!isClinicPath && (
+                <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-20">
+                  {/* WIDGET 1: BitCare Medical Editorial Mission */}
+                  <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
+                    <div className="flex items-center gap-2 text-slate-900">
+                      <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-200/70">
+                        <ShieldCheck className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold leading-tight">
+                          Medical Review Standards
+                        </h4>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          Medical Integrity & Accuracy
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Every article in the BitCare Health Library is authored or curated by licensed medical professionals, accredited clinics, diagnostic laboratories, and pharmacies to provide clear, actionable health education.
+                    </p>
+
+                    <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Verified Healthcare Author Credentials</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Clinical Peer Review Prior to Publish</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-700 font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Free Access for Patients & Caregivers</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WIDGET 2: Featured Clinical Authors & Centers */}
+                  {contributingClinics.length > 0 && (
+                    <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
+                          <h4 className="text-sm font-bold text-slate-900">
+                            Top Healthcare Providers
+                          </h4>
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-400">
+                          {contributingClinics.length} Providers
+                        </span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {contributingClinics.map((clinic, i) => (
+                          <div
+                            key={i}
+                            onClick={() => setSearchQuery(clinic.name)}
+                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/80 transition cursor-pointer group"
+                            title={`Click to filter articles by ${clinic.name}`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <EntityAvatar
+                                name={clinic.name}
+                                logo={clinic.logo}
+                                size="sm"
+                              />
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-slate-800 group-hover:text-[var(--color-primary)] transition truncate block">
+                                  {clinic.name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 truncate block">
+                                  {getEntityTypeLabel(clinic.type)} • {clinic.count} {clinic.count === 1 ? "article" : "articles"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 group-hover:bg-[var(--color-primary)] group-hover:text-white transition shrink-0">
+                              {clinic.count} {clinic.count === 1 ? "article" : "articles"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* WIDGET 3: Trending / Featured Medical Guides */}
+                  {trendingArticles.length > 0 && (
+                    <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3.5">
+                      <div className="flex items-center gap-2 text-slate-900">
+                        <TrendingUp className="w-4 h-4 text-rose-500" />
+                        <h4 className="text-sm font-bold leading-tight">
+                          Featured Health Guides
+                        </h4>
+                      </div>
+
+                      <div className="space-y-3">
+                        {trendingArticles.map((tBlog, tIdx) => {
+                          const tCat = getCategoryMeta(tBlog.category_id);
+                          const tImg = getBlogImageUrl(
+                            tBlog.featured_image_guid,
+                            tBlog.featured_image_path
+                          );
+                          const tTime = calculateReadTime(
+                            tBlog.content || tBlog.short_description
+                          );
+
+                          return (
+                            <div
+                              key={tBlog.blog_id ?? tIdx}
+                              onClick={() => handleReadBlog(tBlog.blog_id || "")}
+                              className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition cursor-pointer group"
+                            >
+                              <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80">
+                                {tImg ? (
+                                  <img
+                                    src={tImg}
+                                    alt={tBlog.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                ) : (
+                                  <FallbackBanner
+                                    categoryId={tBlog.category_id}
+                                    title={tBlog.title}
+                                    className="text-[8px] p-1"
+                                  />
+                                )}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 mb-0.5">
+                                  <span style={{ color: tCat.chipColor }}>
+                                    {tCat.name}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{tTime}</span>
+                                </div>
+                                <h5 className="text-xs font-bold text-slate-900 group-hover:text-[var(--color-primary)] transition line-clamp-2 leading-tight">
+                                  {tBlog.title}
+                                </h5>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* WIDGET 4: Connect with Verified Clinics / Need Care */}
+                  <div className="rounded-2xl sm:rounded-3xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 via-white to-sky-50/60 p-5 shadow-xs space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Stethoscope className="w-4 h-4 text-teal-700" />
+                      <h4 className="text-sm font-bold text-teal-950">
+                        Looking for Healthcare Services?
+                      </h4>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Connect with accredited clinics, diagnostic labs, doctors, and pharmacies across the BitCare network.
+                    </p>
+
+                    <Link
+                      to="/login"
+                      className="inline-flex items-center justify-between w-full px-3.5 py-2 text-xs font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-xl shadow-2xs transition"
+                    >
+                      <span>Access Provider Portal</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+
+                  {/* WIDGET 5: Patient Emergency Disclaimer Notice */}
+                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-900 leading-relaxed flex items-start gap-2.5">
+                    <HelpCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Medical Disclaimer: </span>
+                      BitCare Health Library provides evidence-based guides for health literacy. For urgent symptoms or medical emergencies, please call your local healthcare emergency hotline immediately.
+                    </div>
+                  </div>
+                </aside>
+              )}
             </div>
           )}
         </main>

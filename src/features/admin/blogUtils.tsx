@@ -248,6 +248,77 @@ export const getAdminEntityInfo = (sessionUser: any): AdminEntityInfo => {
   return { id, type };
 };
 
+/**
+ * Returns a human-friendly label for an entity type (clinic, lab, doctor, pharmacy).
+ */
+export const getEntityTypeLabel = (entityType?: string | null): string => {
+  if (!entityType) return "Healthcare Provider";
+  const lower = entityType.toLowerCase().trim();
+  switch (lower) {
+    case "clinic":
+      return "Clinic";
+    case "lab":
+    case "laboratory":
+    case "diagnostics":
+      return "Diagnostic Lab";
+    case "doctor":
+      return "Doctor";
+    case "pharmacy":
+    case "pharma":
+      return "Pharmacy";
+    case "hospital":
+      return "Hospital";
+    default:
+      return entityType.charAt(0).toUpperCase() + entityType.slice(1);
+  }
+};
+
+/**
+ * Returns a badge label for an entity type (e.g. Verified Lab, Verified Clinic, etc.)
+ */
+export const getEntityBadgeLabel = (entityType?: string | null): string => {
+  if (!entityType) return "Verified Provider";
+  const lower = entityType.toLowerCase().trim();
+  switch (lower) {
+    case "clinic":
+      return "Clinic Partner";
+    case "lab":
+    case "laboratory":
+    case "diagnostics":
+      return "Diagnostic Lab";
+    case "doctor":
+      return "Medical Specialist";
+    case "pharmacy":
+    case "pharma":
+      return "Pharmacy Partner";
+    default:
+      return "Verified Provider";
+  }
+};
+
+/**
+ * Returns an action label for contacting the entity (e.g. Contact Lab, Contact Doctor, etc.)
+ */
+export const getEntityContactLabel = (entityType?: string | null): string => {
+  if (!entityType) return "Contact Provider";
+  const lower = entityType.toLowerCase().trim();
+  switch (lower) {
+    case "clinic":
+      return "Contact Clinic";
+    case "lab":
+    case "laboratory":
+    case "diagnostics":
+      return "Contact Lab";
+    case "doctor":
+      return "Contact Doctor";
+    case "pharmacy":
+    case "pharma":
+      return "Contact Pharmacy";
+    default:
+      return "Contact Provider";
+  }
+};
+
 // ============================================================================
 // Text & Date Utilities
 // ============================================================================

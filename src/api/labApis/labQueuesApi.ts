@@ -81,6 +81,7 @@ export const updateLabTestStatusAsync = async (payload: {
   status: string;
   user_id: number;
   lab_record_id: number;
+  lab_appointment_id: number;
 }) => {
   const respone = await emrAPI.post("/lab/update-lab-test-status", payload);
   return respone;

@@ -288,6 +288,7 @@ const ServiceManagement: React.FC = () => {
       {addTestPopupOpen && (
         <LabTestSelectionPopup
           open={addTestPopupOpen}
+          mode="service-management"
           onClose={() => setAddTestPopupOpen(false)}
           labTests={labTests}
           selectedTests={selectedTests}

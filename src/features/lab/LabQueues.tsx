@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Drawer, Tooltip } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Drawer,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { useLocation } from "react-router-dom";
 import {
@@ -8,6 +18,8 @@ import {
   savereportAsync,
   getLabReportsByLabId,
 } from "../../api/labApis/labQueuesApi";
+import { Roles } from "../../context/constant/enum";
+import { FaExclamationTriangle } from "react-icons/fa";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { uploadReportFile } from "../../api/CommonApi/uploadFileApi";
 import { toast } from "react-toastify";
@@ -19,6 +31,15 @@ import LabTestDetailsDialog from "./components/LabTestDetailsDialog";
 import LabPrescriptionDialog from "./components/LabPrescriptionDialog";
 import LabReportUploadDialog from "./components/LabReportUploadDialog";
 import LabReportViewerDialog from "./components/LabReportViewerDialog";
+import LabTestSelectionPopup, {
+  type LabWalkInPackage,
+  type LabWalkInTest,
+} from "./LabTestSelectionPopup";
+import {
+  updatePatientTestsApi,
+  type UpdatePatientTestsRequest,
+  type UpdatePatientTestsResponse,
+} from "../../api/labApis/labQueuesApi";
 import { useSocket } from "../../context/SocketContext";
 import type {
   LabQueueRow,
@@ -30,6 +51,31 @@ import type {
 const PAGE_SIZE = 10;
 
 type UploadPath = "REPORTS_LAB" | "REPORTS_SELF" | "REPORTS_DOCTOR";
+
+interface UpdatedPatientTestResponse {
+  test_id: number | string;
+  category_id?: number | string;
+  test_name?: string;
+  test_code?: string;
+  category_name?: string;
+  test_price?: number | string;
+  price?: number | string;
+  discount_price?: number | string;
+  payable_amount?: number | string;
+}
+
+interface UpdatedPatientTestsResult extends UpdatePatientTestsResponse {
+  updated_tests?: UpdatedPatientTestResponse[];
+  new_gross_amount?: number | string;
+  new_discount_amount?: number | string;
+  new_total_amount?: number | string;
+  data?: {
+    tests?: UpdatedPatientTestResponse[];
+    gross_amount?: number | string;
+    discount_amount?: number | string;
+    total_amount?: number | string;
+  };
+}
 
 function getReportRows(response: unknown): Record<string, unknown>[] {
   if (Array.isArray(response)) {
@@ -56,10 +102,13 @@ function getErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object") return "File upload failed";
   const errorDetails = error as {
     message?: unknown;
-    response?: { data?: { message?: unknown; error?: unknown } };
+    response?: {
+      data?: { message?: unknown; error?: unknown } | string;
+    };
   };
-  const response = errorDetails.response;
-  const message = response?.data?.message ?? response?.data?.error;
+  const responseData = errorDetails.response?.data;
+  if (typeof responseData === "string") return responseData;
+  const message = responseData?.message ?? responseData?.error;
   if (typeof message === "string") return message;
   if (typeof errorDetails.message === "string") return errorDetails.message;
   return "File upload failed";
@@ -92,13 +141,19 @@ function renderReferredBy(row: LabQueueRow) {
     <div className="flex flex-col gap-1 p-1.5 text-xs">
       <span className="font-semibold text-white">Clinic Referral</span>
       <span>Clinic: {row.clinic_name || "Not specified"}</span>
-      <span>Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "Not specified"}</span>
+      <span>
+        Doctor: {row.doctor_name ? `Dr. ${row.doctor_name}` : "Not specified"}
+      </span>
     </div>
   );
 
   return (
     <div className="flex h-full w-full items-center">
-      <Tooltip title={isClinicBooking ? clinicDetails : ""} arrow placement="top">
+      <Tooltip
+        title={isClinicBooking ? clinicDetails : ""}
+        arrow
+        placement="top"
+      >
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold cursor-default transition-all ${
             isClinicBooking
@@ -173,12 +228,15 @@ function PaymentStatusButton({
         fontWeight: 600,
         px: 2,
         py: 0.5,
-        borderColor: "rgba(234, 88, 12, 0.4)",
-        backgroundColor: "rgba(234, 88, 12, 0.08)",
-        color: "#c2410c",
+        borderColor:
+          "color-mix(in srgb, var(--color-warning) 45%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--color-warning) 8%, transparent)",
+        color: "var(--color-warning)",
         "&:hover": {
-          backgroundColor: "rgba(234, 88, 12, 0.15)",
-          borderColor: "#ea580c",
+          backgroundColor:
+            "color-mix(in srgb, var(--color-warning) 15%, transparent)",
+          borderColor: "var(--color-warning)",
         },
       }}
     >
@@ -231,6 +289,12 @@ export default function LabQueues({
   const [detailsPdfUrl, setDetailsPdfUrl] = useState<string | null>(null);
   const [detailsPdfLoading, setDetailsPdfLoading] = useState(false);
 
+  // Reused Walk-In Test Selection Popup for View Details
+  const [queuePopupRow, setQueuePopupRow] = useState<LabQueueRow | null>(null);
+  const [queuePopupMode, setQueuePopupMode] = useState<"processing" | "view">(
+    "view",
+  );
+
   const [openPdf, setOpenPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -247,6 +311,12 @@ export default function LabQueues({
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportsLoadError, setReportsLoadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const userRole = getSessionItem("user", "role");
+  const isLabAdmin = userRole === Roles.Admin;
+  const [reopenDialogRow, setReopenDialogRow] = useState<LabQueueRow | null>(
+    null,
+  );
+  const [reopening, setReopening] = useState(false);
 
   /* ---------------- FETCH & REAL-TIME QUEUE REFRESH ---------------- */
   const refreshQueue = useCallback(async () => {
@@ -339,7 +409,9 @@ export default function LabQueues({
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
         const recordId =
-          record.lab_record_id ?? record.lab_appointment_id ?? record.appointment_id;
+          record.lab_record_id ??
+          record.lab_appointment_id ??
+          record.appointment_id;
         const statusVal = (record.result_status ?? record.status) as
           | string
           | undefined;
@@ -377,7 +449,9 @@ export default function LabQueues({
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
         const recordId =
-          record.lab_record_id ?? record.lab_appointment_id ?? record.appointment_id;
+          record.lab_record_id ??
+          record.lab_appointment_id ??
+          record.appointment_id;
 
         if (recordId !== undefined) {
           setRows((prev) =>
@@ -506,28 +580,261 @@ export default function LabQueues({
     return () => URL.revokeObjectURL(detailsPdfUrl);
   }, [detailsPdfUrl]);
 
-  const openReadOnlyTestDetails = useCallback(
-    async (row: LabQueueRow) => {
-      setDetailsPdfUrl(null);
-      setDetailsRow(row);
-      const isClinic = row.booking_source?.toUpperCase() === "CLINIC";
-      if (isClinic && row.prescription_url && row.guid_name) {
-        setDetailsPdfLoading(true);
-        try {
-          const url = await getPdfFromServer(row.prescription_url, row.guid_name);
-          setDetailsPdfUrl(url);
-        } catch (error) {
-          console.error("Prescription PDF Load Error:", error);
-          toast.error("Failed to load prescription PDF");
-        } finally {
-          setDetailsPdfLoading(false);
-        }
-      } else {
+  const openReadOnlyTestDetails = useCallback(async (row: LabQueueRow) => {
+    setDetailsPdfUrl(null);
+    setDetailsRow(row);
+    const isClinic = row.booking_source?.toUpperCase() === "CLINIC";
+    if (isClinic && row.prescription_url && row.guid_name) {
+      setDetailsPdfLoading(true);
+      try {
+        const url = await getPdfFromServer(row.prescription_url, row.guid_name);
+        setDetailsPdfUrl(url);
+      } catch (error) {
+        console.error("Prescription PDF Load Error:", error);
+        toast.error("Failed to load prescription PDF");
+      } finally {
         setDetailsPdfLoading(false);
       }
-    },
-    [],
-  );
+    } else {
+      setDetailsPdfLoading(false);
+    }
+  }, []);
+
+  const handleSaveProcessingTests = async (
+    targetRow: LabQueueRow,
+    tests: LabWalkInTest[],
+    packages: LabWalkInPackage[],
+  ): Promise<boolean> => {
+    if (
+      !targetRow.lab_id ||
+      !targetRow.patient_id ||
+      !targetRow.lab_record_id ||
+      !targetRow.lab_appointment_id
+    ) {
+      toast.error("Patient appointment details are missing");
+      return false;
+    }
+
+    const testsToSave = [
+      ...tests.map((t) => ({
+        test_id: Number(t.test_id),
+        category_id: Number(t.category_id || 0),
+        test_price: Number(t.price),
+      })),
+    ];
+
+    if (testsToSave.length === 0 && packages.length > 0) {
+      packages.forEach((pkg) => {
+        (pkg.tests || []).forEach((pt) => {
+          testsToSave.push({
+            test_id: Number(pt.test_id),
+            category_id: 0,
+            test_price: Number(pt.test_price ?? 0),
+          });
+        });
+      });
+    }
+
+    // 1. Validate: list must have at least 1 test
+    if (testsToSave.length === 0) {
+      toast.error(
+        "Please select at least one test. An appointment cannot have zero tests.",
+      );
+      return false;
+    }
+
+    // 2. Validate: duplicate test IDs
+    const seenIds = new Set<number>();
+    for (const t of testsToSave) {
+      if (seenIds.has(t.test_id)) {
+        toast.error("Duplicate test IDs are not allowed.");
+        return false;
+      }
+      seenIds.add(t.test_id);
+    }
+
+    // 3. Validate: unchanged list
+    const originalTestIds = (targetRow.test_details || [])
+      .map((t) => Number(t.test_id))
+      .sort((a, b) => a - b);
+    const newTestIds = testsToSave
+      .map((t) => Number(t.test_id))
+      .sort((a, b) => a - b);
+
+    const isUnchanged =
+      originalTestIds.length === newTestIds.length &&
+      originalTestIds.every((id, idx) => id === newTestIds[idx]);
+
+    if (isUnchanged) {
+      toast.info("No changes were made to the patient's tests.");
+      return false;
+    }
+
+    try {
+      const payload: UpdatePatientTestsRequest = {
+        lab_id: Number(targetRow.lab_id),
+        patient_id: Number(targetRow.patient_id),
+        lab_record_id: Number(targetRow.lab_record_id),
+        lab_appointment_id: Number(targetRow.lab_appointment_id),
+        tests: testsToSave,
+        modified_by: Number(getSessionItem("user", "user_id") || user_id),
+      };
+
+      const response = (await updatePatientTestsApi(
+        payload,
+      )) as UpdatedPatientTestsResult;
+      if (
+        !response?.success ||
+        response.success === "false" ||
+        response.success === "0"
+      ) {
+        throw new Error(response?.message || "Failed to update patient tests");
+      }
+
+      toast.success(response.message || "Patient tests updated successfully");
+
+      const updatedTestsList =
+        response.updated_tests || response.data?.tests || [];
+      const newGross = response.new_gross_amount ?? response.data?.gross_amount;
+      const newDiscount =
+        response.new_discount_amount ?? response.data?.discount_amount;
+      const newTotal = response.new_total_amount ?? response.data?.total_amount;
+
+      // Update grid row with updated tests and recalculated amounts from API response
+      setRows((prev) =>
+        prev.map((item) =>
+          item.lab_record_id === targetRow.lab_record_id
+            ? {
+                ...item,
+                test_details:
+                  Array.isArray(updatedTestsList) && updatedTestsList.length > 0
+                    ? updatedTestsList.map((t) => ({
+                        test_id: Number(t.test_id),
+                        category_id: Number(t.category_id || 0),
+                        test_name:
+                          t.test_name ||
+                          tests.find((x) => x.test_id === Number(t.test_id))
+                            ?.test_name ||
+                          "Test",
+                        test_code:
+                          t.test_code ||
+                          tests.find((x) => x.test_id === Number(t.test_id))
+                            ?.test_code ||
+                          "",
+                        category_name:
+                          t.category_name ||
+                          tests.find((x) => x.test_id === Number(t.test_id))
+                            ?.category_name ||
+                          "General Laboratory",
+                        test_price: Number(t.test_price ?? t.price ?? 0),
+                        discount_price: Number(t.discount_price ?? 0),
+                        payable_amount: Number(
+                          t.payable_amount ??
+                            Math.max(
+                              0,
+                              Number(t.test_price ?? t.price ?? 0) -
+                                Number(t.discount_price ?? 0),
+                            ),
+                        ),
+                      }))
+                    : tests.map((t) => ({
+                        test_id: t.test_id,
+                        category_id: t.category_id,
+                        test_name: t.test_name,
+                        test_code: t.test_code,
+                        category_name: t.category_name,
+                        test_price: t.price,
+                        discount_price: t.discount_price,
+                        payable_amount: t.payable_amount,
+                      })),
+                gross_amount:
+                  newGross !== undefined ? Number(newGross) : item.gross_amount,
+                discount_amount:
+                  newDiscount !== undefined
+                    ? Number(newDiscount)
+                    : item.discount_amount,
+                total_amount:
+                  newTotal !== undefined ? Number(newTotal) : item.total_amount,
+              }
+            : item,
+        ),
+      );
+
+      if (socket && targetRow.lab_id) {
+        socket.emit("updatePatientTests", {
+          lab_id: Number(targetRow.lab_id),
+          lab_record_id: Number(targetRow.lab_record_id),
+          tests,
+        });
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Failed to update patient tests:", err);
+      const msg =
+        err instanceof Error ? err.message : "Failed to update patient tests";
+      toast.error(msg);
+      return false;
+    }
+  };
+
+  const queuePopupSelectedTests = useMemo<LabWalkInTest[]>(() => {
+    if (!queuePopupRow) return [];
+    return (queuePopupRow.test_details || []).map((t) => ({
+      test_id: Number(t.test_id),
+      category_id: Number(t.category_id || 0),
+      test_name: t.test_name || (t as any).name || "Unnamed Test",
+      test_code: t.test_code || "",
+      category_name: (t as any).category_name || "General Laboratory",
+      price: Number(t.test_price ?? (t as any).price ?? 0),
+      discount_price: Number(t.discount_price ?? 0),
+      payable_amount: Number(
+        t.payable_amount ??
+          Math.max(
+            0,
+            Number(t.test_price ?? (t as any).price ?? 0) -
+              Number(t.discount_price ?? 0),
+          ),
+      ),
+    }));
+  }, [queuePopupRow]);
+
+  const queuePopupSelectedPackages = useMemo<LabWalkInPackage[]>(() => {
+    if (!queuePopupRow) return [];
+    const hasPackage =
+      queuePopupRow.is_package === "1" ||
+      queuePopupRow.is_package === 1 ||
+      Boolean(queuePopupRow.package_id) ||
+      Boolean(queuePopupRow.package_name);
+
+    if (!hasPackage) return [];
+
+    return [
+      {
+        package_id: Number(queuePopupRow.package_id || 0),
+        package_name: queuePopupRow.package_name || "Package",
+        package_code: queuePopupRow.package_code || "",
+        package_price: Number(queuePopupRow.package_price || 0),
+        actual_price: Number(
+          queuePopupRow.package_actual_price ??
+            queuePopupRow.package_price ??
+            0,
+        ),
+        discount_amount: Number(queuePopupRow.package_discount_amount ?? 0),
+        total_tests: Array.isArray(queuePopupRow.package_tests)
+          ? queuePopupRow.package_tests.length
+          : Number(queuePopupRow.package_total_tests ?? 0),
+        tests: Array.isArray(queuePopupRow.package_tests)
+          ? queuePopupRow.package_tests.map((pt) => ({
+              test_id: Number(pt.test_id),
+              test_name: pt.test_name || (pt as any).name,
+              test_code: pt.test_code,
+              test_price: Number(pt.test_price ?? (pt as any).price ?? 0),
+            }))
+          : [],
+      },
+    ];
+  }, [queuePopupRow]);
 
   const openViewReport = useCallback((row: LabQueueRow) => {
     reportRequestId.current += 1;
@@ -694,6 +1001,7 @@ export default function LabQueues({
         status,
         user_id: Number(user_id),
         lab_record_id: row.lab_record_id,
+        lab_appointment_id: row.lab_appointment_id,
       });
 
       toast.success("Status updated successfully");
@@ -745,6 +1053,12 @@ export default function LabQueues({
           filePath: String(
             report.file_path ?? report.report_file_path ?? report.path ?? "",
           ),
+          createdBy: (report.created_by ??
+            report.uploaded_by ??
+            report.full_name) as string | number | undefined,
+          createdDate: (report.created_date ??
+            report.created_at ??
+            report.test_date) as string | undefined,
         };
       });
       if (reports.some((report) => !report.reportId || !report.guid)) {
@@ -825,9 +1139,7 @@ export default function LabQueues({
         originalName,
         filePath: uploadedFile?.path || uploadRes?.guid,
       };
-      const reportId = await saveReport(report);
-      toast.success(`${originalName} uploaded`);
-      return { ...report, reportId };
+      return report;
     } catch (error) {
       console.error("Upload failed:", error);
       const backendMessage = getErrorMessage(error);
@@ -858,51 +1170,32 @@ export default function LabQueues({
     return reportId;
   };
 
-  const handleSubmitReports = async (reportIds: number[]) => {
+  const handleCompleteReport = useCallback(async () => {
     if (!activeRow) throw new Error("No appointment is selected.");
-    if (!reportIds.length) {
-      throw new Error("Please upload a report before submitting.");
-    }
+    await updateStatus(activeRow, "Completed");
+    closeUpload();
+    await refreshQueue();
+  }, [activeRow, updateStatus, refreshQueue]);
+
+  /**
+   * TASK 2: Reopen for Reporting - Lab Admin only
+   * Transitions status from Completed back to Reporting Pending.
+   */
+  const handleConfirmReopen = useCallback(async () => {
+    if (!isLabAdmin || !reopenDialogRow) return;
+    setReopening(true);
     try {
-      await updateLabTestStatusAsync({
-        lab_id: Number(activeRow.lab_id),
-        status: "Completed",
-        user_id: Number(user_id),
-        lab_record_id: Number(activeRow.lab_record_id),
-      });
-      setRows((prev) =>
-        prev.map((row) =>
-          row.lab_record_id === activeRow.lab_record_id
-            ? {
-                ...row,
-                result_status: "Completed",
-                report_id: reportIds.length === 1 ? reportIds[0] : reportIds,
-              }
-            : row,
-        ),
-      );
-
-      if (socket && activeRow?.lab_id) {
-        socket.emit("labStatusUpdate", {
-          lab_id: Number(activeRow.lab_id),
-          lab_record_id: Number(activeRow.lab_record_id),
-          status: "Completed",
-          report_id: reportIds.length === 1 ? reportIds[0] : reportIds,
-        });
-      }
-
-      toast.success("Reports submitted successfully");
-      closeUpload();
+      await updateStatus(reopenDialogRow, "Reporting Pending");
+      setReopenDialogRow(null);
+      await refreshQueue();
     } catch (error) {
-      console.error("Submit reports failed:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to submit reports. Please try again.",
-      );
-      throw error;
+      console.error("Reopen report error:", error);
+      const message = getErrorMessage(error);
+      toast.error(message);
+    } finally {
+      setReopening(false);
     }
-  };
+  }, [isLabAdmin, reopenDialogRow, updateStatus, refreshQueue]);
 
   const commonColumns = useMemo<GridColDef[]>(
     () => [
@@ -1021,7 +1314,10 @@ export default function LabQueues({
               <Button
                 size="small"
                 variant="contained"
-                onClick={() => void openTestDetails(p.row, false)}
+                onClick={() => {
+                  setQueuePopupRow(p.row);
+                  setQueuePopupMode("processing");
+                }}
                 sx={{
                   borderRadius: "var(--radius-full)",
                   textTransform: "none",
@@ -1091,7 +1387,10 @@ export default function LabQueues({
               <Button
                 size="small"
                 variant="contained"
-                onClick={() => openReadOnlyTestDetails(p.row)}
+                onClick={() => {
+                  setQueuePopupRow(p.row);
+                  setQueuePopupMode("view");
+                }}
                 sx={{
                   borderRadius: "var(--radius-full)",
                   textTransform: "none",
@@ -1132,6 +1431,41 @@ export default function LabQueues({
             </Button>
           ),
         },
+        ...(isLabAdmin
+          ? [
+              {
+                field: "reopen",
+                headerName: "Admin Actions",
+                flex: 1.1,
+                minWidth: 165,
+                renderCell: (p: { row: LabQueueRow }) => (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      setReopenDialogRow(p.row);
+                    }}
+                    sx={{
+                      borderRadius: "var(--radius-full)",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      fontSize: "0.75rem",
+                      px: 2,
+                      py: 0.5,
+                      borderColor: "var(--color-border)",
+                      color: "var(--color-text)",
+                      "&:hover": {
+                        borderColor: "var(--color-primary)",
+                        backgroundColor: "var(--color-bg)",
+                      },
+                    }}
+                  >
+                    Reopen for Reporting
+                  </Button>
+                ),
+              },
+            ]
+          : []),
         {
           field: "payment_status",
           headerName: "Payment Status",
@@ -1160,7 +1494,10 @@ export default function LabQueues({
             <Button
               size="small"
               variant="contained"
-              onClick={() => openReadOnlyTestDetails(p.row)}
+              onClick={() => {
+                setQueuePopupRow(p.row);
+                setQueuePopupMode("view");
+              }}
               sx={{
                 borderRadius: "var(--radius-full)",
                 textTransform: "none",
@@ -1230,6 +1567,7 @@ export default function LabQueues({
     openReadOnlyTestDetails,
     resolvedMode,
     updateStatus,
+    isLabAdmin,
   ]);
 
   return (
@@ -1242,6 +1580,30 @@ export default function LabQueues({
         pageSize={PAGE_SIZE}
         onPageChange={setCurrentPage}
       />
+      <LabTestSelectionPopup
+        open={Boolean(queuePopupRow)}
+        mode={queuePopupMode}
+        readOnlyPricing={true}
+        labId={queuePopupRow?.lab_id || labId}
+        patientName={queuePopupRow?.patient_name}
+        selectedWalkInTests={queuePopupSelectedTests}
+        selectedWalkInPackages={queuePopupSelectedPackages}
+        onClose={() => setQueuePopupRow(null)}
+        onConfirmSelection={async (tests, packages) => {
+          if (!queuePopupRow) return;
+          if (queuePopupMode === "processing") {
+            const success = await handleSaveProcessingTests(
+              queuePopupRow,
+              tests,
+              packages,
+            );
+            if (!success) {
+              throw new Error("Update tests failed");
+            }
+          }
+          setQueuePopupRow(null);
+        }}
+      />
       <LabTestDetailsDialog
         open={Boolean(detailsRow)}
         row={detailsRow}
@@ -1250,6 +1612,11 @@ export default function LabQueues({
         onClose={() => {
           setDetailsRow(null);
           setDetailsPdfUrl(null);
+        }}
+        onAddMoreTests={(r) => {
+          setDetailsRow(null);
+          setDetailsPdfUrl(null);
+          void openTestDetails(r, false);
         }}
       />
       <LabPrescriptionDialog
@@ -1330,14 +1697,14 @@ export default function LabQueues({
       >
         {paymentRow && (
           <LabPayment
-            patientId={paymentRow.patient_id}
+            patientId={paymentRow.patient_id ?? null}
             patientName={paymentRow.patient_name}
-            labId={paymentRow.lab_id}
-            labRecordId={paymentRow.lab_record_id}
-            labAppointmentId={paymentRow.lab_appointment_id}
-            appointmentId={paymentRow.appointment_id}
-            doctorId={paymentRow.doctor_id}
-            clinicId={paymentRow.clinic_id}
+            labId={paymentRow.lab_id ?? null}
+            labRecordId={paymentRow.lab_record_id ?? null}
+            labAppointmentId={paymentRow.lab_appointment_id ?? null}
+            appointmentId={paymentRow.appointment_id ?? null}
+            doctorId={paymentRow.doctor_id ?? null}
+            clinicId={paymentRow.clinic_id ?? null}
             testDetails={paymentRow.test_details || []}
             packageDetails={{
               isPackage: paymentRow.is_package,
@@ -1365,10 +1732,93 @@ export default function LabQueues({
         onRetryLoadReports={() => {
           if (activeRow) void loadSavedReports(activeRow);
         }}
+        onCompleteReport={handleCompleteReport}
+        onFilesSaved={async () => {
+          if (activeRow) {
+            await loadSavedReports(activeRow);
+            await refreshQueue();
+          }
+        }}
         onUploadFile={uploadTestFile}
-        onSaveReport={saveReport}
-        onSubmit={handleSubmitReports}
+        onSaveReport={async (report) => {
+          return saveReport(report);
+        }}
       />
+
+      {/* Confirmation Dialog for Reopening a Completed Report (Lab Admin only) */}
+      <Dialog
+        open={Boolean(reopenDialogRow)}
+        onClose={reopening ? undefined : () => setReopenDialogRow(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "var(--radius-lg)",
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1.5 }}
+        >
+          <div className="w-8 h-8 rounded-full bg-[var(--color-bg)] text-[var(--color-primary)] flex items-center justify-center shrink-0 text-sm">
+            <FaExclamationTriangle />
+          </div>
+          <Typography fontWeight={700} fontSize={16}>
+            Reopen for Reporting
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ py: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to reopen the report for{" "}
+            <strong>{reopenDialogRow?.patient_name}</strong>?
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 0.5, mb: 2 }}
+          >
+            The record will move from <em>Completed</em> back to the{" "}
+            <em>Reporting</em> tab, where new or revised reports can be
+            uploaded.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 2 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setReopenDialogRow(null)}
+            disabled={reopening}
+            sx={{ textTransform: "none", borderRadius: "var(--radius-md)" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={handleConfirmReopen}
+            disabled={reopening}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-surface)",
+              "&:hover": {
+                backgroundColor: "var(--color-primary-dark)",
+              },
+            }}
+          >
+            {reopening ? (
+              <span className="flex items-center gap-1.5">
+                <CircularProgress size={14} color="inherit" /> Reopening...
+              </span>
+            ) : (
+              "Confirm Reopen"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

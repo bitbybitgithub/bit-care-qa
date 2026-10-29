@@ -106,6 +106,37 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       0,
     );
 
+  const groupedSelections = useMemo(() => {
+    const groups: Record<
+      string,
+      {
+        categoryName: string;
+        tests: LabWalkInTest[];
+        packages: LabWalkInPackage[];
+      }
+    > = {};
+
+    selectedTests.forEach((test) => {
+      const cat = test.category_name?.trim() || "General Laboratory";
+      if (!groups[cat]) {
+        groups[cat] = { categoryName: cat, tests: [], packages: [] };
+      }
+      groups[cat].tests.push(test);
+    });
+
+    selectedPackages.forEach((pkg) => {
+      const cat = pkg.category_name?.trim() || "Packages";
+      if (!groups[cat]) {
+        groups[cat] = { categoryName: cat, tests: [], packages: [] };
+      }
+      groups[cat].packages.push(pkg);
+    });
+
+    return Object.values(groups).filter(
+      (g) => g.tests.length > 0 || g.packages.length > 0,
+    );
+  }, [selectedTests, selectedPackages]);
+
   useEffect(() => {
     if (!formData.dob) {
       setAge("");
@@ -323,8 +354,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 discount_price: discount,
                 payable_amount: Number(
                   test.payable_amount ??
-                    test.payable_amount ??
-                    price - discount,
+                    Math.max(0, price - discount),
                 ),
               };
             })
@@ -413,7 +443,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
 
   return (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-[var(--color-surface)] border border-[var(--color-border)]/30 rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] p-4 sm:p-6 text-[var(--color-text)] overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-2xl lg:max-w-3xl bg-[var(--color-surface)] border border-[var(--color-border)]/30 rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] p-4 sm:p-6 text-[var(--color-text)] overflow-hidden max-h-[94vh] flex flex-col">
         {saving && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-surface)]/80 backdrop-blur-xs rounded-[var(--radius-xl)]">
             <CircularProgress
@@ -903,7 +933,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               )}
             </div>
 
-            {/* Selected Tests / Packages Summary Card */}
+            {/* Selected Tests / Packages Detailed Summary Card */}
             <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)]/40 bg-[var(--color-surface-alt)] p-3.5 shadow-[var(--shadow-xs)]">
               <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--color-border)]/20">
                 <div className="flex items-center gap-2">
@@ -943,50 +973,202 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
                 </Button>
               </div>
 
-              {selectionSummary.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 max-h-[85px] overflow-y-auto pr-1">
-                  {selectionSummary.map((item) => (
-                    <span
-                      key={`${item.type}-${item.id}`}
-                      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text)]"
-                    >
-                      <span className="truncate max-w-[220px]">
-                        {item.name}
-                      </span>
-                      <IconButton
-                        type="button"
-                        size="small"
-                        aria-label={`Remove ${item.name}`}
-                        onClick={() => {
-                          if (item.type === "test") {
-                            setSelectedTests((current) =>
-                              current.filter(
-                                (selectedTest) =>
-                                  selectedTest.test_id !== item.id,
-                              ),
-                            );
-                            return;
-                          }
-                          setSelectedPackages((current) =>
-                            current.filter(
-                              (selectedPackage) =>
-                                selectedPackage.package_id !== item.id,
-                            ),
-                          );
-                        }}
-                        sx={{
-                          padding: 0,
-                          color: "var(--color-text-secondary)",
-                          "&:hover": { color: "var(--color-error)" },
-                        }}
+              {groupedSelections.length > 0 ? (
+                <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                  {groupedSelections.map((group) => {
+                    const groupItemCount =
+                      group.tests.length + group.packages.length;
+
+                    return (
+                      <div
+                        key={group.categoryName}
+                        className="rounded-[var(--radius-md)] border border-[var(--color-border)]/30 bg-[var(--color-surface)]/70 overflow-hidden shadow-2xs"
                       >
-                        <DeleteOutlineIcon sx={{ fontSize: 15 }} />
-                      </IconButton>
-                    </span>
-                  ))}
+                        {/* Category Group Header */}
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100/80 border-b border-[var(--color-border)]/20">
+                          <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider truncate">
+                            {group.categoryName}
+                          </span>
+                          <span className="rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-2 py-0.2 text-[10px] font-bold">
+                            {groupItemCount}{" "}
+                            {groupItemCount === 1 ? "item" : "items"}
+                          </span>
+                        </div>
+
+                        {/* Group Items */}
+                        <div className="p-2 space-y-2">
+                          {group.tests.map((test) => {
+                            const actual = Number(test.price ?? 0);
+                            const discount = Number(test.discount_price ?? 0);
+                            const payable = Number(
+                              test.payable_amount ??
+                                Math.max(0, actual - discount),
+                            );
+
+                            return (
+                              <div
+                                key={`test-${test.test_id}`}
+                                className="flex items-center justify-between gap-2.5 p-2 rounded-[var(--radius-md)] border border-[var(--color-border)]/30 bg-[var(--color-surface)] shadow-2xs hover:border-[var(--color-primary)]/30 transition-all"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs sm:text-sm font-semibold text-[var(--color-text)] truncate">
+                                      {test.test_name}
+                                    </span>
+                                    {test.test_code && (
+                                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                        {test.test_code}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] font-medium px-2 py-0.2 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                                      {test.category_name || group.categoryName}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--color-text-secondary)]">
+                                    <span>
+                                      Actual:{" "}
+                                      <span className="font-medium text-[var(--color-text)]">
+                                        ₹{actual.toFixed(2)}
+                                      </span>
+                                    </span>
+                                    {discount > 0 && (
+                                      <span className="text-emerald-600 font-medium">
+                                        Discount: −₹{discount.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <div className="text-right">
+                                    <span className="text-xs sm:text-sm font-bold text-[var(--color-primary)]">
+                                      ₹{payable.toFixed(2)}
+                                    </span>
+                                  </div>
+
+                                  <IconButton
+                                    type="button"
+                                    size="small"
+                                    aria-label={`Remove ${test.test_name}`}
+                                    onClick={() => {
+                                      setSelectedTests((current) =>
+                                        current.filter(
+                                          (selectedTest) =>
+                                            selectedTest.test_id !==
+                                            test.test_id,
+                                        ),
+                                      );
+                                    }}
+                                    sx={{
+                                      p: 0.5,
+                                      color: "var(--color-text-secondary)",
+                                      "&:hover": {
+                                        color: "var(--color-error)",
+                                        backgroundColor:
+                                          "rgba(239, 68, 68, 0.08)",
+                                      },
+                                    }}
+                                  >
+                                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {group.packages.map((pkg) => {
+                            const actual = Number(
+                              pkg.actual_price ?? pkg.package_price ?? 0,
+                            );
+                            const discount = Number(pkg.discount_amount ?? 0);
+                            const payable = Number(pkg.package_price ?? 0);
+
+                            return (
+                              <div
+                                key={`pkg-${pkg.package_id}`}
+                                className="flex items-center justify-between gap-2.5 p-2 rounded-[var(--radius-md)] border border-[var(--color-border)]/30 bg-[var(--color-surface)] shadow-2xs hover:border-[var(--color-primary)]/30 transition-all"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs sm:text-sm font-semibold text-[var(--color-text)] truncate">
+                                      {pkg.package_name}
+                                    </span>
+                                    {pkg.package_code && (
+                                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                        {pkg.package_code}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] font-medium px-2 py-0.2 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                                      {pkg.category_name || group.categoryName}
+                                    </span>
+                                    <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-slate-100 text-slate-700">
+                                      {pkg.total_tests
+                                        ? `${pkg.total_tests} Tests Included`
+                                        : "Package"}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--color-text-secondary)]">
+                                    {actual > payable && (
+                                      <span>
+                                        Actual:{" "}
+                                        <span className="line-through">
+                                          ₹{actual.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    )}
+                                    {discount > 0 && (
+                                      <span className="text-emerald-600 font-medium">
+                                        Discount: −₹{discount.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <div className="text-right">
+                                    <span className="text-xs sm:text-sm font-bold text-[var(--color-primary)]">
+                                      ₹{payable.toFixed(2)}
+                                    </span>
+                                  </div>
+
+                                  <IconButton
+                                    type="button"
+                                    size="small"
+                                    aria-label={`Remove ${pkg.package_name}`}
+                                    onClick={() => {
+                                      setSelectedPackages((current) =>
+                                        current.filter(
+                                          (selectedPackage) =>
+                                            selectedPackage.package_id !==
+                                            pkg.package_id,
+                                        ),
+                                      );
+                                    }}
+                                    sx={{
+                                      p: 0.5,
+                                      color: "var(--color-text-secondary)",
+                                      "&:hover": {
+                                        color: "var(--color-error)",
+                                        backgroundColor:
+                                          "rgba(239, 68, 68, 0.08)",
+                                      },
+                                    }}
+                                  >
+                                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-xs text-[var(--color-text-secondary)] py-1">
+                <p className="text-xs text-[var(--color-text-secondary)] py-1 text-center">
                   No tests or packages selected. Click the button above to
                   choose tests.
                 </p>
@@ -999,12 +1181,21 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
               )}
 
               <div className="mt-2.5 flex items-center justify-between border-t border-[var(--color-border)]/20 pt-2">
-                <span className="text-xs sm:text-sm font-semibold text-[var(--color-text)]">
-                  Total Payable Amount
-                </span>
-                <span className="text-base sm:text-lg font-bold text-[var(--color-primary)]">
-                  ₹{totalAmount.toFixed(2)}
-                </span>
+                <div className="text-xs text-[var(--color-text-secondary)]">
+                  <span>Selected Items: </span>
+                  <strong className="text-[var(--color-text)] font-bold">
+                    {totalSelectionCount}
+                  </strong>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs sm:text-sm font-semibold text-[var(--color-text)]">
+                    Total Payable Amount:
+                  </span>
+                  <span className="text-base sm:text-lg font-bold text-[var(--color-primary)]">
+                    ₹{totalAmount.toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1074,6 +1265,7 @@ const LabWalkInRegisterForm: React.FC<WalkInRegisterFormProps> = ({
       <LabWalkInTestSelectionPopup
         open={testPopupOpen}
         labId={labId}
+        readOnlyPricing={true}
         selectedTests={selectedTests}
         selectedPackages={selectedPackages}
         onClose={() => setTestPopupOpen(false)}

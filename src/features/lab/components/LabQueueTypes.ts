@@ -2,6 +2,7 @@ export interface LabQueueTest {
   test_id?: number;
   category_id?: number;
   test_name?: string;
+  category_name?: string;
   test_code?: string;
   test_price?: number;
   discount_price?: number;
@@ -72,4 +73,7 @@ export interface LabReportFile {
   originalName: string;
   filePath?: string;
   reportId?: number;
+  createdBy?: string | number;
+  createdDate?: string;
+  file?: File;
 }

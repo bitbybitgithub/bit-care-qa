@@ -30,36 +30,10 @@ import {
 import type {
   LabCategory,
   LabTestItemRequest,
+  LabWalkInPackage,
+  LabWalkInTest,
   SelectedTest,
 } from "../../types/labType/LabTestInterfaces";
-
-export interface LabWalkInTest {
-  test_id: number;
-  category_id: number;
-  test_name: string;
-  test_code?: string;
-  price: number;
-  discount_price?: number;
-  payable_amount?: number;
-  category_name?: string;
-}
-
-export interface LabWalkInPackage {
-  package_id: number;
-  package_name: string;
-  package_code?: string;
-  package_price: number;
-  actual_price?: number;
-  discount_amount?: number;
-  total_tests?: number;
-  category_name?: string;
-  tests?: Array<{
-    test_id: number;
-    test_name?: string;
-    test_code?: string;
-    test_price?: number;
-  }>;
-}
 
 const EMPTY_WALKIN_TESTS: LabWalkInTest[] = [];
 const EMPTY_WALKIN_PACKAGES: LabWalkInPackage[] = [];
@@ -749,7 +723,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
       }
 
       if (newSelectedTests.length === 0) {
-        toast.error("Please select at least one test. An appointment cannot have zero tests.");
+        toast.error(
+          "Please select at least one test. An appointment cannot have zero tests.",
+        );
         return;
       }
 

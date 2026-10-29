@@ -31,10 +31,7 @@ import LabTestDetailsDialog from "./components/LabTestDetailsDialog";
 import LabPrescriptionDialog from "./components/LabPrescriptionDialog";
 import LabReportUploadDialog from "./components/LabReportUploadDialog";
 import LabReportViewerDialog from "./components/LabReportViewerDialog";
-import LabTestSelectionPopup, {
-  type LabWalkInPackage,
-  type LabWalkInTest,
-} from "./LabTestSelectionPopup";
+
 import {
   updatePatientTestsApi,
   type UpdatePatientTestsRequest,
@@ -47,35 +44,16 @@ import type {
   LabReport,
   LabReportFile,
 } from "./components/LabQueueTypes";
+import type {
+  LabWalkInPackage,
+  LabWalkInTest,
+  UpdatedPatientTestsResult,
+} from "../../types/labType/LabTestInterfaces";
+import LabTestSelectionPopup from "./LabTestSelectionPopup";
 
 const PAGE_SIZE = 10;
 
 type UploadPath = "REPORTS_LAB" | "REPORTS_SELF" | "REPORTS_DOCTOR";
-
-interface UpdatedPatientTestResponse {
-  test_id: number | string;
-  category_id?: number | string;
-  test_name?: string;
-  test_code?: string;
-  category_name?: string;
-  test_price?: number | string;
-  price?: number | string;
-  discount_price?: number | string;
-  payable_amount?: number | string;
-}
-
-interface UpdatedPatientTestsResult extends UpdatePatientTestsResponse {
-  updated_tests?: UpdatedPatientTestResponse[];
-  new_gross_amount?: number | string;
-  new_discount_amount?: number | string;
-  new_total_amount?: number | string;
-  data?: {
-    tests?: UpdatedPatientTestResponse[];
-    gross_amount?: number | string;
-    discount_amount?: number | string;
-    total_amount?: number | string;
-  };
-}
 
 function getReportRows(response: unknown): Record<string, unknown>[] {
   if (Array.isArray(response)) {

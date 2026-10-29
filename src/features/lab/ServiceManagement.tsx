@@ -12,6 +12,7 @@ import type {
   LabTestApiResponse,
 } from "../../types/labType/LabTestInterfaces";
 import { getSessionItem } from "../../context/sessions/userSession";
+import { useLabOnboarding } from "../../context/LabOnboardingContext";
 import LabTestManagement from "./LabTestManagement";
 import LabPackageManagement from "./LabPackageManagement";
 import LabTestSelectionPopup from "./LabTestSelectionPopup";
@@ -21,6 +22,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 const ServiceManagement: React.FC = () => {
   const [labId] = useState(() => getSessionItem("user", "lab_id"));
   const [userId] = useState(() => getSessionItem("user", "user_id"));
+  const { refreshOnboardingStatus } = useLabOnboarding();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"tests" | "packages">("tests");
   // Test Management
@@ -156,7 +158,7 @@ const ServiceManagement: React.FC = () => {
         return;
       }
       const formattedData = await fetchLabServices();
-      await Promise.all([fetchSavedTests(formattedData), fetchPackages()]);
+      await Promise.all([fetchSavedTests(formattedData), fetchPackages(), refreshOnboardingStatus()]);
     } catch (error) {
       console.error("Failed to load Service Management", error);
       toast.error("Failed to load Service Management");

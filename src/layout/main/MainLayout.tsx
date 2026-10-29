@@ -1,15 +1,41 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../sidebar/Sidebar";
 import Navbar from "../navbar/Navbar";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import Loader from "../../components/shared/Loader/Loader";
 import { useLoader } from "../../context/LoaderContext";
 import { SocketProvider } from "../../context/SocketContext";
 import { TokenManager } from "../../api/auth/tokenManager";
 import { getSession, getSessionItem } from "../../context/sessions/userSession";
+import {
+  LabOnboardingProvider,
+  useLabOnboarding,
+} from "../../context/LabOnboardingContext";
 
-const MainLayout = () => {
+const LabOnboardingRouteGuard: React.FC = () => {
+  const { isLabAdmin, isOnboardingCompleted, isLoading } = useLabOnboarding();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading || !isLabAdmin || isOnboardingCompleted) return;
+
+    const restrictedPaths = ["/lab/users", "/lab/offers"];
+    const isRestricted = restrictedPaths.some(
+      (path) =>
+        location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+
+    if (isRestricted) {
+      navigate("/lab/service-management", { replace: true });
+    }
+  }, [isLabAdmin, isOnboardingCompleted, isLoading, location.pathname, navigate]);
+
+  return null;
+};
+
+const MainLayoutContent = () => {
   const { loading } = useLoader();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -34,6 +60,7 @@ const MainLayout = () => {
 
   return (
     <div className="w-full h-screen overflow-hidden bg-[var(--color-bg)]">
+      <LabOnboardingRouteGuard />
       {/* -------- Sidebar (Desktop Fixed) -------- */}
       <div
         className={`
@@ -108,6 +135,14 @@ const MainLayout = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const MainLayout = () => {
+  return (
+    <LabOnboardingProvider>
+      <MainLayoutContent />
+    </LabOnboardingProvider>
   );
 };
 

@@ -1,5 +1,6 @@
 import { FaSearch, FaUserPlus, FaTimes, FaUser } from "react-icons/fa";
 import { useState, type JSX } from "react";
+import { useNavigate } from "react-router-dom";
 import AddUser from "../component/AddUser";
 import { getSessionItem } from "../../context/sessions/userSession";
 import { TfiAnnouncement } from "react-icons/tfi";
@@ -8,7 +9,10 @@ import LabQueues from "./LabQueues";
 import { Module, Roles } from "../../context/constant/enum";
 import LabWalkInVerificationModal from "./components/LabWalkInVerificationModal";
 import LabWalkInRegisterForm from "./components/LabWalkInRegisterForm";
+import LabOnboardingReminderDialog from "./components/LabOnboardingReminderDialog";
+import { useLabOnboarding } from "../../context/LabOnboardingContext";
 import type { Patient } from "../../types/patientType/patientTypeInterfaces";
+
 export interface DashboardCard {
   id: number;
   title: string;
@@ -18,6 +22,7 @@ export interface DashboardCard {
 }
 
 const LabDashboard = () => {
+  const navigate = useNavigate();
   const user = getSessionItem("user", "role");
   const username = getSessionItem("user", "full_name");
   const module = Module.LAB;
@@ -29,7 +34,14 @@ const LabDashboard = () => {
   const [walkInPatient, setWalkInPatient] = useState<Patient | null>(null);
   const [showWalkInRegistration, setShowWalkInRegistration] = useState(false);
   const [queueRefreshTrigger, setQueueRefreshTrigger] = useState(0);
+
+  const { isOnboardingCompleted, isLoading, isLabAdmin } = useLabOnboarding();
   const isLabStaff = user === Roles.Staff || user === Roles.Admin;
+  const showReminder = isLabAdmin && !isLoading && !isOnboardingCompleted;
+
+  const handleCompleteServiceSetup = () => {
+    navigate("/lab/service-management");
+  };
 
   const tabs = [
     { key: "pendingQueue", label: "Pending" },
@@ -266,6 +278,11 @@ const LabDashboard = () => {
           patientData={walkInPatient}
         />
       )}
+
+      <LabOnboardingReminderDialog
+        open={showReminder}
+        onCompleteSetup={handleCompleteServiceSetup}
+      />
     </div>
   );
 };

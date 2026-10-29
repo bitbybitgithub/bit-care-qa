@@ -6,6 +6,7 @@ import { getSessionItem } from "../../context/sessions/userSession";
 import type { Role, SidebarProps } from "../../types/common/sidebarTypes";
 import { EntityType } from "../../context/constant/enum";
 import { SIDEBAR_MENUS } from "../../context/constant/sidebarMenus";
+import { useLabOnboarding } from "../../context/LabOnboardingContext";
 import {
   useAppTheme,
   FONT_FAMILIES,
@@ -40,6 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const { mode, setMode, font, setFont, fontSize, setFontSize } = useAppTheme();
+  const { isLabAdmin, isOnboardingCompleted } = useLabOnboarding();
   const [activeThemeTab, setActiveThemeTab] = useState<"theme" | "font" | "scale">("theme");
 
   const [role, setRole] = useState<Role | null>(null);
@@ -443,6 +445,54 @@ const Sidebar: React.FC<SidebarProps> = ({
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isItemActive(item.link);
+            const isItemDisabled =
+              isLabAdmin &&
+              !isOnboardingCompleted &&
+              (item.link === "/lab/dashboard" ||
+                item.link === "/lab/users" ||
+                item.link === "/lab/offers");
+
+            if (isItemDisabled) {
+              const disabledContent = (
+                <div
+                  aria-disabled="true"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className={`
+                    group relative flex items-center gap-3 px-3 py-2.5 rounded-xl
+                    text-sm font-medium transition-all duration-200 select-none
+                    opacity-40 cursor-not-allowed text-white/50
+                    ${isCollapsed ? "justify-center px-0 py-2.5" : ""}
+                  `}
+                >
+                  <span className="flex items-center justify-center text-white/50">
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                  </span>
+
+                  {!isCollapsed && (
+                    <span className="truncate tracking-tight">{item.title}</span>
+                  )}
+                </div>
+              );
+
+              return (
+                <li key={item.link}>
+                  {isCollapsed ? (
+                    <Tooltip
+                      title={`${item.title} (Complete onboarding to unlock)`}
+                      placement="right"
+                      arrow
+                    >
+                      {disabledContent}
+                    </Tooltip>
+                  ) : (
+                    disabledContent
+                  )}
+                </li>
+              );
+            }
 
             const content = (
               <NavLink

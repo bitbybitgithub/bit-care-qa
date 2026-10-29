@@ -1,3 +1,5 @@
+import type { UpdatePatientTestsResponse } from "../../api";
+
 export interface CommonApiResponse {
   success: boolean;
   message: string;
@@ -86,12 +88,28 @@ export type UpdateLabTestItemRequest =
       modified_by: number;
     };
 export interface LabProfileData {
+  success?: boolean;
   lab: {
     lab_id: number;
+    lab_name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    lab_category?: any;
     logo?: string;
     is_cod?: number | string | boolean;
+    service_onboarding_completed?: number;
   };
   operational_days: any[];
+  data?: {
+    lab?: {
+      lab_id?: number;
+      service_onboarding_completed?: number;
+      [key: string]: any;
+    };
+    operational_days?: any[];
+    [key: string]: any;
+  };
 }
 
 export interface SaveLabShiftPayload {
@@ -182,4 +200,72 @@ export interface SelectedPackageTest {
   tat_hours: number;
   home_service: string;
   test_description: any;
+}
+
+export interface LabWalkInTest {
+  test_id: number;
+  category_id: number;
+  test_name: string;
+  test_code?: string;
+  price: number;
+  discount_price?: number;
+  payable_amount?: number;
+  category_name?: string;
+}
+
+export interface LabWalkInPackage {
+  package_id: number;
+  package_name: string;
+  package_code?: string;
+  package_price: number;
+  actual_price?: number;
+  discount_amount?: number;
+  total_tests?: number;
+  category_name?: string;
+  tests?: Array<{
+    test_id: number;
+    test_name?: string;
+    test_code?: string;
+    test_price?: number;
+  }>;
+}
+
+export interface UpdatedPatientTestResponse {
+  test_id: number | string;
+  category_id?: number | string;
+  test_name?: string;
+  test_code?: string;
+  category_name?: string;
+  test_price?: number | string;
+  price?: number | string;
+  discount_price?: number | string;
+  payable_amount?: number | string;
+}
+export interface UpdatedPatientTestsResult extends UpdatePatientTestsResponse {
+  updated_tests?: UpdatedPatientTestResponse[];
+  new_gross_amount?: number | string;
+  new_discount_amount?: number | string;
+  new_total_amount?: number | string;
+  data?: {
+    tests?: UpdatedPatientTestResponse[];
+    gross_amount?: number | string;
+    discount_amount?: number | string;
+    total_amount?: number | string;
+  };
+}
+
+export interface LabTestManagementProps {
+  data: {
+    selectedTests: SelectedTest[];
+    search: string;
+  };
+  loading?: boolean;
+  actions: {
+    setSearch: React.Dispatch<React.SetStateAction<string>>;
+    setSelectedTests: React.Dispatch<React.SetStateAction<SelectedTest[]>>;
+  };
+  labId: number | string;
+  userId: number | string;
+  onUpdated: () => Promise<void>;
+  onAddNewTest: () => void;
 }

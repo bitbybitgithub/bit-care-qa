@@ -24,26 +24,11 @@ import { toast } from "react-toastify";
 import Loader from "../../components/shared/Loader/Loader";
 import { updateAvailableLabTestApi } from "../../api/labApis/LabApi";
 import type {
+  LabTestManagementProps,
   LabTestUpdateItem,
   SelectedTest,
   UpdateLabTestItemRequest,
 } from "../../types/labType/LabTestInterfaces";
-
-interface LabTestManagementProps {
-  data: {
-    selectedTests: SelectedTest[];
-    search: string;
-  };
-  loading?: boolean;
-  actions: {
-    setSearch: React.Dispatch<React.SetStateAction<string>>;
-    setSelectedTests: React.Dispatch<React.SetStateAction<SelectedTest[]>>;
-  };
-  labId: number | string;
-  userId: number | string;
-  onUpdated: () => Promise<void>;
-  onAddNewTest: () => void;
-}
 
 const LabTestManagement: React.FC<LabTestManagementProps> = ({
   data,

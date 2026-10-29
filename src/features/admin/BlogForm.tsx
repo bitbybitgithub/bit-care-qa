@@ -32,6 +32,7 @@ import {
   calculateReadTime,
   getBlogImageUrl,
 } from "./blogUtils";
+import { EntityTypeEnum } from "../../context/constant/enum";
 
 // React 19 JSX typing compatibility wrapper for react-quill-new
 const QuillEditor: any = ReactQuill;
@@ -45,6 +46,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
   const navigate = useNavigate();
   const { blogId } = useParams<{ blogId: string }>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const sessionUser = getSession("user");
 
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
@@ -56,8 +58,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
     featured_image_name: "",
     category_id: "",
     status: true,
-    clinic_id: 58,
-    created_by: 160,
+    entity_type: null,
+    entity_id: null,
+    created_by: null,
     modified_by: null,
   });
 
@@ -67,18 +70,19 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
   const [loadingBlog, setLoadingBlog] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const entity = EntityTypeEnum[sessionUser?.entity_name];  
 
   // ---------------------------------------------------------
   // Session & Load Blog for Editing
   // ---------------------------------------------------------
   useEffect(() => {
-    const sessionUser = getSession("user");
 
     if (sessionUser) {
       setFormData((prev) => ({
         ...prev,
-        clinic_id: sessionUser.clinic_id ?? 58,
-        created_by: sessionUser.user_id ?? 160,
+        entity_type: sessionUser?.entity_name,
+        entity_id: sessionUser[entity] ?? 0,
+        created_by: sessionUser.user_id ?? 0,
         modified_by: sessionUser.user_id ?? null,
       }));
     }
@@ -103,7 +107,8 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           content: blog.content ?? "",
           category_id: blog.category_id ? Number(blog.category_id) : "",
           status: blog.status ?? true,
-          clinic_id: blog.clinic_id ? Number(blog.clinic_id) : prev.clinic_id,
+          entity_type  : blog.entity_type ?? "",
+          entity_id: blog.entity_id ? Number(blog.entity_id) : prev.entity_id,
           created_by: blog.created_by ? Number(blog.created_by) : prev.created_by,
           modified_by: sessionUser?.user_id ?? null,
           featured_image_path: blog.featured_image_path ?? "",
@@ -282,8 +287,11 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
       newErrors.category_id = "Please select a category.";
     }
 
-    if (!formData.clinic_id) {
-      newErrors.clinic_id = "Clinic identification is missing.";
+    if (!formData.entity_id) {
+      newErrors.entity_id = "Entity identification is missing.";
+    }
+    if (!formData.entity_type) {
+      newErrors.entity_type = "Entity type is missing.";
     }
 
     if (!formData.created_by) {
@@ -379,8 +387,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
       featured_image_name: "",
       category_id: "",
       status: true,
-      clinic_id: sessionUser?.clinic_id ?? 58,
-      created_by: sessionUser?.user_id ?? 160,
+      entity_id: sessionUser[entity] ?? 0,
+      entity_type: sessionUser?.entity_name ?? "",
+      created_by: sessionUser?.user_id ?? 0,
       modified_by: null,
     });
     setFeaturedImage(null);
@@ -393,10 +402,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
 
   const readTimeEstimate = calculateReadTime(formData.content);
 
-  const sessionUser = getSession("user");
   const isAuthorized = Boolean(
     sessionUser?.user_id &&
-      (sessionUser?.role?.toLowerCase() === "admin" || sessionUser?.clinic_id)
+      (sessionUser?.role?.toLowerCase() === "admin" || sessionUser[entity])
   );
 
   if (!isAuthorized) {
@@ -773,12 +781,12 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
 
             <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
               <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="block text-[10px] text-slate-400">Clinic ID</span>
-                <span className="font-semibold text-slate-700">{formData.clinic_id || 58}</span>
+                <span className="block text-[10px] text-slate-400">Entity ID</span>
+                <span className="font-semibold text-slate-700">{formData.entity_id || 0}</span>
               </div>
               <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-100">
                 <span className="block text-[10px] text-slate-400">Author ID</span>
-                <span className="font-semibold text-slate-700">{formData.created_by || 160}</span>
+                <span className="font-semibold text-slate-700">{formData.created_by || 0}</span>
               </div>
             </div>
 

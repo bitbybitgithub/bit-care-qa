@@ -35,3 +35,10 @@ export enum Module {
   LAB = "LAB",
   PHARMACY = "PHARMACY",
 }
+
+
+export enum EntityTypeEnum{
+  clinic = 'clinic_id',
+  doctor = 'doctor_id',
+  lab = 'lab_id'
+}

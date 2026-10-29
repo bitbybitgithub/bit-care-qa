@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import {
   Search,
   X,
@@ -18,9 +18,13 @@ import {
   Heart,
   Activity,
   Apple,
+  Mail,
+  PlusCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
+import BitCareLogo from "../../assets/BitCareLogo.png";
 import { getBlogListApi, getBlogByIdApi } from "../../api";
 import type { BlogFormData } from "../../types/types";
 import { getSession } from "../../context/sessions/userSession";
@@ -32,16 +36,71 @@ import {
   formatBlogDate,
   FallbackBanner,
   BLOG_CATEGORIES,
+  EntityAvatar,
+  getAdminEntityInfo,
 } from "../admin/blogUtils";
 
 // ============================================================================
-// Single Blog Card (Responsive & Role Aware)
+// Patient View Top Navigation & Branding Header
+// ============================================================================
+
+const PatientNavbar: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Left: BitCare Logo & Health Library Title */}
+        <div
+          onClick={() => navigate("/blog")}
+          className="flex items-center gap-3 cursor-pointer group select-none"
+          role="button"
+          tabIndex={0}
+        >
+          <img
+            src={BitCareLogo}
+            alt="BitCare"
+            className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-102"
+          />
+          <div className="hidden sm:flex flex-col border-l border-slate-200 pl-3">
+            <span className="text-xs font-bold text-slate-800 tracking-tight leading-tight">
+              Health Library
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium">
+              Patient Education & Wellness
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Medical Trust Badge & Portal Link */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-xs font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Verified Medical Articles</span>
+          </div>
+
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <span>Clinic Portal</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// ============================================================================
+// Single Blog Card (Responsive, Entity-Aware & Role-Aware)
 // ============================================================================
 
 interface BlogCardItemProps {
   blog: BlogFormData;
   index: number;
   canEdit: boolean;
+  isAdminView?: boolean;
   onRead: (id: number | string) => void;
   onEdit: (id: number | string) => void;
 }
@@ -50,6 +109,7 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
   blog,
   index,
   canEdit,
+  isAdminView = false,
   onRead,
   onEdit,
 }) => {
@@ -74,6 +134,8 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
         return <Sparkles className="w-2.5 h-2.5" />;
     }
   };
+
+  const isPublished = blog.status === true || String(blog.status) === "1";
 
   return (
     <article
@@ -109,8 +171,21 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
           </span>
         </div>
 
-        {/* Floating Top Right Read Time */}
-        <div className="absolute top-2.5 right-2.5 z-10">
+        {/* Floating Top Right: Status or Read Time */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+          {isAdminView && (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md rounded-full shadow-2xs border ${
+                isPublished
+                  ? "bg-emerald-500/90 text-white border-emerald-400/40"
+                  : "bg-amber-500/90 text-white border-amber-400/40"
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              {isPublished ? "Published" : "Draft"}
+            </span>
+          )}
+
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-white bg-slate-900/75 backdrop-blur-md rounded-full shadow-2xs">
             <Clock className="w-2.5 h-2.5 text-slate-300" />
             {readTime}
@@ -125,7 +200,10 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
           <Calendar className="w-3 h-3 text-slate-400" />
           <span>{formattedDate}</span>
           <span>•</span>
-          <span className="text-emerald-600 font-medium">Verified Guide</span>
+          <span className="text-emerald-600 font-medium inline-flex items-center gap-0.5">
+            <ShieldCheck className="w-3 h-3" />
+            Verified Guide
+          </span>
         </div>
 
         {/* Title */}
@@ -137,12 +215,51 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
         </h3>
 
         {/* Short Description */}
-        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">
+        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mb-3.5">
           {blog.short_description}
         </p>
 
+        {/* ----------------- ENTITY / AUTHOR SHOWCASE ----------------- */}
+        <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <EntityAvatar
+              name={blog.entity_name}
+              logo={blog.entity_logo}
+              size="sm"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-xs font-semibold text-slate-800 truncate block hover:text-[var(--color-primary)] transition"
+                  title={blog.entity_name || "Healthcare Partner"}
+                >
+                  {blog.entity_name || "Healthcare Partner"}
+                </span>
+                {blog.entity_type && (
+                  <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 capitalize">
+                    {blog.entity_type}
+                  </span>
+                )}
+              </div>
+              {blog.entity_email ? (
+                <span
+                  className="text-[11px] text-slate-400 truncate flex items-center gap-1"
+                  title={blog.entity_email}
+                >
+                  <Mail className="w-2.5 h-2.5 shrink-0 text-slate-400" />
+                  <span className="truncate">{blog.entity_email}</span>
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-400 truncate block">
+                  BitCare Medical Contributor
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* ----------------- FOOTER ACTIONS ----------------- */}
-        <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div className="mt-3 pt-2.5 border-t border-slate-100/70 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => onRead(blog.blog_id || "")}
@@ -177,18 +294,31 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
 // Main BlogsList Component
 // ============================================================================
 
-export const BlogsList: React.FC = () => {
+export interface BlogsListProps {
+  adminView?: boolean;
+  onCreateArticle?: () => void;
+}
+
+export const BlogsList: React.FC<BlogsListProps> = ({
+  adminView = false,
+  onCreateArticle,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { blogId } = useParams<{ blogId?: string }>();
 
   // Role and route detection
   const sessionUser = getSession("user");
-  const isClinicPath = location.pathname.startsWith("/clinic");
+  const isClinicPath = location.pathname.startsWith("/clinic") || adminView;
   const isClinicAdmin = Boolean(
     sessionUser?.user_id &&
-    (sessionUser?.role?.toLowerCase() === "admin" || sessionUser?.clinic_id),
+      (sessionUser?.role?.toLowerCase() === "admin" ||
+        sessionUser?.clinic_id ||
+        sessionUser?.entity_id)
   );
+
+  // Extract admin entity information (e.g. id=60, type="clinic")
+  const adminEntity = useMemo(() => getAdminEntityInfo(sessionUser), [sessionUser]);
 
   // STRICT EDITING CONDITION:
   // Only clinic admins accessing from within the clinic portal are allowed to edit!
@@ -208,7 +338,7 @@ export const BlogsList: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [detailImageFailed, setDetailImageFailed] = useState<boolean>(false);
 
-  // Fetch blogs or single blog based on URL param
+  // Fetch blogs or single blog based on URL param and current view mode
   useEffect(() => {
     let isMounted = true;
 
@@ -218,13 +348,26 @@ export const BlogsList: React.FC = () => {
         setError("");
 
         if (blogId) {
+          // Fetch single blog by ID
           const response = await getBlogByIdApi(blogId);
           if (isMounted) {
             setBlog(response.data);
             setDetailImageFailed(false);
           }
         } else {
-          const response = await getBlogListApi();
+          // Fetch blogs list
+          // Admin view: strictly entity-isolated data query (?id=60&type=clinic)
+          // Patient view: query without parameters (/blogs)
+          let response;
+          if (isClinicPath && adminEntity.id && adminEntity.type) {
+            response = await getBlogListApi({
+              id: adminEntity.id,
+              type: adminEntity.type,
+            });
+          } else {
+            response = await getBlogListApi();
+          }
+
           if (isMounted) {
             setBlogs(response.data || []);
           }
@@ -234,7 +377,8 @@ export const BlogsList: React.FC = () => {
         if (isMounted) {
           setError(
             err?.response?.data?.message ||
-              "Unable to load articles at this time. Please try again.",
+              err?.message ||
+              "Unable to load articles at this time. Please try again."
           );
         }
       } finally {
@@ -247,9 +391,9 @@ export const BlogsList: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [blogId]);
+  }, [blogId, isClinicPath, adminEntity.id, adminEntity.type]);
 
-  // Filtered blogs list
+  // Filtered blogs list (Search + Category)
   const filteredBlogs = useMemo(() => {
     return blogs.filter((item) => {
       const matchesCategory =
@@ -260,7 +404,8 @@ export const BlogsList: React.FC = () => {
       const matchesSearch =
         !query ||
         item.title?.toLowerCase().includes(query) ||
-        item.short_description?.toLowerCase().includes(query);
+        item.short_description?.toLowerCase().includes(query) ||
+        item.entity_name?.toLowerCase().includes(query);
 
       return matchesCategory && matchesSearch;
     });
@@ -295,7 +440,7 @@ export const BlogsList: React.FC = () => {
 
   const handleBackToBlogs = () => {
     if (isClinicPath) {
-      navigate("/clinic/BlogTabs");
+      navigate("/clinic/BlogTabs?tab=view");
     } else {
       navigate("/blog");
     }
@@ -322,31 +467,34 @@ export const BlogsList: React.FC = () => {
   }
 
   // ==========================================================================
-  // VIEW B: SINGLE BLOG ARTICLE DETAIL VIEW (Vibrant, Clean & Fully Responsive)
+  // VIEW B: SINGLE BLOG ARTICLE DETAIL VIEW (HIGHLIGHTED ENTITY DETAILS)
   // ==========================================================================
   if (blogId) {
     if (error || !blog) {
       return (
-        <div className="min-h-screen bg-gradient-to-b from-white via-slate-50/50 to-white flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-6 text-center bg-white rounded-2xl border border-rose-200 shadow-sm">
-            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-2.5">
-              <AlertCircle className="w-5 h-5" />
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+          {!isClinicPath && <PatientNavbar />}
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="max-w-md w-full p-6 text-center bg-white rounded-2xl border border-rose-200 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-2.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">
+                Article Not Found
+              </h2>
+              <p className="text-slate-600 mb-4 text-xs">
+                {error ||
+                  "The article you are looking for may have been removed or is temporarily unavailable."}
+              </p>
+              <button
+                type="button"
+                onClick={handleBackToBlogs}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Articles
+              </button>
             </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-1">
-              Article Not Found
-            </h2>
-            <p className="text-slate-600 mb-4 text-xs">
-              {error ||
-                "The article you are looking for may have been removed or is temporarily unavailable."}
-            </p>
-            <button
-              type="button"
-              onClick={handleBackToBlogs}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Articles
-            </button>
           </div>
         </div>
       );
@@ -361,375 +509,570 @@ export const BlogsList: React.FC = () => {
     );
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-slate-50/40 to-white py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
-        <main className="w-full max-w-5xl mx-auto">
-          {/* Top Bar: Back & Share (NO MENUS) */}
-          <div className="flex items-center justify-between gap-2.5 mb-3.5 pb-2.5 border-b border-slate-200/80">
-            <button
-              type="button"
-              onClick={handleBackToBlogs}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-2xs transition cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
-              <span>Back to Blogs</span>
-            </button>
+      <div className="min-h-screen bg-gradient-to-b from-white via-slate-50/50 to-white flex flex-col">
+        {/* Patient View Sticky Navbar with BitCare Branding */}
+        {!isClinicPath && <PatientNavbar />}
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleShareLink}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs transition cursor-pointer"
-                title="Share article"
-              >
-                {copiedLink ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700 font-semibold">
-                      Copied!
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Share</span>
-                  </>
-                )}
-              </button>
-
-              {/* EDIT ARTICLE BUTTON: ONLY SHOWN TO CLINIC ADMINS IN CLINIC PATH */}
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => handleEditBlog(blog.blog_id || blogId)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-xl shadow-2xs transition cursor-pointer"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Edit Article</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Clean Magazine Reading Card (Fully Responsive) */}
-          <article className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-7 lg:p-10">
-            {/* Split Header: Stack on mobile, Side-by-side on desktop */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start pb-5 sm:pb-6 border-b border-slate-100">
-              <div className="lg:col-span-7 space-y-2.5 sm:space-y-3">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full border ${cat.badgeClass}`}
-                  >
-                    <span
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: cat.chipColor }}
-                    />
-                    {cat.name}
-                  </span>
-
-                  <span className="text-slate-300">•</span>
-
-                  <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                    <Calendar className="w-3 h-3 text-slate-400" />
-                    <span>{formattedDate}</span>
-                  </div>
-
-                  <span className="text-slate-300">•</span>
-
-                  <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                    <Clock className="w-3 h-3 text-slate-400" />
-                    <span>{readTime}</span>
-                  </div>
-                </div>
-
-                {/* Article Headline */}
-                <h1 className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  {blog.title}
-                </h1>
-
-                {/* Excerpt / Summary */}
-                {blog.short_description && (
-                  <div className="p-3 sm:p-3.5 rounded-2xl bg-[var(--color-surface)]/70 border-l-4 border-[var(--color-primary)] text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
-                    {blog.short_description}
-                  </div>
-                )}
-
-                {/* Byline */}
-                <div className="flex items-center gap-2 pt-1 text-xs text-slate-500">
-                  <div className="w-6 h-6 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)] flex items-center justify-center font-bold text-[10px] shrink-0">
-                    BC
-                  </div>
-                  <span className="font-semibold text-slate-700">
-                    BitCare Medical Editorial
-                  </span>
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                </div>
-              </div>
-
-              {/* Banner Image */}
-              <div className="lg:col-span-5 w-full">
-                <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-56 sm:max-h-60 w-full rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-100 shadow-2xs">
-                  {!detailImageFailed && resolvedBannerUrl ? (
-                    <img
-                      src={resolvedBannerUrl}
-                      alt={blog.title}
-                      className="w-full h-full object-cover"
-                      onError={() => setDetailImageFailed(true)}
-                    />
-                  ) : (
-                    <FallbackBanner
-                      categoryId={blog.category_id}
-                      title={blog.title}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Rendered Article Body Content */}
-            <div
-              className="pt-5 sm:pt-6 article-content"
-              dangerouslySetInnerHTML={{ __html: blog.content }}
-            />
-
-            {/* Medical Disclaimer */}
-            <div className="mt-8 sm:mt-10 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs text-slate-500 leading-relaxed flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-slate-700 inline">
-                  Medical Disclaimer:{" "}
-                </span>
-                This publication is provided for general health literacy and
-                wellness education. Always consult your physician or healthcare
-                professional for individualized diagnosis or treatment.
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex-1 py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
+          <main className="w-full max-w-5xl mx-auto space-y-4">
+            {/* Top Bar: Back & Share & Edit */}
+            <div className="flex items-center justify-between gap-2.5 pb-2 border-b border-slate-200/80">
               <button
                 type="button"
                 onClick={handleBackToBlogs}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-2xs transition cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Back to Blogs
+                <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+                <span>Back to Blogs</span>
               </button>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleShareLink}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs transition cursor-pointer"
+                  title="Share article"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
-                  Share Article
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
 
+                {/* EDIT ARTICLE BUTTON: ONLY SHOWN TO CLINIC ADMINS IN CLINIC PATH */}
                 {canEdit && (
                   <button
                     type="button"
                     onClick={() => handleEditBlog(blog.blog_id || blogId)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-2xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-xl shadow-2xs transition cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    Edit Article
+                    <span>Edit Article</span>
                   </button>
                 )}
               </div>
             </div>
-          </article>
-        </main>
+
+            {/* Clean Magazine Reading Card (Fully Responsive) */}
+            <article className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-7 lg:p-10 space-y-6">
+              {/* Split Header: Stack on mobile, Side-by-side on desktop */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start pb-5 sm:pb-6 border-b border-slate-100">
+                <div className="lg:col-span-7 space-y-3">
+                  {/* Category & Meta Pills */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full border ${cat.badgeClass}`}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: cat.chipColor }}
+                      />
+                      {cat.name}
+                    </span>
+
+                    <span className="text-slate-300">•</span>
+
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                      <Calendar className="w-3 h-3 text-slate-400" />
+                      <span>{formattedDate}</span>
+                    </div>
+
+                    <span className="text-slate-300">•</span>
+
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      <span>{readTime}</span>
+                    </div>
+                  </div>
+
+                  {/* Article Headline */}
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    {blog.title}
+                  </h1>
+
+                  {/* Excerpt / Summary */}
+                  {blog.short_description && (
+                    <div className="p-3 sm:p-3.5 rounded-2xl bg-[var(--color-surface)]/70 border-l-4 border-[var(--color-primary)] text-slate-700 text-xs sm:text-sm leading-relaxed font-medium">
+                      {blog.short_description}
+                    </div>
+                  )}
+
+                  {/* =====================================================
+                      PROMINENT CLINICAL ENTITY SHOWCASE (HIGHLIGHTED)
+                  ====================================================== */}
+                  <div className="relative overflow-hidden rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-teal-50/90 via-sky-50/60 to-emerald-50/50 border-2 border-teal-200/90 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {/* Left: Avatar + Details */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <EntityAvatar
+                            name={blog.entity_name}
+                            logo={blog.entity_logo}
+                            size="lg"
+                            className="ring-3 ring-white shadow-xs"
+                          />
+                          <span
+                            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white"
+                            title="Verified Clinical Provider"
+                          >
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </span>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded-full bg-teal-700 text-white shadow-2xs">
+                              Clinical Publisher
+                            </span>
+                            {blog.entity_type && (
+                              <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-white text-teal-800 border border-teal-200 capitalize">
+                                {blog.entity_type}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 truncate">
+                            {blog.entity_name || "Verified Healthcare Partner"}
+                          </h4>
+
+                          {blog.entity_email && (
+                            <a
+                              href={`mailto:${blog.entity_email}`}
+                              className="inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-900 font-medium transition truncate"
+                              title={`Email ${blog.entity_name}`}
+                            >
+                              <Mail className="w-3 h-3 text-teal-600 shrink-0" />
+                              <span className="truncate underline decoration-teal-300 underline-offset-2">
+                                {blog.entity_email}
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Verified Badge & Direct Inquire Action */}
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-teal-200/50">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white border border-teal-200/80 text-[11px] font-semibold text-teal-900 shadow-2xs">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Verified Partner</span>
+                        </span>
+
+                        {blog.entity_email && (
+                          <a
+                            href={`mailto:${blog.entity_email}?subject=Inquiry regarding article: ${encodeURIComponent(
+                              blog.title || "Health Guide"
+                            )}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg shadow-2xs transition"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span>Contact Clinic</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner Image */}
+                <div className="lg:col-span-5 w-full">
+                  <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-56 sm:max-h-60 w-full rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-100 shadow-2xs">
+                    {!detailImageFailed && resolvedBannerUrl ? (
+                      <img
+                        src={resolvedBannerUrl}
+                        alt={blog.title}
+                        className="w-full h-full object-cover"
+                        onError={() => setDetailImageFailed(true)}
+                      />
+                    ) : (
+                      <FallbackBanner
+                        categoryId={blog.category_id}
+                        title={blog.title}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rendered Article Body Content */}
+              <div
+                className="pt-2 article-content"
+                dangerouslySetInnerHTML={{ __html: blog.content || "" }}
+              />
+
+              {/* =====================================================
+                  FEATURED "PUBLISHED BY" CARD (HIGHLIGHTED)
+              ====================================================== */}
+              <div className="mt-8 rounded-2xl sm:rounded-3xl border-2 border-teal-200 bg-gradient-to-br from-white via-teal-50/30 to-sky-50/40 p-5 sm:p-7 shadow-xs">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative shrink-0">
+                      <EntityAvatar
+                        name={blog.entity_name}
+                        logo={blog.entity_logo}
+                        size="xl"
+                        className="w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-white shadow-md"
+                      />
+                      <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white shadow-2xs">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </span>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] uppercase tracking-wider font-extrabold text-teal-900 bg-teal-100/90 px-2.5 py-0.5 rounded-full">
+                          Published & Clinically Verified By
+                        </span>
+                        {blog.entity_type && (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 border border-slate-200 capitalize">
+                            {blog.entity_type}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1.5 truncate">
+                        {blog.entity_name || "BitCare Healthcare Partner"}
+                      </h3>
+
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed max-w-xl">
+                        This article was created and approved under the clinical oversight of{" "}
+                        <span className="font-semibold text-slate-800">
+                          {blog.entity_name || "the healthcare provider"}
+                        </span>{" "}
+                        to promote evidence-based medical awareness and preventive care.
+                      </p>
+
+                      {blog.entity_email && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-teal-100 text-xs">
+                          <span className="font-semibold text-slate-500">
+                            Contact / Inquiries:
+                          </span>
+                          <a
+                            href={`mailto:${blog.entity_email}`}
+                            className="inline-flex items-center gap-1 font-bold text-teal-700 hover:text-teal-900 transition truncate"
+                          >
+                            <Mail className="w-3.5 h-3.5 text-teal-600" />
+                            <span>{blog.entity_email}</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-teal-100 shrink-0">
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl shadow-xs text-xs font-bold">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>Authorized Partner</span>
+                    </div>
+
+                    {blog.entity_email && (
+                      <a
+                        href={`mailto:${blog.entity_email}?subject=Patient Inquiry: ${encodeURIComponent(
+                          blog.title || "Health Guide"
+                        )}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-teal-900 bg-white hover:bg-teal-50 border border-teal-300 rounded-xl shadow-2xs transition"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-teal-600" />
+                        <span>Send Inquiry</span>
+                        <ArrowRight className="w-3 h-3 text-teal-600" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical Disclaimer */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 text-xs text-slate-500 leading-relaxed flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-slate-700 inline">
+                    Medical Disclaimer:{" "}
+                  </span>
+                  This publication is provided for general health literacy and
+                  wellness education. Always consult your physician or healthcare
+                  professional for individualized diagnosis or treatment.
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleBackToBlogs}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back to Blogs
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleShareLink}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    Share Article
+                  </button>
+
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => handleEditBlog(blog.blog_id || blogId)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl shadow-2xs transition cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit Article
+                    </button>
+                  )}
+                </div>
+              </div>
+            </article>
+          </main>
+        </div>
       </div>
     );
   }
 
   // ==========================================================================
-  // VIEW A: BLOG CATALOG (ROLE-AWARE & FULLY RESPONSIVE)
+  // VIEW A: BLOG CATALOG (PATIENT BRANDED / ADMIN ISOLATED)
   // ==========================================================================
   return (
-    <div
-      className={`w-full ${
-        isClinicPath
-          ? "space-y-3"
-          : "min-h-screen bg-gradient-to-b from-white via-slate-50/40 to-white py-4 sm:py-6 px-3 sm:px-6 lg:px-8"
-      }`}
-    >
-      <main
-        className={`w-full ${isClinicPath ? "" : "max-w-7xl mx-auto"} space-y-3.5`}
-      >
-        {/* =====================================================
-            GENERAL VIEW TITLE: ONLY SHOWN ON PUBLIC / GENERAL VIEW
-            (Never duplicated in Clinic View where BlogTabs has its header!)
-        ====================================================== */}
-        {!isClinicPath && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Blogs
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Explore our latest health articles, wellness tips, and medical
-                guides.
-              </p>
-            </div>
-          </div>
-        )}
+    <div className={`w-full ${isClinicPath ? "space-y-3" : "min-h-screen bg-gradient-to-b from-white via-slate-50/40 to-white flex flex-col"}`}>
+      {/* =====================================================
+          PATIENT VIEW: STICKY TOP BRANDING NAVBAR
+      ====================================================== */}
+      {!isClinicPath && <PatientNavbar />}
 
-        {/* =====================================================
-            RESPONSIVE FITTED TOOLBAR: PILLS + SEARCH + COUNT
-        ====================================================== */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-2.5 sm:px-4 sm:py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          {/* Left: Category Filter Pills (Horizontal swipe on mobile) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full md:w-auto flex-nowrap">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("all")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer whitespace-nowrap shrink-0 shadow-2xs ${
-                selectedCategory === "all"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>All Topics</span>
-              <span
-                className={`px-1.5 py-0.2 text-[11px] rounded-full ${
+      <div className={`w-full ${isClinicPath ? "" : "flex-1 py-4 sm:py-6 px-3 sm:px-6 lg:px-8"}`}>
+        <main className={`w-full ${isClinicPath ? "" : "max-w-7xl mx-auto"} space-y-4`}>
+          {/* =====================================================
+              PATIENT VIEW: HERO BRANDING BANNER
+          ====================================================== */}
+          {!isClinicPath && (
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-sky-50/50 to-[var(--color-surface)] border border-slate-200/90 p-5 sm:p-8 shadow-2xs">
+              <div className="relative z-10 max-w-3xl space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white shadow-2xs border border-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                  <Sparkles className="w-3 h-3 text-[var(--color-primary)]" />
+                  <span>BitCare Verified Healthcare Articles</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  Health & Medical Blogs
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Explore evidence-based health articles, wellness tips, and guides verified by healthcare professionals across our clinical network.
+                </p>
+                <div className="pt-2 flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium text-slate-500">
+                  <span className="inline-flex items-center gap-1 text-emerald-700">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    Doctor & Clinic Verified
+                  </span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 text-slate-600">
+                    <Clock className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                    Evidence-Based Insights
+                  </span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 text-slate-600">
+                    <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+                    Free Patient Education
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =====================================================
+              RESPONSIVE TOOLBAR: CATEGORY PILLS + SEARCH + COUNT
+          ====================================================== */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-2.5 sm:px-4 sm:py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+            {/* Left: Category Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full md:w-auto flex-nowrap">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("all")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer whitespace-nowrap shrink-0 shadow-2xs ${
                   selectedCategory === "all"
-                    ? "bg-slate-800 text-slate-200"
-                    : "bg-slate-200/70 text-slate-600"
+                    ? "bg-slate-900 text-white shadow-2xs"
+                    : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
                 }`}
               >
-                {categoryCounts.all || 0}
-              </span>
-            </button>
-
-            {Object.values(BLOG_CATEGORIES).map((cat) => {
-              const isSelected = selectedCategory === cat.id;
-              const count = categoryCounts[String(cat.id)] || 0;
-
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer whitespace-nowrap shrink-0 shadow-2xs ${
-                    isSelected
-                      ? "text-white shadow-2xs"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                <Layers className="w-3.5 h-3.5" />
+                <span>All Topics</span>
+                <span
+                  className={`px-1.5 py-0.2 text-[11px] rounded-full ${
+                    selectedCategory === "all"
+                      ? "bg-slate-800 text-slate-200"
+                      : "bg-slate-200/70 text-slate-600"
                   }`}
-                  style={{
-                    backgroundColor: isSelected ? cat.chipColor : undefined,
-                  }}
                 >
-                  <span>{cat.name}</span>
-                  <span
-                    className={`px-1.5 py-0.2 text-[11px] rounded-full ${
-                      isSelected
-                        ? "bg-black/20 text-white"
-                        : "bg-slate-200/70 text-slate-600"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  {categoryCounts.all || 0}
+                </span>
+              </button>
 
-          {/* Right: Search Bar & Count (Responsive full-width on mobile) */}
-          <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-between md:justify-end">
-            <div className="relative w-full sm:w-60">
-              <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search articles..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition"
-              />
-              {searchQuery && (
+              {Object.values(BLOG_CATEGORIES).map((cat) => {
+                const isSelected = selectedCategory === cat.id;
+                const count = categoryCounts[String(cat.id)] || 0;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer whitespace-nowrap shrink-0 shadow-2xs ${
+                      isSelected
+                        ? "text-white shadow-2xs"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? cat.chipColor : undefined,
+                    }}
+                  >
+                    <span>{cat.name}</span>
+                    <span
+                      className={`px-1.5 py-0.2 text-[11px] rounded-full ${
+                        isSelected
+                          ? "bg-black/20 text-white"
+                          : "bg-slate-200/70 text-slate-600"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right: Search Bar & Count */}
+            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-between md:justify-end">
+              <div className="relative w-full sm:w-60">
+                <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by title, clinic, topic..."
+                  className="w-full pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1.5 p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              <span className="text-xs font-medium text-slate-400 whitespace-nowrap shrink-0">
+                {filteredBlogs.length} {filteredBlogs.length === 1 ? "article" : "articles"}
+              </span>
+
+              {isClinicPath && onCreateArticle && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1.5 p-0.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                  onClick={onCreateArticle}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-lg shadow-2xs transition cursor-pointer shrink-0"
                 >
-                  <X className="w-3 h-3" />
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>New Article</span>
                 </button>
               )}
             </div>
-
-            <span className="text-xs font-medium text-slate-400 whitespace-nowrap shrink-0">
-              {filteredBlogs.length}{" "}
-              {filteredBlogs.length === 1 ? "article" : "articles"}
-            </span>
           </div>
-        </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="max-w-md mx-auto p-6 bg-white rounded-2xl border border-rose-200 text-center shadow-2xs">
-            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-2">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">
-              Unable to Load Articles
-            </h3>
-            <p className="text-xs text-slate-600 mb-3">{error}</p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!error && filteredBlogs.length === 0 && (
-          <div className="max-w-md mx-auto py-12 px-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center mx-auto mb-3 shadow-2xs">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">
-              No Articles Found
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              {searchQuery
-                ? `No articles match "${searchQuery}". Try a different keyword or reset filters.`
-                : "There are currently no articles in this category."}
-            </p>
-            {(searchQuery || selectedCategory !== "all") && (
+          {/* Error State */}
+          {error && (
+            <div className="max-w-md mx-auto p-6 bg-white rounded-2xl border border-rose-200 text-center shadow-2xs">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-2">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-1">
+                Unable to Load Articles
+              </h3>
+              <p className="text-xs text-slate-600 mb-3">{error}</p>
               <button
                 type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                }}
-                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-lg transition cursor-pointer"
+                onClick={() => window.location.reload()}
+                className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl transition cursor-pointer"
               >
-                Clear Filters
+                Retry
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Blog Cards Grid (Responsive 1 col mobile, 2 cols tablet, 3 cols desktop) */}
-        {!error && filteredBlogs.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {filteredBlogs.map((b, idx) => (
-              <BlogCardItem
-                key={b.blog_id ?? idx}
-                blog={b}
-                index={idx}
-                canEdit={canEdit}
-                onRead={handleReadBlog}
-                onEdit={handleEditBlog}
-              />
-            ))}
-          </div>
-        )}
-      </main>
+          {/* Empty State */}
+          {!error && filteredBlogs.length === 0 && (
+            <div className="max-w-md mx-auto py-12 px-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-1">
+                {isClinicPath
+                  ? "No Articles Found for Your Clinic"
+                  : "No Articles Found"}
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                {searchQuery
+                  ? `No articles match "${searchQuery}". Try a different keyword or reset filters.`
+                  : isClinicPath
+                  ? "Your clinic has not published any articles yet. Create and publish your first article for patients."
+                  : "There are currently no articles in this category. Check back soon for new health updates."}
+              </p>
+
+              <div className="flex items-center justify-center gap-2">
+                {(searchQuery || selectedCategory !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-alt)] border border-[var(--color-primary)]/20 rounded-lg transition cursor-pointer"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+
+                {isClinicPath && onCreateArticle && (
+                  <button
+                    type="button"
+                    onClick={onCreateArticle}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-lg shadow-2xs transition cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>Create Your First Article</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Blog Cards Grid (Responsive 1 col mobile, 2 cols tablet, 3 cols desktop) */}
+          {!error && filteredBlogs.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {filteredBlogs.map((b, idx) => (
+                <BlogCardItem
+                  key={b.blog_id ?? idx}
+                  blog={b}
+                  index={idx}
+                  canEdit={canEdit}
+                  isAdminView={isClinicPath}
+                  onRead={handleReadBlog}
+                  onEdit={handleEditBlog}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

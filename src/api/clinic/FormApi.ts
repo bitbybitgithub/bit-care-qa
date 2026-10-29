@@ -100,8 +100,8 @@ export const uploadOfferImageApi = async (file: File) => {
 
 export const createBlogApi = async (formData: BlogFormData) => {
   const blogData = {
-    clinic_id: formData.clinic_id,
-
+    entity_id: formData.entity_id,
+    entity_type : formData.entity_type,
     title: formData.title,
     short_description: formData.short_description,
     content: formData.content,
@@ -113,8 +113,7 @@ export const createBlogApi = async (formData: BlogFormData) => {
     category_id: formData.category_id,
     status: formData.status,
 
-    created_by: formData.created_by,
-    modified_by: formData.modified_by,
+    created_by: formData.created_by
   };
 
   const response = await emrAPI.post<any>(`/admin/blogs`, blogData);
@@ -145,13 +144,25 @@ export const uploadBlogImageApi = async (file: File) => {
   return data;
 };
 
-export const getBlogListApi = async () => {
-  const response = await emrAPI.get<BlogListResponse>("/blogs");
+export interface BlogListQueryParams {
+  id?: string | number;
+  type?: string;
+}
 
+export const getBlogListApi = async (params?: BlogListQueryParams) => {
+  let url = "/blogs";
+  if (params && params.id && params.type) {
+    const query = new URLSearchParams({
+      id: String(params.id),
+      type: String(params.type),
+    }).toString();
+    url = `/blogs?${query}`;
+  }
+  const response = await emrAPI.get<BlogListResponse>(url);
   return response;
 };
 
-export const getBlogByIdApi = async (blogId: string) => {
+export const getBlogByIdApi = async (blogId: string | number) => {
   const response = await emrAPI.get<BlogByIdResponse>(`/blogs/${blogId}`);
   return response;
 };
@@ -161,7 +172,8 @@ export const updateBlogApi = async (
   formData: BlogFormData,
 ) => {
   const blogData = {
-    clinic_id: formData.clinic_id,
+    entity_id: formData.entity_id,
+    entity_type : formData.entity_type,
     title: formData.title,
     short_description: formData.short_description,
     content: formData.content,

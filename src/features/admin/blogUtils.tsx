@@ -100,6 +100,155 @@ export const getBlogImageUrl = (
 };
 
 // ============================================================================
+// Base64 Logo Decoder & Entity Helpers
+// ============================================================================
+
+/**
+ * Resolves base64 or URL logo string into a valid img src attribute.
+ * Matches existing header/sidebar decoder with intelligent mime-type fallback.
+ */
+export const formatBase64Logo = (logo?: string | null): string => {
+  if (!logo) return "";
+  const trimmed = logo.trim();
+  if (!trimmed) return "";
+
+  // If already full http(s) URL
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  // If already has data: prefix
+  if (trimmed.startsWith("data:")) {
+    return trimmed;
+  }
+
+  // Intelligent detection for base64 formats
+  // /9j/ is standard JPEG magic bytes in base64
+  if (trimmed.startsWith("/9j/")) {
+    return `data:image/jpeg;base64,${trimmed}`;
+  }
+
+  // iVBORw0KGgo is standard PNG magic bytes in base64
+  if (trimmed.startsWith("iVBORw0KGgo")) {
+    return `data:image/png;base64,${trimmed}`;
+  }
+
+  // Default fallback to PNG matching header/sidebar implementation
+  return `data:image/png;base64,${trimmed}`;
+};
+
+export const getEntityInitials = (name?: string | null): string => {
+  if (!name) return "BC";
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "BC";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
+
+export interface EntityAvatarProps {
+  name?: string | null;
+  logo?: string | null;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  className?: string;
+  bordered?: boolean;
+}
+
+export const EntityAvatar: React.FC<EntityAvatarProps> = ({
+  name,
+  logo,
+  size = "md",
+  className = "",
+  bordered = true,
+}) => {
+  const [imageError, setImageError] = React.useState<boolean>(false);
+  const logoSrc = React.useMemo(() => formatBase64Logo(logo), [logo]);
+  const initials = getEntityInitials(name);
+
+  // Reset error when logo changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [logo]);
+
+  const sizeClasses = {
+    xs: "w-6 h-6 text-[10px]",
+    sm: "w-8 h-8 text-xs",
+    md: "w-10 h-10 text-sm",
+    lg: "w-12 h-12 text-base",
+    xl: "w-16 h-16 text-lg",
+  }[size];
+
+  if (logoSrc && !imageError) {
+    return (
+      <div
+        className={`relative ${sizeClasses} rounded-full overflow-hidden shrink-0 bg-white shadow-2xs flex items-center justify-center p-0.5 ${
+          bordered ? "border border-slate-200/90 ring-1 ring-slate-100" : ""
+        } ${className}`}
+      >
+        <img
+          src={logoSrc}
+          alt={name || "Entity Logo"}
+          className="w-full h-full object-contain rounded-full"
+          onError={() => setImageError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`relative ${sizeClasses} rounded-full shrink-0 flex items-center justify-center font-bold text-white shadow-2xs select-none bg-gradient-to-br from-[var(--color-primary)] via-teal-600 to-emerald-600 ${
+        bordered ? "ring-2 ring-white/80 border border-slate-200/40" : ""
+      } ${className}`}
+      title={name || "Healthcare Entity"}
+    >
+      {initials}
+    </div>
+  );
+};
+
+export interface AdminEntityInfo {
+  id: string | number | null;
+  type: string;
+}
+
+export const getAdminEntityInfo = (sessionUser: any): AdminEntityInfo => {
+  if (!sessionUser) return { id: null, type: "" };
+
+  // Detect type
+  let type = "";
+  if (typeof sessionUser.entity_name === "string" && sessionUser.entity_name.trim()) {
+    const lower = sessionUser.entity_name.toLowerCase().trim();
+    if (lower === "clinic" || lower === "lab" || lower === "doctor" || lower === "pharmacy") {
+      type = lower;
+    }
+  }
+
+  if (!type) {
+    if (sessionUser.clinic_id) type = "clinic";
+    else if (sessionUser.lab_id) type = "lab";
+    else if (sessionUser.doctor_id) type = "doctor";
+    else if (sessionUser.pharmacy_id || sessionUser.pharma_id) type = "pharmacy";
+  }
+
+  // Detect id
+  let id: string | number | null = null;
+  if (type === "clinic") {
+    id = sessionUser.clinic_id ?? sessionUser.entity_id ?? null;
+  } else if (type === "lab") {
+    id = sessionUser.lab_id ?? sessionUser.entity_id ?? null;
+  } else if (type === "doctor") {
+    id = sessionUser.doctor_id ?? sessionUser.entity_id ?? null;
+  } else if (type === "pharmacy") {
+    id = sessionUser.pharmacy_id ?? sessionUser.pharma_id ?? sessionUser.entity_id ?? null;
+  } else if (sessionUser.entity_id) {
+    id = sessionUser.entity_id;
+  }
+
+  return { id, type };
+};
+
+// ============================================================================
 // Text & Date Utilities
 // ============================================================================
 
@@ -234,4 +383,3 @@ export const FallbackBanner: React.FC<FallbackBannerProps> = ({
     </div>
   );
 };
-

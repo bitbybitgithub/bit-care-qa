@@ -84,26 +84,31 @@ export interface PromotionalOfferslistResponse {
 }
 
 export interface BlogFormData {
-  blog_id?: number;
+  blog_id?: string | number;
   created_date?: string;
+  modified_date?: string;
   title: string;
   short_description: string;
-  content: string;
+  content?: string;
 
   // Temporary field for upload only
-  featured_image: File | null;
+  featured_image?: File | null;
 
   // Database fields
-  featured_image_path: string;
-  featured_image_guid: string;
-  featured_image_name: string;
+  featured_image_path?: string;
+  featured_image_guid?: string;
+  featured_image_name?: string;
 
-  category_id: number | "";
-  status: boolean;
+  category_id?: number | string | "";
+  status?: boolean | number;
 
-  clinic_id: number | "";
-  created_by: number | "";
-  modified_by: number | null;
+  entity_type?: string | null;
+  entity_id?: number | string | null;
+  entity_name?: string | null;
+  entity_email?: string | null;
+  entity_logo?: string | null;
+  created_by?: number | string | null;
+  modified_by?: number | string | null;
 }
 
 export interface BlogListResponse {

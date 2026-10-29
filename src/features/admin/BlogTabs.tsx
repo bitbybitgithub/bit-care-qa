@@ -93,7 +93,12 @@ export const BlogTabs: React.FC = () => {
           TAB CONTENT PANEL
       ====================================================== */}
       <div className="transition-all duration-200">
-        {activeTab === "view" && <BlogsList />}
+        {activeTab === "view" && (
+          <BlogsList
+            adminView={true}
+            onCreateArticle={() => handleTabChange("add")}
+          />
+        )}
 
         {activeTab === "add" && (
           <BlogForm

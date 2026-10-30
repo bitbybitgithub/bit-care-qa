@@ -20,10 +20,99 @@ import { getPromotionalOffersApi } from "../../api";
 import type { PromotionalOffer } from "../../types/types";
 import { getSession } from "../../context/sessions/userSession";
 
+
+const getOfferImage = async (
+  offer: PromotionalOffer,
+): Promise<string> => {
+  if (!offer.offer_image_guid) return "";
+
+  const response = await fetch(`${BASE_URL}/common/downloadFile`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      filePath: "E:\\DEV\\documents\\offers",
+      fileName: offer.offer_image_guid,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to load offer image: ${response.status}`);
+  }
+
+  const imageBlob = await response.blob();
+  return URL.createObjectURL(imageBlob);
+};
+
+
 interface PromotionalOffersProps {
   onEdit: (offer: PromotionalOffer) => void;
   onAddNew?: () => void;
 }
+
+interface OfferImageProps {
+  offer: PromotionalOffer;
+  onError: () => void;
+}
+
+const OfferImage: React.FC<OfferImageProps> = ({
+  offer,
+  onError,
+}) => {
+  const [imageUrl, setImageUrl] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl = "";
+
+    const loadImage = async () => {
+      try {
+        const url = await getOfferImage(offer);
+
+        if (cancelled) {
+          if (url) URL.revokeObjectURL(url);
+          return;
+        }
+
+        if (url) {
+          objectUrl = url;
+          setImageUrl(url);
+        } else {
+          onError();
+        }
+      } catch (error) {
+        console.error("Error loading offer image:", error);
+
+        if (!cancelled) {
+          onError();
+        }
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [offer.offer_image_guid]);
+
+  if (!imageUrl) return null;
+
+  return (
+    <img
+      src={imageUrl}
+      alt={offer.offer_title}
+      className="absolute inset-0 w-full h-full object-cover"
+      onError={onError}
+    />
+  );
+};
+
 
 const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
   onEdit,
@@ -112,10 +201,10 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
     });
   };
 
-  const getImageUrl = (offer: PromotionalOffer) => {
-    if (!offer.offer_image_guid) return "";
-    return `${BASE_URL}/patient/patients/offer-images/${offer.offer_image_guid}`;
-  };
+  // const getImageUrl = (offer: PromotionalOffer) => {
+  //   if (!offer.offer_image_guid) return "";
+  //   return `${BASE_URL}/patient/patients/offer-images/${offer.offer_image_guid}`;
+  // };
 
   const formatValidTill = (dateStr?: string) => {
     if (!dateStr) return "Ongoing";
@@ -277,8 +366,9 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
       {!error && filteredOffers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {filteredOffers.map((offer) => {
-            const imageUrl = getImageUrl(offer);
-            const isImageFailed = failedImages[offer.offer_id] || !imageUrl;
+            const isImageFailed = failedImages[offer.offer_id] || !offer.offer_image_guid;
+            // const imageUrl = getImageUrl(offer);
+            // const isImageFailed = failedImages[offer.offer_id] || !imageUrl;
             const isActive = Number(offer.is_active ?? 1) === 1;
 
             return (
@@ -287,33 +377,31 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
                 className="relative rounded-2xl overflow-hidden min-h-[220px] p-5 flex flex-col justify-between bg-slate-900 border border-slate-800 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1 group"
               >
                 {/* Background Image with Dark Cinematic Gradient Overlay */}
-                {!isImageFailed ? (
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{
-                      backgroundImage: `url(${imageUrl})`,
-                    }}
-                  >
-                    <img
-                      src={imageUrl}
-                      alt={offer.offer_title}
-                      className="hidden"
-                      onError={() =>
-                        setFailedImages((prev) => ({
-                          ...prev,
-                          [offer.offer_id]: true,
-                        }))
-                      }
-                    />
-                    {/* Gradient Overlay for high readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/60" />
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
-                    <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[var(--color-primary)]/15 blur-2xl pointer-events-none" />
-                    <Percent className="absolute right-4 bottom-4 w-28 h-28 text-white/[0.04] pointer-events-none" />
-                  </div>
-                )}
+                
+
+                {/* Background Image */}
+              {!isImageFailed ? (
+                <>
+                  <OfferImage
+                    offer={offer}
+                    onError={() =>
+                      setFailedImages((prev) => ({
+                        ...prev,
+                        [offer.offer_id]: true,
+                      }))
+                    }
+                  />
+
+                  {/* Preserve the existing dark overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/60" />
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+                  <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[var(--color-primary)]/15 blur-2xl pointer-events-none" />
+                  <Percent className="absolute right-4 bottom-4 w-28 h-28 text-white/[0.04] pointer-events-none" />
+                </div>
+              )}
+
 
                 {/* Top Row: Center Pill & Validity / Status */}
                 <div className="relative z-10 flex items-center justify-between gap-2">

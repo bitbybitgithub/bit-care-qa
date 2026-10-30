@@ -42,6 +42,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   const today = new Date().toISOString().split("T")[0];
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   const navigationState = location.state as {
     offer?: PromotionalOffer;
@@ -84,6 +85,32 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
     priority: "",
   });
 
+  const loadExistingOfferImage = async (imageGuid: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/common/downloadFile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        filePath: "E:\\DEV\\documents\\offers",
+        fileName: imageGuid,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load offer image");
+    }
+
+    const imageBlob = await response.blob();
+    return URL.createObjectURL(imageBlob);
+  } catch (error) {
+    console.error("Failed to load existing offer image:", error);
+    return "";
+  }
+};
+
+
   useEffect(() => {
     if (!isEdit || !selectedOffer) return;
 
@@ -116,14 +143,41 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       created_by: user?.user_id ?? 0,
     });
 
+    // if (selectedOffer.offer_image_guid) {
+    //   setPreview(
+    //     `${BASE_URL}/patient/patients/offer-images/${selectedOffer.offer_image_guid}`,
+    //   );
+    // } else {
+    //   setPreview("");
+    // }
+
     if (selectedOffer.offer_image_guid) {
-      setPreview(
-        `${BASE_URL}/patient/patients/offer-images/${selectedOffer.offer_image_guid}`,
-      );
-    } else {
-      setPreview("");
-    }
+    let imageUrl = "";
+
+    loadExistingOfferImage(selectedOffer.offer_image_guid).then((url) => {
+      imageUrl = url;
+
+      if (url) {
+        setPreview(url);
+      } else {
+        setPreview("");
+      }
+    });
+  } else {
+    setPreview("");
+  }
+
   }, [isEdit, selectedOffer]);
+
+  useEffect(() => {
+  return () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  };
+}, []);
+
 
   const processImageFile = (file: File) => {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];

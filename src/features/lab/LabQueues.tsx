@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -38,11 +39,13 @@ import {
   type UpdatePatientTestsResponse,
 } from "../../api/labApis/labQueuesApi";
 import { useSocket } from "../../context/SocketContext";
-import type {
-  LabQueueRow,
-  LabQueueTest,
-  LabReport,
-  LabReportFile,
+import {
+  isPaymentPending,
+  getRowPayableAmount,
+  type LabQueueRow,
+  type LabQueueTest,
+  type LabReport,
+  type LabReportFile,
 } from "./components/LabQueueTypes";
 import type {
   LabWalkInPackage,
@@ -296,6 +299,32 @@ export default function LabQueues({
   );
   const [reopening, setReopening] = useState(false);
 
+  // Payment confirmation states (Task 1 and Task 2)
+  const [samplingConfirmRow, setSamplingConfirmRow] =
+    useState<LabQueueRow | null>(null);
+  const [samplingInProgressId, setSamplingInProgressId] = useState<
+    number | null
+  >(null);
+  const [uploadConfirmRow, setUploadConfirmRow] = useState<LabQueueRow | null>(
+    null,
+  );
+
+  // Sync active upload row with the latest data in rows
+  const currentActiveRow = useMemo(() => {
+    if (!activeRow) return null;
+    const match = rows.find(
+      (r) =>
+        (activeRow.lab_record_id !== undefined &&
+          Number(r.lab_record_id) === Number(activeRow.lab_record_id)) ||
+        (activeRow.lab_appointment_id !== undefined &&
+          Number(r.lab_appointment_id) ===
+            Number(activeRow.lab_appointment_id)) ||
+        (activeRow.appointment_id !== undefined &&
+          Number(r.appointment_id) === Number(activeRow.appointment_id)),
+    );
+    return match ? { ...activeRow, ...match } : activeRow;
+  }, [activeRow, rows]);
+
   /* ---------------- FETCH & REAL-TIME QUEUE REFRESH ---------------- */
   const refreshQueue = useCallback(async () => {
     if (!labId) return;
@@ -446,6 +475,18 @@ export default function LabQueues({
               return matches ? { ...r, ...record, is_fee_paid: "1" } : r;
             }),
           );
+          setActiveRow((prev) => {
+            if (!prev) return null;
+            const matches =
+              (record.lab_record_id !== undefined &&
+                Number(prev.lab_record_id) === Number(record.lab_record_id)) ||
+              (record.lab_appointment_id !== undefined &&
+                Number(prev.lab_appointment_id) ===
+                  Number(record.lab_appointment_id)) ||
+              (record.appointment_id !== undefined &&
+                Number(prev.appointment_id) === Number(record.appointment_id));
+            return matches ? { ...prev, ...record, is_fee_paid: "1" } : prev;
+          });
           return;
         }
       }
@@ -1058,13 +1099,66 @@ export default function LabQueues({
   }, []);
 
   const openUpload = useCallback(
-    (_: React.MouseEvent, row: LabQueueRow) => {
+    (_?: React.MouseEvent, row?: LabQueueRow) => {
+      if (!row) return;
       setActiveRow(row);
       setSavedReports([]);
       void loadSavedReports(row);
     },
     [loadSavedReports],
   );
+
+  const handleUploadClick = useCallback(
+    (e: React.MouseEvent, row: LabQueueRow) => {
+      if (isPaymentPending(row)) {
+        setUploadConfirmRow(row);
+      } else {
+        openUpload(e, row);
+      }
+    },
+    [openUpload],
+  );
+
+  const handleConfirmUpload = useCallback(() => {
+    if (!uploadConfirmRow) return;
+    const rowToOpen = uploadConfirmRow;
+    setUploadConfirmRow(null);
+    openUpload(undefined, rowToOpen);
+  }, [uploadConfirmRow, openUpload]);
+
+  const executeSampling = useCallback(
+    async (row: LabQueueRow) => {
+      if (samplingInProgressId === row.lab_record_id) return;
+      setSamplingInProgressId(row.lab_record_id);
+      try {
+        await updateStatus(row, "Reporting Pending");
+      } catch (error) {
+        console.error("Sampling status update failed:", error);
+      } finally {
+        setSamplingInProgressId(null);
+      }
+    },
+    [samplingInProgressId, updateStatus],
+  );
+
+  const handleSamplingClick = useCallback(
+    (row: LabQueueRow) => {
+      if (samplingInProgressId === row.lab_record_id) return;
+      if (isPaymentPending(row)) {
+        setSamplingConfirmRow(row);
+      } else {
+        void executeSampling(row);
+      }
+    },
+    [samplingInProgressId, executeSampling],
+  );
+
+  const handleConfirmSampling = useCallback(async () => {
+    if (!samplingConfirmRow || samplingInProgressId !== null) return;
+    const rowToSample = samplingConfirmRow;
+    setSamplingConfirmRow(null);
+    await executeSampling(rowToSample);
+  }, [samplingConfirmRow, samplingInProgressId, executeSampling]);
 
   const closeUpload = () => {
     setActiveRow(null);
@@ -1080,6 +1174,11 @@ export default function LabQueues({
           : row,
       ),
     );
+    setActiveRow((prev) =>
+      prev && Number(prev.lab_record_id) === labRecordId
+        ? { ...prev, is_fee_paid: "1" }
+        : prev,
+    );
   };
 
   const uploadPath = (type?: string): UploadPath => {
@@ -1090,10 +1189,11 @@ export default function LabQueues({
   };
 
   const uploadTestFile = async (file: File): Promise<LabReportFile> => {
-    if (!activeRow) throw new Error("Select an appointment before uploading.");
+    const targetRow = currentActiveRow || activeRow;
+    if (!targetRow) throw new Error("Select an appointment before uploading.");
     try {
       setUploading(true);
-      const path = uploadPath(activeRow.booking_source);
+      const path = uploadPath(targetRow.booking_source);
       const uploadRes = await uploadReportFile(file, path);
       const uploadedFile = uploadRes?.files?.[0];
       const guid =
@@ -1129,12 +1229,13 @@ export default function LabQueues({
   };
 
   const saveReport = async (report: LabReportFile): Promise<number> => {
-    if (!activeRow) throw new Error("No appointment is selected.");
-    const path = uploadPath(activeRow.booking_source);
+    const targetRow = currentActiveRow || activeRow;
+    if (!targetRow) throw new Error("No appointment is selected.");
+    const path = uploadPath(targetRow.booking_source);
 
     const saveResponse = await savereportAsync({
-      lab_record_id: Number(activeRow.lab_record_id),
-      lab_id: Number(activeRow.lab_id),
+      lab_record_id: Number(targetRow.lab_record_id),
+      lab_id: Number(targetRow.lab_id),
       test_date: new Date().toISOString(),
       file_guid_name: report.guid,
       file_name: report.originalName,
@@ -1149,11 +1250,18 @@ export default function LabQueues({
   };
 
   const handleCompleteReport = useCallback(async () => {
-    if (!activeRow) throw new Error("No appointment is selected.");
-    await updateStatus(activeRow, "Completed");
+    const targetRow = currentActiveRow || activeRow;
+    if (!targetRow) throw new Error("No appointment is selected.");
+    if (isPaymentPending(targetRow)) {
+      toast.warning(
+        "Payment is pending. Complete Report will be enabled only after the payment is received.",
+      );
+      return;
+    }
+    await updateStatus(targetRow, "Completed");
     closeUpload();
     await refreshQueue();
-  }, [activeRow, updateStatus, refreshQueue]);
+  }, [currentActiveRow, activeRow, updateStatus, refreshQueue]);
 
   /**
    * TASK 2: Reopen for Reporting - Lab Admin only
@@ -1272,7 +1380,7 @@ export default function LabQueues({
           filterable: false,
           renderCell: (p) => (
             <PaymentStatusButton
-              paid={String(p.row.is_fee_paid) === "1"}
+              paid={!isPaymentPending(p.row)}
               onMakePayment={() => setPaymentRow(p.row)}
             />
           ),
@@ -1319,23 +1427,33 @@ export default function LabQueues({
           headerName: "Complete Test",
           flex: 0.9,
           minWidth: 130,
-          renderCell: (p) => (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => updateStatus(p.row, "Reporting Pending")}
-              sx={{
-                borderRadius: "var(--radius-full)",
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: "0.75rem",
-                px: 2,
-                py: 0.5,
-              }}
-            >
-              Sampling
-            </Button>
-          ),
+          renderCell: (p) => {
+            const inFlight = samplingInProgressId === p.row.lab_record_id;
+            return (
+              <Button
+                size="small"
+                variant="contained"
+                disabled={inFlight}
+                onClick={() => handleSamplingClick(p.row)}
+                sx={{
+                  borderRadius: "var(--radius-full)",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.75rem",
+                  px: 2,
+                  py: 0.5,
+                }}
+              >
+                {inFlight ? (
+                  <span className="flex items-center gap-1.5">
+                    <CircularProgress size={12} color="inherit" /> Sampling...
+                  </span>
+                ) : (
+                  "Sampling"
+                )}
+              </Button>
+            );
+          },
         },
         {
           field: "payment_status",
@@ -1346,7 +1464,7 @@ export default function LabQueues({
           filterable: false,
           renderCell: (p) => (
             <PaymentStatusButton
-              paid={String(p.row.is_fee_paid) === "1"}
+              paid={!isPaymentPending(p.row)}
               onMakePayment={() => setPaymentRow(p.row)}
             />
           ),
@@ -1453,7 +1571,7 @@ export default function LabQueues({
           filterable: false,
           renderCell: (p) => (
             <PaymentStatusButton
-              paid={String(p.row.is_fee_paid) === "1"}
+              paid={!isPaymentPending(p.row)}
               onMakePayment={() => setPaymentRow(p.row)}
             />
           ),
@@ -1502,7 +1620,7 @@ export default function LabQueues({
           <Button
             size="small"
             variant="outlined"
-            onClick={(e) => openUpload(e, p.row)}
+            onClick={(e) => handleUploadClick(e, p.row)}
             sx={{
               borderRadius: "var(--radius-full)",
               textTransform: "none",
@@ -1531,7 +1649,7 @@ export default function LabQueues({
         filterable: false,
         renderCell: (p) => (
           <PaymentStatusButton
-            paid={String(p.row.is_fee_paid) === "1"}
+            paid={!isPaymentPending(p.row)}
             onMakePayment={() => setPaymentRow(p.row)}
           />
         ),
@@ -1546,6 +1664,9 @@ export default function LabQueues({
     resolvedMode,
     updateStatus,
     isLabAdmin,
+    handleSamplingClick,
+    handleUploadClick,
+    samplingInProgressId,
   ]);
 
   return (
@@ -1700,20 +1821,21 @@ export default function LabQueues({
       </Drawer>
 
       <LabReportUploadDialog
-        open={Boolean(activeRow)}
-        appointment={activeRow}
+        open={Boolean(currentActiveRow)}
+        appointment={currentActiveRow}
+        isPaymentPending={isPaymentPending(currentActiveRow)}
         existingReports={savedReports}
         reportsLoading={reportsLoading}
         reportsLoadError={reportsLoadError}
         uploading={uploading}
         onClose={closeUpload}
         onRetryLoadReports={() => {
-          if (activeRow) void loadSavedReports(activeRow);
+          if (currentActiveRow) void loadSavedReports(currentActiveRow);
         }}
         onCompleteReport={handleCompleteReport}
         onFilesSaved={async () => {
-          if (activeRow) {
-            await loadSavedReports(activeRow);
+          if (currentActiveRow) {
+            await loadSavedReports(currentActiveRow);
             await refreshQueue();
           }
         }}
@@ -1722,6 +1844,184 @@ export default function LabQueues({
           return saveReport(report);
         }}
       />
+
+      {/* Confirmation Dialog for Sampling with Pending Payment (Task 1) */}
+      <Dialog
+        open={Boolean(samplingConfirmRow)}
+        onClose={
+          samplingInProgressId !== null
+            ? undefined
+            : () => setSamplingConfirmRow(null)
+        }
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "var(--radius-lg)",
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1.5 }}
+        >
+          <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 text-sm">
+            <FaExclamationTriangle />
+          </div>
+          <Typography fontWeight={700} fontSize={16}>
+            Payment Pending
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ py: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            The payment for this patient is still pending. Do you want to
+            proceed to the next stage without payment?
+          </Typography>
+          <Box
+            sx={{
+              mt: 2,
+              p: 1.5,
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-bg)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Patient:{" "}
+              <span className="font-normal text-[var(--color-text)]">
+                {samplingConfirmRow?.patient_name}
+              </span>
+            </Typography>
+            {samplingConfirmRow &&
+              getRowPayableAmount(samplingConfirmRow) !== null && (
+                <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
+                  Amount Due:{" "}
+                  <span className="font-bold text-[var(--color-primary)]">
+                    ₹{getRowPayableAmount(samplingConfirmRow)!.toFixed(2)}
+                  </span>
+                </Typography>
+              )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 2 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setSamplingConfirmRow(null)}
+            disabled={samplingInProgressId !== null}
+            sx={{ textTransform: "none", borderRadius: "var(--radius-md)" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={handleConfirmSampling}
+            disabled={samplingInProgressId !== null}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-surface)",
+              "&:hover": {
+                backgroundColor: "var(--color-primary-dark)",
+              },
+            }}
+          >
+            {samplingInProgressId !== null ? (
+              <span className="flex items-center gap-1.5">
+                <CircularProgress size={14} color="inherit" /> Sampling...
+              </span>
+            ) : (
+              "Yes, Continue Without Payment"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation Dialog for Upload Report with Pending Payment (Task 2) */}
+      <Dialog
+        open={Boolean(uploadConfirmRow)}
+        onClose={() => setUploadConfirmRow(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "var(--radius-lg)",
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1.5 }}
+        >
+          <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 text-sm">
+            <FaExclamationTriangle />
+          </div>
+          <Typography fontWeight={700} fontSize={16}>
+            Payment Pending
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ py: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            The payment for this patient has not been received. Do you want to
+            continue with the report upload?
+          </Typography>
+          <Box
+            sx={{
+              mt: 2,
+              p: 1.5,
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-bg)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Patient:{" "}
+              <span className="font-normal text-[var(--color-text)]">
+                {uploadConfirmRow?.patient_name}
+              </span>
+            </Typography>
+            {uploadConfirmRow &&
+              getRowPayableAmount(uploadConfirmRow) !== null && (
+                <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
+                  Amount Due:{" "}
+                  <span className="font-bold text-[var(--color-primary)]">
+                    ₹{getRowPayableAmount(uploadConfirmRow)!.toFixed(2)}
+                  </span>
+                </Typography>
+              )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 2 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setUploadConfirmRow(null)}
+            sx={{ textTransform: "none", borderRadius: "var(--radius-md)" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={handleConfirmUpload}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "var(--radius-md)",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-surface)",
+              "&:hover": {
+                backgroundColor: "var(--color-primary-dark)",
+              },
+            }}
+          >
+            Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Confirmation Dialog for Reopening a Completed Report (Lab Admin only) */}
       <Dialog

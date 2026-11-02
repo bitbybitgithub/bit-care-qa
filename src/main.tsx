@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProviderWrapper } from "./theme";
 import "./theme/token.css";
 import "./index.css";
+import "./styles/healthcare-toast.css";
 import { LoaderProvider } from "./context/LoaderContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LocalizationProvider } from "@mui/x-date-pickers";

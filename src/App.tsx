@@ -2,7 +2,8 @@ import { useNavigate, useRoutes } from "react-router-dom";
 import Router from "./routes/Router";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import ScrollToTop from "./components/shared/ScrollToTop";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import HealthcareToastContainer from "./components/shared/HealthcareToast";
 import { ApiInterceptor } from "./services/EmrApi";
 import { logoutApi } from "./api";
 import { useDispatch } from "react-redux";
@@ -32,18 +33,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <ToastContainer
-        position="top-center" // top-left, bottom-right, bottom-left
-        autoClose={3000} // 3 seconds
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored" // "light" | "dark" | "colored"
-      />
+      <HealthcareToastContainer />
       <ScrollToTop>{routing}</ScrollToTop>
     </ErrorBoundary>
   );

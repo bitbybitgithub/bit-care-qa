@@ -65,7 +65,7 @@ export const offersdiscountApi = async (formData: OfferForm) => {
       modified_by: formData.modified_by ?? null,
     };
 
-    const response = await emrAPI.post<any>("/admin/offers", offersDiscount);
+    const response = await emrAPI.post<any>("/admin/save-offers", offersDiscount);
 
     return response;
   } catch (error: any) {

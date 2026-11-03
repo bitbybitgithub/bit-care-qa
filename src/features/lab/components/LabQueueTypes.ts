@@ -40,7 +40,7 @@ export interface LabQueueRow {
   appointment_type?: string;
   lab_appointment_id?: number;
   appointment_id?: number;
-  is_fee_paid?: string | number;
+  is_fee_paid?: string | number | boolean;
   test_details?: LabQueueTest[];
   is_package?: string | number;
   package_id?: number;
@@ -76,4 +76,78 @@ export interface LabReportFile {
   createdBy?: string | number;
   createdDate?: string;
   file?: File;
+}
+
+/**
+ * Determines whether payment is pending for a lab queue row.
+ * In this system, is_fee_paid = "1", 1, or true means fee is PAID.
+ * Any other value (e.g. "0", 0, false, null, undefined) means payment is NOT PAID (PENDING).
+ */
+export function isPaymentPending(
+  row?: { is_fee_paid?: string | number | boolean | null } | null,
+): boolean {
+  if (!row) return false;
+  const val = row.is_fee_paid;
+  if (val === true || val === 1 || val === "1") {
+    return false;
+  }
+  if (typeof val === "string" && val.trim() === "1") {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Calculates the total payable / amount due for a row if available.
+ */
+export function getRowPayableAmount(row?: LabQueueRow | null): number | null {
+  if (!row) return null;
+
+  const isPackage = Boolean(
+    row.is_package === "1" ||
+      row.is_package === 1 ||
+      row.package_id ||
+      row.package_name ||
+      row.package_code,
+  );
+
+  if (isPackage && row.package_price != null) {
+    const pkgPrice = Number(row.package_price);
+    if (!Number.isNaN(pkgPrice) && pkgPrice >= 0) {
+      return pkgPrice;
+    }
+  }
+
+  const tests =
+    Array.isArray(row.test_details) && row.test_details.length > 0
+      ? row.test_details
+      : Array.isArray(row.package_tests) && row.package_tests.length > 0
+        ? row.package_tests
+        : [];
+
+  if (tests.length > 0) {
+    const total = tests.reduce((sum, t) => {
+      const payable =
+        t.payable_amount != null
+          ? Number(t.payable_amount)
+          : Math.max(
+              0,
+              Number(t.test_price ?? 0) - Number(t.discount_price ?? 0),
+            );
+      return sum + (Number.isNaN(payable) ? 0 : payable);
+    }, 0);
+    return total;
+  }
+
+  const direct =
+    (row as Record<string, unknown>).payable_amount ??
+    (row as Record<string, unknown>).total_amount ??
+    (row as Record<string, unknown>).amount;
+
+  if (direct != null) {
+    const n = Number(direct);
+    if (!Number.isNaN(n) && n >= 0) return n;
+  }
+
+  return null;
 }

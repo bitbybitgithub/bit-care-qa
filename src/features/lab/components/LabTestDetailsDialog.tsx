@@ -24,7 +24,11 @@ import {
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import PdfViewerDialog from "../../../components/common/PdfViewerDialog";
-import type { LabQueueRow, LabQueueTest } from "./LabQueueTypes";
+import {
+  isPaymentPending,
+  type LabQueueRow,
+  type LabQueueTest,
+} from "./LabQueueTypes";
 
 interface LabTestDetailsDialogProps {
   open: boolean;
@@ -101,7 +105,7 @@ export default function LabTestDetailsDialog({
 
   if (!row) return null;
 
-  const isPaid = String(row.is_fee_paid) === "1";
+  const isPaid = !isPaymentPending(row);
   const isProcessing = row.result_status === "Processing";
 
   // Test cards content formatted consistent with Service Management

@@ -1,0 +1,438 @@
+/* ==========================================================
+   🏥 BitCare Production Healthcare Toast System
+   High-Contrast, Crisp Clinical Notification Design
+   ========================================================== */
+
+/* Import base react-toastify styling */
+@import "react-toastify/dist/ReactToastify.css";
+
+/* ----------------------------------------------------------
+   1. Root Variables & Resetting ReactToastify text colors
+   (CRITICAL: Prevents ReactToastify's #fff white text bug)
+   ---------------------------------------------------------- */
+:root {
+  --toastify-z-index: 99999;
+  --toastify-toast-width: 350px;
+  --toastify-toast-offset: 16px;
+  --toastify-toast-bd-radius: 10px;
+  --toastify-color-light: #ffffff;
+  --toastify-text-color-light: #0f172a;
+  --toastify-text-color-dark: #f8fafc;
+  --toastify-text-color-info: #0f172a;
+  --toastify-text-color-success: #0f172a;
+  --toastify-text-color-warning: #0f172a;
+  --toastify-text-color-error: #0f172a;
+  --toastify-font-family: var(--font-family, "Inter", "Roboto", system-ui, -apple-system, sans-serif);
+}
+
+/* ----------------------------------------------------------
+   2. Toast Container Viewport Positioning
+   ---------------------------------------------------------- */
+.Toastify__toast-container {
+  width: min(350px, calc(100vw - 32px)) !important;
+  padding: 0 !important;
+  z-index: 99999 !important;
+  pointer-events: none;
+}
+
+.Toastify__toast-container > * {
+  pointer-events: auto;
+}
+
+.Toastify__toast-container--top-right {
+  top: 18px !important;
+  right: 18px !important;
+}
+
+.Toastify__toast-container--top-center {
+  top: 18px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+@media (max-width: 640px) {
+  .Toastify__toast-container {
+    top: 12px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: calc(100vw - 32px) !important;
+    transform: none !important;
+  }
+}
+
+/* ----------------------------------------------------------
+   3. Base Toast Card (Crisp White Surface + Subtle Border)
+   ---------------------------------------------------------- */
+.Toastify__toast {
+  position: relative !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  min-height: 48px !important;
+  padding: 10px 12px 12px 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-family, "Inter", "Roboto", system-ui, sans-serif) !important;
+  cursor: default !important;
+
+  /* Strict clipping & isolation */
+  overflow: hidden !important;
+  contain: paint !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+  -webkit-mask-image: -webkit-radial-gradient(white, black) !important;
+  mask-image: radial-gradient(white, black) !important;
+
+  /* Pristine white card in light mode */
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.06),
+    0 2px 4px -2px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+  color: #0f172a !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Force dark text on all status toast types (no white-on-white!) */
+.Toastify__toast--default,
+.Toastify__toast--info,
+.Toastify__toast--success,
+.Toastify__toast--warning,
+.Toastify__toast--error {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Micro-interaction on hover */
+.Toastify__toast:hover {
+  transform: translateY(-1px) !important;
+  box-shadow:
+    0 8px 16px -2px rgba(0, 0, 0, 0.08),
+    0 3px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .Toastify__toast,
+[data-theme="dark"] .Toastify__toast--default,
+[data-theme="dark"] .Toastify__toast--info,
+[data-theme="dark"] .Toastify__toast--success,
+[data-theme="dark"] .Toastify__toast--warning,
+[data-theme="dark"] .Toastify__toast--error {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+  box-shadow:
+    0 8px 20px -4px rgba(0, 0, 0, 0.5),
+    0 2px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ----------------------------------------------------------
+   4. Clean Vertical Status Strip (Left 3.5px)
+   ---------------------------------------------------------- */
+.Toastify__toast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  border-radius: 10px 0 0 10px;
+  z-index: 2;
+}
+
+.Toastify__toast--success::before {
+  background-color: #10b981 !important;
+}
+
+.Toastify__toast--error::before {
+  background-color: #ef4444 !important;
+}
+
+.Toastify__toast--warning::before {
+  background-color: #f59e0b !important;
+}
+
+.Toastify__toast--info::before {
+  background-color: var(--color-primary, #0284c7) !important;
+}
+
+/* ----------------------------------------------------------
+   5. Toast Body & High-Contrast Typography
+   ---------------------------------------------------------- */
+.Toastify__toast-body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  align-items: flex-start !important;
+  margin: 0 !important;
+  padding: 0 4px 0 8px !important;
+  width: auto !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .Toastify__toast-body {
+  color: #f8fafc !important;
+}
+
+.healthcare-toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding-left: 2px;
+  text-align: left;
+}
+
+.healthcare-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+/* Crystal-clear dark title */
+.healthcare-toast-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.01em !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-theme="dark"] .healthcare-toast-title {
+  color: #f8fafc !important;
+}
+
+/* High-contrast readable description */
+.healthcare-toast-desc {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  color: #334155 !important; /* Deep Slate 700 - razor sharp contrast */
+  word-break: break-word;
+}
+
+[data-theme="dark"] .healthcare-toast-desc {
+  color: #cbd5e1 !important;
+}
+
+.healthcare-toast-desc strong {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .healthcare-toast-desc strong {
+  color: #ffffff !important;
+}
+
+/* ----------------------------------------------------------
+   6. Clinical Icon Badges
+   ---------------------------------------------------------- */
+.healthcare-toast-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.healthcare-toast-icon-wrap--success {
+  background-color: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #059669 !important;
+}
+
+.healthcare-toast-icon-wrap--error {
+  background-color: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.healthcare-toast-icon-wrap--warning {
+  background-color: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  color: #d97706 !important;
+}
+
+.healthcare-toast-icon-wrap--info {
+  background-color: #f0f9ff !important;
+  border: 1px solid #bae6fd !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="dark"] .healthcare-toast-icon-wrap--success {
+  background-color: rgba(6, 78, 59, 0.4) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .healthcare-toast-icon-wrap--error {
+  background-color: rgba(136, 19, 55, 0.4) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  color: #fb7185 !important;
+}
+
+[data-theme="dark"] .healthcare-toast-icon-wrap--warning {
+  background-color: rgba(120, 53, 15, 0.4) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .healthcare-toast-icon-wrap--info {
+  background-color: rgba(12, 74, 110, 0.4) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+  color: #38bdf8 !important;
+}
+
+/* ----------------------------------------------------------
+   7. Clinical Badges
+   ---------------------------------------------------------- */
+.healthcare-toast-badge {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  padding: 1px 6px !important;
+  border-radius: 9999px !important;
+  border: 1px solid transparent !important;
+  line-height: 1.2 !important;
+}
+
+.healthcare-toast-badge--success {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.healthcare-toast-badge--error {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fecaca !important;
+}
+
+.healthcare-toast-badge--warning {
+  background-color: #fffbeb !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+.healthcare-toast-badge--info {
+  background-color: #f0f9ff !important;
+  color: #075985 !important;
+  border-color: #bae6fd !important;
+}
+
+[data-theme="dark"] .healthcare-toast-badge--success {
+  background-color: rgba(6, 78, 59, 0.4) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .healthcare-toast-badge--error {
+  background-color: rgba(136, 19, 55, 0.4) !important;
+  color: #fda4af !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+[data-theme="dark"] .healthcare-toast-badge--warning {
+  background-color: rgba(120, 53, 15, 0.4) !important;
+  color: #fde68a !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .healthcare-toast-badge--info {
+  background-color: rgba(12, 74, 110, 0.4) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(14, 165, 233, 0.3) !important;
+}
+
+/* ----------------------------------------------------------
+   8. Hairline Progress Bar (Inset & Never Leaking)
+   ---------------------------------------------------------- */
+.Toastify__progress-bar--wrp {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 3.5px !important; /* Starts after the left indicator bar */
+  right: 0 !important;
+  width: calc(100% - 3.5px) !important;
+  height: 2px !important;
+  overflow: hidden !important;
+  border-bottom-right-radius: 9px !important;
+  contain: paint !important;
+  pointer-events: none !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  z-index: 1 !important;
+}
+
+[data-theme="dark"] .Toastify__progress-bar--wrp {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.Toastify__progress-bar {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  height: 2px !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  opacity: 0.85 !important;
+  transform-origin: left !important;
+}
+
+.Toastify__progress-bar--success {
+  background: #10b981 !important;
+}
+
+.Toastify__progress-bar--error {
+  background: #ef4444 !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: #f59e0b !important;
+}
+
+.Toastify__progress-bar--info {
+  background: var(--color-primary, #0284c7) !important;
+}
+
+/* ----------------------------------------------------------
+   9. Dismiss / Close Button
+   ---------------------------------------------------------- */
+.healthcare-toast-close,
+.Toastify__close-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  padding: 0 !important;
+  margin: -2px -2px 0 6px !important;
+  color: #94a3b8 !important;
+  opacity: 0.7 !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.healthcare-toast-close:hover,
+.Toastify__close-button:hover {
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.06) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .healthcare-toast-close:hover,
+[data-theme="dark"] .Toastify__close-button:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Tag,
@@ -15,16 +15,128 @@ import {
   RotateCcw,
   AlertCircle,
   Eye,
+  FlaskConical,
+  PlusCircle,
+  X,
+  Edit2,
 } from "lucide-react";
+import LabTestSelectionPopup from "../lab/LabTestSelectionPopup";
+import type { LabWalkInTest } from "../../types/labType/LabTestInterfaces";
 import { toast } from "react-toastify";
 import type {
   OfferForm,
   ValidationErrors,
   PromotionalOffer,
+  AvailableOfferTest,
 } from "../../types/types";
 import { offersdiscountApi, uploadOfferImageApi } from "../../api";
 import { getSession } from "../../context/sessions/userSession";
 import { BASE_URL } from "../../services/EmrApi";
+
+export const toLocalDateInputValue = (val?: string | null): string => {
+  if (!val) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export interface MappedOfferState {
+  formData: OfferForm;
+  selectedTests: LabWalkInTest[];
+  isActive: number;
+  isTestBased: boolean;
+  hasConflictingPercentage: boolean;
+}
+
+export const mapOfferToFormState = (
+  offer: PromotionalOffer,
+  currentUserId: number,
+): MappedOfferState => {
+  const isTestSpecific =
+    String((offer as any).is_test_specific) === "1" ||
+    (Array.isArray(offer.tests) && offer.tests.length > 0) ||
+    (Array.isArray((offer as any).available_offers) &&
+      (offer as any).available_offers.length > 0);
+
+  const rawTests: any[] =
+    Array.isArray(offer.tests) && offer.tests.length > 0
+      ? offer.tests
+      : Array.isArray((offer as any).available_offers) &&
+          (offer as any).available_offers.length > 0
+        ? (offer as any).available_offers
+        : [];
+
+  const selectedTests: LabWalkInTest[] = rawTests.map((t: any) => {
+    const offerAmount = Number(t.offer_price ?? t.offer_amount ?? 0);
+    const price = Number(t.test_price ?? t.price ?? 0);
+    return {
+      test_id: Number(t.test_id),
+      category_id: Number(t.category_id || 0),
+      category_name: t.category_name || "General Laboratory",
+      test_name: t.test_name || `Test #${t.test_id}`,
+      test_code: t.test_code || "",
+      price,
+      discount_price: offerAmount,
+      offer_amount: offerAmount,
+    };
+  });
+
+  const isTestBased = isTestSpecific && selectedTests.length > 0;
+
+  const hasConflictingPercentage =
+    isTestBased &&
+    offer.discount_percentage !== null &&
+    offer.discount_percentage !== undefined &&
+    offer.discount_percentage !== "" &&
+    Number(offer.discount_percentage) > 0;
+
+  const discountPercentage = isTestBased
+    ? ""
+    : offer.discount_percentage !== null &&
+        offer.discount_percentage !== undefined &&
+        offer.discount_percentage !== ""
+      ? Number(offer.discount_percentage)
+      : "";
+
+  const formData: OfferForm = {
+    offer_id: offer.offer_id != null ? Number(offer.offer_id) : null,
+    is_active: Number(offer.is_active ?? 1) === 1 ? 1 : 0,
+    center_id: offer.center_id != null ? Number(offer.center_id) : undefined,
+    entity_type: offer.entity_type != null ? Number(offer.entity_type) : 2,
+    center_name: offer.center_name || "",
+    offer_title: offer.offer_title || "",
+    offer_description: offer.offer_description || "",
+    offer_image: null,
+    offer_image_path: offer.offer_image_path || "",
+    offer_image_guid: offer.offer_image_guid || "",
+    offer_image_name: offer.offer_image_name || "",
+    discount_percentage: discountPercentage,
+    coupon_code: offer.coupon_code || "",
+    start_date: toLocalDateInputValue(offer.start_date),
+    end_date: toLocalDateInputValue(offer.end_date),
+    priority: offer.priority != null ? Number(offer.priority) : 0,
+    created_by: currentUserId,
+    modified_by: currentUserId,
+    available_offers: isTestBased
+      ? selectedTests.map((t) => ({
+          test_id: t.test_id,
+          offer_amount: Number(t.offer_amount ?? 0),
+        }))
+      : null,
+  };
+
+  return {
+    formData,
+    selectedTests,
+    isActive: Number(offer.is_active ?? 1) === 1 ? 1 : 0,
+    isTestBased,
+    hasConflictingPercentage,
+  };
+};
 
 interface OffersDiscountProps {
   initialOffer?: PromotionalOffer | null;
@@ -42,6 +154,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   const today = new Date().toISOString().split("T")[0];
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   const navigationState = location.state as {
     offer?: PromotionalOffer;
@@ -57,6 +170,9 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   const [preview, setPreview] = useState("");
   const [isActive, setIsActive] = useState<number>(1);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasConflictingPercentage, setHasConflictingPercentage] =
+    useState(false);
+  const initialSnapshotRef = useRef<string>("");
 
   const [formData, setFormData] = useState<OfferForm>({
     offer_title: "",
@@ -84,46 +200,178 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
     priority: "",
   });
 
-  useEffect(() => {
-    if (!isEdit || !selectedOffer) return;
+  const [isTestSelectionOpen, setIsTestSelectionOpen] = useState(false);
+  const [selectedOfferTests, setSelectedOfferTests] = useState<LabWalkInTest[]>(
+    [],
+  );
 
-    setIsActive(Number(selectedOffer.is_active ?? 1));
+  const centerId =
+    user?.entity_type === 1
+      ? user?.clinic_id
+      : user?.entity_type === 2
+        ? user?.lab_id
+        : user?.clinic_id || user?.lab_id;
 
-    const parseToDateInput = (val?: string | null) => {
-      if (!val) return "";
-      try {
-        const d = new Date(val);
-        if (Number.isNaN(d.getTime())) return "";
-        return d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-      } catch {
-        return "";
+  const activeLabId = Number(user?.lab_id || centerId || 1);
+
+  const hasPercentage =
+    formData.discount_percentage !== "" &&
+    Number(formData.discount_percentage) > 0;
+  const hasSelectedTests = selectedOfferTests.length > 0;
+
+  const totalTests = selectedOfferTests.length;
+  const totalTestPrice = selectedOfferTests.reduce(
+    (sum, t) => sum + Number(t.price || 0),
+    0,
+  );
+  const totalOfferAmount = selectedOfferTests.reduce(
+    (sum, t) => sum + Number(t.offer_amount ?? t.discount_price ?? 0),
+    0,
+  );
+
+  const testsByCategory = useMemo(() => {
+    const map = new Map<string, LabWalkInTest[]>();
+    selectedOfferTests.forEach((test) => {
+      const cat = test.category_name?.trim() || "General Laboratory";
+      if (!map.has(cat)) {
+        map.set(cat, []);
       }
-    };
-
-    setFormData({
-      offer_id: selectedOffer.offer_id,
-      offer_title: selectedOffer.offer_title ?? "",
-      offer_description: selectedOffer.offer_description ?? "",
-      offer_image: null,
-      offer_image_path: selectedOffer.offer_image_path ?? "",
-      offer_image_guid: selectedOffer.offer_image_guid ?? "",
-      offer_image_name: selectedOffer.offer_image_name ?? "",
-      discount_percentage: selectedOffer.discount_percentage ?? "",
-      coupon_code: selectedOffer.coupon_code ?? "",
-      start_date: parseToDateInput(selectedOffer.start_date),
-      end_date: parseToDateInput(selectedOffer.end_date),
-      priority: selectedOffer.priority ?? 0,
-      created_by: user?.user_id ?? 0,
+      map.get(cat)!.push(test);
     });
+    return Array.from(map.entries());
+  }, [selectedOfferTests]);
 
-    if (selectedOffer.offer_image_guid) {
-      setPreview(
-        `${BASE_URL}/patient/patients/offer-images/${selectedOffer.offer_image_guid}`,
+  const handleConfirmOfferTests = (tests: LabWalkInTest[]) => {
+    setSelectedOfferTests(tests);
+    if (tests.length > 0) {
+      setFormData((prev) => ({ ...prev, discount_percentage: "" }));
+      setErrors((prev) => ({ ...prev, discount_percentage: "" }));
+    }
+  };
+
+  const handleInlineOfferAmountChange = (testId: number, value: string) => {
+    if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
+      return;
+    }
+    setSelectedOfferTests((prev) =>
+      prev.map((t) => {
+        if (t.test_id !== testId) return t;
+        const offerAmount = value === "" ? 0 : Number(value);
+        const payable = Math.max(0, Number(t.price || 0) - offerAmount);
+        return {
+          ...t,
+          offer_amount: offerAmount,
+          discount_price: offerAmount,
+          payable_amount: Number(payable.toFixed(2)),
+        };
+      }),
+    );
+  };
+
+  const handleRemoveOfferTest = (testId: number) => {
+    setSelectedOfferTests((prev) => prev.filter((t) => t.test_id !== testId));
+  };
+
+  const loadExistingOfferImage = async (
+    imageGuid: string,
+    imagePath?: string,
+  ): Promise<string> => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/common/downloadFile`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filePath: imagePath || "E:\\DEV\\documents\\offers",
+            fileName: imageGuid,
+          }),
+        },
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to load offer image");
+      }
+
+      const imageBlob = await response.blob();
+      return URL.createObjectURL(imageBlob);
+    } catch (error) {
+      console.error("Failed to load existing offer image:", error);
+      return "";
+    }
+  };
+
+  useEffect(() => {
+    if (!isEdit || !selectedOffer) {
+      handleReset();
+      initialSnapshotRef.current = "";
+      return;
+    }
+
+    const mapped = mapOfferToFormState(selectedOffer, user?.user_id ?? 0);
+    setFormData(mapped.formData);
+    setSelectedOfferTests(mapped.selectedTests);
+    setIsActive(mapped.isActive);
+    setHasConflictingPercentage(mapped.hasConflictingPercentage);
+
+    if (mapped.formData.offer_image_guid) {
+      loadExistingOfferImage(
+        mapped.formData.offer_image_guid,
+        mapped.formData.offer_image_path,
+      ).then((url) => {
+        if (url) {
+          setPreview(url);
+        } else {
+          setPreview("");
+        }
+      });
     } else {
       setPreview("");
     }
+
+    initialSnapshotRef.current = JSON.stringify({
+      formData: mapped.formData,
+      selectedTests: mapped.selectedTests,
+      isActive: mapped.isActive,
+    });
   }, [isEdit, selectedOffer]);
+
+  const checkIfDirty = () => {
+    if (!initialSnapshotRef.current) return false;
+    const currentSnapshot = JSON.stringify({
+      formData,
+      selectedTests: selectedOfferTests,
+      isActive,
+    });
+    return currentSnapshot !== initialSnapshotRef.current;
+  };
+
+  const handleCancelEdit = () => {
+    if (checkIfDirty()) {
+      if (
+        !window.confirm(
+          "You have unsaved changes. Discard changes and return to View offers?",
+        )
+      ) {
+        return;
+      }
+    }
+    handleReset();
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const processImageFile = (file: File) => {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -237,18 +485,53 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       newErrors.offer_image = "Please upload an offer banner image.";
     }
 
-    const discount = Number(formData.discount_percentage);
-    if (
-      formData.discount_percentage === "" ||
-      discount <= 0 ||
-      discount >= 100
-    ) {
+    const hasPct =
+      formData.discount_percentage !== "" &&
+      Number(formData.discount_percentage) > 0;
+    const hasTests = selectedOfferTests.length > 0;
+
+    if (hasPct && hasTests) {
       newErrors.discount_percentage =
-        "Discount must be greater than 0% and less than 100%.";
+        "An offer cannot have both discount percentage and specific tests.";
+    } else if (!hasPct && !hasTests) {
+      newErrors.discount_percentage =
+        "Please specify a discount percentage OR select tests for the offer.";
+    } else if (hasPct) {
+      const discount = Number(formData.discount_percentage);
+      if (isNaN(discount) || discount <= 0 || discount >= 100) {
+        newErrors.discount_percentage =
+          "Discount must be greater than 0% and less than 100%.";
+      }
+    } else if (hasTests) {
+      const hasInvalidTest = selectedOfferTests.some((t) => {
+        const offer = Number(t.offer_amount ?? t.discount_price ?? 0);
+        const price = Number(t.price ?? 0);
+        return (
+          isNaN(offer) ||
+          offer <= 0 ||
+          isNaN(price) ||
+          price <= 0 ||
+          offer > price
+        );
+      });
+      if (hasInvalidTest) {
+        newErrors.discount_percentage =
+          "All selected tests must have a valid Offer Amount (> ₹0 and ≤ Test Price).";
+      }
     }
 
-    if (!formData.coupon_code.trim()) {
+    if (!hasTests && !formData.coupon_code.trim()) {
       newErrors.coupon_code = "Coupon Code is required.";
+    }
+
+    if (
+      formData.priority === ("" as any) ||
+      formData.priority === null ||
+      formData.priority === undefined ||
+      isNaN(Number(formData.priority)) ||
+      Number(formData.priority) < 0
+    ) {
+      newErrors.priority = "Priority must be a non-negative number.";
     }
 
     if (!formData.start_date) {
@@ -270,6 +553,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
+    debugger;
     if (e) e.preventDefault();
 
     if (loading || !validateForm()) {
@@ -316,27 +600,48 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
         imageName = uploadedFile.file_name;
       }
 
-      const offerData = {
+      const availableOffersPayload: AvailableOfferTest[] | null =
+        selectedOfferTests.length > 0
+          ? selectedOfferTests.map((t) => ({
+              test_id: Number(t.test_id),
+              offer_amount: Number(t.offer_amount ?? t.discount_price ?? 0),
+            }))
+          : null;
+
+      const offerData: OfferForm = {
         ...formData,
-        offer_id: isEdit ? selectedOffer!.offer_id : null,
+        discount_percentage:
+          selectedOfferTests.length > 0
+            ? ""
+            : formData.discount_percentage !== "" &&
+                formData.discount_percentage !== null
+              ? Number(formData.discount_percentage)
+              : "",
+        coupon_code: formData.coupon_code ? formData.coupon_code.trim() : "",
+        offer_id: isEdit
+          ? Number(formData.offer_id ?? selectedOffer!.offer_id)
+          : null,
         is_active: isEdit ? isActive : 1,
-        center_id: centerId,
-        entity_type: user?.entity_type,
-        center_name: user?.full_name,
-        center_type: user?.entity_name,
-        created_by: user?.user_id ?? 0,
-        modified_by: isEdit ? (user?.user_id ?? 0) : null,
+        center_id: Number(centerId),
+        entity_type: Number(user?.entity_type || formData.entity_type || 2),
+        center_name: String(user?.full_name || formData.center_name || ""),
+        center_type: String(
+          user?.entity_name ||
+            (user?.entity_type === 2 ? "lab" : "clinic") ||
+            "lab",
+        ),
+        priority: Number(formData.priority ?? 0),
+        created_by: Number(user?.user_id ?? 0),
+        modified_by: isEdit ? Number(user?.user_id ?? 0) : null,
         offer_image_path: imagePath,
         offer_image_guid: imageGuid,
         offer_image_name: imageName,
+        available_offers: availableOffersPayload,
       };
 
       const res = await offersdiscountApi(offerData);
       toast.success(
-        res?.message ||
-          (isEdit
-            ? "Offer updated successfully!"
-            : "Offer created successfully!"),
+        isEdit ? "Offer updated successfully!" : "Offer created successfully!",
       );
 
       handleReset();
@@ -384,6 +689,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       end_date: "",
       priority: "",
     });
+    setSelectedOfferTests([]);
   };
 
   const formatPreviewDate = (dateStr?: string) => {
@@ -403,53 +709,72 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
           SLIM ACTION BAR (COMPACT & FITTED - MATCHING BLOG FORM)
       ====================================================== */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-800">
-            {isEdit ? "Update Promotional Offer" : "Create Promotional Offer"}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-            <Sparkles className="w-2.5 h-2.5 text-[var(--color-primary)]" />
-            {isEdit ? `ID #${selectedOffer?.offer_id}` : "Draft Campaign"}
-          </span>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-800">
+              {isEdit ? "Edit Promotional Offer" : "Create Promotional Offer"}
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                isEdit
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20"
+              }`}
+            >
+              <Sparkles
+                className={`w-2.5 h-2.5 ${isEdit ? "text-amber-600" : "text-[var(--color-primary)]"}`}
+              />
+              {isEdit ? "Editing" : "Draft Campaign"}
+            </span>
+          </div>
+          {isEdit && selectedOffer && (
+            <span className="text-[11px] text-slate-500 truncate max-w-sm">
+              {selectedOffer.offer_title ||
+                `Offer ID #${selectedOffer.offer_id}`}
+            </span>
+          )}
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {/* Clean minimal Active/Inactive toggle switch */}
+          {/* Offer Status toggle in EDIT mode */}
           {isEdit && (
-            <button
-              type="button"
-              onClick={() => setIsActive((prev) => (prev === 1 ? 0 : 1))}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer select-none"
-              title="Toggle active status"
-            >
-              <span
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  isActive === 1
-                    ? "bg-emerald-500 ring-2 ring-emerald-200"
-                    : "bg-slate-400"
-                }`}
-              />
-              <span
-                className={
-                  isActive === 1
-                    ? "text-emerald-700 font-bold"
-                    : "text-slate-600"
-                }
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50 select-none">
+              <span className="text-slate-600">Offer Status:</span>
+              <button
+                type="button"
+                onClick={() => setIsActive((prev) => (prev === 1 ? 0 : 1))}
+                className="inline-flex items-center gap-1.5 cursor-pointer focus:outline-none"
+                title="Toggle active status"
               >
-                {isActive === 1 ? "Active" : "Inactive"}
-              </span>
-            </button>
+                <span
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    isActive === 1
+                      ? "bg-emerald-500 ring-2 ring-emerald-200"
+                      : "bg-slate-400"
+                  }`}
+                />
+                <span
+                  className={
+                    isActive === 1
+                      ? "text-emerald-700 font-bold"
+                      : "text-slate-600 font-medium"
+                  }
+                >
+                  {isActive === 1 ? "Active" : "Inactive"}
+                </span>
+              </button>
+            </div>
           )}
 
           <button
             type="button"
-            onClick={isEdit && onCancel ? onCancel : handleReset}
+            onClick={isEdit ? handleCancelEdit : handleReset}
             disabled={loading}
             className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg shadow-2xs transition disabled:opacity-50 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3 text-slate-500" />
-            <span>{isEdit ? "Discard" : "Reset"}</span>
+            <span>{isEdit ? "Cancel Edit" : "Reset"}</span>
           </button>
 
           <button
@@ -572,6 +897,16 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
               </span>
             </div>
 
+            {hasConflictingPercentage && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-medium">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  This is a test-based offer. The saved percentage will not be
+                  used.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Discount Percentage */}
               <div>
@@ -580,7 +915,9 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                   className="block text-xs font-semibold text-slate-800 mb-1"
                 >
                   Discount Percentage (%){" "}
-                  <span className="text-rose-500">*</span>
+                  {!hasSelectedTests && (
+                    <span className="text-rose-500">*</span>
+                  )}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-xs font-bold text-slate-400 pointer-events-none">
@@ -593,17 +930,29 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                     min="1"
                     max="99"
                     step="any"
+                    disabled={hasSelectedTests}
                     value={formData.discount_percentage}
                     onChange={handleChange}
-                    placeholder="eg. 30"
+                    placeholder={
+                      hasSelectedTests
+                        ? "Disabled (Test offer selected)"
+                        : "eg. 30"
+                    }
                     className={`w-full pl-7 pr-3 py-2 rounded-xl border text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
-                      errors.discount_percentage
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
-                        : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
+                      hasSelectedTests
+                        ? "bg-slate-100/80 text-slate-400 border-slate-200 cursor-not-allowed"
+                        : errors.discount_percentage
+                          ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
+                          : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
                     }`}
                   />
                 </div>
-                {errors.discount_percentage && (
+                {hasSelectedTests && (
+                  <p className="mt-1 text-[11px] text-slate-500 font-medium">
+                    Remove selected tests to use a percentage
+                  </p>
+                )}
+                {errors.discount_percentage && !hasSelectedTests && (
                   <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
                     <AlertCircle className="w-3 h-3" />
                     {errors.discount_percentage}
@@ -617,7 +966,10 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                   htmlFor="coupon_code"
                   className="block text-xs font-semibold text-slate-800 mb-1"
                 >
-                  Coupon Code <span className="text-rose-500">*</span>
+                  Coupon Code{" "}
+                  {!hasSelectedTests && (
+                    <span className="text-rose-500">*</span>
+                  )}
                 </label>
                 <div className="relative">
                   <Ticket className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
@@ -644,6 +996,216 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                 )}
               </div>
             </div>
+
+            {/* TASK 1: OR Divider */}
+            <div className="relative flex items-center justify-center my-1.5 py-1">
+              <div className="border-t border-slate-200 w-full" />
+              <span className="bg-white px-3 text-[11px] font-bold text-slate-400 tracking-wider uppercase absolute">
+                OR
+              </span>
+            </div>
+
+            {/* TASK 1: Select Tests for Offer Action Card */}
+            <div className="p-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="space-y-0.5">
+                <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                  <FlaskConical className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                  <span>Select Tests for Offer</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Offer specific tests with an offer amount instead of a
+                  percentage
+                </p>
+                {hasPercentage && (
+                  <p className="text-[11px] text-amber-600 font-medium">
+                    Clear the percentage to offer specific tests
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTestSelectionOpen(true)}
+                disabled={hasPercentage}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs cursor-pointer shrink-0"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>
+                  {hasSelectedTests
+                    ? "Edit Selection"
+                    : "Select Tests for Offer"}
+                </span>
+              </button>
+            </div>
+
+            {/* TASK 3: Selected Tests Section (Visible only when tests are selected) */}
+            {hasSelectedTests && (
+              <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Selected Tests
+                    </span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
+                      {totalTests} {totalTests === 1 ? "Test" : "Tests"}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsTestSelectionOpen(true)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface)] border border-[var(--color-primary)]/30 rounded-lg transition cursor-pointer"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit Selection</span>
+                  </button>
+                </div>
+
+                {/* Grouped by Category */}
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {testsByCategory.map(([categoryName, tests]) => (
+                    <div
+                      key={categoryName}
+                      className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-2"
+                    >
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-bold text-slate-700">
+                          {categoryName}
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                          {tests.length} {tests.length === 1 ? "test" : "tests"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {tests.map((test) => {
+                          const currentOffer =
+                            test.offer_amount ?? test.discount_price ?? 0;
+                          const isInvalidOffer =
+                            currentOffer <= 0 ||
+                            currentOffer > Number(test.price);
+
+                          return (
+                            <div
+                              key={test.test_id}
+                              className="p-2.5 rounded-lg bg-white border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold text-slate-800 truncate">
+                                  {test.test_name}
+                                </div>
+                                {test.test_code && (
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    {test.test_code}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                                {/* Test Price: Display Only */}
+                                <div className="text-left sm:text-right">
+                                  <div className="text-[10px] text-slate-400 font-medium">
+                                    Test Price
+                                  </div>
+                                  <div className="text-xs font-semibold text-slate-700">
+                                    ₹{Number(test.price).toFixed(2)}
+                                  </div>
+                                </div>
+
+                                {/* Offer Amount: Editable Inline */}
+                                <div className="flex flex-col">
+                                  <div className="text-[10px] text-slate-500 font-normal">
+                                    Offer Amount{" "}
+                                    <span className="text-rose-500">*</span>
+                                  </div>
+                                  <div className="relative">
+                                    <span className="absolute left-2 top-1.5 text-xs font-bold text-slate-400 pointer-events-none">
+                                      ₹
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max={test.price}
+                                      step="any"
+                                      value={
+                                        currentOffer === 0 ? "" : currentOffer
+                                      }
+                                      placeholder="Not set"
+                                      onChange={(e) =>
+                                        handleInlineOfferAmountChange(
+                                          test.test_id,
+                                          e.target.value,
+                                        )
+                                      }
+                                      className={`w-24 pl-5 pr-2 py-1 text-xs rounded-lg border font-semibold placeholder:font-normal placeholder:text-slate-400 ${
+                                        isInvalidOffer
+                                          ? "border-rose-400 bg-rose-50/30 text-rose-700 focus:ring-1 focus:ring-rose-400"
+                                          : "border-slate-300 text-slate-900 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/20"
+                                      } outline-none transition`}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Remove Button */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveOfferTest(test.test_id)
+                                  }
+                                  title="Remove test"
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition cursor-pointer shrink-0"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Summary Totals */}
+                <div className="p-3 rounded-xl bg-slate-100/80 border border-slate-200 grid grid-cols-3 gap-2 text-center">
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
+                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
+                      Total Tests
+                    </div>
+                    <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
+                      {totalTests}
+                    </div>
+                  </div>
+
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
+                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
+                      Total Test Price
+                    </div>
+                    <div className="text-xs sm:text-sm font-bold text-slate-700 mt-0.5">
+                      ₹{totalTestPrice.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
+                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
+                      Total Offer Amount
+                    </div>
+                    <div className="text-xs sm:text-sm font-bold text-emerald-600 mt-0.5">
+                      {totalOfferAmount > 0
+                        ? `₹${totalOfferAmount.toFixed(2)}`
+                        : "Not set"}
+                    </div>
+                  </div>
+                </div>
+
+                {errors.discount_percentage && hasSelectedTests && (
+                  <p className="mt-2 text-xs text-rose-600 flex items-center gap-1 font-medium bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {errors.discount_percentage}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Card 3: Campaign Validity Period */}
@@ -866,11 +1428,17 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight line-clamp-1">
                   {formData.offer_title || "Special Promotional Offer"}
                 </h3>
-                <div className="text-xl sm:text-2xl font-extrabold text-amber-400 tracking-tight leading-tight">
-                  {formData.discount_percentage
-                    ? `${formData.discount_percentage}% OFF`
-                    : "30% OFF"}
-                </div>
+                {hasSelectedTests ? (
+                  <div className="text-lg sm:text-xl font-extrabold text-amber-400 tracking-tight leading-tight">
+                    Offer on {totalTests} {totalTests === 1 ? "test" : "tests"}
+                  </div>
+                ) : (
+                  <div className="text-xl sm:text-2xl font-extrabold text-amber-400 tracking-tight leading-tight">
+                    {formData.discount_percentage
+                      ? `${formData.discount_percentage}% OFF`
+                      : "30% OFF"}
+                  </div>
+                )}
                 <p className="text-[11px] text-slate-200/85 line-clamp-2 leading-relaxed">
                   {formData.offer_description ||
                     "Get exclusive health and checkup discount benefits for your family."}
@@ -921,6 +1489,20 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Test Selection Dialog (mode="offer") */}
+      {isTestSelectionOpen && (
+        <LabTestSelectionPopup
+          open={isTestSelectionOpen}
+          mode="offer"
+          onClose={() => setIsTestSelectionOpen(false)}
+          labId={activeLabId}
+          selectedWalkInTests={selectedOfferTests}
+          onConfirmSelection={(tests) => {
+            handleConfirmOfferTests(tests);
+          }}
+        />
+      )}
     </div>
   );
 };

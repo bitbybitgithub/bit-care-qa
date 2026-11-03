@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import {
@@ -36,6 +37,7 @@ interface LabReportUploadDialogProps {
   uploading?: boolean;
   onUploadFile: (file: File) => Promise<LabReportFile>;
   onSaveReport: (report: LabReportFile) => Promise<number>;
+  isPaymentPending?: boolean;
 }
 
 const MAX_TOTAL_REPORTS = 10;
@@ -74,6 +76,7 @@ export default function LabReportUploadDialog({
   uploading = false,
   onUploadFile,
   onSaveReport,
+  isPaymentPending = false,
 }: LabReportUploadDialogProps) {
   const [selectedNewFiles, setSelectedNewFiles] = useState<StagedReportFile[]>(
     [],
@@ -252,6 +255,12 @@ export default function LabReportUploadDialog({
    */
   const handleOpenCompleteConfirm = () => {
     if (busy) return;
+    if (isPaymentPending) {
+      toast.warning(
+        "Payment is pending. Complete Report will be enabled only after the payment is received.",
+      );
+      return;
+    }
     const totalReportsCount = existingReports.length + selectedNewFiles.length;
     if (totalReportsCount === 0) {
       setServerError(
@@ -264,6 +273,13 @@ export default function LabReportUploadDialog({
   };
 
   const handleExecuteComplete = async () => {
+    if (isPaymentPending) {
+      setShowConfirmComplete(false);
+      toast.warning(
+        "Payment is pending. Complete Report will be enabled only after the payment is received.",
+      );
+      return;
+    }
     setShowConfirmComplete(false);
     setCompleting(true);
     setServerError(null);
@@ -592,6 +608,21 @@ export default function LabReportUploadDialog({
 
         </DialogContent>
 
+        {isPaymentPending && (
+          <Box sx={{ px: { xs: 2, sm: 3 }, pt: 1.5, pb: 0 }}>
+            <Alert
+              severity="warning"
+              icon={<FaExclamationTriangle className="text-amber-600" />}
+              sx={{
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.8125rem",
+              }}
+            >
+              Payment is pending. Complete Report will be enabled only after the payment is received. You can still upload and submit report files.
+            </Alert>
+          </Box>
+        )}
+
         <DialogActions
           sx={{
             px: { xs: 2, sm: 3 },
@@ -644,34 +675,45 @@ export default function LabReportUploadDialog({
             </Button>
 
             {/* Action 2: Complete Report (primary style) */}
-            <Button
-              variant="contained"
-              onClick={handleOpenCompleteConfirm}
-              disabled={
-                busy ||
-                reportsLoading ||
-                Boolean(reportsLoadError)
+            <Tooltip
+              title={
+                isPaymentPending
+                  ? "Payment is pending. Complete Report will be enabled only after the payment is received. You can still upload and submit report files."
+                  : ""
               }
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: "var(--radius-md)",
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-surface)",
-                "&:hover": {
-                  backgroundColor: "var(--color-primary-dark)",
-                },
-              }}
             >
-              {completing ? (
-                <span className="flex items-center gap-2">
-                  <CircularProgress size={16} color="inherit" />
-                  Completing...
-                </span>
-              ) : (
-                "Complete Report"
-              )}
-            </Button>
+              <span>
+                <Button
+                  variant="contained"
+                  onClick={handleOpenCompleteConfirm}
+                  disabled={
+                    busy ||
+                    reportsLoading ||
+                    Boolean(reportsLoadError) ||
+                    isPaymentPending
+                  }
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    borderRadius: "var(--radius-md)",
+                    backgroundColor: "var(--color-primary)",
+                    color: "var(--color-surface)",
+                    "&:hover": {
+                      backgroundColor: "var(--color-primary-dark)",
+                    },
+                  }}
+                >
+                  {completing ? (
+                    <span className="flex items-center gap-2">
+                      <CircularProgress size={16} color="inherit" />
+                      Completing...
+                    </span>
+                  ) : (
+                    "Complete Report"
+                  )}
+                </Button>
+              </span>
+            </Tooltip>
           </div>
         </DialogActions>
 

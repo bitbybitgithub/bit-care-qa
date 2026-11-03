@@ -459,7 +459,7 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
                               {t.test_name || `Test #${t.test_id}`}
                             </span>
                             <span className="text-amber-300 font-semibold shrink-0">
-                              Offer: ₹{Number(t.offer_amount || 0).toFixed(2)}
+                              Offer: ₹{Number(t.offer_price || 0).toFixed(2)}
                             </span>
                           </div>
                         ))}

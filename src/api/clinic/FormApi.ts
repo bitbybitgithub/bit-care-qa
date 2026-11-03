@@ -44,7 +44,11 @@ export const registerApi = async (formData: any) => {
 
 export const offersdiscountApi = async (formData: OfferForm) => {
   try {
-    const offersDiscount = {
+    const isTestBased =
+      Array.isArray(formData.available_offers) &&
+      formData.available_offers.length > 0;
+
+    const offersDiscount: Record<string, any> = {
       offer_id: formData.offer_id ?? null,
       is_active: formData.is_active ?? 1,
       center_id: formData.center_id,
@@ -52,20 +56,34 @@ export const offersdiscountApi = async (formData: OfferForm) => {
       center_name: formData.center_name,
       center_type: formData.center_type,
       offer_title: formData.offer_title,
-      offer_description: formData.offer_description,
-      offer_image_path: formData.offer_image_path,
-      offer_image_guid: formData.offer_image_guid,
-      offer_image_name: formData.offer_image_name,
-      discount_percentage: formData.discount_percentage,
-      coupon_code: formData.coupon_code,
+      offer_description: formData.offer_description ?? "",
+      offer_image_path: formData.offer_image_path ?? "",
+      offer_image_guid: formData.offer_image_guid ?? "",
+      offer_image_name: formData.offer_image_name ?? "",
+      discount_percentage: isTestBased
+        ? ""
+        : formData.discount_percentage !== undefined &&
+            formData.discount_percentage !== null
+          ? formData.discount_percentage
+          : "",
+      coupon_code: formData.coupon_code ?? "",
       start_date: formData.start_date,
       end_date: formData.end_date,
-      priority: formData.priority,
+      priority: Number(formData.priority ?? 0),
       created_by: formData.created_by,
       modified_by: formData.modified_by ?? null,
+      available_offers: isTestBased
+        ? formData.available_offers!.map((item) => ({
+            test_id: Number(item.test_id),
+            offer_amount: Number(item.offer_amount),
+          }))
+        : null,
     };
 
-    const response = await emrAPI.post<any>("/admin/save-offers", offersDiscount);
+    const response = await emrAPI.post<any>(
+      "/admin/save-offers",
+      offersDiscount,
+    );
 
     return response;
   } catch (error: any) {
@@ -101,7 +119,7 @@ export const uploadOfferImageApi = async (file: File) => {
 export const createBlogApi = async (formData: BlogFormData) => {
   const blogData = {
     entity_id: formData.entity_id,
-    entity_type : formData.entity_type,
+    entity_type: formData.entity_type,
     title: formData.title,
     short_description: formData.short_description,
     content: formData.content,
@@ -113,7 +131,7 @@ export const createBlogApi = async (formData: BlogFormData) => {
     category_id: formData.category_id,
     status: formData.status,
 
-    created_by: formData.created_by
+    created_by: formData.created_by,
   };
 
   const response = await emrAPI.post<any>(`/admin/blogs`, blogData);
@@ -173,7 +191,7 @@ export const updateBlogApi = async (
 ) => {
   const blogData = {
     entity_id: formData.entity_id,
-    entity_type : formData.entity_type,
+    entity_type: formData.entity_type,
     title: formData.title,
     short_description: formData.short_description,
     content: formData.content,

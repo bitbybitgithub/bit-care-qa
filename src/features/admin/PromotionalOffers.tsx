@@ -20,10 +20,7 @@ import { getPromotionalOffersApi } from "../../api";
 import type { PromotionalOffer } from "../../types/types";
 import { getSession } from "../../context/sessions/userSession";
 
-
-const getOfferImage = async (
-  offer: PromotionalOffer,
-): Promise<string> => {
+const getOfferImage = async (offer: PromotionalOffer): Promise<string> => {
   if (!offer.offer_image_guid) return "";
 
   const response = await fetch(`${BASE_URL}/common/downloadFile`, {
@@ -45,7 +42,6 @@ const getOfferImage = async (
   return URL.createObjectURL(imageBlob);
 };
 
-
 interface PromotionalOffersProps {
   onEdit: (offer: PromotionalOffer) => void;
   onAddNew?: () => void;
@@ -56,10 +52,7 @@ interface OfferImageProps {
   onError: () => void;
 }
 
-const OfferImage: React.FC<OfferImageProps> = ({
-  offer,
-  onError,
-}) => {
+const OfferImage: React.FC<OfferImageProps> = ({ offer, onError }) => {
   const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
@@ -113,7 +106,6 @@ const OfferImage: React.FC<OfferImageProps> = ({
   );
 };
 
-
 const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
   onEdit,
   onAddNew,
@@ -122,7 +114,9 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
 
@@ -152,12 +146,13 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
 
       if (!centerId || !centerType) {
         setOffers([]);
-        setError("Unable to identify the logged-in clinic or lab establishment.");
+        setError(
+          "Unable to identify the logged-in clinic or lab establishment.",
+        );
         return;
       }
 
       const response = await getPromotionalOffersApi(centerId, centerType);
-
       if (response.success && Array.isArray(response.data)) {
         setOffers(response.data);
       } else {
@@ -181,7 +176,8 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
     if (onEdit) {
       onEdit(offer);
     } else {
-      const targetRoute = user?.entity_type === 2 ? "/lab/offers" : "/clinic/offers";
+      const targetRoute =
+        user?.entity_type === 2 ? "/lab/offers" : "/clinic/offers";
       navigate(targetRoute, {
         state: {
           offer,
@@ -221,9 +217,15 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
 
       if (search.trim()) {
         const query = search.trim().toLowerCase();
-        const titleMatch = (offer.offer_title || "").toLowerCase().includes(query);
-        const codeMatch = (offer.coupon_code || "").toLowerCase().includes(query);
-        const descMatch = (offer.offer_description || "").toLowerCase().includes(query);
+        const titleMatch = (offer.offer_title || "")
+          .toLowerCase()
+          .includes(query);
+        const codeMatch = (offer.coupon_code || "")
+          .toLowerCase()
+          .includes(query);
+        const descMatch = (offer.offer_description || "")
+          .toLowerCase()
+          .includes(query);
         return titleMatch || codeMatch || descMatch;
       }
 
@@ -254,7 +256,8 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
           </span>
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
             <Tag className="w-3 h-3 text-[var(--color-primary)]" />
-            {filteredOffers.length} {filteredOffers.length === 1 ? "Offer" : "Offers"}
+            {filteredOffers.length}{" "}
+            {filteredOffers.length === 1 ? "Offer" : "Offers"}
           </span>
         </div>
 
@@ -362,10 +365,19 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
       {!error && filteredOffers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {filteredOffers.map((offer) => {
-            const isImageFailed = failedImages[offer.offer_id] || !offer.offer_image_guid;
+            const isImageFailed =
+              failedImages[offer.offer_id] || !offer.offer_image_guid;
             // const imageUrl = getImageUrl(offer);
             // const isImageFailed = failedImages[offer.offer_id] || !imageUrl;
             const isActive = Number(offer.is_active ?? 1) === 1;
+            const offerTests =
+              Array.isArray((offer as any).available_offers) &&
+              (offer as any).available_offers.length > 0
+                ? (offer as any).available_offers
+                : Array.isArray((offer as any).tests) &&
+                    (offer as any).tests.length > 0
+                  ? (offer as any).tests
+                  : null;
 
             return (
               <div
@@ -373,31 +385,29 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
                 className="relative rounded-2xl overflow-hidden min-h-[220px] p-5 flex flex-col justify-between bg-slate-900 border border-slate-800 shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1 group"
               >
                 {/* Background Image with Dark Cinematic Gradient Overlay */}
-                
 
                 {/* Background Image */}
-              {!isImageFailed ? (
-                <>
-                  <OfferImage
-                    offer={offer}
-                    onError={() =>
-                      setFailedImages((prev) => ({
-                        ...prev,
-                        [offer.offer_id]: true,
-                      }))
-                    }
-                  />
+                {!isImageFailed ? (
+                  <>
+                    <OfferImage
+                      offer={offer}
+                      onError={() =>
+                        setFailedImages((prev) => ({
+                          ...prev,
+                          [offer.offer_id]: true,
+                        }))
+                      }
+                    />
 
-                  {/* Preserve the existing dark overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/60" />
-                </>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
-                  <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[var(--color-primary)]/15 blur-2xl pointer-events-none" />
-                  <Percent className="absolute right-4 bottom-4 w-28 h-28 text-white/[0.04] pointer-events-none" />
-                </div>
-              )}
-
+                    {/* Preserve the existing dark overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/60" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+                    <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[var(--color-primary)]/15 blur-2xl pointer-events-none" />
+                    <Percent className="absolute right-4 bottom-4 w-28 h-28 text-white/[0.04] pointer-events-none" />
+                  </div>
+                )}
 
                 {/* Top Row: Center Pill & Validity / Status */}
                 <div className="relative z-10 flex items-center justify-between gap-2">
@@ -411,7 +421,9 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
                     </span>
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 ${
-                        isActive ? "bg-emerald-400 ring-2 ring-emerald-400/40" : "bg-slate-400"
+                        isActive
+                          ? "bg-emerald-400 ring-2 ring-emerald-400/40"
+                          : "bg-slate-400"
                       }`}
                       title={isActive ? "Active campaign" : "Inactive campaign"}
                     />
@@ -420,13 +432,46 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
 
                 {/* Middle Row: Title, Big Yellow Discount, Description */}
                 <div className="relative z-10 my-3 space-y-1">
-                  <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug line-clamp-1">
-                    {offer.offer_title}
-                  </h3>
-
-                  <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight leading-none drop-shadow-xs">
-                    {offer.discount_percentage}% OFF
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug line-clamp-1">
+                      {offer.offer_title}
+                    </h3>
+                    {offerTests && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold border border-amber-400/30 shrink-0">
+                        Test Offer
+                      </span>
+                    )}
                   </div>
+
+                  {offerTests ? (
+                    <div className="space-y-1">
+                      <div className="text-lg sm:text-xl font-extrabold text-amber-400 tracking-tight leading-none drop-shadow-xs">
+                        {offerTests.length}{" "}
+                        {offerTests.length === 1 ? "Test" : "Tests"} Included
+                      </div>
+                      <div className="max-h-20 overflow-y-auto space-y-1 pr-1">
+                        {offerTests.map((t: any, idx: number) => (
+                          <div
+                            key={t.test_id || idx}
+                            className="flex items-center justify-between text-[11px] text-slate-200 bg-white/10 px-2 py-0.5 rounded"
+                          >
+                            <span className="truncate max-w-[150px]">
+                              {t.test_name || `Test #${t.test_id}`}
+                            </span>
+                            <span className="text-amber-300 font-semibold shrink-0">
+                              Offer: ₹{Number(t.offer_amount || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight leading-none drop-shadow-xs">
+                      {offer.discount_percentage
+                        ? `${offer.discount_percentage}% OFF`
+                        : ""}
+                    </div>
+                  )}
 
                   <p className="text-xs text-slate-200/90 line-clamp-2 leading-relaxed pt-0.5">
                     {offer.offer_description}

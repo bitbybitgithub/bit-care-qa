@@ -16,17 +16,22 @@ const OffersTabs: React.FC = () => {
   const [editingOffer, setEditingOffer] = useState<PromotionalOffer | null>(
     null,
   );
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (location.state?.isEdit && location.state?.offer) {
       setEditingOffer(location.state.offer);
       setActiveTab("add");
+      setSearchParams({ tab: "add" });
     }
-  }, [location.state]);
+  }, [location.state, setSearchParams]);
 
   const handleTabChange = (tab: "add" | "view") => {
     setActiveTab(tab);
     setSearchParams(tab === "view" ? { tab: "view" } : {});
+    if (tab === "add" && activeTab !== "add") {
+      setEditingOffer(null);
+    }
     if (tab === "view") {
       setEditingOffer(null);
     }
@@ -79,7 +84,7 @@ const OffersTabs: React.FC = () => {
               ) : (
                 <PlusCircle className="w-3.5 h-3.5 text-[var(--color-primary)]" />
               )}
-              <span>{editingOffer ? "Update" : "Add"}</span>
+              <span>{editingOffer ? "Edit Offer" : "Add Offer"}</span>
             </button>
 
             <button
@@ -112,6 +117,7 @@ const OffersTabs: React.FC = () => {
               setEditingOffer(null);
               setActiveTab("view");
               setSearchParams({ tab: "view" });
+              setRefreshKey((prev) => prev + 1);
             }}
             onCancel={() => {
               setEditingOffer(null);
@@ -123,13 +129,16 @@ const OffersTabs: React.FC = () => {
 
         {activeTab === "view" && (
           <PromotionalOffers
+            key={refreshKey}
             onEdit={(offer: PromotionalOffer) => {
               setEditingOffer(offer);
               setActiveTab("add");
+              setSearchParams({ tab: "add" });
             }}
             onAddNew={() => {
               setEditingOffer(null);
               setActiveTab("add");
+              setSearchParams({ tab: "add" });
             }}
           />
         )}

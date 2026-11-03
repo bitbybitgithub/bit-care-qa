@@ -209,6 +209,7 @@ export interface LabWalkInTest {
   test_code?: string;
   price: number;
   discount_price?: number;
+  offer_amount?: number;
   payable_amount?: number;
   category_name?: string;
 }

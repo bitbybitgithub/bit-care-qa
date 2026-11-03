@@ -12,6 +12,7 @@ import {
   IconButton,
   InputAdornment,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -43,7 +44,8 @@ export type LabTestSelectionMode =
   | "walkin"
   | "processing"
   | "view"
-  | "catalog";
+  | "catalog"
+  | "offer";
 
 export interface LabTestSelectionPopupProps {
   open: boolean;
@@ -87,7 +89,8 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
   const isWalkIn = mode === "walkin";
   const isProcessing = mode === "processing";
   const isView = mode === "view";
-  const isSelectionMode = isWalkIn || isProcessing || isView;
+  const isOffer = mode === "offer";
+  const isSelectionMode = isWalkIn || isProcessing || isView || isOffer;
   const isReadOnlyPricing =
     readOnlyPricing ?? (isWalkIn || isProcessing || isView);
 
@@ -113,6 +116,63 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
     "categories" | "tests" | "selected"
   >("tests");
 
+  // Offer mode touched state per testId and submit attempt
+  const [touchedOfferTests, setTouchedOfferTests] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const getOfferValidationError = (
+    priceStr?: string | number,
+    discountStr?: string | number,
+  ): string => {
+    if (
+      discountStr === undefined ||
+      discountStr === null ||
+      String(discountStr).trim() === ""
+    ) {
+      return "Offer amount required";
+    }
+    const offer = Number(discountStr);
+    const price = Number(priceStr);
+    if (isNaN(offer) || offer <= 0) {
+      return "Offer amount must be greater than 0";
+    }
+    if (!isNaN(price) && price > 0 && offer > price) {
+      return "Offer amount cannot exceed the test price";
+    }
+    return "";
+  };
+
+  const isOfferSaveDisabled =
+    newSelectedTests.length === 0 ||
+    newSelectedTests.some((t) =>
+      Boolean(getOfferValidationError(t.price, t.discountPrice)),
+    );
+
+  const focusFirstInvalidOfferField = () => {
+    const firstInvalid = newSelectedTests.find((t) =>
+      Boolean(getOfferValidationError(t.price, t.discountPrice)),
+    );
+    if (!firstInvalid) return;
+
+    const catIndex = availableCategories.findIndex((cat) =>
+      cat.tests.some(
+        (ct: any) => String(ct.id) === String(firstInvalid.testId),
+      ),
+    );
+    if (catIndex !== -1 && catIndex !== activeCategory) {
+      setActiveCategory(catIndex);
+    }
+
+    setTimeout(() => {
+      const el = document.getElementById(
+        `offer-amount-input-${firstInvalid.testId}`,
+      );
+      if (el) {
+        el.focus();
+      }
+    }, 100);
+  };
+
   // Load catalog data when opening in walk-in, processing, view, or service-management mode
   useEffect(() => {
     if (!open || !labId) return;
@@ -125,7 +185,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           !isServiceManagement
             ? getLabTestListApi(Number(labId))
             : Promise.resolve(null),
-          getLabPackageListApi(Number(labId)),
+          !isOffer
+            ? getLabPackageListApi(Number(labId))
+            : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
@@ -133,7 +195,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         const rawTests =
           testsRes && Array.isArray((testsRes as any)?.data)
             ? (testsRes as any).data
-            : [];
+            : Array.isArray(testsRes)
+              ? (testsRes as any[])
+              : [];
 
         if (rawTests.length > 0) {
           const grouped: Record<string, any[]> = {};
@@ -189,13 +253,15 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                 item.category ||
                 "General Laboratory";
               const masterPrice =
-                item.price !== ""
-                  ? item.price
-                  : matched.price != null
-                    ? String(matched.price)
-                    : matched.test_price != null
-                      ? String(matched.test_price)
-                      : "0";
+                isOffer && matched.price != null && Number(matched.price) > 0
+                  ? String(matched.price)
+                  : item.price !== ""
+                    ? item.price
+                    : matched.price != null
+                      ? String(matched.price)
+                      : matched.test_price != null
+                        ? String(matched.test_price)
+                        : "0";
               const masterDiscount =
                 item.discountPrice !== ""
                   ? item.discountPrice
@@ -267,22 +333,39 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
 
   // Reset or pre-populate state when opening dialog
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setTouchedOfferTests({});
+      setSubmitAttempted(false);
+      return;
+    }
 
     setSearch("");
     setActiveCategory(0);
     setMobileTab("tests");
+    setTouchedOfferTests({});
+    setSubmitAttempted(false);
 
     if (isSelectionMode) {
-      // Pre-populate with existing walk-in / queue selections
+      // Pre-populate with existing walk-in / queue / offer selections
       const initialTests: SelectedTest[] = selectedWalkInTests.map((t) => {
         const price = String(t.price ?? "");
         const discount =
-          t.discount_price != null ? String(t.discount_price) : "";
+          t.offer_amount != null
+            ? String(t.offer_amount)
+            : t.discount_price != null
+              ? String(t.discount_price)
+              : "";
         const payable =
           t.payable_amount != null
             ? String(t.payable_amount)
             : String(Math.max(0, Number(price || 0) - Number(discount || 0)));
+
+        let discountPriceError = "";
+        if (isOffer) {
+          if (discount && discount.trim() !== "") {
+            discountPriceError = getOfferValidationError(price, discount);
+          }
+        }
 
         return {
           category: t.category_name || "General Laboratory",
@@ -293,19 +376,19 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           price,
           priceError: "",
           discountPrice: discount,
-          discountPriceError: "",
+          discountPriceError,
           payableAmount: payable,
         };
       });
 
-      const initialPackages: LabWalkInPackage[] = selectedWalkInPackages.map(
-        (p) => ({ ...p }),
-      );
+      const initialPackages: LabWalkInPackage[] = isOffer
+        ? []
+        : selectedWalkInPackages.map((p) => ({ ...p }));
 
       setNewSelectedTests(initialTests);
       setNewSelectedPackages(initialPackages);
 
-      if (initialPackages.length > 0 && initialTests.length === 0) {
+      if (!isOffer && initialPackages.length > 0 && initialTests.length === 0) {
         setActiveTab("packages");
       } else {
         setActiveTab("tests");
@@ -448,6 +531,11 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         );
         if (alreadyExists) return prev;
 
+        const hasValidPrice = Boolean(test.price && Number(test.price) > 0);
+        if (isOffer && !hasValidPrice) {
+          return prev;
+        }
+
         const defaultPrice = isServiceManagement
           ? test.price
             ? String(test.price)
@@ -457,15 +545,17 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
             : test.test_price !== undefined && test.test_price !== ""
               ? String(test.test_price)
               : "0";
-        const defaultDiscount = isServiceManagement
-          ? test.discountPrice
-            ? String(test.discountPrice)
-            : ""
-          : test.discountPrice !== undefined && test.discountPrice !== ""
-            ? String(test.discountPrice)
-            : test.discount_price !== undefined && test.discount_price !== ""
-              ? String(test.discount_price)
-              : "0";
+        const defaultDiscount = isOffer
+          ? ""
+          : isServiceManagement
+            ? test.discountPrice
+              ? String(test.discountPrice)
+              : ""
+            : test.discountPrice !== undefined && test.discountPrice !== ""
+              ? String(test.discountPrice)
+              : test.discount_price !== undefined && test.discount_price !== ""
+                ? String(test.discount_price)
+                : "0";
         const defaultPayable =
           defaultPrice !== ""
             ? String(
@@ -493,6 +583,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
         ];
       });
     } else {
+      if (isOffer) {
+        setTouchedOfferTests((prev) => {
+          const next = { ...prev };
+          delete next[String(test.id)];
+          return next;
+        });
+      }
       setNewSelectedTests((prev) =>
         prev.filter((item) => String(item.testId) !== String(test.id)),
       );
@@ -517,7 +614,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
 
   const isCategoryChecked = (category?: LabCategory) => {
     if (!category || category.tests.length === 0) return false;
-    return category.tests.every((test) =>
+    const eligibleTests = isOffer
+      ? category.tests.filter((t: any) =>
+          Boolean(t.price && Number(t.price) > 0),
+        )
+      : category.tests;
+    if (eligibleTests.length === 0) return false;
+    return eligibleTests.every((test) =>
       newSelectedTests.some(
         (selected) => String(selected.testId) === String(test.id),
       ),
@@ -526,7 +629,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
 
   const isCategoryIndeterminate = (category?: LabCategory) => {
     if (!category || category.tests.length === 0) return false;
-    const hasSome = category.tests.some((test) =>
+    const eligibleTests = isOffer
+      ? category.tests.filter((t: any) =>
+          Boolean(t.price && Number(t.price) > 0),
+        )
+      : category.tests;
+    if (eligibleTests.length === 0) return false;
+    const hasSome = eligibleTests.some((test) =>
       newSelectedTests.some(
         (selected) => String(selected.testId) === String(test.id),
       ),
@@ -545,7 +654,13 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
       setNewSelectedTests((prev) => {
         const existingIds = new Set(prev.map((test) => String(test.testId)));
 
-        const newTests = category.tests
+        const eligibleCategoryTests = isOffer
+          ? category.tests.filter((t: any) =>
+              Boolean(t.price && Number(t.price) > 0),
+            )
+          : category.tests;
+
+        const newTests = eligibleCategoryTests
           .filter((test) => !existingIds.has(String(test.id)))
           .map((test: any) => {
             const defaultPrice = isServiceManagement
@@ -557,16 +672,18 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                 : test.test_price !== undefined && test.test_price !== ""
                   ? String(test.test_price)
                   : "0";
-            const defaultDiscount = isServiceManagement
-              ? test.discountPrice
-                ? String(test.discountPrice)
-                : ""
-              : test.discountPrice !== undefined && test.discountPrice !== ""
-                ? String(test.discountPrice)
-                : test.discount_price !== undefined &&
-                    test.discount_price !== ""
-                  ? String(test.discount_price)
-                  : "0";
+            const defaultDiscount = isOffer
+              ? ""
+              : isServiceManagement
+                ? test.discountPrice
+                  ? String(test.discountPrice)
+                  : ""
+                : test.discountPrice !== undefined && test.discountPrice !== ""
+                  ? String(test.discountPrice)
+                  : test.discount_price !== undefined &&
+                      test.discount_price !== ""
+                    ? String(test.discount_price)
+                    : "0";
             const defaultPayable =
               defaultPrice !== ""
                 ? String(
@@ -597,6 +714,14 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
       const categoryIds = new Set(
         category.tests.map((test) => String(test.id)),
       );
+
+      if (isOffer) {
+        setTouchedOfferTests((prev) => {
+          const next = { ...prev };
+          categoryIds.forEach((id) => delete next[id]);
+          return next;
+        });
+      }
 
       setNewSelectedTests((prev) =>
         prev.filter((test) => !categoryIds.has(String(test.testId))),
@@ -666,14 +791,20 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
     if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
       return;
     }
+    if (isOffer) {
+      setTouchedOfferTests((prev) => ({ ...prev, [String(testId)]: true }));
+    }
     setNewSelectedTests((prev) =>
       prev.map((test) => {
         if (String(test.testId) !== String(testId)) return test;
 
         let discountPriceError = "";
-        if (value !== "" && Number(value) !== 0) {
+        const price = Number(test.price || 0);
+
+        if (isOffer) {
+          discountPriceError = getOfferValidationError(price, value);
+        } else if (value !== "" && Number(value) !== 0) {
           const discountPrice = Number(value);
-          const price = Number(test.price || 0);
           if (isNaN(discountPrice) || discountPrice < 0) {
             discountPriceError = "Discount must be non-negative";
           } else if (discountPrice > price) {
@@ -696,6 +827,12 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
     );
   };
 
+  const handleOfferBlur = (testId: string) => {
+    if (isOffer) {
+      setTouchedOfferTests((prev) => ({ ...prev, [String(testId)]: true }));
+    }
+  };
+
   // Confirm / Save Handler
   const handleConfirmOrSave = async () => {
     if (isView) {
@@ -703,7 +840,65 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
       return;
     }
 
-    // 1. Walk-In or Processing mode confirmation
+    // 1. Offer mode confirmation
+    if (isOffer) {
+      if (newSelectedTests.length === 0) {
+        toast.error("Please select at least one test for the offer");
+        return;
+      }
+
+      const hasInvalid = newSelectedTests.some((test) => {
+        const price = Number(test.price || 0);
+        const offer = Number(test.discountPrice || 0);
+        return (
+          !test.discountPrice ||
+          test.discountPrice.trim() === "" ||
+          Boolean(test.discountPriceError) ||
+          isNaN(offer) ||
+          offer <= 0 ||
+          isNaN(price) ||
+          price <= 0 ||
+          offer > price
+        );
+      });
+
+      if (hasInvalid) {
+        toast.error(
+          "Please enter a valid Offer Amount (> ₹0 and ≤ Test Price) for all selected tests",
+        );
+        return;
+      }
+
+      const confirmedTests: LabWalkInTest[] = newSelectedTests.map((t) => {
+        const price = Number(t.price);
+        const offer = Number(t.discountPrice);
+        const payable = Math.max(0, price - offer);
+        return {
+          test_id: Number(t.testId),
+          category_id: Number(t.categoryId),
+          test_name: t.testName,
+          test_code: t.code,
+          category_name: t.category,
+          price,
+          discount_price: offer,
+          offer_amount: offer,
+          payable_amount: Number(payable.toFixed(2)),
+        };
+      });
+
+      try {
+        setSaving(true);
+        await onConfirmSelection?.(confirmedTests, []);
+        onClose();
+      } catch (err) {
+        console.error("Offer selection confirm error:", err);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // 2. Walk-In or Processing mode confirmation
     if (isWalkIn || isProcessing) {
       if (activeTab === "packages" || newSelectedPackages.length > 0) {
         if (newSelectedPackages.length === 0) {
@@ -945,26 +1140,30 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
           </div>
           <div>
             <Typography variant="h6" fontWeight={700} fontSize={18}>
-              {isView
-                ? patientName
-                  ? `View Details - ${patientName}`
-                  : "View Tests & Packages Details"
-                : isProcessing
+              {isOffer
+                ? "Select Tests for Promotional Offer"
+                : isView
                   ? patientName
-                    ? `Manage Tests - ${patientName}`
-                    : "Select & Manage Tests"
-                  : isWalkIn
-                    ? "Select Tests & Packages"
-                    : "Add New Tests to Catalogue"}
+                    ? `View Details - ${patientName}`
+                    : "View Tests & Packages Details"
+                  : isProcessing
+                    ? patientName
+                      ? `Manage Tests - ${patientName}`
+                      : "Select & Manage Tests"
+                    : isWalkIn
+                      ? "Select Tests & Packages"
+                      : "Add New Tests to Catalogue"}
             </Typography>
             <Typography variant="body2" color="text.secondary" fontSize={13}>
-              {isView
-                ? "Read-only summary of tests and packages assigned to this patient"
-                : isProcessing
-                  ? "Select tests by category to update this patient's test order"
-                  : isWalkIn
-                    ? "Choose laboratory tests or full packages for walk-in patient registration"
-                    : "Select tests from the master catalogue, set pricing, and publish them to your lab menu"}
+              {isOffer
+                ? "Select laboratory tests from the master catalog and define specific promotional offer amounts"
+                : isView
+                  ? "Read-only summary of tests and packages assigned to this patient"
+                  : isProcessing
+                    ? "Select tests by category to update this patient's test order"
+                    : isWalkIn
+                      ? "Choose laboratory tests or full packages for walk-in patient registration"
+                      : "Select tests from the master catalogue, set pricing, and publish them to your lab menu"}
             </Typography>
           </div>
         </div>
@@ -982,7 +1181,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
       </DialogTitle>
 
       {/* ================= TOP SEGMENTED BAR (WALK-IN / QUEUES) ================= */}
-      {isSelectionMode && (
+      {isSelectionMode && !isOffer && (
         <div className="bg-slate-100/90 border-b border-slate-200 px-4 py-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
           <div className="inline-flex p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
             <button
@@ -1158,7 +1357,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                           <div className="text-xs text-slate-400 font-normal mt-0.5">
                             {isView
                               ? `${category.tests.length} ${category.tests.length === 1 ? "test" : "tests"}`
-                              : `${category.tests.length} available tests`}
+                              : `${category.tests.length} ${category.tests.length === 1 ? "available test" : "available tests"}`}
                           </div>
                         </div>
 
@@ -1191,7 +1390,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                       {currentCategory?.category}
                     </span>
                     <span className="text-xs font-medium text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full shrink-0">
-                      {filteredTests.length} tests available
+                      {filteredTests.length} {filteredTests.length === 1 ? "test available" : "tests available"}
                     </span>
                   </div>
 
@@ -1259,6 +1458,10 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                   ) : (
                     filteredTests.map((test) => {
                       const checked = isTestSelected(test.id);
+                      const hasValidPrice =
+                        test.price !== "" &&
+                        Number.isFinite(Number(test.price)) &&
+                        Number(test.price) > 0;
                       const selected = newSelectedTests.find(
                         (item) => String(item.testId) === String(test.id),
                       );
@@ -1276,7 +1479,9 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                           className={`p-3 rounded-xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3 ${
                             checked
                               ? "bg-[var(--color-surface)]/90 border-[var(--color-primary)] shadow-xs ring-1 ring-[var(--color-primary-light)]/50"
-                              : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
+                              : isOffer && !hasValidPrice
+                                ? "bg-slate-50/70 border-slate-200/60 opacity-60"
+                                : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
                           }`}
                         >
                           {/* Left: Checkbox / Badge + Name + Code */}
@@ -1286,17 +1491,30 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                 <ScienceOutlinedIcon sx={{ fontSize: 18 }} />
                               </div>
                             ) : (
-                              <Checkbox
-                                checked={checked}
-                                onChange={(e) =>
-                                  handleToggleTest(
-                                    currentCategory,
-                                    test,
-                                    e.target.checked,
-                                  )
+                              <Tooltip
+                                title={
+                                  isOffer && !hasValidPrice
+                                    ? "This test has no price set in master data and cannot be selected for an offer"
+                                    : ""
                                 }
-                                sx={{ p: 0 }}
-                              />
+                                arrow
+                                placement="top"
+                              >
+                                <span>
+                                  <Checkbox
+                                    checked={checked}
+                                    disabled={isOffer && !hasValidPrice}
+                                    onChange={(e) =>
+                                      handleToggleTest(
+                                        currentCategory,
+                                        test,
+                                        e.target.checked,
+                                      )
+                                    }
+                                    sx={{ p: 0 }}
+                                  />
+                                </span>
+                              </Tooltip>
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="text-sm sm:text-[15px] font-semibold text-slate-800 truncate">
@@ -1313,34 +1531,60 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                     {currentCategory.category}
                                   </span>
                                 )}
+                                {isOffer && (
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                                    Price:{" "}
+                                    {hasValidPrice
+                                      ? `₹${Number(test.price).toFixed(2)}`
+                                      : "No price"}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Right: Inputs when checked OR prompt when unselected */}
-                          {selected ? (
+                          {selected ? (() => {
+                            const isInvalidOffer = isOffer
+                              ? Boolean(getOfferValidationError(selected.price, selected.discountPrice))
+                              : false;
+                            const isTouched = isOffer
+                              ? Boolean(touchedOfferTests[String(selected.testId)])
+                              : false;
+                            const showOfferError = isOffer
+                              ? isInvalidOffer && (isTouched || submitAttempted)
+                              : Boolean(selected.discountPriceError);
+                            const offerErrorMessage = showOfferError
+                              ? getOfferValidationError(selected.price, selected.discountPrice)
+                              : "";
+
+                            return (
                             <div className="flex items-center gap-2 shrink-0 self-end lg:self-center pl-8 lg:pl-0">
                               {/* Price */}
                               <div className="flex flex-col">
                                 <label className="text-[11px] font-semibold text-slate-600 mb-0.5">
-                                  Price *
+                                  {isOffer ? "Price" : "Price *"}
                                 </label>
                                 <TextField
                                   size="small"
                                   value={selected.price}
                                   placeholder="e.g. 500"
-                                  disabled={isReadOnlyPricing}
+                                  disabled={isReadOnlyPricing || isOffer}
                                   error={
                                     !isReadOnlyPricing &&
+                                    !isOffer &&
                                     Boolean(selected.priceError)
                                   }
                                   helperText={
-                                    !isReadOnlyPricing
+                                    !isReadOnlyPricing && !isOffer
                                       ? selected.priceError
-                                      : undefined
+                                      : isOffer
+                                        ? " "
+                                        : undefined
                                   }
                                   onChange={(e) =>
                                     !isReadOnlyPricing &&
+                                    !isOffer &&
                                     handlePriceChange(
                                       selected.testId,
                                       e.target.value,
@@ -1351,31 +1595,53 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                     "& .MuiOutlinedInput-root": {
                                       fontSize: 13,
                                       height: 36,
-                                      backgroundColor: isReadOnlyPricing
-                                        ? "var(--color-surface-alt, #f8fafc)"
-                                        : "var(--color-bg)",
+                                      backgroundColor:
+                                        isReadOnlyPricing || isOffer
+                                          ? "var(--color-surface-alt, #f8fafc)"
+                                          : "var(--color-bg)",
                                       borderRadius: 1.5,
+                                      ...(isOffer && {
+                                        "& fieldset": {
+                                          borderColor: "var(--color-border, #e2e8f0)",
+                                        },
+                                        "&:hover fieldset": {
+                                          borderColor: "var(--color-border, #e2e8f0)",
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                          borderColor: "var(--color-border, #e2e8f0)",
+                                          borderWidth: 1,
+                                        },
+                                      }),
+                                    },
+                                    "& .MuiInputBase-input": {
+                                      ...(isOffer && {
+                                        cursor: "default",
+                                        color: "var(--color-text-muted, #64748b)",
+                                      }),
                                     },
                                     "& .MuiInputBase-input.Mui-disabled": {
-                                      WebkitTextFillColor:
-                                        "var(--color-text, #1e293b)",
+                                      WebkitTextFillColor: "var(--color-text-muted, #64748b)",
                                       cursor: "default",
                                     },
                                     "& .MuiFormHelperText-root": {
                                       fontSize: 10,
                                       marginLeft: 0,
                                       marginTop: 0.25,
+                                      minHeight: "14px",
+                                      lineHeight: "14px",
+                                      visibility: isOffer ? "hidden" : "visible",
                                     },
                                   }}
                                   slotProps={{
                                     input: {
-                                      readOnly: isReadOnlyPricing,
+                                      readOnly: isReadOnlyPricing || isOffer,
+                                      tabIndex: isOffer ? -1 : undefined,
                                       startAdornment: (
                                         <InputAdornment
                                           position="start"
                                           sx={{ mr: 0.25 }}
                                         >
-                                          <span className="text-xs font-bold text-slate-500">
+                                          <span className="text-xs font-bold text-slate-400">
                                             ₹
                                           </span>
                                         </InputAdornment>
@@ -1385,48 +1651,64 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                 />
                               </div>
 
-                              <span className="text-base text-slate-400 font-bold self-center mt-3">
-                                −
-                              </span>
+                              {!isOffer && (
+                                <span className="text-base text-slate-400 font-bold self-center mt-3">
+                                  −
+                                </span>
+                              )}
 
-                              {/* Discount */}
+                              {/* Discount / Offer Amount */}
                               <div className="flex flex-col">
                                 <label className="text-[11px] font-semibold text-slate-600 mb-0.5">
-                                  Discount
+                                  {isOffer ? "Offer Amount *" : "Discount"}
                                 </label>
                                 <TextField
+                                  id={`offer-amount-input-${selected.testId}`}
                                   size="small"
                                   value={
                                     selected.discountPrice ||
-                                    (isReadOnlyPricing ? "0" : "")
+                                    (isReadOnlyPricing && !isOffer ? "0" : "")
                                   }
-                                  placeholder="e.g. 50"
-                                  disabled={isReadOnlyPricing}
-                                  error={
-                                    !isReadOnlyPricing &&
-                                    Boolean(selected.discountPriceError)
-                                  }
+                                  placeholder={isOffer ? "e.g. 50" : "e.g. 50"}
+                                  disabled={isOffer ? false : isReadOnlyPricing}
+                                  error={isOffer ? showOfferError : Boolean(selected.discountPriceError)}
                                   helperText={
-                                    !isReadOnlyPricing
-                                      ? selected.discountPriceError
-                                      : undefined
+                                    isOffer
+                                      ? (showOfferError ? offerErrorMessage : " ")
+                                      : (selected.discountPriceError || undefined)
                                   }
                                   onChange={(e) =>
-                                    !isReadOnlyPricing &&
                                     handleDiscountPriceChange(
                                       selected.testId,
                                       e.target.value,
                                     )
                                   }
+                                  onBlur={() => handleOfferBlur(selected.testId)}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      isOffer &&
+                                      (e.key === "e" ||
+                                        e.key === "E" ||
+                                        e.key === "-" ||
+                                        e.key === "+")
+                                    ) {
+                                      e.preventDefault();
+                                    }
+                                  }}
                                   sx={{
-                                    width: 105,
+                                    width: 115,
                                     "& .MuiOutlinedInput-root": {
                                       fontSize: 13,
                                       height: 36,
-                                      backgroundColor: isReadOnlyPricing
-                                        ? "var(--color-surface-alt, #f8fafc)"
-                                        : "var(--color-bg)",
+                                      fontWeight: isOffer ? 600 : 400,
+                                      backgroundColor:
+                                        !isOffer && isReadOnlyPricing
+                                          ? "var(--color-surface-alt, #f8fafc)"
+                                          : "var(--color-bg)",
                                       borderRadius: 1.5,
+                                    },
+                                    "& .MuiInputBase-input::placeholder": {
+                                      fontWeight: 400,
                                     },
                                     "& .MuiInputBase-input.Mui-disabled": {
                                       WebkitTextFillColor:
@@ -1437,11 +1719,24 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                       fontSize: 10,
                                       marginLeft: 0,
                                       marginTop: 0.25,
+                                      minHeight: "14px",
+                                      lineHeight: "14px",
+                                      visibility: isOffer && !showOfferError ? "hidden" : "visible",
                                     },
                                   }}
                                   slotProps={{
                                     input: {
-                                      readOnly: isReadOnlyPricing,
+                                      readOnly: isOffer
+                                        ? false
+                                        : isReadOnlyPricing,
+                                      inputMode: isOffer ? "decimal" : undefined,
+                                      "aria-invalid": isOffer
+                                        ? showOfferError
+                                        : Boolean(selected.discountPriceError),
+                                      "aria-describedby":
+                                        isOffer && showOfferError
+                                          ? `offer-amount-error-${selected.testId}`
+                                          : undefined,
                                       startAdornment: (
                                         <InputAdornment
                                           position="start"
@@ -1452,19 +1747,25 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                                           </span>
                                         </InputAdornment>
                                       ),
+                                    },
+                                    formHelperText: {
+                                      id: `offer-amount-error-${selected.testId}`,
                                     },
                                   }}
                                 />
                               </div>
 
                               {/* Net Payable Badge */}
-                              <div className="flex flex-col items-end self-center mt-3 ml-1">
-                                <span className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] whitespace-nowrap border border-[var(--color-primary)]/20">
-                                  = ₹{payable !== null ? payable : "0.00"}
-                                </span>
-                              </div>
+                              {!isOffer && (
+                                <div className="flex flex-col items-end self-center mt-3 ml-1">
+                                  <span className="text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] whitespace-nowrap border border-[var(--color-primary)]/20">
+                                    = ₹{payable !== null ? payable : "0.00"}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          ) : (
+                            );
+                          })() : (
                             <div className="hidden lg:block text-right">
                               {!isView && (
                                 <span className="text-xs text-slate-400 font-medium">
@@ -1528,6 +1829,16 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                               {test.code ? `${test.code} • ` : ""}
                               {test.category}
                             </div>
+                            {isOffer &&
+                              !dataLoading &&
+                              walkInCategories.length > 0 &&
+                              !walkInCategories.some((cat) =>
+                                cat.tests.some((t: any) => String(t.id) === String(test.testId)),
+                              ) && (
+                                <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-block mt-0.5">
+                                  No longer in catalog
+                                </span>
+                              )}
                           </div>
 
                           {!isView && (
@@ -1560,30 +1871,52 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                           </span>
                         </div>
 
-                        {Number(test.discountPrice || 0) > 0 && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-500 font-medium">
-                              Discount Amount:
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 font-normal">
+                            {isOffer ? "Offer Amount:" : "Discount Amount:"}
+                          </span>
+                          <span
+                            className={
+                              isOffer
+                                ? "font-semibold text-slate-800"
+                                : "font-semibold text-emerald-600"
+                            }
+                          >
+                            {isOffer ? (
+                              test.discountPrice &&
+                              test.discountPrice.trim() !== "" &&
+                              !isNaN(Number(test.discountPrice)) &&
+                              Number(test.discountPrice) > 0 ? (
+                                `₹${Number(test.discountPrice).toFixed(2)}`
+                              ) : (
+                                <span className="text-slate-400 font-normal">Not set</span>
+                              )
+                            ) : (
+                              `− ₹${
+                                test.discountPrice
+                                  ? Number(test.discountPrice).toFixed(2)
+                                  : "0.00"
+                              }`
+                            )}
+                          </span>
+                        </div>
+
+                        {!isOffer && (
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                            <span className="font-bold text-slate-800 uppercase tracking-wide">
+                              Payable Amount:
                             </span>
-                            <span className="font-semibold text-emerald-600">
-                              − ₹{test.discountPrice}
+                            <span className="text-sm font-bold text-[var(--color-primary)]">
+                              {test.price
+                                ? `₹${Math.max(
+                                    0,
+                                    Number(test.price) -
+                                      Number(test.discountPrice || 0),
+                                  ).toFixed(2)}`
+                                : "—"}
                             </span>
                           </div>
                         )}
-
-                        <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                          <span className="font-bold text-slate-800 uppercase tracking-wide">
-                            Payable Amount:
-                          </span>
-                          <span className="text-sm font-bold text-[var(--color-primary)]">
-                            {test.price
-                              ? `₹${(
-                                  Number(test.price) -
-                                  Number(test.discountPrice || 0)
-                                ).toFixed(2)}`
-                              : "—"}
-                          </span>
-                        </div>
                       </div>
                     ))
                   )}
@@ -1606,7 +1939,7 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                     Available Packages
                   </span>
                   <span className="text-xs font-medium text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full shrink-0">
-                    {filteredPackages.length} packages
+                    {filteredPackages.length} {filteredPackages.length === 1 ? "package" : "packages"}
                   </span>
                 </div>
 
@@ -1861,11 +2194,20 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
               <strong className="text-[var(--color-primary)] font-bold">
                 {totalSelectionCount}
               </strong>{" "}
-              {totalSelectionCount === 1 ? "item" : "items"}{" "}
+              {totalSelectionCount === 1
+                ? isOffer
+                  ? "test"
+                  : "item"
+                : isOffer
+                  ? "tests"
+                  : "items"}{" "}
               {isView ? "assigned" : "selected"}
             </span>
           ) : (
-            <span>No items {isView ? "assigned" : "selected"}</span>
+            <span>
+              No {isOffer ? "tests" : "items"}{" "}
+              {isView ? "assigned" : "selected"}
+            </span>
           )}
         </div>
 
@@ -1904,41 +2246,66 @@ const LabTestSelectionPopup: React.FC<LabTestSelectionPopupProps> = ({
                 Cancel
               </Button>
 
-              <Button
-                size="medium"
-                variant="contained"
-                onClick={handleConfirmOrSave}
-                disabled={
-                  saving ||
-                  totalSelectionCount === 0 ||
-                  (!isReadOnlyPricing &&
-                    newSelectedTests.some(
-                      (test) =>
-                        !test.price ||
-                        Boolean(test.priceError) ||
-                        Boolean(test.discountPriceError),
-                    ))
-                }
-                sx={{
-                  textTransform: "none",
-                  borderRadius: 2,
-                  px: 3,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  bgcolor: "var(--color-primary)",
-                  "&:hover": { bgcolor: "var(--color-primary-dark)" },
+              {isOffer && totalSelectionCount > 0 && isOfferSaveDisabled && (
+                <span className="text-[11px] text-amber-600 font-medium mr-1 hidden sm:inline-block">
+                  Enter an offer amount for every selected test
+                </span>
+              )}
+
+              <div
+                className="inline-block"
+                onClick={() => {
+                  if (isOffer && isOfferSaveDisabled && newSelectedTests.length > 0) {
+                    setSubmitAttempted(true);
+                    focusFirstInvalidOfferField();
+                  }
                 }}
+                title={
+                  isOffer && isOfferSaveDisabled
+                    ? "Enter an offer amount for every selected test"
+                    : undefined
+                }
               >
-                {saving
-                  ? "Saving..."
-                  : isProcessing
-                    ? `Save Tests (${totalSelectionCount})`
-                    : isWalkIn
-                      ? `Confirm Selection (${totalSelectionCount})`
-                      : newSelectedTests.length > 0
-                        ? `Confirm & Add (${newSelectedTests.length})`
-                        : "Confirm & Add"}
-              </Button>
+                <Button
+                  size="medium"
+                  variant="contained"
+                  onClick={handleConfirmOrSave}
+                  disabled={
+                    saving ||
+                    totalSelectionCount === 0 ||
+                    (isOffer && isOfferSaveDisabled) ||
+                    (!isReadOnlyPricing &&
+                      !isOffer &&
+                      newSelectedTests.some(
+                        (test) =>
+                          !test.price ||
+                          Boolean(test.priceError) ||
+                          Boolean(test.discountPriceError),
+                      ))
+                  }
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 2,
+                    px: 3,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    bgcolor: "var(--color-primary)",
+                    "&:hover": { bgcolor: "var(--color-primary-dark)" },
+                  }}
+                >
+                  {saving
+                    ? "Saving..."
+                    : isOffer
+                      ? "Save Offers Test"
+                      : isProcessing
+                        ? `Save Tests (${totalSelectionCount})`
+                        : isWalkIn
+                          ? `Confirm Selection (${totalSelectionCount})`
+                          : newSelectedTests.length > 0
+                            ? `Confirm & Add (${newSelectedTests.length})`
+                            : "Confirm & Add"}
+                </Button>
+              </div>
             </>
           )}
         </div>

@@ -21,6 +21,17 @@ export interface FormDataBase {
   labCategory?: string;
 }
 
+export interface AvailableOfferTest {
+  test_id: number;
+  offer_amount: number;
+}
+
+export interface OfferTestItem {
+  test_id: number;
+  category_id: number;
+  offer_amount: number;
+}
+
 export interface OfferForm {
   offer_id?: number | null;
   is_active?: number; 
@@ -35,40 +46,58 @@ export interface OfferForm {
   offer_image_path: string;
   offer_image_guid: string;
   offer_image_name: string;
-  discount_percentage: number | "";
-  coupon_code: string;
+  discount_percentage: number | string | null;
+  coupon_code: string | null;
   start_date: string;
   end_date: string;
   priority: number;
 
   created_by: number;
   modified_by?: number | null;
+  available_offers?: AvailableOfferTest[] | null;
+  tests?: OfferTestItem[];
+}
+
+export interface OfferListItemTest {
+  test_id: number | string;
+  test_code?: string;
+  test_name?: string;
+  test_price?: number | string;
+  category_id?: number | string;
+  category_name?: string;
+  offer_price?: number | string;
+  offer_amount?: number | string;
+  price?: number | string;
 }
 
 export interface PromotionalOffer {
-  offer_id: number;
-  center_id: number;
-  entity_type: number;
-  center_name: string;
+  offer_id: number | string;
+  center_id: number | string;
+  entity_type: number | string;
+  center_name?: string;
+  center_type?: string;
 
   offer_title: string;
   offer_description: string;
 
-  offer_image_path: string | null;
-  offer_image_guid: string | null;
-  offer_image_name: string | null;
+  offer_image_path?: string | null;
+  offer_image_guid?: string | null;
+  offer_image_name?: string | null;
 
-  discount_percentage: number;
-  coupon_code: string | null;
+  discount_percentage?: number | string | null;
+  coupon_code?: string | null;
+  available_offers?: AvailableOfferTest[] | null;
 
   start_date: string;
   end_date: string;
-  priority: number;
+  priority?: number | string;
 
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  is_active: number | string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  is_active?: number | string;
+  is_test_specific?: number | string;
+  tests?: OfferListItemTest[] | null;
 }
 
 export interface PromotionalOffersResponse {

@@ -201,10 +201,6 @@ const PromotionalOffers: React.FC<PromotionalOffersProps> = ({
     });
   };
 
-  // const getImageUrl = (offer: PromotionalOffer) => {
-  //   if (!offer.offer_image_guid) return "";
-  //   return `${BASE_URL}/patient/patients/offer-images/${offer.offer_image_guid}`;
-  // };
 
   const formatValidTill = (dateStr?: string) => {
     if (!dateStr) return "Ongoing";

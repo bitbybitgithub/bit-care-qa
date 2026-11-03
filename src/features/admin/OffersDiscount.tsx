@@ -143,13 +143,6 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       created_by: user?.user_id ?? 0,
     });
 
-    // if (selectedOffer.offer_image_guid) {
-    //   setPreview(
-    //     `${BASE_URL}/patient/patients/offer-images/${selectedOffer.offer_image_guid}`,
-    //   );
-    // } else {
-    //   setPreview("");
-    // }
 
     if (selectedOffer.offer_image_guid) {
     let imageUrl = "";

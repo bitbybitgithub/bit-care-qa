@@ -17,7 +17,6 @@ import {
   Eye,
   FlaskConical,
   PlusCircle,
-  X,
   Edit2,
 } from "lucide-react";
 import LabTestSelectionPopup from "../lab/LabTestSelectionPopup";
@@ -204,6 +203,49 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   const [selectedOfferTests, setSelectedOfferTests] = useState<LabWalkInTest[]>(
     [],
   );
+  const [discountType, setDiscountType] = useState<"percentage" | "tests">(
+    "percentage",
+  );
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  const handleTooltipMouseEnter = () => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+    setIsTooltipOpen(true);
+  };
+
+  const handleTooltipMouseLeave = () => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setIsTooltipOpen(false);
+    }, 200);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tooltipRef.current &&
+        !tooltipRef.current.contains(event.target as Node)
+      ) {
+        setIsTooltipOpen(false);
+      }
+    };
+    if (isTooltipOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
+  }, [isTooltipOpen]);
 
   const centerId =
     user?.entity_type === 1
@@ -211,6 +253,8 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       : user?.entity_type === 2
         ? user?.lab_id
         : user?.clinic_id || user?.lab_id;
+
+  const isLab = Number(user?.entity_type ?? formData.entity_type) === 2;
 
   const activeLabId = Number(user?.lab_id || centerId || 1);
 
@@ -244,32 +288,42 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   const handleConfirmOfferTests = (tests: LabWalkInTest[]) => {
     setSelectedOfferTests(tests);
     if (tests.length > 0) {
-      setFormData((prev) => ({ ...prev, discount_percentage: "" }));
-      setErrors((prev) => ({ ...prev, discount_percentage: "" }));
+      setDiscountType("tests");
+      setFormData((prev) => ({
+        ...prev,
+        discount_percentage: "",
+        coupon_code: "",
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        discount_percentage: "",
+        coupon_code: "",
+      }));
     }
   };
 
-  const handleInlineOfferAmountChange = (testId: number, value: string) => {
-    if (value !== "" && !/^\d*(\.\d{0,2})?$/.test(value)) {
-      return;
+  const handleDiscountTypeChange = (type: "percentage" | "tests") => {
+    if (type === discountType) return;
+    setDiscountType(type);
+    if (type === "percentage") {
+      setSelectedOfferTests([]);
+      setErrors((prev) => ({
+        ...prev,
+        discount_percentage: "",
+        coupon_code: "",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        discount_percentage: "",
+        coupon_code: "",
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        discount_percentage: "",
+        coupon_code: "",
+      }));
     }
-    setSelectedOfferTests((prev) =>
-      prev.map((t) => {
-        if (t.test_id !== testId) return t;
-        const offerAmount = value === "" ? 0 : Number(value);
-        const payable = Math.max(0, Number(t.price || 0) - offerAmount);
-        return {
-          ...t,
-          offer_amount: offerAmount,
-          discount_price: offerAmount,
-          payable_amount: Number(payable.toFixed(2)),
-        };
-      }),
-    );
-  };
-
-  const handleRemoveOfferTest = (testId: number) => {
-    setSelectedOfferTests((prev) => prev.filter((t) => t.test_id !== testId));
   };
 
   const loadExistingOfferImage = async (
@@ -278,7 +332,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
   ): Promise<string> => {
     try {
       const response = await fetch(
-        `https://cliniccareapi.bitbybitsolutions.co.in/api/common/downloadFile`,
+        `${BASE_URL}/common/downloadFile`,
         {
           method: "POST",
           headers: {
@@ -315,6 +369,9 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
     setSelectedOfferTests(mapped.selectedTests);
     setIsActive(mapped.isActive);
     setHasConflictingPercentage(mapped.hasConflictingPercentage);
+    const initialDiscountType: "percentage" | "tests" =
+      isLab && mapped.selectedTests.length > 0 ? "tests" : "percentage";
+    setDiscountType(initialDiscountType);
 
     if (mapped.formData.offer_image_guid) {
       loadExistingOfferImage(
@@ -335,6 +392,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       formData: mapped.formData,
       selectedTests: mapped.selectedTests,
       isActive: mapped.isActive,
+      discountType: initialDiscountType,
     });
   }, [isEdit, selectedOffer]);
 
@@ -344,6 +402,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       formData,
       selectedTests: selectedOfferTests,
       isActive,
+      discountType,
     });
     return currentSnapshot !== initialSnapshotRef.current;
   };
@@ -485,43 +544,45 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       newErrors.offer_image = "Please upload an offer banner image.";
     }
 
-    const hasPct =
-      formData.discount_percentage !== "" &&
-      Number(formData.discount_percentage) > 0;
-    const hasTests = selectedOfferTests.length > 0;
-
-    if (hasPct && hasTests) {
-      newErrors.discount_percentage =
-        "An offer cannot have both discount percentage and specific tests.";
-    } else if (!hasPct && !hasTests) {
-      newErrors.discount_percentage =
-        "Please specify a discount percentage OR select tests for the offer.";
-    } else if (hasPct) {
+    if (!isLab || discountType === "percentage") {
       const discount = Number(formData.discount_percentage);
-      if (isNaN(discount) || discount <= 0 || discount >= 100) {
+      if (
+        formData.discount_percentage === "" ||
+        formData.discount_percentage === null ||
+        formData.discount_percentage === undefined ||
+        isNaN(discount) ||
+        discount <= 0 ||
+        discount >= 100
+      ) {
         newErrors.discount_percentage =
           "Discount must be greater than 0% and less than 100%.";
       }
-    } else if (hasTests) {
-      const hasInvalidTest = selectedOfferTests.some((t) => {
-        const offer = Number(t.offer_amount ?? t.discount_price ?? 0);
-        const price = Number(t.price ?? 0);
-        return (
-          isNaN(offer) ||
-          offer <= 0 ||
-          isNaN(price) ||
-          price <= 0 ||
-          offer > price
-        );
-      });
-      if (hasInvalidTest) {
-        newErrors.discount_percentage =
-          "All selected tests must have a valid Offer Amount (> ₹0 and ≤ Test Price).";
-      }
-    }
 
-    if (!hasTests && !formData.coupon_code.trim()) {
-      newErrors.coupon_code = "Coupon Code is required.";
+      if (!formData.coupon_code.trim()) {
+        newErrors.coupon_code = "Coupon Code is required.";
+      }
+    } else {
+      // Specific Tests Offer
+      if (selectedOfferTests.length === 0) {
+        newErrors.discount_percentage =
+          "Please select at least one test for the offer.";
+      } else {
+        const hasInvalidTest = selectedOfferTests.some((t) => {
+          const offer = Number(t.offer_amount ?? t.discount_price ?? 0);
+          const price = Number(t.price ?? 0);
+          return (
+            isNaN(offer) ||
+            offer <= 0 ||
+            isNaN(price) ||
+            price <= 0 ||
+            offer > price
+          );
+        });
+        if (hasInvalidTest) {
+          newErrors.discount_percentage =
+            "All selected tests must have a valid Offer Amount (> ₹0 and ≤ Test Price).";
+        }
+      }
     }
 
     if (
@@ -600,8 +661,10 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
         imageName = uploadedFile.file_name;
       }
 
+      const isTestOffer = isLab && discountType === "tests";
+
       const availableOffersPayload: AvailableOfferTest[] | null =
-        selectedOfferTests.length > 0
+        isTestOffer && selectedOfferTests.length > 0
           ? selectedOfferTests.map((t) => ({
               test_id: Number(t.test_id),
               offer_amount: Number(t.offer_amount ?? t.discount_price ?? 0),
@@ -610,14 +673,17 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
 
       const offerData: OfferForm = {
         ...formData,
-        discount_percentage:
-          selectedOfferTests.length > 0
-            ? ""
-            : formData.discount_percentage !== "" &&
-                formData.discount_percentage !== null
-              ? Number(formData.discount_percentage)
-              : "",
-        coupon_code: formData.coupon_code ? formData.coupon_code.trim() : "",
+        discount_percentage: isTestOffer
+          ? ""
+          : formData.discount_percentage !== "" &&
+              formData.discount_percentage !== null
+            ? Number(formData.discount_percentage)
+            : "",
+        coupon_code: isTestOffer
+          ? ""
+          : formData.coupon_code
+            ? formData.coupon_code.trim()
+            : "",
         offer_id: isEdit
           ? Number(formData.offer_id ?? selectedOffer!.offer_id)
           : null,
@@ -690,6 +756,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       priority: "",
     });
     setSelectedOfferTests([]);
+    setDiscountType("percentage");
   };
 
   const formatPreviewDate = (dateStr?: string) => {
@@ -888,318 +955,332 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
             </div>
           </div>
 
-          {/* Card 2: Discount & Redemption Code */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <span className="flex items-center gap-1.5 text-slate-800 font-semibold text-xs sm:text-sm">
+          {/* Card 2: Discount & Offer Configuration */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+              <span className="flex items-center gap-1.5 text-slate-800 font-semibold text-xs sm:text-sm shrink-0">
                 <Tag className="w-3.5 h-3.5 text-[var(--color-primary)]" />
                 Discount & Coupon
               </span>
+
+              {/* Offer Type Tabs on Header (Visible ONLY when entity_type === 2 i.e. Lab) */}
+              {isLab && (
+                <div className="grid grid-cols-2 sm:flex sm:inline-flex p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/70 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => handleDiscountTypeChange("percentage")}
+                    className={`flex items-center justify-center gap-1.5 py-1 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
+                      discountType === "percentage"
+                        ? "bg-white text-[var(--color-primary)] shadow-2xs font-bold border border-slate-200/60"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                  >
+                    <Percent className="w-3 h-3 shrink-0" />
+                    <span className="truncate">Percentage Discount</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDiscountTypeChange("tests")}
+                    className={`flex items-center justify-center gap-1.5 py-1 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
+                      discountType === "tests"
+                        ? "bg-white text-[var(--color-primary)] shadow-2xs font-bold border border-slate-200/60"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                  >
+                    <FlaskConical className="w-3 h-3 shrink-0" />
+                    <span className="truncate">Specific Tests Offer</span>
+                    {hasSelectedTests && discountType === "tests" && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[var(--color-surface,#f5f3ff)] text-[var(--color-primary)]">
+                        {totalTests}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
-            {hasConflictingPercentage && (
-              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-medium">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>
-                  This is a test-based offer. The saved percentage will not be
-                  used.
-                </span>
+            {/* VIEW 1: Discount Percentage & Coupon Code (Shown for non-lab OR when percentage is active) */}
+            {(!isLab || discountType === "percentage") && (
+              <div className="space-y-3 animate-in fade-in duration-150">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Discount Percentage */}
+                  <div>
+                    <label
+                      htmlFor="discount_percentage"
+                      className="block text-xs font-semibold text-slate-800 mb-1"
+                    >
+                      Discount Percentage (%){" "}
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-xs font-bold text-slate-400 pointer-events-none">
+                        %
+                      </span>
+                      <input
+                        id="discount_percentage"
+                        name="discount_percentage"
+                        type="number"
+                        min="1"
+                        max="99"
+                        step="any"
+                        value={formData.discount_percentage}
+                        onChange={handleChange}
+                        placeholder="eg. 30"
+                        className={`w-full pl-7 pr-3 py-2 rounded-xl border text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
+                          errors.discount_percentage
+                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
+                            : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.discount_percentage && (
+                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.discount_percentage}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Coupon Code */}
+                  <div>
+                    <label
+                      htmlFor="coupon_code"
+                      className="block text-xs font-semibold text-slate-800 mb-1"
+                    >
+                      Coupon Code <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Ticket className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                      <input
+                        id="coupon_code"
+                        name="coupon_code"
+                        type="text"
+                        maxLength={16}
+                        value={formData.coupon_code}
+                        onChange={handleChange}
+                        placeholder="eg. MONSOON30"
+                        className={`w-full pl-8 pr-3 py-2 border rounded-xl uppercase font-semibold tracking-wider text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
+                          errors.coupon_code
+                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
+                            : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.coupon_code && (
+                      <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.coupon_code}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Discount Percentage */}
-              <div>
-                <label
-                  htmlFor="discount_percentage"
-                  className="block text-xs font-semibold text-slate-800 mb-1"
-                >
-                  Discount Percentage (%){" "}
-                  {!hasSelectedTests && (
-                    <span className="text-rose-500">*</span>
-                  )}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs font-bold text-slate-400 pointer-events-none">
-                    %
-                  </span>
-                  <input
-                    id="discount_percentage"
-                    name="discount_percentage"
-                    type="number"
-                    min="1"
-                    max="99"
-                    step="any"
-                    disabled={hasSelectedTests}
-                    value={formData.discount_percentage}
-                    onChange={handleChange}
-                    placeholder={
-                      hasSelectedTests
-                        ? "Disabled (Test offer selected)"
-                        : "eg. 30"
-                    }
-                    className={`w-full pl-7 pr-3 py-2 rounded-xl border text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
-                      hasSelectedTests
-                        ? "bg-slate-100/80 text-slate-400 border-slate-200 cursor-not-allowed"
-                        : errors.discount_percentage
-                          ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
-                          : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
-                    }`}
-                  />
-                </div>
-                {hasSelectedTests && (
-                  <p className="mt-1 text-[11px] text-slate-500 font-medium">
-                    Remove selected tests to use a percentage
-                  </p>
-                )}
-                {errors.discount_percentage && !hasSelectedTests && (
-                  <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.discount_percentage}
-                  </p>
-                )}
-              </div>
-
-              {/* Coupon Code */}
-              <div>
-                <label
-                  htmlFor="coupon_code"
-                  className="block text-xs font-semibold text-slate-800 mb-1"
-                >
-                  Coupon Code{" "}
-                  {!hasSelectedTests && (
-                    <span className="text-rose-500">*</span>
-                  )}
-                </label>
-                <div className="relative">
-                  <Ticket className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
-                  <input
-                    id="coupon_code"
-                    name="coupon_code"
-                    type="text"
-                    maxLength={16}
-                    value={formData.coupon_code}
-                    onChange={handleChange}
-                    placeholder="eg. MONSOON30"
-                    className={`w-full pl-8 pr-3 py-2 border rounded-xl uppercase font-semibold tracking-wider text-slate-900 placeholder:text-slate-400 text-xs sm:text-sm transition focus:outline-none focus:ring-2 ${
-                      errors.coupon_code
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 bg-rose-50/20"
-                        : "border-slate-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/15 bg-white"
-                    }`}
-                  />
-                </div>
-                {errors.coupon_code && (
-                  <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.coupon_code}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* TASK 1: OR Divider */}
-            <div className="relative flex items-center justify-center my-1.5 py-1">
-              <div className="border-t border-slate-200 w-full" />
-              <span className="bg-white px-3 text-[11px] font-bold text-slate-400 tracking-wider uppercase absolute">
-                OR
-              </span>
-            </div>
-
-            {/* TASK 1: Select Tests for Offer Action Card */}
-            <div className="p-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="space-y-0.5">
-                <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-                  <FlaskConical className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                  <span>Select Tests for Offer</span>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  Offer specific tests with an offer amount instead of a
-                  percentage
-                </p>
-                {hasPercentage && (
-                  <p className="text-[11px] text-amber-600 font-medium">
-                    Clear the percentage to offer specific tests
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsTestSelectionOpen(true)}
-                disabled={hasPercentage}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs cursor-pointer shrink-0"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>
-                  {hasSelectedTests
-                    ? "Edit Selection"
-                    : "Select Tests for Offer"}
-                </span>
-              </button>
-            </div>
-
-            {/* TASK 3: Selected Tests Section (Visible only when tests are selected) */}
-            {hasSelectedTests && (
-              <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      Selected Tests
+            {/* VIEW 2: Specific Tests Offer Action Card (Visible ONLY for Lab: entity_type === 2) */}
+            {isLab && discountType === "tests" && (
+              <div className="space-y-2.5 animate-in fade-in duration-150">
+                {hasConflictingPercentage && (
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-medium">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      This is a test-based offer. The saved percentage will not
+                      be used.
                     </span>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
-                      {totalTests} {totalTests === 1 ? "Test" : "Tests"}
-                    </span>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                      <FlaskConical className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                      <span>Select Tests for Offer</span>
+
+                      {/* Icon for view added tests (with hover tooltip on top) */}
+                      {hasSelectedTests && (
+                        <div
+                          ref={tooltipRef}
+                          className="relative inline-flex items-center"
+                          onMouseEnter={handleTooltipMouseEnter}
+                          onMouseLeave={handleTooltipMouseLeave}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setIsTooltipOpen((prev) => !prev)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-surface,#f5f3ff)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/25 text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+                            title="View added tests"
+                            aria-label="View added tests"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>
+                              {totalTests} {totalTests === 1 ? "Test" : "Tests"}
+                            </span>
+                          </button>
+
+                          {/* Tooltip view on hover/click */}
+                          {isTooltipOpen && (
+                            <div
+                              role="tooltip"
+                              className="absolute left-0 bottom-full mb-2.5 w-80 sm:w-96 md:w-[420px] max-w-[calc(100vw-2.5rem)] bg-white rounded-2xl shadow-xl border border-slate-200/90 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150 before:content-[''] before:absolute before:-bottom-3 before:left-0 before:right-0 before:h-3"
+                              onMouseEnter={handleTooltipMouseEnter}
+                              onMouseLeave={handleTooltipMouseLeave}
+                            >
+                              {/* Pointer Triangle */}
+                              <div className="absolute -bottom-1.5 left-5 w-3 h-3 bg-white border-b border-r border-slate-200 rotate-45" />
+
+                              {/* Tooltip Header */}
+                              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 relative">
+                                <div className="flex items-center gap-1.5">
+                                  <FlaskConical className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                                    Selected Tests
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface,#f5f3ff)] text-[var(--color-primary)]">
+                                  {totalTests}{" "}
+                                  {totalTests === 1 ? "Test" : "Tests"}
+                                </span>
+                              </div>
+
+                              {/* Tests Grouped by Category */}
+                              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                                {testsByCategory.map(([categoryName, tests]) => (
+                                  <div
+                                    key={categoryName}
+                                    className="rounded-xl border border-slate-200 bg-slate-50/50 p-2 space-y-1.5"
+                                  >
+                                    <div className="flex items-center justify-between px-1">
+                                      <span className="text-[11px] font-bold text-slate-700">
+                                        {categoryName}
+                                      </span>
+                                      <span className="text-[10px] font-medium text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                        {tests.length}{" "}
+                                        {tests.length === 1 ? "test" : "tests"}
+                                      </span>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      {tests.map((test) => {
+                                        const currentOffer =
+                                          test.offer_amount ??
+                                          test.discount_price ??
+                                          0;
+
+                                        return (
+                                          <div
+                                            key={test.test_id}
+                                            className="p-2 rounded-lg bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2.5"
+                                          >
+                                            <div className="min-w-0 flex-1">
+                                              <div
+                                                className="text-xs font-semibold text-slate-800 truncate"
+                                                title={test.test_name}
+                                              >
+                                                {test.test_name}
+                                              </div>
+                                              {test.test_code && (
+                                                <span className="text-[10px] font-mono text-slate-400">
+                                                  {test.test_code}
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 shrink-0 text-right">
+                                              <div>
+                                                <div className="text-[9px] text-slate-400 font-medium uppercase">
+                                                  Test Price
+                                                </div>
+                                                <div className="text-xs font-semibold text-slate-700">
+                                                  ₹
+                                                  {Number(test.price).toFixed(
+                                                    2,
+                                                  )}
+                                                </div>
+                                              </div>
+
+                                              <div>
+                                                <div className="text-[9px] text-emerald-600 font-medium uppercase">
+                                                  Offer Amount
+                                                </div>
+                                                <div className="text-xs font-bold text-emerald-600">
+                                                  ₹
+                                                  {Number(currentOffer).toFixed(
+                                                    2,
+                                                  )}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Summary Totals */}
+                              <div className="pt-2.5 mt-2.5 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+                                <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200/60 shadow-2xs">
+                                  <div className="text-[9px] text-slate-400 font-semibold uppercase">
+                                    Total Tests
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-800 mt-0.5">
+                                    {totalTests}
+                                  </div>
+                                </div>
+
+                                <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-200/60 shadow-2xs">
+                                  <div className="text-[9px] text-slate-400 font-semibold uppercase">
+                                    Total Test Price
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-700 mt-0.5">
+                                    ₹{totalTestPrice.toFixed(2)}
+                                  </div>
+                                </div>
+
+                                <div className="p-1.5 bg-emerald-50/60 rounded-lg border border-emerald-200/60 shadow-2xs">
+                                  <div className="text-[9px] text-emerald-600 font-semibold uppercase">
+                                    Total Offer
+                                  </div>
+                                  <div className="text-xs font-bold text-emerald-600 mt-0.5">
+                                    {totalOfferAmount > 0
+                                      ? `₹${totalOfferAmount.toFixed(2)}`
+                                      : "₹0.00"}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Offer specific tests with a custom offer amount
+                    </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setIsTestSelectionOpen(true)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface)] border border-[var(--color-primary)]/30 rounded-lg transition cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] transition shadow-2xs cursor-pointer shrink-0"
                   >
-                    <Edit2 className="w-3 h-3" />
-                    <span>Edit Selection</span>
+                    {hasSelectedTests ? (
+                      <>
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Selection</span>
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>Select Tests for Offer</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
-                {/* Grouped by Category */}
-                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                  {testsByCategory.map(([categoryName, tests]) => (
-                    <div
-                      key={categoryName}
-                      className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 space-y-2"
-                    >
-                      <div className="flex items-center justify-between px-1">
-                        <span className="text-xs font-bold text-slate-700">
-                          {categoryName}
-                        </span>
-                        <span className="text-[10px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                          {tests.length} {tests.length === 1 ? "test" : "tests"}
-                        </span>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        {tests.map((test) => {
-                          const currentOffer =
-                            test.offer_amount ?? test.discount_price ?? 0;
-                          const isInvalidOffer =
-                            currentOffer <= 0 ||
-                            currentOffer > Number(test.price);
-
-                          return (
-                            <div
-                              key={test.test_id}
-                              className="p-2.5 rounded-lg bg-white border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
-                            >
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold text-slate-800 truncate">
-                                  {test.test_name}
-                                </div>
-                                {test.test_code && (
-                                  <span className="text-[10px] font-mono text-slate-400">
-                                    {test.test_code}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                                {/* Test Price: Display Only */}
-                                <div className="text-left sm:text-right">
-                                  <div className="text-[10px] text-slate-400 font-medium">
-                                    Test Price
-                                  </div>
-                                  <div className="text-xs font-semibold text-slate-700">
-                                    ₹{Number(test.price).toFixed(2)}
-                                  </div>
-                                </div>
-
-                                {/* Offer Amount: Editable Inline */}
-                                <div className="flex flex-col">
-                                  <div className="text-[10px] text-slate-500 font-normal">
-                                    Offer Amount{" "}
-                                    <span className="text-rose-500">*</span>
-                                  </div>
-                                  <div className="relative">
-                                    <span className="absolute left-2 top-1.5 text-xs font-bold text-slate-400 pointer-events-none">
-                                      ₹
-                                    </span>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      max={test.price}
-                                      step="any"
-                                      value={
-                                        currentOffer === 0 ? "" : currentOffer
-                                      }
-                                      placeholder="Not set"
-                                      onChange={(e) =>
-                                        handleInlineOfferAmountChange(
-                                          test.test_id,
-                                          e.target.value,
-                                        )
-                                      }
-                                      className={`w-24 pl-5 pr-2 py-1 text-xs rounded-lg border font-semibold placeholder:font-normal placeholder:text-slate-400 ${
-                                        isInvalidOffer
-                                          ? "border-rose-400 bg-rose-50/30 text-rose-700 focus:ring-1 focus:ring-rose-400"
-                                          : "border-slate-300 text-slate-900 focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/20"
-                                      } outline-none transition`}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Remove Button */}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveOfferTest(test.test_id)
-                                  }
-                                  title="Remove test"
-                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition cursor-pointer shrink-0"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Summary Totals */}
-                <div className="p-3 rounded-xl bg-slate-100/80 border border-slate-200 grid grid-cols-3 gap-2 text-center">
-                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
-                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
-                      Total Tests
-                    </div>
-                    <div className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
-                      {totalTests}
-                    </div>
-                  </div>
-
-                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
-                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
-                      Total Test Price
-                    </div>
-                    <div className="text-xs sm:text-sm font-bold text-slate-700 mt-0.5">
-                      ₹{totalTestPrice.toFixed(2)}
-                    </div>
-                  </div>
-
-                  <div className="p-1.5 bg-white rounded-lg border border-slate-200/60 shadow-2xs">
-                    <div className="text-[10px] text-slate-400 font-semibold uppercase">
-                      Total Offer Amount
-                    </div>
-                    <div className="text-xs sm:text-sm font-bold text-emerald-600 mt-0.5">
-                      {totalOfferAmount > 0
-                        ? `₹${totalOfferAmount.toFixed(2)}`
-                        : "Not set"}
-                    </div>
-                  </div>
-                </div>
-
-                {errors.discount_percentage && hasSelectedTests && (
-                  <p className="mt-2 text-xs text-rose-600 flex items-center gap-1 font-medium bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                {errors.discount_percentage && (
+                  <p className="text-xs text-rose-600 flex items-center gap-1 font-medium bg-rose-50 p-2.5 rounded-xl border border-rose-200">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     {errors.discount_percentage}
                   </p>
@@ -1428,9 +1509,11 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight line-clamp-1">
                   {formData.offer_title || "Special Promotional Offer"}
                 </h3>
-                {hasSelectedTests ? (
+                {isLab && discountType === "tests" ? (
                   <div className="text-lg sm:text-xl font-extrabold text-amber-400 tracking-tight leading-tight">
-                    Offer on {totalTests} {totalTests === 1 ? "test" : "tests"}
+                    {hasSelectedTests
+                      ? `Offer on ${totalTests} ${totalTests === 1 ? "test" : "tests"}`
+                      : "Special Lab Tests Offer"}
                   </div>
                 ) : (
                   <div className="text-xl sm:text-2xl font-extrabold text-amber-400 tracking-tight leading-tight">
@@ -1447,10 +1530,17 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
 
               {/* Card Footer: Coupon code box & Claim Now button */}
               <div className="relative z-10 flex items-center justify-between gap-2 pt-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-white/25 bg-black/40 backdrop-blur-sm text-[11px] font-bold text-white tracking-wider">
-                  <Ticket className="w-3 h-3 text-amber-300" />
-                  <span>{formData.coupon_code || "OFFER30"}</span>
-                </div>
+                {isLab && discountType === "tests" ? (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-white/25 bg-black/40 backdrop-blur-sm text-[11px] font-bold text-amber-300 tracking-wider">
+                    <FlaskConical className="w-3 h-3 text-amber-300" />
+                    <span>Lab Test Offer</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-white/25 bg-black/40 backdrop-blur-sm text-[11px] font-bold text-white tracking-wider">
+                    <Ticket className="w-3 h-3 text-amber-300" />
+                    <span>{formData.coupon_code || "OFFER30"}</span>
+                  </div>
+                )}
 
                 <span className="px-3 py-1 rounded-full bg-white text-slate-900 font-bold text-[11px] shadow-sm select-none">
                   Claim Now
@@ -1491,7 +1581,7 @@ const OffersDiscount: React.FC<OffersDiscountProps> = ({
       </form>
 
       {/* Test Selection Dialog (mode="offer") */}
-      {isTestSelectionOpen && (
+      {isLab && isTestSelectionOpen && (
         <LabTestSelectionPopup
           open={isTestSelectionOpen}
           mode="offer"

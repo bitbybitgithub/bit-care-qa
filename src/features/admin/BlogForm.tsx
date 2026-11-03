@@ -30,12 +30,48 @@ import {
 import {
   BLOG_CATEGORIES,
   calculateReadTime,
-  getBlogImageUrl,
+  
 } from "./blogUtils";
 import { EntityTypeEnum } from "../../context/constant/enum";
+import { BASE_URL } from "../../services/EmrApi";
+import { Blogs_Image_Url } from "../../context/constant/constant";
 
 // React 19 JSX typing compatibility wrapper for react-quill-new
 const QuillEditor: any = ReactQuill;
+
+const getBlogImage = async (
+  blog: BlogFormData
+): Promise<string> => {
+  if (!blog.featured_image_guid) return "";
+
+  try {
+    const response = await fetch(`${BASE_URL}/common/downloadFile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        filePath: Blogs_Image_Url,
+        fileName: blog.featured_image_guid,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Blog image download failed:", errorText);
+      return "";
+    }
+
+    const blob = await response.blob();
+
+    if (!blob.size) return "";
+
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Blog image loading error:", error);
+    return "";
+  }
+};
 
 interface BlogFormProps {
   onSuccess?: () => void;
@@ -116,10 +152,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({ onSuccess, onCancel }) => {
           featured_image_name: blog.featured_image_name ?? "",
         }));
 
-        const resolvedUrl = getBlogImageUrl(
-          blog.featured_image_guid,
-          blog.featured_image_path
-        );
+      const resolvedUrl = await getBlogImage(blog);
         setImagePreview(resolvedUrl);
         setFeaturedImage(null);
       } catch (error) {

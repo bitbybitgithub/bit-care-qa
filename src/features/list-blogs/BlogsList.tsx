@@ -56,6 +56,39 @@ import {
   getEntityBadgeLabel,
   getEntityContactLabel,
 } from "../admin/blogUtils";
+import { BASE_URL } from "../../services/EmrApi";
+import { Blogs_Image_Url } from "../../context/constant/constant";
+
+
+const getBlogImage = async (
+  blog: BlogFormData
+): Promise<string> => {
+  if (!blog.featured_image_guid) return "";
+
+  try {
+    const response = await fetch(`${BASE_URL}/common/downloadFile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        filePath: Blogs_Image_Url,
+        fileName: blog.featured_image_guid,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download blog image");
+    }
+
+    const blob = await response.blob();
+
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Blog image loading error:", error);
+    return "";
+  }
+};
 
 // ============================================================================
 // Patient View Top Navigation & Branding Header
@@ -130,11 +163,38 @@ const BlogListItem: React.FC<BlogListItemProps> = ({
   onRead,
   onEdit,
 }) => {
-  const [imageFailed, setImageFailed] = useState<boolean>(false);
-  const imageUrl = getBlogImageUrl(
-    blog.featured_image_guid,
-    blog.featured_image_path
-  );
+ const [imageFailed, setImageFailed] = useState<boolean>(false);
+const [imageUrl, setImageUrl] = useState<string>("");
+
+useEffect(() => {
+  let isActive = true;
+  let objectUrl = "";
+
+  setImageUrl("");
+  setImageFailed(false);
+
+  if (!blog.featured_image_guid) {
+    return;
+  }
+
+  getBlogImage(blog).then((url) => {
+    if (!isActive) {
+      if (url) URL.revokeObjectURL(url);
+      return;
+    }
+
+    objectUrl = url;
+    setImageUrl(url);
+  });
+
+  return () => {
+    isActive = false;
+
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+}, [blog.featured_image_guid]);
   const cat = getCategoryMeta(blog.category_id);
   const readTime = calculateReadTime(blog.content || blog.short_description);
   const formattedDate = formatBlogDate(blog.created_date);
@@ -332,11 +392,38 @@ const BlogCardItem: React.FC<BlogCardItemProps> = ({
   onRead,
   onEdit,
 }) => {
-  const [imageFailed, setImageFailed] = useState<boolean>(false);
-  const imageUrl = getBlogImageUrl(
-    blog.featured_image_guid,
-    blog.featured_image_path
-  );
+const [imageFailed, setImageFailed] = useState<boolean>(false);
+const [imageUrl, setImageUrl] = useState<string>("");
+
+useEffect(() => {
+  let isActive = true;
+  let objectUrl = "";
+
+  setImageUrl("");
+  setImageFailed(false);
+
+  if (!blog.featured_image_guid) {
+    return;
+  }
+
+  getBlogImage(blog).then((url) => {
+    if (!isActive) {
+      if (url) URL.revokeObjectURL(url);
+      return;
+    }
+
+    objectUrl = url;
+    setImageUrl(url);
+  });
+
+  return () => {
+    isActive = false;
+
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+}, [blog.featured_image_guid]);
   const cat = getCategoryMeta(blog.category_id);
   const readTime = calculateReadTime(blog.content || blog.short_description);
   const formattedDate = formatBlogDate(blog.created_date);
@@ -704,6 +791,38 @@ export const BlogsList: React.FC<BlogsListProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [detailImageFailed, setDetailImageFailed] = useState<boolean>(false);
 
+  const [detailImageUrl, setDetailImageUrl] = useState<string>("");
+
+useEffect(() => {
+  let isActive = true;
+  let objectUrl = "";
+
+  setDetailImageUrl("");
+  setDetailImageFailed(false);
+
+  if (!blog?.featured_image_guid) {
+    return;
+  }
+
+  getBlogImage(blog).then((url) => {
+    if (!isActive) {
+      if (url) URL.revokeObjectURL(url);
+      return;
+    }
+
+    objectUrl = url;
+    setDetailImageUrl(url);
+  });
+
+  return () => {
+    isActive = false;
+
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+}, [blog?.featured_image_guid]);
+
   // Fetch blogs or single blog based on URL param and current view mode
   useEffect(() => {
     let isMounted = true;
@@ -943,10 +1062,7 @@ export const BlogsList: React.FC<BlogsListProps> = ({
     const cat = getCategoryMeta(blog.category_id);
     const readTime = calculateReadTime(blog.content || blog.short_description);
     const formattedDate = formatBlogDate(blog.created_date);
-    const resolvedBannerUrl = getBlogImageUrl(
-      blog.featured_image_guid,
-      blog.featured_image_path
-    );
+   const resolvedBannerUrl = detailImageUrl;
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-white via-slate-50/50 to-white flex flex-col">
